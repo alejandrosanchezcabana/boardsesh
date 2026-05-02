@@ -1,0 +1,195 @@
+{
+  "metadata": {
+    "boardHome": {
+      "title": "{{boardName}} en Boardsesh",
+      "description": "Explora bloques y sesiones en {{boardName}}",
+      "fallbackTitle": "Tabla no encontrada"
+    },
+    "list": {
+      "title": "Bloques de {{boardName}} a {{angle}}°",
+      "description": "Explora bloques en {{boardName}} a {{angle}}°",
+      "fallbackTitle": "Bloques",
+      "fallbackDescription": "Explora bloques"
+    },
+    "view": {
+      "title": "{{climbName}} - {{grade}}",
+      "description": "{{climbName}} - {{grade}} de {{setter}}. Calidad: {{quality}}/5. Encadenes: {{ascents}}",
+      "imageAlt": "{{climbName}} - {{grade}} en tabla {{boardName}}",
+      "fallbackTitle": "Bloque",
+      "fallbackDescription": "Mira los detalles del bloque y vídeos de beta"
+    },
+    "play": {
+      "title": "{{climbName}} - {{grade}} | Modo Jugar",
+      "description": "{{climbName}} - {{grade}} de {{setter}}. Calidad: {{quality}}/5. Encadenes: {{ascents}}",
+      "fallbackTitle": "Jugar",
+      "fallbackDescription": "Juega un bloque en tu tabla"
+    },
+    "create": {
+      "title": "Crear un bloque",
+      "description": "Apertura un nuevo bloque en tu tabla"
+    },
+    "import": {
+      "title": "Importar bloques",
+      "description": "Importa bloques de MoonBoard desde capturas de pantalla"
+    },
+    "liked": {
+      "title": "Bloques favoritos",
+      "description": "Bloques que has marcado como favoritos"
+    },
+    "logbook": {
+      "title": "Bitácora",
+      "description": "Tu historial de escalada para esta tabla"
+    }
+  },
+  "list": {
+    "empty": {
+      "title": "Ningún bloque coincide con tus filtros",
+      "subtitle": "Afloja los filtros e inténtalo otra vez"
+    },
+    "loading": "Cargando bloques...",
+    "loadMore": "Ver más",
+    "noMore": "No hay más bloques",
+    "viewMode": {
+      "list": "Vista de lista",
+      "grid": "Vista de cuadrícula"
+    },
+    "biggerBoard": {
+      "title": "No cabe en tu tabla",
+      "description": "Este se sale del borde de tu pared. Necesitas un tamaño mayor para encadenarlo."
+    },
+    "sort": {
+      "label": "Ordenar",
+      "ascents": "Encadenes",
+      "popular": "Popular",
+      "difficulty": "Dificultad",
+      "name": "Nombre",
+      "quality": "Calidad",
+      "creation": "Creación",
+      "ascending": "Asc",
+      "descending": "Desc"
+    }
+  },
+  "header": {
+    "backToList": "Volver a la lista de bloques",
+    "createNewClimb": "Crear un nuevo bloque"
+  },
+  "share": {
+    "title": "{{climbName}} en Boardsesh",
+    "text": "Mira {{climbName}} en Boardsesh",
+    "linkCopied": "Enlace copiado",
+    "shareFailed": "No se pudo compartir"
+  },
+  "board": {
+    "connect": "Conectar con la tabla",
+    "disconnect": "Desconectar de la tabla",
+    "connectError": "No se pudo conectar con la tabla. Asegúrate de que el Bluetooth está encendido y la tabla está cerca.",
+    "lightingUnavailable": "Iluminación de la tabla no disponible",
+    "lightingUnavailableIos": "Safari no soporta Bluetooth. Usa la app de Boardsesh para iluminar las presas de tu tabla.",
+    "lightingUnavailableBrowser": "Este navegador no soporta Bluetooth. Cambia a Chrome para iluminar las presas de tu tabla.",
+    "dismiss": "Descartar",
+    "getApp": "Obtener la app"
+  },
+  "angleSelector": {
+    "selectAngle": "Selecciona el ángulo",
+    "loadingStats": "Cargando estadísticas...",
+    "noData": "Sin datos",
+    "sends_one": "{{count}} encadene",
+    "sends_other": "{{count}} encadenes"
+  },
+  "search": {
+    "drawerTitle": "Buscar y filtrar",
+    "categories": {
+      "climbs": "Bloques",
+      "boards": "Tablas",
+      "gyms": "Rocódromos",
+      "users": "Escaladores",
+      "playlists": "Listas"
+    },
+    "placeholders": {
+      "boards": "Busca tablas...",
+      "gyms": "Busca rocódromos...",
+      "users": "Busca escaladores...",
+      "playlists": "Busca listas...",
+      "climbs": "Busca bloques...",
+      "setters": "Busca aperturistas..."
+    },
+    "fields": {
+      "climbName": "Nombre del bloque",
+      "gradeRange": "Rango de grados",
+      "minGrade": "Mín",
+      "maxGrade": "Máx",
+      "setter": "Aperturista",
+      "minAscents": "Encadenes mín.",
+      "minRating": "Valoración mín.",
+      "any": "Cualquiera",
+      "tallClimbsOnly": "Solo bloques altos",
+      "tallClimbsTooltip": "Muestra solo bloques que usan presas en las 8 filas inferiores (solo disponible en tablas 10x12)",
+      "gradeAccuracy": "Precisión del grado",
+      "somewhatAccurate": "Algo precisa (<0.2)",
+      "veryAccurate": "Muy precisa (<0.1)",
+      "extremelyAccurate": "Extremadamente precisa (<0.05)",
+      "classicsOnly": "Solo clásicos"
+    },
+    "panels": {
+      "quality": "Calidad",
+      "status": "Estado de encadene",
+      "progress": "Progreso",
+      "holds": "Presas",
+      "holdsTitle": "Buscar por presa",
+      "anyDefault": "Cualquiera",
+      "allClimbs": "Todos los bloques"
+    },
+    "status": {
+      "any": "Cualquiera",
+      "established": "Establecidos",
+      "establishedTooltip": "Bloques con 2 o más encadenes",
+      "projects": "Proyectos",
+      "projectsTooltip": "Bloques sin encadenes registrados",
+      "myDrafts": "Mis borradores",
+      "myDraftsSignedOut": "Mis borradores (inicia sesión)",
+      "signInToFilterDrafts": "Inicia sesión para filtrar por tus borradores.",
+      "signInModalTitle": "Inicia sesión en Boardsesh",
+      "signInModalDescription": "Inicia sesión para ver tus bloques en borrador."
+    },
+    "progress": {
+      "signInTitle": "Inicia sesión para filtrar por tus datos",
+      "signInBody": "Inicia sesión para filtrar bloques según tu historial de intentos y encadenes.",
+      "signInModalTitle": "Inicia sesión en Boardsesh",
+      "signInModalDescription": "Crea una cuenta para filtrar por tu progreso y guardar favoritos.",
+      "hideAttempted": "Ocultar intentados",
+      "hideCompleted": "Ocultar encadenados",
+      "onlyAttempted": "Solo intentados",
+      "onlyCompleted": "Solo encadenados"
+    },
+    "actions": {
+      "search": "Buscar",
+      "clearAll": "Limpiar todo",
+      "signIn": "Iniciar sesión"
+    },
+    "results": {
+      "count": "resultados"
+    },
+    "setters": {
+      "loading": "Cargando...",
+      "openDropdown": "Abre el desplegable para ver aperturistas",
+      "noSetters": "No se encontraron aperturistas"
+    },
+    "holds": {
+      "tapTo": "Toca para:",
+      "include": "Incluir",
+      "exclude": "Excluir",
+      "included": "{{count}} incluidas",
+      "excluded": "{{count}} excluidas"
+    },
+    "sortToggle": "Ordenar"
+  },
+  "statsFilter": {
+    "drawerTitle": "Filtros",
+    "fields": {
+      "board": "Tabla",
+      "timeRange": "Rango de tiempo",
+      "from": "Desde",
+      "to": "Hasta"
+    }
+  }
+}

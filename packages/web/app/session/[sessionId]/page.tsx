@@ -6,6 +6,9 @@ import { GET_SESSION_DETAIL, type GetSessionDetailQueryResponse } from '@/app/li
 import SessionDetailContent from './session-detail-content';
 import { buildVersionedOgImagePath, OG_IMAGE_HEIGHT, OG_IMAGE_WIDTH } from '@/app/lib/seo/og';
 import { getSessionOgSummary } from '@/app/lib/seo/dynamic-og-data';
+import { getServerTranslation } from '@/app/lib/i18n/server';
+import { getLocale } from '@/app/lib/i18n/get-locale';
+import I18nProvider from '@/app/components/providers/i18n-provider';
 
 type Props = {
   params: Promise<{ sessionId: string }>;
@@ -29,9 +32,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { sessionId: rawSessionId } = await params;
   const sessionId = decodeURIComponent(rawSessionId);
   const summary = await getSessionOgSummary(sessionId);
+  const { t } = await getServerTranslation('session');
 
   if (!summary.found) {
-    return { title: 'Session Not Found | Boardsesh' };
+    return { title: `${t('metadata.detail.notFoundTitle')} | Boardsesh` };
   }
 
   const participantNames = summary.participantNames.join(', ');
@@ -40,10 +44,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   let description: string;
   if (summary.totalSends > 0) {
-    const stats = `${summary.totalSends} send${summary.totalSends !== 1 ? 's' : ''}`;
+    const stats = t('detail.subtitleSends', { count: summary.totalSends });
     description = participantNames ? `${participantNames} — ${stats}` : stats;
   } else {
-    description = participantNames ? `${participantNames} climbing on Boardsesh` : `${sessionName} on Boardsesh`;
+    description = participantNames
+      ? t('detail.participantsClimbing', { names: participantNames })
+      : t('detail.sessionNameOnBoardsesh', { name: sessionName });
   }
 
   const ogImage = buildVersionedOgImagePath('/api/og/session', { sessionId }, summary.version);
@@ -73,6 +79,11 @@ export default async function SessionDetailPage({ params }: Props) {
   const { sessionId: rawSessionId } = await params;
   const sessionId = decodeURIComponent(rawSessionId);
   const session = await fetchSessionDetail(sessionId);
+  const locale = await getLocale();
 
-  return <SessionDetailContent session={session} sessionId={sessionId} />;
+  return (
+    <I18nProvider locale={locale} namespaces={['session']}>
+      <SessionDetailContent session={session} sessionId={sessionId} />
+    </I18nProvider>
+  );
 }

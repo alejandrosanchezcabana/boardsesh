@@ -1,0 +1,43 @@
+{
+  "metadata": {
+    "notifications": {
+      "title": "Notifications",
+      "description": "Your notifications on Boardsesh"
+    }
+  },
+  "title": "Notifications",
+  "empty": "Nothing yet",
+  "markAllRead": "Mark all as read",
+  "actorSummary": {
+    "fallback": "Someone",
+    "secondaryFallback": "someone",
+    "two": "{{first}} and {{second}}",
+    "many": "{{first}} and {{count}} others",
+    "manyOne": "{{first}} and 1 other"
+  },
+  "items": {
+    "newFollower": "{{actor}} started following you",
+    "commentReplyWithBody": "{{actor}} replied: \"{{body}}\"",
+    "commentReply": "{{actor}} replied to your comment",
+    "commentOnTickWithBody": "{{actor}} commented: \"{{body}}\"",
+    "commentOnTick": "{{actor}} commented on your ascent",
+    "commentOnClimbWithBody": "{{actor}} commented: \"{{body}}\"",
+    "commentOnClimb": "{{actor}} commented on a climb",
+    "voteOnTick": "{{actor}} liked your ascent",
+    "voteOnComment": "{{actor}} liked your comment",
+    "proposalCreated": "{{actor}} created a new proposal",
+    "proposalApproved": "{{actor}}'s proposal was approved",
+    "proposalRejected": "{{actor}}'s proposal was rejected",
+    "proposalVote": "{{actor}} voted on your proposal",
+    "newClimb": "{{actor}} created a new climb",
+    "newClimbsSyncedSetter": "{{setter}} set new climbs",
+    "newClimbsSynced": "{{actor}} set new climbs",
+    "default": "You have a new notification"
+  },
+  "time": {
+    "justNow": "just now",
+    "minutes": "{{count}}m",
+    "hours": "{{count}}h",
+    "days": "{{count}}d"
+  }
+}

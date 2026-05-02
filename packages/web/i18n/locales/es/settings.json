@@ -1,0 +1,271 @@
+{
+  "metadata": {
+    "settings": {
+      "title": "Ajustes",
+      "description": "Gestiona tu cuenta de Boardsesh, tu perfil y tus preferencias"
+    }
+  },
+  "title": "Ajustes",
+  "loading": {
+    "profileError": "No se pudo cargar el perfil"
+  },
+  "profile": {
+    "title": "Perfil",
+    "subtitle": "Personaliza cómo apareces en Boardsesh",
+    "avatar": {
+      "label": "Foto de perfil",
+      "upload": "Subir",
+      "change": "Cambiar",
+      "remove": "Quitar",
+      "hint": "JPG, PNG, GIF o WebP. Hasta 10 MB — se comprime automáticamente."
+    },
+    "displayName": {
+      "label": "Nombre",
+      "placeholder": "Escribe tu nombre"
+    },
+    "instagram": {
+      "label": "Perfil de Instagram",
+      "placeholder": "https://instagram.com/usuario"
+    },
+    "email": {
+      "label": "Correo",
+      "help": "El correo no se puede cambiar"
+    },
+    "save": "Guardar cambios",
+    "saved": "Ajustes guardados",
+    "saveError": "No se pudieron guardar los ajustes",
+    "validation": {
+      "displayNameTooLong": "El nombre debe tener menos de 100 caracteres",
+      "invalidInstagramUrl": "Introduce una URL válida de perfil de Instagram",
+      "invalidImageType": "Solo se permiten imágenes JPG, PNG, GIF o WebP",
+      "imageTooLarge": "La imagen debe pesar menos de 10 MB",
+      "compressionFailed": "No se pudo comprimir — prueba con una imagen más pequeña"
+    },
+    "avatarUploadFailed": "No se pudo subir la foto de perfil"
+  },
+  "preferences": {
+    "title": "Preferencias de visualización",
+    "subtitle": "Personaliza cómo se muestran los grados y otros datos",
+    "gradeFormat": {
+      "label": "Formato de grados",
+      "vGrade": "V-Grade (V3, V6, ...)",
+      "font": "Fontainebleau (6A, 7C+, ...)"
+    },
+    "appleHealth": {
+      "label": "Apple Health",
+      "switchLabel": "Guardar sesiones en Apple Health automáticamente",
+      "subtitle": "Desactívalo para guardar sesiones solo cuando pulses el botón Guardar en Apple Health."
+    }
+  },
+  "logbook": {
+    "title": "Tu logbook",
+    "subtitle": "Mira y filtra tus vías registradas"
+  },
+  "deleteAccount": {
+    "title": "Eliminar cuenta",
+    "warning": "Elimina tu cuenta y todos los datos asociados de forma permanente. Esta acción no se puede deshacer.",
+    "button": "Eliminar cuenta",
+    "dialog": {
+      "title": "¿Eliminar tu cuenta?",
+      "warning": "Esto es permanente. Tu perfil, los borradores de vías, las entradas del logbook y el resto de datos se eliminarán y no se podrán recuperar.",
+      "checking": "Comprobando tus vías...",
+      "publishedClimbs_one": "Tienes <strong>{{count}}</strong> vía publicada que se conservará tras la eliminación.",
+      "publishedClimbs_other": "Tienes <strong>{{count}}</strong> vías publicadas que se conservarán tras la eliminación.",
+      "removeSetterName": "Quitar mi nombre de aperturista de las vías publicadas",
+      "confirmInstruction": "Escribe <strong>DELETE</strong> para confirmar.",
+      "confirmPlaceholder": "DELETE",
+      "cancel": "Cancelar",
+      "confirm": "Eliminar mi cuenta"
+    },
+    "error": "No se pudo eliminar la cuenta. Inténtalo de nuevo."
+  },
+  "password": {
+    "enabledTitle": "Inicio de sesión con correo y contraseña",
+    "enabledDescription": "El inicio de sesión con contraseña está activo para {{email}}",
+    "title": "Inicio de sesión con correo y contraseña",
+    "description": "Configura una contraseña para iniciar sesión con tu correo. Es útil para navegadores que no admiten Google sign-in (por ejemplo, la app de Boardsesh para iOS).",
+    "linkedProviderInfo_one": "Has iniciado sesión con {{providers}}. Configurar una contraseña no afecta a tu inicio de sesión con {{providers}}.",
+    "linkedProviderInfo_other": "Has iniciado sesión con {{providers}}. Configurar una contraseña no afecta a tu inicio de sesión social.",
+    "passwordLabel": "Contraseña",
+    "passwordPlaceholder": "Contraseña (mínimo 8 caracteres)",
+    "confirmLabel": "Confirmar contraseña",
+    "confirmPlaceholder": "Confirma la contraseña",
+    "submit": "Guardar contraseña",
+    "success": "Contraseña guardada. Ya puedes iniciar sesión con tu correo y contraseña.",
+    "validation": {
+      "enterPassword": "Introduce una contraseña",
+      "tooShort": "La contraseña debe tener al menos 8 caracteres",
+      "tooLong": "La contraseña debe tener menos de 128 caracteres",
+      "confirmRequired": "Confirma tu contraseña",
+      "mismatch": "Las contraseñas no coinciden",
+      "saveError": "No se pudo guardar la contraseña",
+      "retryError": "No se pudo guardar la contraseña. Inténtalo de nuevo."
+    }
+  },
+  "controllers": {
+    "title": "Controladores ESP32",
+    "subtitle": "Registra dispositivos ESP32 para controlar tu tabla a través de un puente Bluetooth. Así puedes usar BoardSesh con las apps oficiales de Kilter/Tension.",
+    "empty": "No hay controladores registrados. Añade un ESP32 para usar BoardSesh con las apps oficiales.",
+    "add": "Añadir controlador",
+    "card": {
+      "unnamed": "Controlador sin nombre",
+      "board": "Tabla:",
+      "layout": "Diseño:",
+      "layoutValue": "{{layoutId}} / Tamaño {{sizeId}}",
+      "lastSeen": "Última conexión:",
+      "delete": "Eliminar controlador",
+      "deleteConfirm": {
+        "title": "Eliminar controlador",
+        "description": "¿Seguro que quieres eliminar este controlador? No se puede deshacer.",
+        "ok": "Sí, eliminar",
+        "cancel": "Cancelar"
+      }
+    },
+    "status": {
+      "online": "Conectado",
+      "offline": "Desconectado",
+      "neverConnected": "Nunca conectado",
+      "never": "Nunca",
+      "justNow": "Ahora mismo",
+      "minutesAgo_one": "Hace {{count}} minuto",
+      "minutesAgo_other": "Hace {{count}} minutos",
+      "hoursAgo_one": "Hace {{count}} hora",
+      "hoursAgo_other": "Hace {{count}} horas"
+    },
+    "register": {
+      "title": "Registrar controlador ESP32",
+      "description": "Registra un nuevo controlador ESP32 para recibir comandos LED de BoardSesh. Recibirás una clave API para configurarla en el dispositivo.",
+      "nameLabel": "Nombre del controlador (opcional)",
+      "namePlaceholder": "Ej.: Tabla del salón",
+      "boardLabel": "Tipo de tabla",
+      "layoutLabel": "Diseño",
+      "sizeLabel": "Tamaño",
+      "setsLabel": "Conjuntos de presas",
+      "submit": "Registrar controlador",
+      "submitting": "Registrando...",
+      "registerError": "No se pudo registrar el controlador"
+    },
+    "apiKey": {
+      "title": "Controlador registrado",
+      "warningTitle": "¡Guarda esta clave API ahora!",
+      "warning": "Esta es la única vez que verás esta clave. Si la pierdes, tendrás que eliminar el controlador y volver a registrarlo.",
+      "registered": "Tu controlador <strong>{{name}}</strong> está registrado.",
+      "instruction": "Introduce esta clave API en la configuración de tu ESP32:",
+      "copy": "Copiar clave API",
+      "done": "Listo",
+      "copySuccess": "Clave API copiada al portapapeles",
+      "copyError": "No se pudo copiar - selecciona y copia manualmente"
+    },
+    "deleteSuccess": "Controlador eliminado",
+    "deleteError": "No se pudo eliminar el controlador"
+  },
+  "aurora": {
+    "title": "Cuentas de Aurora",
+    "subtitle": "Vincula tus cuentas de tabla para importar tus datos de Aurora a Boardsesh, o impórtalos desde un archivo JSON. Sincronizamos automáticamente tu logbook, encadenes y vías DESDE Aurora cada 12 horas. Los datos creados en Boardsesh se quedan locales y no se sincronizan de vuelta con Aurora.",
+    "card": {
+      "boardSuffix": "Board",
+      "username": "Usuario:",
+      "lastSynced": "Última sincronización:",
+      "never": "Nunca",
+      "kilterShutdown": "El backend de Kilter ha sido apagado. Puedes importar tus datos con un archivo JSON exportado de Aurora, o escribir a Aurora Climbing por correo para pedir una exportación.",
+      "notConnected": "No vinculado. Vincula tu cuenta de {{boardName}} para importar tus datos de Aurora, o impórtalos desde un archivo JSON.",
+      "link": "Vincular",
+      "import": "Importar",
+      "requestData": "Pedir tus datos",
+      "unlink": "Desvincular",
+      "unlinkConfirm": {
+        "title": "Quitar vínculo de cuenta",
+        "description": "¿Seguro que quieres desvincular tu cuenta de {{boardName}}?",
+        "ok": "Sí, desvincular"
+      }
+    },
+    "status": {
+      "connected": "Vinculado",
+      "error": "Error",
+      "expired": "Caducado",
+      "syncing": "Sincronizando"
+    },
+    "unsynced": {
+      "title_one": "{{count}} elemento pendiente de sincronizar",
+      "title_other": "{{count}} elementos pendientes de sincronizar",
+      "ascents_one": "{{count}} encadene",
+      "ascents_other": "{{count}} encadenes",
+      "climbs_one": "{{count}} vía",
+      "climbs_other": "{{count}} vías"
+    },
+    "linkDialog": {
+      "title": "Vincular cuenta de {{boardName}}",
+      "description": "Introduce el usuario y la contraseña de tu cuenta de {{boardName}} Board para importar tus datos de Aurora. Tus credenciales se cifran y se guardan de forma segura. Los datos se sincronizan cada 12 horas.",
+      "usernameLabel": "Usuario",
+      "usernamePlaceholder": "Escribe tu usuario",
+      "passwordLabel": "Contraseña",
+      "passwordPlaceholder": "Escribe tu contraseña",
+      "submit": "Vincular cuenta",
+      "submitting": "Vinculando...",
+      "linkError": "No se pudo vincular la cuenta",
+      "linkSuccess": "Cuenta de {{boardName}} vinculada. Tus datos aparecerán en menos de 12 horas."
+    },
+    "unlinkSuccess": "Cuenta desvinculada",
+    "unlinkError": "No se pudo desvincular la cuenta",
+    "import": {
+      "steps": {
+        "climbs": "Importando borradores de vías",
+        "resolving": "Resolviendo nombres de vías",
+        "dedup": "Buscando duplicados",
+        "ascents": "Importando encadenes",
+        "attempts": "Importando intentos",
+        "circuits": "Importando circuitos",
+        "sessions": "Creando sesiones"
+      },
+      "fileLabel": "Subir archivo JSON exportado de Aurora",
+      "tooLarge": "El archivo es demasiado grande (máx. 200 MB). Comprueba que has elegido el archivo correcto.",
+      "parseError": "No se pudo leer el archivo JSON. Comprueba el formato del archivo.",
+      "readError": "No se pudo leer el archivo. Inténtalo de nuevo.",
+      "interrupted": "La importación se interrumpió. El servidor pudo agotar el tiempo de espera. Puede que tus datos se hayan importado parcialmente.",
+      "interruptedShort": "Importación interrumpida",
+      "failed": "Importación fallida",
+      "successCount": "{{count}} elementos importados correctamente",
+      "dialog": {
+        "previewTitle": "Importar datos de Aurora",
+        "importingTitle": "Importando datos de Aurora...",
+        "completeTitle": "Importación completada",
+        "errorTitle": "Importación fallida",
+        "previewIntro": "Importar datos de <strong>{{username}}</strong> a <strong>{{boardName}}</strong>:",
+        "draftClimbs": "{{count}} borradores de vías",
+        "ascents": "{{count}} encadenes",
+        "attempts": "{{count}} intentos",
+        "circuits": "{{count}} circuitos",
+        "previewNote": "Las vías se emparejan por nombre. Las que no se puedan emparejar aparecerán al terminar la importación. Volver a importar el mismo archivo no crea duplicados.",
+        "cancel": "Cancelar",
+        "confirm": "Importar",
+        "close": "Cerrar",
+        "errorTitleShort": "Importación fallida"
+      },
+      "results": {
+        "draftClimbs": "Borradores de vías",
+        "draftClimbsSummary": "{{imported}} importadas, {{skipped}} omitidas, {{failed}} fallidas",
+        "ascents": "Encadenes",
+        "ascentsSummary": "{{imported}} importados, {{skipped}} omitidos (ya existían), {{failed}} sin emparejar",
+        "attempts": "Intentos",
+        "attemptsSummary": "{{imported}} importados, {{skipped}} omitidos (ya existían), {{failed}} sin emparejar",
+        "circuits": "Circuitos",
+        "circuitsSummary": "{{imported}} importados, {{skipped}} omitidos, {{failed}} fallidos",
+        "unresolvedTitle_one": "No se pudo emparejar {{count}} vía",
+        "unresolvedTitle_other": "No se pudieron emparejar {{count}} vías",
+        "unresolvedMore": "...y {{count}} más"
+      }
+    },
+    "kilterEmail": {
+      "subject": "Datos de Kilterboard",
+      "namePlaceholder": "[TU NOMBRE]",
+      "emailPlaceholder": "[TU CORREO]",
+      "body": "¡Hola!\n\nSoy un ex usuario de la app. Me preguntaba si podríais enviarme una copia de mis datos para guardar mis logbooks y otra información para mi seguimiento personal.\n\nMi usuario es {{name}} y debería estar bajo este correo ({{email}}).\n\n¡Gracias!\n\n{{name}}"
+    }
+  },
+  "healthkit": {
+    "save": "Guardar en Apple Health",
+    "saving": "Guardando en Apple Health…",
+    "saved": "Guardado en Apple Health",
+    "retry": "Guardar en Apple Health (reintentar)"
+  }
+}

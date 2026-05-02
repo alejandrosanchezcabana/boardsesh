@@ -1,0 +1,93 @@
+{
+  "metadata": {
+    "profile": {
+      "title": "{{name}}",
+      "description": "Perfil de escalada de {{name}} en Boardsesh",
+      "fallbackTitle": "Perfil",
+      "fallbackDescription": "Mira el perfil de escalada y las estadísticas",
+      "notFoundTitle": "Perfil no encontrado",
+      "notFoundDescription": "No se ha podido encontrar este perfil de escalada.",
+      "ogAlt": "Perfil de escalada de {{name}}"
+    },
+    "statistics": {
+      "title": "Estadísticas"
+    },
+    "sessions": {
+      "title": "Sesiones"
+    },
+    "climbs": {
+      "title": "Bloques creados"
+    },
+    "setter": {
+      "title": "{{name}} - Aperturista",
+      "description": "Bloques creados por {{name}} en Boardsesh",
+      "fallbackTitle": "Perfil de aperturista",
+      "fallbackDescription": "Mira el perfil del aperturista y sus bloques en Boardsesh",
+      "ogAlt": "Perfil de aperturista de {{name}}"
+    }
+  },
+  "page": {
+    "lastThreeMonths": "Últimos 3 meses",
+    "activityChartLabel": "Actividad de los últimos 3 meses",
+    "displayNameFallback": "Escalador"
+  },
+  "nav": {
+    "statistics": {
+      "title": "Estadísticas",
+      "subtitleSent": "{{count}} bloques encadenados",
+      "subtitleEmpty": "Grados, progresión y más"
+    },
+    "sessions": {
+      "title": "Sesiones",
+      "subtitle": "Sesiones de escalada y actividad"
+    },
+    "createdClimbs": {
+      "title": "Bloques creados",
+      "subtitleOwn": "Bloques que has creado",
+      "subtitleOther": "Bloques que ha creado"
+    }
+  },
+  "stats": {
+    "problems": "bloques",
+    "send": "encadene",
+    "flash": "flash",
+    "percentile": "Percentil",
+    "topPercent": "Top {{value}}%",
+    "moreSentThan": "Más bloques encadenados que el {{value}}% de los escaladores",
+    "activity": "Actividad",
+    "gradeDistribution": "Distribución por grados",
+    "flashVsRedpoint": "Flash vs Trabajado",
+    "vPoints": "V-Points",
+    "vPointsTotal": "{{value}} en total",
+    "gradeDistributionAria": "Distribución por grados en todas las tablas",
+    "weeklyAttemptsAria": "Intentos semanales por dificultad",
+    "flashRedpointAria": "Flash vs trabajado por grado",
+    "layoutTooltip": "{{name}}: {{count}} bloques ({{percentage}}%)"
+  },
+  "empty": {
+    "userNotFound": "Usuario no encontrado",
+    "noAscentData": "Sin datos de encadenes en este periodo",
+    "noClimbingData": "Sin datos de escalada en este periodo"
+  },
+  "filter": {
+    "pageTitle": "Estadísticas"
+  },
+  "setter": {
+    "notFoundTitle": "Aperturista no encontrado",
+    "notFoundMessage": "Este perfil de aperturista puede no existir o haber sido eliminado.",
+    "shareAriaLabel": "Compartir perfil del aperturista",
+    "shareTitle": "{{name}} - Aperturista",
+    "shareText": "Echa un vistazo a los bloques de {{name}} en Boardsesh",
+    "linkCopied": "¡Enlace copiado al portapapeles!",
+    "shareFailed": "No se pudo compartir",
+    "follower_one": "seguidor",
+    "follower_other": "seguidores",
+    "climb_one": "bloque",
+    "climb_other": "bloques"
+  },
+  "follow": {
+    "follow": "Seguir",
+    "following": "Siguiendo",
+    "unfollow": "Dejar de seguir"
+  }
+}

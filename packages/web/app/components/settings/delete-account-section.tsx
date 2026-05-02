@@ -14,6 +14,7 @@ import CircularProgress from '@mui/material/CircularProgress';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import Checkbox from '@mui/material/Checkbox';
 import { signOut } from 'next-auth/react';
+import { Trans, useTranslation } from 'react-i18next';
 import { useSnackbar } from '@/app/components/providers/snackbar-provider';
 import { ClientError } from 'graphql-request';
 import { useWsAuthToken } from '@/app/hooks/use-ws-auth-token';
@@ -21,6 +22,7 @@ import { createGraphQLHttpClient } from '@/app/lib/graphql/client';
 import { GET_DELETE_ACCOUNT_INFO, DELETE_ACCOUNT } from '@/app/lib/graphql/operations/account';
 
 export default function DeleteAccountSection() {
+  const { t } = useTranslation('settings');
   const [dialogOpen, setDialogOpen] = useState(false);
   const [confirmText, setConfirmText] = useState('');
   const [deleting, setDeleting] = useState(false);
@@ -92,7 +94,7 @@ export default function DeleteAccountSection() {
       await signOut({ callbackUrl: '/' });
     } catch (error) {
       console.error('Delete account error:', error);
-      let message = 'Failed to delete account. Please try again.';
+      let message = t('deleteAccount.error');
       if (error instanceof ClientError) {
         const serverMessage = error.response?.errors?.[0]?.message;
         if (serverMessage) {
@@ -112,36 +114,40 @@ export default function DeleteAccountSection() {
       <Card>
         <CardContent>
           <Typography variant="h5" gutterBottom>
-            Delete Account
+            {t('deleteAccount.title')}
           </Typography>
           <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-            Permanently delete your account and all associated data. This action cannot be undone.
+            {t('deleteAccount.warning')}
           </Typography>
           <Button variant="outlined" color="error" onClick={handleOpen}>
-            Delete Account
+            {t('deleteAccount.button')}
           </Button>
         </CardContent>
       </Card>
 
       <Dialog open={dialogOpen} onClose={handleClose} maxWidth="sm" fullWidth>
-        <DialogTitle>Delete your account?</DialogTitle>
+        <DialogTitle>{t('deleteAccount.dialog.title')}</DialogTitle>
         <DialogContent>
           <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-            This is permanent. Your profile, draft climbs, logbook entries, and all other data will be deleted and
-            cannot be recovered.
+            {t('deleteAccount.dialog.warning')}
           </Typography>
 
           {loadingInfo && (
             <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-              Checking your climbs...
+              {t('deleteAccount.dialog.checking')}
             </Typography>
           )}
 
           {hasPublishedClimbs && (
             <>
               <Typography variant="body2" sx={{ mb: 1 }}>
-                You have <strong>{publishedClimbCount}</strong> published{' '}
-                {publishedClimbCount === 1 ? 'climb' : 'climbs'} that will be preserved after deletion.
+                <Trans
+                  i18nKey="deleteAccount.dialog.publishedClimbs"
+                  t={t}
+                  count={publishedClimbCount ?? 0}
+                  values={{ count: publishedClimbCount ?? 0 }}
+                  components={{ strong: <strong /> }}
+                />
               </Typography>
               <FormControlLabel
                 control={
@@ -151,20 +157,20 @@ export default function DeleteAccountSection() {
                     disabled={deleting}
                   />
                 }
-                label="Remove my setter name from published climbs"
+                label={t('deleteAccount.dialog.removeSetterName')}
                 sx={{ mb: 2, display: 'flex' }}
               />
             </>
           )}
 
           <Typography variant="body2" sx={{ mb: 2 }}>
-            Type <strong>DELETE</strong> to confirm.
+            <Trans i18nKey="deleteAccount.dialog.confirmInstruction" t={t} components={{ strong: <strong /> }} />
           </Typography>
           <TextField
             autoFocus
             fullWidth
             size="small"
-            placeholder="DELETE"
+            placeholder={t('deleteAccount.dialog.confirmPlaceholder')}
             value={confirmText}
             onChange={(e) => setConfirmText(e.target.value)}
             disabled={deleting}
@@ -172,7 +178,7 @@ export default function DeleteAccountSection() {
         </DialogContent>
         <DialogActions>
           <Button onClick={handleClose} disabled={deleting}>
-            Cancel
+            {t('deleteAccount.dialog.cancel')}
           </Button>
           <Button
             color="error"
@@ -181,7 +187,7 @@ export default function DeleteAccountSection() {
             disabled={!isConfirmed || deleting}
             startIcon={deleting ? <CircularProgress size={16} /> : undefined}
           >
-            Delete My Account
+            {t('deleteAccount.dialog.confirm')}
           </Button>
         </DialogActions>
       </Dialog>

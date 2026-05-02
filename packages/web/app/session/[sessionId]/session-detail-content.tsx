@@ -22,6 +22,7 @@ import ChatBubbleOutlineOutlined from '@mui/icons-material/ChatBubbleOutlineOutl
 import DeleteOutlined from '@mui/icons-material/DeleteOutlined';
 import LocaleLink from '@/app/components/i18n/locale-link';
 import { useLocaleRouter } from '@/app/lib/i18n/use-locale-router';
+import { useTranslation } from 'react-i18next';
 import { useSession } from 'next-auth/react';
 import type {
   SessionDetail,
@@ -96,39 +97,41 @@ function getStatusColor(status: string): 'success' | 'primary' | 'default' {
   return 'default';
 }
 
-function ordinalSuffix(n: number): string {
+type TFunc = (key: string, options?: Record<string, unknown>) => string;
+
+function ordinalSuffix(n: number, t: TFunc): string {
   const mod100 = n % 100;
-  if (mod100 >= 11 && mod100 <= 13) return `${n}th`;
+  if (mod100 >= 11 && mod100 <= 13) return t('detail.ordinalDefault', { n });
   switch (n % 10) {
     case 1:
-      return `${n}st`;
+      return t('detail.ordinalFirst', { n });
     case 2:
-      return `${n}nd`;
+      return t('detail.ordinalSecond', { n });
     case 3:
-      return `${n}rd`;
+      return t('detail.ordinalThird', { n });
     default:
-      return `${n}th`;
+      return t('detail.ordinalDefault', { n });
   }
 }
 
-function formatAttemptText(tick: SessionDetailTick): string | null {
+function formatAttemptText(tick: SessionDetailTick, t: TFunc): string | null {
   if (tick.status === 'flash') return null;
 
   const sessionAttempts = tick.attemptCount;
   const total = tick.totalAttempts;
 
   if (tick.status === 'send') {
-    const parts = [`on ${ordinalSuffix(sessionAttempts)} attempt`];
+    const parts = [t('detail.attemptOnNth', { ordinal: ordinalSuffix(sessionAttempts, t) })];
     if (total != null && total > sessionAttempts) {
-      parts.push(`${total} total`);
+      parts.push(t('detail.totalAttempts', { count: total }));
     }
     return parts.join(', ');
   }
 
   // attempt status
-  const parts = [`${sessionAttempts} attempt${sessionAttempts !== 1 ? 's' : ''}`];
+  const parts = [t('detail.attemptCount', { count: sessionAttempts })];
   if (total != null && total > sessionAttempts) {
-    parts.push(`${total} total`);
+    parts.push(t('detail.totalAttempts', { count: total }));
   }
   return parts.join(', ');
 }
@@ -137,7 +140,7 @@ function formatAttemptText(tick: SessionDetailTick): string | null {
  * Convert session ticks to deduplicated Climb objects for use with ClimbsList.
  * Keeps the first occurrence of each climbUuid.
  */
-function convertSessionTicksToClimbs(ticks: SessionDetailTick[]): Climb[] {
+function convertSessionTicksToClimbs(ticks: SessionDetailTick[], unknownClimbLabel: string): Climb[] {
   const seen = new Map<string, Climb>();
   const order: string[] = [];
 
@@ -148,7 +151,7 @@ function convertSessionTicksToClimbs(ticks: SessionDetailTick[]): Climb[] {
 
     seen.set(tick.climbUuid, {
       uuid: tick.climbUuid,
-      name: tick.climbName || 'Unknown Climb',
+      name: tick.climbName || unknownClimbLabel,
       frames: tick.frames || '',
       angle: tick.angle,
       difficulty: tick.difficultyName || '',
@@ -199,8 +202,9 @@ function SessionTickItem({
   onDelete?: (uuid: string) => void;
   isDeleting?: boolean;
 }) {
+  const { t } = useTranslation('session');
   const [commentsOpen, setCommentsOpen] = useState(false);
-  const attemptText = formatAttemptText(tick);
+  const attemptText = formatAttemptText(tick, t);
 
   return (
     <Box
@@ -219,7 +223,7 @@ function SessionTickItem({
               {!participant?.avatarUrl && <PersonOutlined sx={{ fontSize: 10 }} />}
             </Avatar>
             <Typography variant="caption" sx={{ minWidth: 0 }} noWrap>
-              {participant?.displayName || 'Climber'}
+              {participant?.displayName || t('detail.climberFallback')}
             </Typography>
           </>
         )}
@@ -249,10 +253,10 @@ function SessionTickItem({
           </IconButton>
           {currentUserId && tick.userId === currentUserId && onDelete && (
             <ConfirmPopover
-              title="Delete ascent"
-              description="Are you sure? This cannot be undone."
+              title={t('detail.deleteAscent')}
+              description={t('detail.deleteAscentConfirm')}
               onConfirm={() => onDelete(tick.uuid)}
-              okText="Delete"
+              okText={t('detail.delete')}
               okButtonProps={{ color: 'error' }}
             >
               <IconButton size="small" disabled={isDeleting} sx={{ color: 'text.secondary' }}>
@@ -269,7 +273,7 @@ function SessionTickItem({
       )}
       <Collapse in={commentsOpen} unmountOnExit>
         <Box sx={{ mt: 0.5 }}>
-          <CommentSection entityType="tick" entityId={tick.uuid} title="Comments" />
+          <CommentSection entityType="tick" entityId={tick.uuid} title={t('detail.comments')} />
         </Box>
       </Collapse>
     </Box>
@@ -288,6 +292,7 @@ export default function SessionDetailContent({
   namedBoardName: _namedBoardName,
   tourActiveSection,
 }: SessionDetailContentProps) {
+  const { t } = useTranslation('session');
   const { data: authSession } = useSession();
   const router = useLocaleRouter();
   const deleteTick = useDeleteTick();
@@ -376,7 +381,11 @@ export default function SessionDetailContent({
   }, [participants]);
 
   // Convert ticks to Climb objects for ClimbsList
-  const sessionClimbs = useMemo(() => convertSessionTicksToClimbs(ticks), [ticks]);
+  const unknownClimbLabel = t('detail.unknownClimb');
+  const sessionClimbs = useMemo(
+    () => convertSessionTicksToClimbs(ticks, unknownClimbLabel),
+    [ticks, unknownClimbLabel],
+  );
 
   // Group ticks by climb for rendering tick details below each climb
   const ticksByClimb = useMemo(() => groupTicksByClimbUuid(ticks), [ticks]);
@@ -438,17 +447,17 @@ export default function SessionDetailContent({
 
   const handleShare = useCallback(async () => {
     const shareUrl = `${window.location.origin}/session/${sessionId}`;
-    const name = sessionName || 'Climbing Session';
+    const name = sessionName || t('detail.shareTitle');
     await shareWithFallback({
       url: shareUrl,
       title: name,
-      text: 'Check out this climbing session on Boardsesh',
+      text: t('detail.shareText'),
       trackingEvent: 'Session Shared',
       trackingProps: { sessionId },
-      onClipboardSuccess: () => showMessage('Link copied to clipboard!', 'success'),
-      onError: () => showMessage('Failed to share', 'error'),
+      onClipboardSuccess: () => showMessage(t('detail.shareSuccess'), 'success'),
+      onError: () => showMessage(t('detail.shareError'), 'error'),
     });
-  }, [sessionId, sessionName, showMessage]);
+  }, [sessionId, sessionName, showMessage, t]);
 
   const handleDeleteTick = useCallback(
     (uuid: string) => {
@@ -550,9 +559,9 @@ export default function SessionDetailContent({
     if (inviteContent) {
       sections.push({
         key: 'invite',
-        label: 'Invite',
-        title: 'Invite others to join',
-        defaultSummary: 'Share link or QR code',
+        label: t('detail.sections.invite'),
+        title: t('detail.sections.inviteTitle'),
+        defaultSummary: t('detail.sections.inviteSummary'),
         getSummary: () => [],
         content: inviteContent,
         defaultActive: true,
@@ -561,9 +570,9 @@ export default function SessionDetailContent({
 
     sections.push({
       key: 'activity',
-      label: 'Activity',
-      title: `${sessionClimbs.length} climb${sessionClimbs.length !== 1 ? 's' : ''} logged`,
-      defaultSummary: 'No climbs yet',
+      label: t('detail.sections.activity'),
+      title: t('detail.climbsLogged', { count: sessionClimbs.length }),
+      defaultSummary: t('detail.noClimbsYet'),
       getSummary: () =>
         buildSessionSummaryParts({
           totalFlashes,
@@ -572,6 +581,7 @@ export default function SessionDetailContent({
           tickCount,
           hardestGrade,
           formatGrade: gradeFormatLoaded ? formatGrade : undefined,
+          t,
         }),
       flush: true,
       content:
@@ -597,20 +607,20 @@ export default function SessionDetailContent({
           </VoteSummaryProvider>
         ) : (
           <Typography variant="body2" color="text.secondary">
-            No climbs yet
+            {t('detail.noClimbsYet')}
           </Typography>
         ),
     });
 
     sections.push({
       key: 'analytics',
-      label: 'Analytics',
-      title: 'Grade Distribution',
-      defaultSummary: 'Grades climbed this session',
+      label: t('detail.sections.analytics'),
+      title: t('detail.gradeDistribution'),
+      defaultSummary: t('detail.gradesClimbedThisSession'),
       getSummary: () => {
         if (effectiveGradeDistribution.length === 0) return [];
         const count = effectiveGradeDistribution.length;
-        return [`${count} grade${count !== 1 ? 's' : ''}`];
+        return [t('detail.gradesCount', { count })];
       },
       lazy: true,
       content:
@@ -621,7 +631,7 @@ export default function SessionDetailContent({
               height={160}
               mobileHeight={120}
               gap={3}
-              ariaLabel="Session grade distribution"
+              ariaLabel={t('detail.sessionGradeDistribution')}
             />
             <Box sx={{ display: 'flex', gap: 1.5, justifyContent: 'center', mt: 1 }}>
               {SESSION_GRADE_LEGEND.map((entry) => (
@@ -636,7 +646,7 @@ export default function SessionDetailContent({
           </Box>
         ) : (
           <Typography variant="body2" color="text.secondary">
-            Log some climbs to see your grade breakdown
+            {t('detail.logSomeClimbs')}
           </Typography>
         ),
     });
@@ -674,9 +684,9 @@ export default function SessionDetailContent({
           <IconButton component={LocaleLink} href="/">
             <ArrowBackOutlined />
           </IconButton>
-          <Typography variant="h6">Session Not Found</Typography>
+          <Typography variant="h6">{t('detail.notFound.title')}</Typography>
         </Box>
-        <Typography color="text.secondary">This session could not be found. It may have been removed.</Typography>
+        <Typography color="text.secondary">{t('detail.notFound.subtitle')}</Typography>
       </Box>
     );
   }
@@ -723,7 +733,7 @@ export default function SessionDetailContent({
             </Typography>
           </Box>
           {!isEditing && (
-            <IconButton size="small" onClick={handleShare} aria-label="Share session">
+            <IconButton size="small" onClick={handleShare} aria-label={t('detail.share')}>
               <IosShare fontSize="small" />
             </IconButton>
           )}
@@ -758,7 +768,7 @@ export default function SessionDetailContent({
           <TextField
             value={editDescription}
             onChange={(e) => setEditDescription(e.target.value)}
-            placeholder="Session notes or goal..."
+            placeholder={t('detail.sessionNotesPlaceholder')}
             size="small"
             fullWidth
             multiline
@@ -817,7 +827,7 @@ export default function SessionDetailContent({
                 </IconButton>
               </Box>
               <Collapse in={sessionCommentsOpen} unmountOnExit>
-                <CommentSection entityType="session" entityId={sessionId} title="Comments" />
+                <CommentSection entityType="session" entityId={sessionId} title={t('detail.comments')} />
               </Collapse>
               {healthKitSummary && (
                 <Box sx={{ mt: 1 }}>
@@ -834,7 +844,7 @@ export default function SessionDetailContent({
 
             {/* Climbs list */}
             <Typography variant="subtitle1" fontWeight={600}>
-              Climbs ({sessionClimbs.length})
+              {t('detail.climbsCount', { count: sessionClimbs.length })}
             </Typography>
           </>
         )}

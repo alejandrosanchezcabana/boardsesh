@@ -14,6 +14,8 @@ import { authOptions } from '@/app/lib/auth/auth-options';
 import { scheduleOverlayWarming } from '@/app/lib/warm-overlay-cache';
 import { buildOverlayUrl } from '@/app/components/board-renderer/util';
 import { formatBoardDisplayName } from '@/app/lib/string-utils';
+import { createPageMetadata } from '@/app/lib/seo/metadata';
+import { getServerTranslation } from '@/app/lib/i18n/server';
 
 type BoardSlugListPageProps = {
   params: Promise<{ board_slug: string; angle: string }>;
@@ -22,37 +24,33 @@ type BoardSlugListPageProps = {
 
 export async function generateMetadata(props: BoardSlugListPageProps): Promise<Metadata> {
   const params = await props.params;
+  const { t, locale } = await getServerTranslation('climbs');
 
   try {
     const board = await resolveBoardBySlug(params.board_slug);
     if (!board) {
-      return { title: 'Climbs | Boardsesh', description: 'Browse climbing routes' };
+      return createPageMetadata({
+        title: t('metadata.list.fallbackTitle'),
+        description: t('metadata.list.fallbackDescription'),
+        locale,
+      });
     }
 
     const boardName = formatBoardDisplayName(board.boardType);
     const angle = params.angle;
-    const title = `${boardName} Climbs at ${angle}\u00B0 | Boardsesh`;
-    const description = `Browse climbing routes on ${boardName} at ${angle}\u00B0`;
-    const canonicalUrl = `/b/${params.board_slug}/${angle}/list`;
 
-    return {
-      title,
-      description,
-      alternates: { canonical: canonicalUrl },
-      openGraph: {
-        title,
-        description,
-        type: 'website',
-        url: canonicalUrl,
-      },
-      twitter: {
-        card: 'summary_large_image',
-        title,
-        description,
-      },
-    };
+    return createPageMetadata({
+      title: t('metadata.list.title', { boardName, angle }),
+      description: t('metadata.list.description', { boardName, angle }),
+      path: `/b/${params.board_slug}/${angle}/list`,
+      locale,
+    });
   } catch {
-    return { title: 'Climbs | Boardsesh', description: 'Browse climbing routes' };
+    return createPageMetadata({
+      title: t('metadata.list.fallbackTitle'),
+      description: t('metadata.list.fallbackDescription'),
+      locale,
+    });
   }
 }
 

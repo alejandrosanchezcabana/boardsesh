@@ -1,0 +1,195 @@
+{
+  "metadata": {
+    "boardHome": {
+      "title": "{{boardName}} on Boardsesh",
+      "description": "Browse climbs and sessions on {{boardName}}",
+      "fallbackTitle": "Board Not Found"
+    },
+    "list": {
+      "title": "{{boardName}} climbs at {{angle}}°",
+      "description": "Browse climbs on {{boardName}} at {{angle}}°",
+      "fallbackTitle": "Climbs",
+      "fallbackDescription": "Browse climbs"
+    },
+    "view": {
+      "title": "{{climbName}} - {{grade}}",
+      "description": "{{climbName}} - {{grade}} by {{setter}}. Quality: {{quality}}/5. Ascents: {{ascents}}",
+      "imageAlt": "{{climbName}} - {{grade}} on {{boardName}} board",
+      "fallbackTitle": "Climb",
+      "fallbackDescription": "View climb details and beta videos"
+    },
+    "play": {
+      "title": "{{climbName}} - {{grade}} | Play Mode",
+      "description": "{{climbName}} - {{grade}} by {{setter}}. Quality: {{quality}}/5. Ascents: {{ascents}}",
+      "fallbackTitle": "Play",
+      "fallbackDescription": "Play a climb on your board"
+    },
+    "create": {
+      "title": "Create a climb",
+      "description": "Set a new climb on your board"
+    },
+    "import": {
+      "title": "Import climbs",
+      "description": "Import MoonBoard climbs from screenshots"
+    },
+    "liked": {
+      "title": "Liked climbs",
+      "description": "Climbs you've liked"
+    },
+    "logbook": {
+      "title": "Logbook",
+      "description": "Your climbing history for this board"
+    }
+  },
+  "list": {
+    "empty": {
+      "title": "No climbs match your filters",
+      "subtitle": "Loosen up the filters and try again"
+    },
+    "loading": "Loading climbs...",
+    "loadMore": "Load more",
+    "noMore": "No more climbs",
+    "viewMode": {
+      "list": "List view",
+      "grid": "Grid view"
+    },
+    "biggerBoard": {
+      "title": "Won't fit your board",
+      "description": "This one runs off the edge of your wall. You'll need a bigger size to send it."
+    },
+    "sort": {
+      "label": "Sort",
+      "ascents": "Ascents",
+      "popular": "Popular",
+      "difficulty": "Difficulty",
+      "name": "Name",
+      "quality": "Quality",
+      "creation": "Creation",
+      "ascending": "Asc",
+      "descending": "Desc"
+    }
+  },
+  "header": {
+    "backToList": "Back to climb list",
+    "createNewClimb": "Create new climb"
+  },
+  "share": {
+    "title": "{{climbName}} on Boardsesh",
+    "text": "Check out {{climbName}} on Boardsesh",
+    "linkCopied": "Link copied",
+    "shareFailed": "Failed to share"
+  },
+  "board": {
+    "connect": "Connect to board",
+    "disconnect": "Disconnect from board",
+    "connectError": "Could not connect to board. Make sure Bluetooth is on and the board is nearby.",
+    "lightingUnavailable": "Board lighting unavailable",
+    "lightingUnavailableIos": "Safari doesn't support Bluetooth. Use the Boardsesh app to light up holds on your board.",
+    "lightingUnavailableBrowser": "This browser doesn't support Bluetooth. Switch to Chrome to light up holds on your board.",
+    "dismiss": "Dismiss",
+    "getApp": "Get the app"
+  },
+  "angleSelector": {
+    "selectAngle": "Select Angle",
+    "loadingStats": "Loading stats...",
+    "noData": "No data",
+    "sends_one": "{{count}} send",
+    "sends_other": "{{count}} sends"
+  },
+  "search": {
+    "drawerTitle": "Search & filter",
+    "categories": {
+      "climbs": "Climbs",
+      "boards": "Boards",
+      "gyms": "Gyms",
+      "users": "Users",
+      "playlists": "Playlists"
+    },
+    "placeholders": {
+      "boards": "Search boards...",
+      "gyms": "Search gyms...",
+      "users": "Search climbers...",
+      "playlists": "Search playlists...",
+      "climbs": "Search climbs...",
+      "setters": "Search setters..."
+    },
+    "fields": {
+      "climbName": "Climb Name",
+      "gradeRange": "Grade Range",
+      "minGrade": "Min",
+      "maxGrade": "Max",
+      "setter": "Setter",
+      "minAscents": "Min Ascents",
+      "minRating": "Min Rating",
+      "any": "Any",
+      "tallClimbsOnly": "Tall Climbs Only",
+      "tallClimbsTooltip": "Show only climbs that use holds in the bottom 8 rows (only available on 10x12 boards)",
+      "gradeAccuracy": "Grade Accuracy",
+      "somewhatAccurate": "Somewhat Accurate (<0.2)",
+      "veryAccurate": "Very Accurate (<0.1)",
+      "extremelyAccurate": "Extremely Accurate (<0.05)",
+      "classicsOnly": "Classics Only"
+    },
+    "panels": {
+      "quality": "Quality",
+      "status": "Ascent Status",
+      "progress": "Progress",
+      "holds": "Holds",
+      "holdsTitle": "Search by Hold",
+      "anyDefault": "Any",
+      "allClimbs": "All climbs"
+    },
+    "status": {
+      "any": "Any",
+      "established": "Established",
+      "establishedTooltip": "Climbs with 2 or more ascents",
+      "projects": "Projects",
+      "projectsTooltip": "Climbs with zero recorded ascents",
+      "myDrafts": "My Drafts",
+      "myDraftsSignedOut": "My Drafts (sign in)",
+      "signInToFilterDrafts": "Sign in to filter by your drafts.",
+      "signInModalTitle": "Sign in to Boardsesh",
+      "signInModalDescription": "Sign in to browse your draft climbs."
+    },
+    "progress": {
+      "signInTitle": "Sign in to filter by your data",
+      "signInBody": "Login to filter climbs based on your attempt and completion history.",
+      "signInModalTitle": "Sign in to Boardsesh",
+      "signInModalDescription": "Create an account to filter by your climbing progress and save favorites.",
+      "hideAttempted": "Hide Attempted",
+      "hideCompleted": "Hide Completed",
+      "onlyAttempted": "Only Attempted",
+      "onlyCompleted": "Only Completed"
+    },
+    "actions": {
+      "search": "Search",
+      "clearAll": "Clear all",
+      "signIn": "Sign In"
+    },
+    "results": {
+      "count": "results"
+    },
+    "setters": {
+      "loading": "Loading...",
+      "openDropdown": "Open dropdown to see setters",
+      "noSetters": "No setters found"
+    },
+    "holds": {
+      "tapTo": "Tap to:",
+      "include": "Include",
+      "exclude": "Exclude",
+      "included": "{{count}} included",
+      "excluded": "{{count}} excluded"
+    },
+    "sortToggle": "Sort"
+  },
+  "statsFilter": {
+    "drawerTitle": "Filters",
+    "fields": {
+      "board": "Board",
+      "timeRange": "Time Range",
+      "from": "From",
+      "to": "To"
+    }
+  }
+}

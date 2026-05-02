@@ -9,10 +9,12 @@ import PlayViewClient from './play-view-client';
 import type { Metadata } from 'next';
 import { scheduleOverlayWarming } from '@/app/lib/warm-overlay-cache';
 import { buildOgBoardRenderUrl } from '@/app/components/board-renderer/util';
-import { OG_IMAGE_HEIGHT, OG_IMAGE_WIDTH } from '@/app/lib/seo/og';
+import { getServerTranslation } from '@/app/lib/i18n/server';
+import { createPageMetadata } from '@/app/lib/seo/metadata';
 
 export async function generateMetadata(props: { params: Promise<BoardRouteParametersWithUuid> }): Promise<Metadata> {
   const params = await props.params;
+  const { t, locale } = await getServerTranslation('climbs');
 
   try {
     const { parsedParams } = await parseRouteParams(params);
@@ -22,9 +24,9 @@ export async function generateMetadata(props: { params: Promise<BoardRouteParame
     const climbName = currentClimb.name || `${boardDetails.board_name} Climb`;
     const climbGrade = currentClimb.difficulty || 'Unknown Grade';
     const setter = currentClimb.setter_username || 'Unknown Setter';
-    const description = `${climbName} - ${climbGrade} by ${setter}. Quality: ${currentClimb.quality_average || 0}/5. Ascents: ${currentClimb.ascensionist_count || 0}`;
+    const quality = currentClimb.quality_average || 0;
+    const ascents = currentClimb.ascensionist_count || 0;
 
-    // Construct the play URL for OG
     const playUrl =
       boardDetails.layout_name && boardDetails.size_name && boardDetails.set_names
         ? constructPlayUrlWithSlugs(
@@ -41,35 +43,22 @@ export async function generateMetadata(props: { params: Promise<BoardRouteParame
 
     const ogImagePath = buildOgBoardRenderUrl(boardDetails, currentClimb.frames);
 
-    return {
-      title: `${climbName} - ${climbGrade} | Play Mode | Boardsesh`,
-      description,
-      openGraph: {
-        title: `${climbName} - ${climbGrade}`,
-        description,
-        type: 'website',
-        url: playUrl,
-        images: [
-          {
-            url: ogImagePath,
-            width: OG_IMAGE_WIDTH,
-            height: OG_IMAGE_HEIGHT,
-            alt: `${climbName} - ${climbGrade} on ${boardDetails.board_name} board`,
-          },
-        ],
-      },
-      twitter: {
-        card: 'summary_large_image',
-        title: `${climbName} - ${climbGrade}`,
-        description,
-        images: [ogImagePath],
-      },
-    };
+    return createPageMetadata({
+      title: t('metadata.play.title', { climbName, grade: climbGrade }),
+      description: t('metadata.play.description', { climbName, grade: climbGrade, setter, quality, ascents }),
+      path: playUrl,
+      locale,
+      robots: { index: false, follow: true },
+      imagePath: ogImagePath,
+      imageAlt: t('metadata.view.imageAlt', { climbName, grade: climbGrade, boardName: boardDetails.board_name }),
+    });
   } catch {
-    return {
-      title: 'Play Mode | Boardsesh',
-      description: 'Play climbing routes in fullscreen mode',
-    };
+    return createPageMetadata({
+      title: t('metadata.play.fallbackTitle'),
+      description: t('metadata.play.fallbackDescription'),
+      locale,
+      robots: { index: false, follow: true },
+    });
   }
 }
 

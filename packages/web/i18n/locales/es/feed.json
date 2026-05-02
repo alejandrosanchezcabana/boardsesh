@@ -1,0 +1,88 @@
+{
+  "metadata": {
+    "feed": {
+      "title": "Actividad",
+      "description": "Mira lo que están escalando los que sigues."
+    }
+  },
+  "title": "Actividad",
+  "tabs": {
+    "label": "Pestañas de actividad",
+    "sessions": "Sesiones",
+    "proposals": "Propuestas",
+    "comments": "Comentarios"
+  },
+  "comment": {
+    "placeholder": "Escribe un comentario...",
+    "replyPlaceholder": "Escribe una respuesta...",
+    "thoughtsPlaceholder": "Comparte tus pensamientos...",
+    "submit": "Publicar",
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "signInPrompt": "Inicia sesión para comentar.",
+    "discussionTitle": "Discusión",
+    "empty": "Sin comentarios todavía. Di algo.",
+    "deleted": "[eliminado]",
+    "edited": "(editado)",
+    "userFallback": "Usuario",
+    "reply": "Responder",
+    "showRepliesOne": "Mostrar 1 respuesta",
+    "showRepliesMany": "Mostrar {{count}} respuestas",
+    "countOne": "{{count}} comentario",
+    "countMany": "{{count}} comentarios",
+    "sort": {
+      "new": "Nuevos",
+      "top": "Top",
+      "controversial": "Polémicos",
+      "hot": "Populares"
+    },
+    "delete": {
+      "title": "Eliminar comentario",
+      "description": "¿Seguro que quieres eliminar este comentario? No se puede deshacer.",
+      "confirm": "Eliminar",
+      "editAria": "Editar comentario",
+      "deleteAria": "Eliminar comentario"
+    },
+    "errors": {
+      "post": "No se pudo publicar el comentario",
+      "update": "No se pudo actualizar el comentario",
+      "delete": "No se pudo eliminar el comentario",
+      "reply": "No se pudo publicar la respuesta",
+      "loadReplies": "No se pudieron cargar las respuestas"
+    }
+  },
+  "proposal": {
+    "trigger": "Proponer cambio",
+    "drawerTitle": "Crear propuesta",
+    "submit": "Crear propuesta",
+    "submitting": "Creando...",
+    "cancel": "Cancelar",
+    "types": {
+      "grade": "Grado",
+      "classic": "Clásico",
+      "benchmark": "Referencia"
+    },
+    "fields": {
+      "angle": "Ángulo",
+      "proposedGrade": "Grado propuesto",
+      "proposedStatus": "Estado propuesto",
+      "reasonLabel": "Motivo (opcional)",
+      "reasonPlaceholder": "¿Por qué crees que se necesita este cambio?",
+      "yes": "Sí",
+      "no": "No"
+    },
+    "hints": {
+      "classic": "Las propuestas de clásico aplican a todos los ángulos.",
+      "benchmark": "Las propuestas de referencia son por ángulo."
+    },
+    "outlierWarning": "El grado en este ángulo parece atípico comparado con los ángulos adyacentes. Esta propuesta puede aprobarse automáticamente si concuerda con los datos vecinos.",
+    "validation": {
+      "signIn": "Inicia sesión para proponer cambios",
+      "missingValue": "Introduce un valor propuesto",
+      "sameGrade": "El grado propuesto es el mismo que el actual",
+      "noData": "No se pudo crear la propuesta: sin datos",
+      "failed": "No se pudo crear la propuesta"
+    },
+    "created": "Propuesta creada"
+  }
+}

@@ -7,5 +7,81 @@
   "languages": {
     "en-US": "English",
     "es": "Español"
+  },
+  "actions": {
+    "yes": "Sí",
+    "no": "No",
+    "ok": "OK",
+    "cancel": "Cancelar",
+    "save": "Guardar",
+    "delete": "Eliminar",
+    "edit": "Editar",
+    "close": "Cerrar",
+    "back": "Atrás",
+    "next": "Siguiente",
+    "done": "Listo",
+    "retry": "Reintentar",
+    "loadMore": "Ver más",
+    "loading": "Cargando...",
+    "share": "Compartir",
+    "copy": "Copiar",
+    "submit": "Enviar"
+  },
+  "ariaLabels": {
+    "close": "Cerrar",
+    "back": "Atrás",
+    "menu": "Menú",
+    "search": "Buscar",
+    "clearSearch": "Limpiar búsqueda",
+    "openFilters": "Abrir filtros",
+    "openStatsFilters": "Abrir filtros de estadísticas",
+    "shareProfile": "Compartir perfil",
+    "settings": "Ajustes",
+    "notifications": "Notificaciones",
+    "searchClimbsByName": "Buscar bloques por nombre"
+  },
+  "header": {
+    "you": "Tú",
+    "profile": "Perfil",
+    "statistics": "Estadísticas",
+    "sessions": "Sesiones",
+    "createdClimbs": "Bloques creados",
+    "auroraMigration": "Migración de Aurora",
+    "searchPlaceholder": "¿Qué quieres escalar?",
+    "searchClimbsPlaceholder": "Busca bloques..."
+  },
+  "share": {
+    "profileTitle": "Perfil de escalada de {{name}}",
+    "profileText": "Mira el perfil de escalada de {{name}} en Boardsesh",
+    "fallbackName": "Mi",
+    "viewedFallbackName": "Escalador",
+    "linkCopied": "¡Enlace copiado!",
+    "shareFailed": "No se pudo compartir"
+  },
+  "myBoards": {
+    "title": "Mis tablas",
+    "findBoard": "Buscar tabla",
+    "boardDetail": "Tabla",
+    "searchPlaceholder": "Busca por nombre o ubicación...",
+    "ariaFindBoard": "Buscar tabla",
+    "ariaCreateBoard": "Crear tabla",
+    "empty": "Aún no tienes tablas. Crea una desde el selector de tablas."
+  },
+  "loading": {
+    "messages": [
+      "Preparando tu tabla...",
+      "Configurando rutas...",
+      "Calentando la pared...",
+      "Cargando presas...",
+      "Casi listos para escalar...",
+      "Encendiendo los LEDs...",
+      "Sincronizando la tabla...",
+      "Calibrando los grados...",
+      "Entrando en flow...",
+      "Revisando condiciones..."
+    ]
+  },
+  "emptyState": {
+    "default": "Sin datos"
   }
 }

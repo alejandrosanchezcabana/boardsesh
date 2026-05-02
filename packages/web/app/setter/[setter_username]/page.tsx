@@ -4,6 +4,9 @@ import SetterProfileContent from './setter-profile-content';
 import styles from '@/app/components/library/playlist-view.module.css';
 import { buildVersionedOgImagePath, OG_IMAGE_HEIGHT, OG_IMAGE_WIDTH } from '@/app/lib/seo/og';
 import { getSetterOgSummary } from '@/app/lib/seo/dynamic-og-data';
+import { getServerTranslation } from '@/app/lib/i18n/server';
+import { getLocale } from '@/app/lib/i18n/get-locale';
+import I18nProvider from '@/app/components/providers/i18n-provider';
 
 export async function generateMetadata({
   params,
@@ -12,13 +15,14 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { setter_username } = await params;
   const username = decodeURIComponent(setter_username);
+  const { t } = await getServerTranslation('profile');
 
   try {
     const summary = await getSetterOgSummary(username);
     const displayName = summary.displayName;
     const ogImagePath = buildVersionedOgImagePath('/api/og/setter', { username }, summary.version);
-    const title = `${displayName} - Setter | Boardsesh`;
-    const description = `Climbs created by ${displayName} on Boardsesh`;
+    const title = `${t('metadata.setter.title', { name: displayName })} | Boardsesh`;
+    const description = t('metadata.setter.description', { name: displayName });
     const canonicalUrl = `/setter/${encodeURIComponent(setter_username)}`;
 
     return {
@@ -34,7 +38,7 @@ export async function generateMetadata({
             url: ogImagePath,
             width: OG_IMAGE_WIDTH,
             height: OG_IMAGE_HEIGHT,
-            alt: `${displayName}'s setter profile`,
+            alt: t('metadata.setter.ogAlt', { name: displayName }),
           },
         ],
       },
@@ -47,18 +51,21 @@ export async function generateMetadata({
     };
   } catch {
     return {
-      title: 'Setter Profile | Boardsesh',
-      description: 'View setter profile and climbs on Boardsesh',
+      title: `${t('metadata.setter.fallbackTitle')} | Boardsesh`,
+      description: t('metadata.setter.fallbackDescription'),
     };
   }
 }
 
 export default async function SetterProfilePage({ params }: { params: Promise<{ setter_username: string }> }) {
   const { setter_username } = await params;
+  const locale = await getLocale();
 
   return (
-    <div className={styles.pageContainer}>
-      <SetterProfileContent username={decodeURIComponent(setter_username)} />
-    </div>
+    <I18nProvider locale={locale} namespaces={['profile']}>
+      <div className={styles.pageContainer}>
+        <SetterProfileContent username={decodeURIComponent(setter_username)} />
+      </div>
+    </I18nProvider>
   );
 }

@@ -27,14 +27,15 @@ import TuneOutlined from '@mui/icons-material/TuneOutlined';
 import { usePathname } from 'next/navigation';
 import BackButton from '@/app/components/back-button';
 import Typography from '@mui/material/Typography';
+import { useTranslation } from 'react-i18next';
 import { useStatsFilterBridge } from '@/app/components/stats-filter-bridge/stats-filter-bridge-context';
 import { useProfileHeaderShare } from '@/app/components/profile-header-bridge/profile-header-bridge-context';
 import { useSnackbar } from '@/app/components/providers/snackbar-provider';
 import styles from './global-header.module.css';
 
-/** Route prefix → title for pages that show a simple title header instead of the default search/sesh header */
+/** Route prefix → translation key for pages that show a simple title header instead of the default search/sesh header */
 const TITLE_HEADER_PAGES: Record<string, string> = {
-  '/aurora-migration': 'Aurora Migration',
+  '/aurora-migration': 'header.auroraMigration',
 };
 
 /** Pages where the global header is completely hidden */
@@ -121,7 +122,10 @@ function CenteredHeader({ left, title, right }: CenteredHeaderProps) {
   );
 }
 
-function getProfileHeaderConfig(pathname: string): ProfileHeaderConfig | null {
+function getProfileHeaderConfig(
+  pathname: string,
+  t: (key: string) => string,
+): ProfileHeaderConfig | null {
   const segments = pathname.split('/').filter(Boolean);
 
   if (segments[0] !== 'profile' || !segments[1]) {
@@ -134,27 +138,28 @@ function getProfileHeaderConfig(pathname: string): ProfileHeaderConfig | null {
   if (!childPage) {
     return {
       userId,
-      title: 'Profile',
+      title: t('header.profile'),
       backUrl: '/',
       isRoot: true,
     };
   }
 
-  const childPageTitles: Record<string, string> = {
-    statistics: 'Statistics',
-    sessions: 'Sessions',
-    climbs: 'Created Climbs',
+  const childPageTitleKeys: Record<string, string> = {
+    statistics: 'header.statistics',
+    sessions: 'header.sessions',
+    climbs: 'header.createdClimbs',
   };
 
   return {
     userId,
-    title: childPageTitles[childPage] ?? 'Profile',
+    title: t(childPageTitleKeys[childPage] ?? 'header.profile'),
     backUrl: `/profile/${userId}`,
     isRoot: false,
   };
 }
 
 export default function GlobalHeader({ boardConfigs }: GlobalHeaderProps) {
+  const { t } = useTranslation('common');
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchRendered, setSearchRendered] = useState(false);
   const { data: session } = useSession();
@@ -172,7 +177,7 @@ export default function GlobalHeader({ boardConfigs }: GlobalHeaderProps) {
   const profileHeaderShare = useProfileHeaderShare();
   const pathname = usePathname();
   const inputRef = useRef<HTMLInputElement>(null);
-  const profileHeaderConfig = getProfileHeaderConfig(pathname);
+  const profileHeaderConfig = getProfileHeaderConfig(pathname, t);
 
   // Unmount drawer trees after close animation finishes to avoid rendering
   // MUI Modal/Portal/FocusTrap infrastructure on every parent re-render.
@@ -184,39 +189,39 @@ export default function GlobalHeader({ boardConfigs }: GlobalHeaderProps) {
     if (!session?.user?.id) return;
 
     const shareUrl = `${window.location.origin}/profile/${session.user.id}`;
-    const displayName = session.user.name || 'My';
+    const displayName = session.user.name || t('share.fallbackName');
 
     void shareWithFallback({
       url: shareUrl,
-      title: `${displayName}'s climbing profile`,
-      text: `Check out ${displayName}'s climbing profile on Boardsesh`,
+      title: t('share.profileTitle', { name: displayName }),
+      text: t('share.profileText', { name: displayName }),
       trackingEvent: 'Profile Shared',
       trackingProps: { source: 'you-header' },
     });
-  }, [session]);
+  }, [session, t]);
 
   const handleShareViewedProfile = useCallback(async () => {
     if (!profileHeaderConfig?.isRoot || !profileHeaderShare.isActive) return;
 
-    const displayName = profileHeaderShare.displayName || 'Climber';
+    const displayName = profileHeaderShare.displayName || t('share.viewedFallbackName');
     const shareUrl = `${window.location.origin}/profile/${profileHeaderConfig.userId}`;
 
     await shareWithFallback({
       url: shareUrl,
-      title: `${displayName}'s climbing profile`,
-      text: `Check out ${displayName}'s climbing profile on Boardsesh`,
+      title: t('share.profileTitle', { name: displayName }),
+      text: t('share.profileText', { name: displayName }),
       trackingEvent: 'Profile Shared',
       trackingProps: {
         source: 'profile-header',
         userId: profileHeaderConfig.userId,
       },
-      onClipboardSuccess: () => showMessage('Link copied to clipboard!', 'success'),
-      onError: () => showMessage('Failed to share', 'error'),
+      onClipboardSuccess: () => showMessage(t('share.linkCopied'), 'success'),
+      onError: () => showMessage(t('share.shareFailed'), 'error'),
     });
-  }, [profileHeaderConfig, profileHeaderShare.displayName, profileHeaderShare.isActive, showMessage]);
+  }, [profileHeaderConfig, profileHeaderShare.displayName, profileHeaderShare.isActive, showMessage, t]);
 
   const notificationButton = (
-    <IconButton component={LocaleLink} href="/notifications" aria-label="Notifications" size="small">
+    <IconButton component={LocaleLink} href="/notifications" aria-label={t('ariaLabels.notifications')} size="small">
       <Badge
         badgeContent={notificationUnreadCount}
         color="error"
@@ -240,19 +245,19 @@ export default function GlobalHeader({ boardConfigs }: GlobalHeaderProps) {
         left={
           <div className={styles.headerActions}>
             <UserDrawer boardConfigs={boardConfigs} />
-            <IconButton component={LocaleLink} href="/settings" aria-label="Settings" size="small">
+            <IconButton component={LocaleLink} href="/settings" aria-label={t('ariaLabels.settings')} size="small">
               <SettingsOutlined />
             </IconButton>
           </div>
         }
-        title="You"
+        title={t('header.you')}
         right={
           <div className={styles.headerActions}>
             {statsFilterBridge.isActive && (
               <div className={styles.filterButton}>
                 <IconButton
                   onClick={() => statsFilterBridge.openFilterDrawer?.()}
-                  aria-label="Open stats filters"
+                  aria-label={t('ariaLabels.openStatsFilters')}
                   size="small"
                 >
                   <TuneOutlined />
@@ -261,7 +266,7 @@ export default function GlobalHeader({ boardConfigs }: GlobalHeaderProps) {
               </div>
             )}
             {session?.user?.id && (
-              <IconButton onClick={handleShareOwnProfile} aria-label="Share profile" size="small">
+              <IconButton onClick={handleShareOwnProfile} aria-label={t('ariaLabels.shareProfile')} size="small">
                 <IosShareOutlined />
               </IconButton>
             )}
@@ -279,12 +284,12 @@ export default function GlobalHeader({ boardConfigs }: GlobalHeaderProps) {
         <UserDrawer boardConfigs={boardConfigs} />
         <Box sx={{ flex: 1 }} />
         {session?.user?.id && (
-          <IconButton onClick={handleShareOwnProfile} aria-label="Share profile" size="small">
+          <IconButton onClick={handleShareOwnProfile} aria-label={t('ariaLabels.shareProfile')} size="small">
             <IosShareOutlined />
           </IconButton>
         )}
         {notificationButton}
-        <IconButton component={LocaleLink} href="/settings" aria-label="Settings" size="small">
+        <IconButton component={LocaleLink} href="/settings" aria-label={t('ariaLabels.settings')} size="small">
           <SettingsOutlined />
         </IconButton>
       </header>
@@ -320,7 +325,7 @@ export default function GlobalHeader({ boardConfigs }: GlobalHeaderProps) {
               <div className={styles.filterButton}>
                 <IconButton
                   onClick={() => statsFilterBridge.openFilterDrawer?.()}
-                  aria-label="Open stats filters"
+                  aria-label={t('ariaLabels.openStatsFilters')}
                   size="small"
                 >
                   <TuneOutlined />
@@ -329,7 +334,7 @@ export default function GlobalHeader({ boardConfigs }: GlobalHeaderProps) {
               </div>
             )}
             {!statsFilterBridge.isActive && profileHeaderConfig.isRoot && profileHeaderShare.isActive && (
-              <IconButton onClick={handleShareViewedProfile} aria-label="Share profile" size="small">
+              <IconButton onClick={handleShareViewedProfile} aria-label={t('ariaLabels.shareProfile')} size="small">
                 <IosShareOutlined />
               </IconButton>
             )}
@@ -369,11 +374,11 @@ export default function GlobalHeader({ boardConfigs }: GlobalHeaderProps) {
     }
   };
 
-  const searchPlaceholder = useClimbSearchBridge ? 'Search climbs...' : 'What do you want to climb?';
+  const searchPlaceholder = useClimbSearchBridge ? t('header.searchClimbsPlaceholder') : t('header.searchPlaceholder');
 
   // Simple title header for specific pages (back button + title, no search/sesh)
   if (titleHeaderPage) {
-    return <CenteredHeader left={<BackButton fallbackUrl="/" />} title={titleHeaderPage[1]} />;
+    return <CenteredHeader left={<BackButton fallbackUrl="/" />} title={t(titleHeaderPage[1])} />;
   }
 
   return (
@@ -391,7 +396,7 @@ export default function GlobalHeader({ boardConfigs }: GlobalHeaderProps) {
             value={useClimbSearchBridge ? nameFilter : ''}
             onChange={(e) => setNameFilter?.(e.target.value)}
             onFocus={handleSearchFocus}
-            aria-label="Search climbs by name"
+            aria-label={t('ariaLabels.searchClimbsByName')}
             slotProps={{
               input: {
                 readOnly: !useClimbSearchBridge,
@@ -406,7 +411,7 @@ export default function GlobalHeader({ boardConfigs }: GlobalHeaderProps) {
                       <IconButton
                         size="small"
                         onClick={() => setNameFilter?.('')}
-                        aria-label="Clear search"
+                        aria-label={t('ariaLabels.clearSearch')}
                         edge="end"
                         sx={{ padding: '2px' }}
                       >
@@ -421,7 +426,7 @@ export default function GlobalHeader({ boardConfigs }: GlobalHeaderProps) {
 
         {useClimbSearchBridge && (
           <div className={styles.filterButton}>
-            <IconButton onClick={handleFilterClick} aria-label="Open filters" size="small">
+            <IconButton onClick={handleFilterClick} aria-label={t('ariaLabels.openFilters')} size="small">
               <FilterListOutlined />
             </IconButton>
             {nonNameFiltersActive && <span className={styles.filterActiveIndicator} />}

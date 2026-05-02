@@ -7,6 +7,7 @@ import MuiButton from '@mui/material/Button';
 import MuiTypography from '@mui/material/Typography';
 import CircularProgress from '@mui/material/CircularProgress';
 import NotificationsNoneOutlined from '@mui/icons-material/NotificationsNoneOutlined';
+import { useTranslation } from 'react-i18next';
 import { useLocaleRouter } from '@/app/lib/i18n/use-locale-router';
 import type { GroupedNotification, GroupedNotificationConnection } from '@boardsesh/shared-schema';
 import { useUnreadNotificationCount } from '@/app/hooks/use-unread-notification-count';
@@ -20,6 +21,7 @@ type NotificationListProps = {
 };
 
 export default function NotificationList({ initialData }: NotificationListProps) {
+  const { t } = useTranslation('notifications');
   const unreadCount = useUnreadNotificationCount();
   const { groupedNotifications, isLoading, hasMore, isFetchingMore, fetchMore } = useGroupedNotifications(
     initialData ?? undefined,
@@ -86,7 +88,7 @@ export default function NotificationList({ initialData }: NotificationListProps)
           {groupedNotifications.length > 0 && unreadCount > 0 && (
             <Box sx={{ display: 'flex', justifyContent: 'flex-end', px: 2, py: 1 }}>
               <MuiButton onClick={() => markAllAsReadMutation.mutate()} size="small" sx={{ textTransform: 'none' }}>
-                Mark all as read
+                {t('markAllRead')}
               </MuiButton>
             </Box>
           )}
@@ -96,7 +98,7 @@ export default function NotificationList({ initialData }: NotificationListProps)
             <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', py: 6, gap: 1 }}>
               <NotificationsNoneOutlined sx={{ fontSize: 40, color: 'var(--neutral-300)' }} />
               <MuiTypography variant="body2" color="text.secondary">
-                Nothing yet
+                {t('empty')}
               </MuiTypography>
             </Box>
           ) : (

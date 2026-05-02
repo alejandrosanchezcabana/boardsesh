@@ -3,6 +3,11 @@
 import * as Sentry from '@sentry/nextjs';
 import { useEffect } from 'react';
 
+// This is a Next.js root error boundary that renders when the root layout itself
+// fails. It lives outside the normal provider tree, so we can't rely on
+// I18nProvider here — we ship hardcoded English. The same copy is mirrored in
+// `errors.json` under `globalError.*` for nested error boundaries that DO have
+// access to i18n.
 export default function GlobalError({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
   useEffect(() => {
     Sentry.captureException(error);

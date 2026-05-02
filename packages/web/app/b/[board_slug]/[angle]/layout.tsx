@@ -14,6 +14,8 @@ import { UISearchParamsProvider } from '@/app/components/queue-control/ui-search
 import { BoardProvider } from '@/app/components/board-provider/board-provider-context';
 import { QueueBridgeInjector } from '@/app/components/queue-control/queue-bridge-context';
 import LastUsedBoardTracker from '@/app/components/board-page/last-used-board-tracker';
+import I18nProvider from '@/app/components/providers/i18n-provider';
+import { getLocale } from '@/app/lib/i18n/get-locale';
 
 import { constructBoardSlugListUrl } from '@/app/lib/url-utils';
 import { themeTokens } from '@/app/theme/theme-config';
@@ -55,17 +57,19 @@ export default async function BoardSlugLayout(props: PropsWithChildren<{ params:
   const boardDetails = getBoardDetailsForBoard(parsedParams);
 
   const listUrl = constructBoardSlugListUrl(board.slug, angle);
+  const locale = await getLocale();
 
   return (
-    <div
-      style={{
-        minHeight: '100dvh',
-        display: 'flex',
-        flexDirection: 'column',
-        padding: 0,
-        background: 'var(--semantic-surface)',
-      }}
-    >
+    <I18nProvider locale={locale} namespaces={['common', 'climbs']}>
+      <div
+        style={{
+          minHeight: '100dvh',
+          display: 'flex',
+          flexDirection: 'column',
+          padding: 0,
+          background: 'var(--semantic-surface)',
+        }}
+      >
       <LastUsedBoardTracker
         url={listUrl}
         boardName={boardDetails.board_name}
@@ -111,6 +115,7 @@ export default async function BoardSlugLayout(props: PropsWithChildren<{ params:
           </ConnectionSettingsProvider>
         </BoardSessionBridge>
       </BoardProvider>
-    </div>
+      </div>
+    </I18nProvider>
   );
 }

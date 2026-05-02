@@ -5,15 +5,21 @@ import { parseBoardRouteParamsWithSlugs } from '@/app/lib/url-utils.server';
 import type { Metadata } from 'next';
 import { getServerAuthToken } from '@/app/lib/auth/server-auth';
 import { serverMyBoards, serverUserPlaylists, cachedDiscoverPlaylists } from '@/app/lib/graphql/server-cached-client';
+import { createNoIndexMetadata } from '@/app/lib/seo/metadata';
+import { getServerTranslation } from '@/app/lib/i18n/server';
+import { getLocale } from '@/app/lib/i18n/get-locale';
+import I18nProvider from '@/app/components/providers/i18n-provider';
 import LibraryPageContent from '@/app/playlists/library-page-content';
 import { getPlaylistLcpPreloadUrl } from '@/app/lib/lcp-preload-url';
 import styles from '@/app/components/library/library.module.css';
 
 export async function generateMetadata(): Promise<Metadata> {
-  return {
-    title: 'Playlists | Boardsesh',
-    description: 'View and manage your climb playlists',
-  };
+  const { t, locale } = await getServerTranslation('playlists');
+  return createNoIndexMetadata({
+    title: t('metadata.library.title'),
+    description: t('metadata.library.description'),
+    locale,
+  });
 }
 
 export default async function PlaylistsPage(props: { params: Promise<BoardRouteParameters> }) {
@@ -26,6 +32,7 @@ export default async function PlaylistsPage(props: { params: Promise<BoardRouteP
 
     // SSR: fetch boards, playlists, and discover data in parallel
     const authToken = await getServerAuthToken();
+    const locale = await getLocale();
     const playlistFilter = { boardType: parsed.board_name, layoutId: parsed.layout_id };
 
     const [initialMyBoards, initialPlaylists, initialDiscoverPlaylists] = await Promise.all([
@@ -37,7 +44,7 @@ export default async function PlaylistsPage(props: { params: Promise<BoardRouteP
     const lcpPreloadUrl = getPlaylistLcpPreloadUrl(initialPlaylists?.[0] ?? initialDiscoverPlaylists?.popular?.[0]);
 
     return (
-      <>
+      <I18nProvider locale={locale} namespaces={['playlists']}>
         {lcpPreloadUrl && <link rel="preload" as="image" href={lcpPreloadUrl} fetchPriority="high" />}
         <div className={styles.pageContainer}>
           <LibraryPageContent
@@ -47,7 +54,7 @@ export default async function PlaylistsPage(props: { params: Promise<BoardRouteP
             initialDiscoverPlaylists={initialDiscoverPlaylists}
           />
         </div>
-      </>
+      </I18nProvider>
     );
   } catch (error) {
     console.error('Error loading playlists page:', error);

@@ -27,6 +27,7 @@ import DeleteOutlined from '@mui/icons-material/DeleteOutlined';
 import AddOutlined from '@mui/icons-material/AddOutlined';
 import ContentCopyOutlined from '@mui/icons-material/ContentCopyOutlined';
 import WarningOutlined from '@mui/icons-material/WarningOutlined';
+import { Trans, useTranslation } from 'react-i18next';
 import type { ControllerInfo } from '@/app/api/internal/controllers/route';
 import { getBoardSelectorOptions } from '@/app/lib/board-constants';
 import type { BoardName } from '@/app/lib/types';
@@ -43,29 +44,30 @@ type ControllerCardProps = {
 };
 
 function ControllerCard({ controller, onRemove, isRemoving }: ControllerCardProps) {
+  const { t } = useTranslation('settings');
   const boardName = controller.boardName.charAt(0).toUpperCase() + controller.boardName.slice(1);
 
   const getStatusTag = () => {
     if (controller.isOnline) {
-      return <Chip icon={<CheckCircleOutlined />} label="Online" size="small" color="success" />;
+      return <Chip icon={<CheckCircleOutlined />} label={t('controllers.status.online')} size="small" color="success" />;
     }
     if (controller.lastSeen) {
-      return <Chip icon={<AccessTimeOutlined />} label="Offline" size="small" color="default" />;
+      return <Chip icon={<AccessTimeOutlined />} label={t('controllers.status.offline')} size="small" color="default" />;
     }
-    return <Chip label="Never connected" size="small" color="default" />;
+    return <Chip label={t('controllers.status.neverConnected')} size="small" color="default" />;
   };
 
   const formatLastSeen = (dateString: string | null) => {
-    if (!dateString) return 'Never';
+    if (!dateString) return t('controllers.status.never');
     const date = new Date(dateString);
     const now = new Date();
     const diffMs = now.getTime() - date.getTime();
     const diffMinutes = Math.floor(diffMs / 60000);
 
-    if (diffMinutes < 1) return 'Just now';
-    if (diffMinutes < 60) return `${diffMinutes} minute${diffMinutes > 1 ? 's' : ''} ago`;
+    if (diffMinutes < 1) return t('controllers.status.justNow');
+    if (diffMinutes < 60) return t('controllers.status.minutesAgo', { count: diffMinutes });
     const diffHours = Math.floor(diffMinutes / 60);
-    if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
+    if (diffHours < 24) return t('controllers.status.hoursAgo', { count: diffHours });
     return date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
   };
 
@@ -74,28 +76,28 @@ function ControllerCard({ controller, onRemove, isRemoving }: ControllerCardProp
       <CardContent>
         <div className={styles.cardHeader}>
           <Typography variant="h5" sx={{ margin: 0 }}>
-            {controller.name || 'Unnamed Controller'}
+            {controller.name || t('controllers.card.unnamed')}
           </Typography>
           {getStatusTag()}
         </div>
         <div className={styles.controllerInfo}>
           <div className={styles.infoRow}>
             <Typography variant="body2" component="span" color="text.secondary">
-              Board:
+              {t('controllers.card.board')}
             </Typography>
             <Chip label={boardName} size="small" color="primary" />
           </div>
           <div className={styles.infoRow}>
             <Typography variant="body2" component="span" color="text.secondary">
-              Layout:
+              {t('controllers.card.layout')}
             </Typography>
             <Typography variant="body2" component="span">
-              {controller.layoutId} / Size {controller.sizeId}
+              {t('controllers.card.layoutValue', { layoutId: controller.layoutId, sizeId: controller.sizeId })}
             </Typography>
           </div>
           <div className={styles.infoRow}>
             <Typography variant="body2" component="span" color="text.secondary">
-              Last seen:
+              {t('controllers.card.lastSeen')}
             </Typography>
             <Typography variant="body2" component="span">
               {formatLastSeen(controller.lastSeen)}
@@ -103,11 +105,11 @@ function ControllerCard({ controller, onRemove, isRemoving }: ControllerCardProp
           </div>
         </div>
         <ConfirmPopover
-          title="Delete controller"
-          description="Are you sure you want to delete this controller? This cannot be undone."
+          title={t('controllers.card.deleteConfirm.title')}
+          description={t('controllers.card.deleteConfirm.description')}
           onConfirm={onRemove}
-          okText="Yes, delete"
-          cancelText="Cancel"
+          okText={t('controllers.card.deleteConfirm.ok')}
+          cancelText={t('controllers.card.deleteConfirm.cancel')}
           okButtonProps={{ color: 'error' }}
         >
           <Button
@@ -117,7 +119,7 @@ function ControllerCard({ controller, onRemove, isRemoving }: ControllerCardProp
             disabled={isRemoving}
             fullWidth
           >
-            Delete Controller
+            {t('controllers.card.delete')}
           </Button>
         </ConfirmPopover>
       </CardContent>
@@ -133,31 +135,36 @@ type ApiKeySuccessModalProps = {
 };
 
 function ApiKeySuccessModal({ isOpen, apiKey, controllerName, onClose }: ApiKeySuccessModalProps) {
+  const { t } = useTranslation('settings');
   const { showMessage } = useSnackbar();
 
   const handleCopy = async () => {
     try {
       await navigator.clipboard.writeText(apiKey);
-      showMessage('API key copied to clipboard', 'success');
+      showMessage(t('controllers.apiKey.copySuccess'), 'success');
     } catch {
-      showMessage('Failed to copy - please select and copy manually', 'error');
+      showMessage(t('controllers.apiKey.copyError'), 'error');
     }
   };
 
   return (
     <Dialog open={isOpen} onClose={onClose} disableEscapeKeyDown maxWidth="sm" fullWidth>
-      <DialogTitle>Controller Registered</DialogTitle>
+      <DialogTitle>{t('controllers.apiKey.title')}</DialogTitle>
       <DialogContent>
         <MuiAlert severity="warning" icon={<WarningOutlined />} sx={{ marginBottom: 2 }}>
-          <AlertTitle>Save this API key now!</AlertTitle>
-          This is the only time you&apos;ll see this key. If you lose it, you&apos;ll need to delete and re-register the
-          controller.
+          <AlertTitle>{t('controllers.apiKey.warningTitle')}</AlertTitle>
+          {t('controllers.apiKey.warning')}
         </MuiAlert>
         <Typography variant="body1" component="p">
-          Your controller <strong>{controllerName || 'Unnamed Controller'}</strong> has been registered.
+          <Trans
+            i18nKey="controllers.apiKey.registered"
+            t={t}
+            values={{ name: controllerName || t('controllers.card.unnamed') }}
+            components={{ strong: <strong /> }}
+          />
         </Typography>
         <Typography variant="body1" component="p" color="text.secondary">
-          Enter this API key in your ESP32 configuration:
+          {t('controllers.apiKey.instruction')}
         </Typography>
         <TextField
           value={apiKey}
@@ -170,12 +177,12 @@ function ApiKeySuccessModal({ isOpen, apiKey, controllerName, onClose }: ApiKeyS
           sx={{ marginBottom: 1 }}
         />
         <Button variant="outlined" startIcon={<ContentCopyOutlined />} onClick={handleCopy} fullWidth>
-          Copy API Key
+          {t('controllers.apiKey.copy')}
         </Button>
       </DialogContent>
       <DialogActions>
         <Button variant="contained" onClick={onClose}>
-          Done
+          {t('controllers.apiKey.done')}
         </Button>
       </DialogActions>
     </Dialog>
@@ -183,6 +190,7 @@ function ApiKeySuccessModal({ isOpen, apiKey, controllerName, onClose }: ApiKeyS
 }
 
 export default function ControllersSection() {
+  const { t } = useTranslation('settings');
   const [controllers, setControllers] = useState<ControllerInfo[]>([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -277,7 +285,7 @@ export default function ControllersSection() {
       selectedBoard && selectedLayout
         ? boardSelectorOptions.sets[`${selectedBoard}-${selectedLayout}-${value}`] || []
         : [];
-    const allSetIds = availableSets.map((s) => s.id);
+    const allSetIds = availableSets.map((set) => set.id);
     setSelectedSets(allSetIds);
   };
 
@@ -308,7 +316,7 @@ export default function ControllersSection() {
 
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.error || 'Failed to register controller');
+        throw new Error(error.error || t('controllers.register.registerError'));
       }
 
       const data = await response.json();
@@ -323,7 +331,7 @@ export default function ControllersSection() {
 
       await fetchControllers();
     } catch (error) {
-      showMessage(error instanceof Error ? error.message : 'Failed to register controller', 'error');
+      showMessage(error instanceof Error ? error.message : t('controllers.register.registerError'), 'error');
     } finally {
       setIsSaving(false);
     }
@@ -340,13 +348,13 @@ export default function ControllersSection() {
 
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.error || 'Failed to delete controller');
+        throw new Error(error.error || t('controllers.deleteError'));
       }
 
-      showMessage('Controller deleted successfully', 'success');
+      showMessage(t('controllers.deleteSuccess'), 'success');
       await fetchControllers();
     } catch (error) {
-      showMessage(error instanceof Error ? error.message : 'Failed to delete controller', 'error');
+      showMessage(error instanceof Error ? error.message : t('controllers.deleteError'), 'error');
     } finally {
       setRemovingId(null);
     }
@@ -373,16 +381,15 @@ export default function ControllersSection() {
     <>
       <Card>
         <CardContent>
-          <Typography variant="h5">ESP32 Controllers</Typography>
+          <Typography variant="h5">{t('controllers.title')}</Typography>
           <Typography variant="body2" component="span" color="text.secondary" className={styles.sectionDescription}>
-            Register ESP32 devices to control your board via Bluetooth bridge. This allows you to use BoardSesh with
-            official Kilter/Tension apps.
+            {t('controllers.subtitle')}
           </Typography>
 
           {controllers.length === 0 ? (
             <div className={styles.emptyState}>
               <Typography variant="body2" component="span" color="text.secondary">
-                No controllers registered. Add an ESP32 to use BoardSesh with official apps.
+                {t('controllers.empty')}
               </Typography>
             </div>
           ) : (
@@ -405,17 +412,16 @@ export default function ControllersSection() {
             fullWidth
             className={styles.addButton}
           >
-            Add Controller
+            {t('controllers.add')}
           </Button>
         </CardContent>
       </Card>
 
       <Dialog open={isModalOpen} onClose={handleModalCancel} maxWidth="sm" fullWidth>
-        <DialogTitle>Register ESP32 Controller</DialogTitle>
+        <DialogTitle>{t('controllers.register.title')}</DialogTitle>
         <DialogContent>
           <Typography variant="body2" component="span" color="text.secondary" className={styles.modalDescription}>
-            Register a new ESP32 controller to receive LED commands from BoardSesh. You&apos;ll receive an API key to
-            configure on the device.
+            {t('controllers.register.description')}
           </Typography>
           <Box
             component="form"
@@ -433,8 +439,8 @@ export default function ControllersSection() {
             sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 2 }}
           >
             <TextField
-              label="Controller Name (optional)"
-              placeholder="e.g., Living Room Board"
+              label={t('controllers.register.nameLabel')}
+              placeholder={t('controllers.register.namePlaceholder')}
               variant="outlined"
               size="small"
               fullWidth
@@ -444,10 +450,10 @@ export default function ControllersSection() {
             />
 
             <FormControl fullWidth required>
-              <InputLabel>Board Type</InputLabel>
+              <InputLabel>{t('controllers.register.boardLabel')}</InputLabel>
               <MuiSelect
                 value={selectedBoard || ''}
-                label="Board Type"
+                label={t('controllers.register.boardLabel')}
                 onChange={(e) => handleBoardChange(e.target.value)}
               >
                 <MenuItem value="kilter">Kilter</MenuItem>
@@ -456,10 +462,10 @@ export default function ControllersSection() {
             </FormControl>
 
             <FormControl fullWidth required disabled={!selectedBoard}>
-              <InputLabel>Layout</InputLabel>
+              <InputLabel>{t('controllers.register.layoutLabel')}</InputLabel>
               <MuiSelect
                 value={selectedLayout ?? ''}
-                label="Layout"
+                label={t('controllers.register.layoutLabel')}
                 onChange={(e) => handleLayoutChange(e.target.value)}
               >
                 {layouts.map(({ id, name }) => (
@@ -471,8 +477,12 @@ export default function ControllersSection() {
             </FormControl>
 
             <FormControl fullWidth required disabled={!selectedLayout}>
-              <InputLabel>Size</InputLabel>
-              <MuiSelect value={selectedSize ?? ''} label="Size" onChange={(e) => handleSizeChange(e.target.value)}>
+              <InputLabel>{t('controllers.register.sizeLabel')}</InputLabel>
+              <MuiSelect
+                value={selectedSize ?? ''}
+                label={t('controllers.register.sizeLabel')}
+                onChange={(e) => handleSizeChange(e.target.value)}
+              >
                 {sizes.map(({ id, name, description }) => (
                   <MenuItem key={id} value={id}>
                     {name} {description}
@@ -482,11 +492,11 @@ export default function ControllersSection() {
             </FormControl>
 
             <FormControl fullWidth required disabled={!selectedSize}>
-              <InputLabel>Hold Sets</InputLabel>
+              <InputLabel>{t('controllers.register.setsLabel')}</InputLabel>
               <MuiSelect
                 multiple
                 value={selectedSets}
-                label="Hold Sets"
+                label={t('controllers.register.setsLabel')}
                 onChange={(e) => handleSetsChange(e.target.value as number[])}
               >
                 {sets.map(({ id, name }) => (
@@ -504,7 +514,7 @@ export default function ControllersSection() {
               startIcon={isSaving ? <CircularProgress size={16} /> : undefined}
               fullWidth
             >
-              {isSaving ? 'Registering...' : 'Register Controller'}
+              {isSaving ? t('controllers.register.submitting') : t('controllers.register.submit')}
             </Button>
           </Box>
         </DialogContent>

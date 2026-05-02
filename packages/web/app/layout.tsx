@@ -20,20 +20,21 @@ import { OnboardingTourProvider } from './components/onboarding/onboarding-tour-
 import OnboardingTourOverlay from './components/onboarding/onboarding-tour-overlay';
 import OnboardingDummySeshMount from './components/onboarding/onboarding-dummy-sesh-mount';
 import { getLocale } from './lib/i18n/get-locale';
+import { getServerTranslation } from './lib/i18n/server';
 import { LOCALE_HTML_LANG, LOCALE_OG } from './lib/i18n/config';
 import { SITE_URL } from './lib/seo/base-url';
 import './components/index.css';
 import type { Viewport, Metadata } from 'next';
 
 export async function generateMetadata(): Promise<Metadata> {
-  const locale = await getLocale();
+  const { t, locale } = await getServerTranslation('marketing');
   return {
     metadataBase: new URL(SITE_URL),
     title: {
-      default: 'Boardsesh - Train smarter on your climbing board',
+      default: t('metadata.home.title'),
       template: '%s | Boardsesh',
     },
-    description: 'Track your sends across Kilter, Tension, and MoonBoard. One app for your boards.',
+    description: t('metadata.home.description'),
     openGraph: {
       type: 'website',
       siteName: 'Boardsesh',

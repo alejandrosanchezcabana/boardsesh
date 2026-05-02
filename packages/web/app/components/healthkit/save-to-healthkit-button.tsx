@@ -3,6 +3,7 @@
 import React from 'react';
 import Button from '@mui/material/Button';
 import FavoriteOutlined from '@mui/icons-material/FavoriteOutlined';
+import { useTranslation } from 'react-i18next';
 import type { SessionSummary } from '@boardsesh/shared-schema';
 import { useHealthKitSync } from '@/app/hooks/use-healthkit-sync';
 
@@ -23,17 +24,18 @@ export default function SaveToHealthKitButton({
   existingWorkoutId,
   size = 'small',
 }: SaveToHealthKitButtonProps) {
+  const { t } = useTranslation('settings');
   const { available, state, save } = useHealthKitSync({ summary, boardType, existingWorkoutId });
 
   if (!available || !summary) return null;
 
-  let label = 'Save to Apple Health';
+  let label = t('healthkit.save');
   if (state === 'saving') {
-    label = 'Saving to Apple Health…';
+    label = t('healthkit.saving');
   } else if (state === 'saved') {
-    label = 'Saved to Apple Health';
+    label = t('healthkit.saved');
   } else if (state === 'error') {
-    label = 'Save to Apple Health (retry)';
+    label = t('healthkit.retry');
   }
 
   return (

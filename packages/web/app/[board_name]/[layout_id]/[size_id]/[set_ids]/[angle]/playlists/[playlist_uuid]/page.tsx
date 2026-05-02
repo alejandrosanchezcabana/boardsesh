@@ -5,13 +5,21 @@ import { parseBoardRouteParamsWithSlugs } from '@/app/lib/url-utils.server';
 import type { Metadata } from 'next';
 import { getServerAuthToken } from '@/app/lib/auth/server-auth';
 import { serverMyBoards } from '@/app/lib/graphql/server-cached-client';
+import { createNoIndexMetadata } from '@/app/lib/seo/metadata';
+import { getServerTranslation } from '@/app/lib/i18n/server';
+import { getLocale } from '@/app/lib/i18n/get-locale';
+import I18nProvider from '@/app/components/providers/i18n-provider';
 import PlaylistDetailContent from '@/app/playlists/[playlist_uuid]/playlist-detail-content';
 import styles from '@/app/components/library/playlist-view.module.css';
 
-export const metadata: Metadata = {
-  title: 'Playlist | Boardsesh',
-  description: 'View playlist details and climbs',
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const { t, locale } = await getServerTranslation('playlists');
+  return createNoIndexMetadata({
+    title: t('metadata.detail.fallbackTitle'),
+    description: t('metadata.detail.fallbackDescription'),
+    locale,
+  });
+}
 
 type PlaylistDetailRouteParams = BoardRouteParameters & {
   playlist_uuid: string;
@@ -27,21 +35,24 @@ export default async function PlaylistDetailPage(props: { params: Promise<Playli
 
     // Fetch user's boards server-side for instant board filter selection
     const authToken = await getServerAuthToken();
+    const locale = await getLocale();
     const initialMyBoards = authToken ? await serverMyBoards(authToken) : null;
 
     return (
-      <div className={styles.pageContainer}>
-        <PlaylistDetailContent
-          playlistUuid={params.playlist_uuid}
-          playlistsBasePath={playlistsBasePath}
-          boardConfig={{
-            boardType: parsed.board_name,
-            layoutId: parsed.layout_id,
-            sizeId: parsed.size_id,
-          }}
-          initialMyBoards={initialMyBoards}
-        />
-      </div>
+      <I18nProvider locale={locale} namespaces={['playlists']}>
+        <div className={styles.pageContainer}>
+          <PlaylistDetailContent
+            playlistUuid={params.playlist_uuid}
+            playlistsBasePath={playlistsBasePath}
+            boardConfig={{
+              boardType: parsed.board_name,
+              layoutId: parsed.layout_id,
+              sizeId: parsed.size_id,
+            }}
+            initialMyBoards={initialMyBoards}
+          />
+        </div>
+      </I18nProvider>
     );
   } catch (error) {
     console.error('Error loading playlist detail page:', error);

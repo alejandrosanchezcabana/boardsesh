@@ -1,16 +1,21 @@
 import React from 'react';
-import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import { getProfileData } from '../profile/[user_id]/server-profile-data';
 import { fetchProfileStatsData } from '../profile/[user_id]/server-profile-stats';
 import { getYouSession } from './you-auth';
 import YouProgressContent from './you-progress-content';
+import { createNoIndexMetadata } from '@/app/lib/seo/metadata';
+import { getServerTranslation } from '@/app/lib/i18n/server';
 
-export const metadata: Metadata = {
-  title: 'You | Boardsesh',
-  description: 'Your climbing dashboard',
-  robots: { index: false, follow: true },
-};
+export async function generateMetadata() {
+  const { t, locale } = await getServerTranslation('you');
+  return createNoIndexMetadata({
+    title: t('metadata.dashboard.title'),
+    description: t('metadata.dashboard.description'),
+    path: '/you',
+    locale,
+  });
+}
 
 export default async function YouPage() {
   const session = await getYouSession();

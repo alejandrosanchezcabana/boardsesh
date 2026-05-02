@@ -21,6 +21,7 @@ import {
   IosShare,
 } from '@mui/icons-material';
 import { useInfiniteQuery } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import type { Climb } from '@/app/lib/types';
 import { executeGraphQL, createGraphQLHttpClient } from '@/app/lib/graphql/client';
 import {
@@ -98,6 +99,7 @@ export default function PlaylistDetailContent({
 }: PlaylistDetailContentProps) {
   const router = useLocaleRouter();
   const { showMessage } = useSnackbar();
+  const { t } = useTranslation('playlists');
   const [playlist, setPlaylist] = useState<Playlist | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -149,14 +151,14 @@ export default function PlaylistDetailContent({
       );
 
       if (!response.playlist) {
-        setError('Playlist not found');
+        setError('not-found');
         return;
       }
 
       setPlaylist(response.playlist);
     } catch (err) {
       console.error('Error fetching playlist:', err);
-      setError('Failed to load playlist');
+      setError('load-failed');
     } finally {
       setLoading(false);
     }
@@ -264,13 +266,13 @@ export default function PlaylistDetailContent({
         token,
       );
 
-      showMessage('Playlist deleted', 'success');
+      showMessage(t('detail.deleted'), 'success');
       router.push(playlistsBasePath);
     } catch (err) {
       console.error('Error deleting playlist:', err);
-      showMessage('Failed to delete playlist', 'error');
+      showMessage(t('detail.deleteFailed'), 'error');
     }
-  }, [token, playlist, playlistUuid, router, showMessage, playlistsBasePath]);
+  }, [token, playlist, playlistUuid, router, showMessage, playlistsBasePath, t]);
 
   const handleBoardSelect = useCallback((board: UserBoard | null) => {
     setSelectedBoard(board);

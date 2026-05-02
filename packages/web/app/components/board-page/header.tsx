@@ -30,6 +30,7 @@ import ChevronLeftOutlined from '@mui/icons-material/ChevronLeftOutlined';
 import AngleSelector from './angle-selector';
 import styles from './header.module.css';
 import LocaleLink from '@/app/components/i18n/locale-link';
+import { useTranslation } from 'react-i18next';
 
 type BoardSeshHeaderProps = {
   boardDetails: BoardDetails;
@@ -38,6 +39,7 @@ type BoardSeshHeaderProps = {
 };
 
 export default function BoardSeshHeader({ boardDetails, angle, isAngleAdjustable }: BoardSeshHeaderProps) {
+  const { t } = useTranslation('climbs');
   const pathname = usePathname();
   const { currentClimb } = useCurrentClimb();
   const { totalSearchResultCount, isFetchingClimbs } = useSearchData();

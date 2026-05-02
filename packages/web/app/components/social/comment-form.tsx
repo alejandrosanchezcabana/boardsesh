@@ -5,6 +5,7 @@ import Box from '@mui/material/Box';
 import TextField from '@mui/material/TextField';
 import MuiButton from '@mui/material/Button';
 import MuiTypography from '@mui/material/Typography';
+import { useTranslation } from 'react-i18next';
 import { themeTokens } from '@/app/theme/theme-config';
 
 const MAX_BODY_LENGTH = 2000;
@@ -23,10 +24,11 @@ export default function CommentForm({
   onSubmit,
   onCancel,
   initialBody = '',
-  placeholder = 'Add a comment...',
+  placeholder,
   autoFocus = false,
-  submitLabel = 'Post',
+  submitLabel,
 }: CommentFormProps) {
+  const { t } = useTranslation('feed');
   const [body, setBody] = useState(initialBody);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -57,6 +59,8 @@ export default function CommentForm({
 
   const isOverLimit = body.length > MAX_BODY_LENGTH;
   const showCounter = body.length > COUNTER_THRESHOLD;
+  const resolvedPlaceholder = placeholder ?? t('comment.placeholder');
+  const resolvedSubmitLabel = submitLabel ?? t('comment.submit');
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
@@ -67,7 +71,7 @@ export default function CommentForm({
         value={body}
         onChange={(e) => setBody(e.target.value)}
         onKeyDown={handleKeyDown}
-        placeholder={placeholder}
+        placeholder={resolvedPlaceholder}
         autoFocus={autoFocus}
         disabled={isSubmitting}
         size="small"
@@ -87,7 +91,7 @@ export default function CommentForm({
         <Box sx={{ display: 'flex', gap: 1 }}>
           {onCancel && (
             <MuiButton size="small" onClick={onCancel} disabled={isSubmitting}>
-              Cancel
+              {t('comment.cancel')}
             </MuiButton>
           )}
           <MuiButton
@@ -96,7 +100,7 @@ export default function CommentForm({
             onClick={handleSubmit}
             disabled={!body.trim() || isOverLimit || isSubmitting}
           >
-            {submitLabel}
+            {resolvedSubmitLabel}
           </MuiButton>
         </Box>
       </Box>

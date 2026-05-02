@@ -5,6 +5,7 @@ import Popover from '@mui/material/Popover';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import Button from '@mui/material/Button';
+import { useTranslation } from 'react-i18next';
 
 type ConfirmPopoverProps = {
   title: React.ReactNode;
@@ -22,11 +23,14 @@ export function ConfirmPopover({
   description,
   onConfirm,
   onCancel,
-  okText = 'Yes',
-  cancelText = 'No',
+  okText,
+  cancelText,
   okButtonProps,
   children,
 }: ConfirmPopoverProps) {
+  const { t } = useTranslation('common');
+  const resolvedOkText = okText ?? t('actions.yes');
+  const resolvedCancelText = cancelText ?? t('actions.no');
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
 
   const handleOpen = (event: React.MouseEvent<HTMLElement>) => {
@@ -64,10 +68,10 @@ export function ConfirmPopover({
           )}
           <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
             <Button size="small" onClick={handleClose}>
-              {cancelText}
+              {resolvedCancelText}
             </Button>
             <Button size="small" variant="contained" onClick={handleConfirm} {...okButtonProps}>
-              {okText}
+              {resolvedOkText}
             </Button>
           </Box>
         </Box>

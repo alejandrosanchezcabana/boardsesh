@@ -3,6 +3,7 @@
 import React from 'react';
 import MuiButton from '@mui/material/Button';
 import CircularProgress from '@mui/material/CircularProgress';
+import { useTranslation } from 'react-i18next';
 import { useFollowToggle } from '@/app/hooks/use-follow-toggle';
 import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
 
@@ -25,6 +26,7 @@ export default function FollowButton({
   getFollowVariables,
   onFollowChange,
 }: FollowButtonProps) {
+  const { t } = useTranslation('profile');
   const { isFollowing, isLoading, isHovered, isAuthenticated, handleToggle, setIsHovered } = useFollowToggle({
     entityId,
     initialIsFollowing,
@@ -41,9 +43,9 @@ export default function FollowButton({
 
   const getButtonLabel = () => {
     if (isLoading) return <CircularProgress size={16} color="inherit" />;
-    if (isFollowing && isHovered) return 'Unfollow';
-    if (isFollowing) return 'Following';
-    return 'Follow';
+    if (isFollowing && isHovered) return t('follow.unfollow');
+    if (isFollowing) return t('follow.following');
+    return t('follow.follow');
   };
 
   return (

@@ -31,6 +31,7 @@ import CircularProgress from '@mui/material/CircularProgress';
 import DeleteIcon from '@mui/icons-material/Delete';
 import AddIcon from '@mui/icons-material/Add';
 import Snackbar from '@mui/material/Snackbar';
+import { useTranslation } from 'react-i18next';
 import { themeTokens } from '@/app/theme/theme-config';
 import { useWsAuthToken } from '@/app/hooks/use-ws-auth-token';
 import { createGraphQLHttpClient } from '@/app/lib/graphql/client';
@@ -45,6 +46,7 @@ import type { CommunityRoleAssignment, CommunityRoleType } from '@boardsesh/shar
 type UserResult = SearchUsersQueryResponse['searchUsers']['results'][number]['user'];
 
 export default function RoleManagement() {
+  const { t } = useTranslation('admin');
   const { token } = useWsAuthToken();
   const [roles, setRoles] = useState<CommunityRoleAssignment[]>([]);
   const [loading, setLoading] = useState(true);
@@ -117,12 +119,12 @@ export default function RoleManagement() {
       setSearchQuery('');
       setSearchResults([]);
       setGrantBoardType('');
-      setSnackbar('Role granted');
+      setSnackbar(t('roles.snackbar.granted'));
       void fetchRoles();
     } catch {
-      setSnackbar('Failed to grant role');
+      setSnackbar(t('roles.snackbar.grantFailed'));
     }
-  }, [token, selectedUser, grantRole, grantBoardType, fetchRoles]);
+  }, [token, selectedUser, grantRole, grantBoardType, fetchRoles, t]);
 
   const handleRevoke = useCallback(
     async (role: CommunityRoleAssignment) => {
@@ -136,13 +138,13 @@ export default function RoleManagement() {
             boardType: role.boardType || null,
           },
         });
-        setSnackbar('Role revoked');
+        setSnackbar(t('roles.snackbar.revoked'));
         void fetchRoles();
       } catch {
-        setSnackbar('Failed to revoke role');
+        setSnackbar(t('roles.snackbar.revokeFailed'));
       }
     },
-    [token, fetchRoles],
+    [token, fetchRoles, t],
   );
 
   const handleCloseDialog = useCallback(() => {
@@ -152,11 +154,14 @@ export default function RoleManagement() {
     setSearchResults([]);
   }, []);
 
+  const fallbackInitial = t('roles.labels.fallbackUserInitial');
+  const fallbackEmpty = t('roles.labels.fallbackEmpty');
+
   return (
     <Box>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
         <Typography variant="h6" sx={{ fontWeight: 600 }}>
-          Community Roles
+          {t('roles.heading')}
         </Typography>
         <Button
           variant="contained"
@@ -168,7 +173,7 @@ export default function RoleManagement() {
             '&:hover': { bgcolor: themeTokens.colors.primaryHover },
           }}
         >
-          Grant Role
+          {t('roles.grant')}
         </Button>
       </Box>
 
@@ -176,12 +181,12 @@ export default function RoleManagement() {
         <Table size="small">
           <TableHead>
             <TableRow>
-              <TableCell>User</TableCell>
-              <TableCell>Role</TableCell>
-              <TableCell>Board</TableCell>
-              <TableCell>Granted By</TableCell>
-              <TableCell>Date</TableCell>
-              <TableCell align="right">Actions</TableCell>
+              <TableCell>{t('roles.table.user')}</TableCell>
+              <TableCell>{t('roles.table.role')}</TableCell>
+              <TableCell>{t('roles.table.board')}</TableCell>
+              <TableCell>{t('roles.table.grantedBy')}</TableCell>
+              <TableCell>{t('roles.table.date')}</TableCell>
+              <TableCell align="right">{t('roles.table.actions')}</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -190,14 +195,14 @@ export default function RoleManagement() {
                 <TableCell>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                     <Avatar src={role.userAvatarUrl || undefined} sx={{ width: 28, height: 28, fontSize: 12 }}>
-                      {role.userDisplayName?.[0] || 'U'}
+                      {role.userDisplayName?.[0] || fallbackInitial}
                     </Avatar>
                     <Typography variant="body2">{role.userDisplayName || role.userId}</Typography>
                   </Box>
                 </TableCell>
                 <TableCell>
                   <Chip
-                    label={role.role === 'admin' ? 'Admin' : 'Leader'}
+                    label={role.role === 'admin' ? t('roles.labels.admin') : t('roles.labels.leader')}
                     size="small"
                     sx={{
                       bgcolor:
@@ -208,8 +213,8 @@ export default function RoleManagement() {
                     }}
                   />
                 </TableCell>
-                <TableCell>{role.boardType || 'Global'}</TableCell>
-                <TableCell>{role.grantedByDisplayName || role.grantedBy || '-'}</TableCell>
+                <TableCell>{role.boardType || t('roles.labels.global')}</TableCell>
+                <TableCell>{role.grantedByDisplayName || role.grantedBy || fallbackEmpty}</TableCell>
                 <TableCell>{new Date(role.createdAt).toLocaleDateString()}</TableCell>
                 <TableCell align="right">
                   <IconButton size="small" onClick={() => handleRevoke(role)}>
@@ -222,7 +227,7 @@ export default function RoleManagement() {
               <TableRow>
                 <TableCell colSpan={6} align="center">
                   <Typography variant="body2" sx={{ color: themeTokens.neutral[400], py: 2 }}>
-                    No roles assigned yet
+                    {t('roles.empty')}
                   </Typography>
                 </TableCell>
               </TableRow>
@@ -233,7 +238,7 @@ export default function RoleManagement() {
 
       {/* Grant Role Dialog */}
       <Dialog open={showGrantDialog} onClose={handleCloseDialog} maxWidth="sm" fullWidth>
-        <DialogTitle>Grant Role</DialogTitle>
+        <DialogTitle>{t('roles.dialog.title')}</DialogTitle>
         <DialogContent>
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 1 }}>
             {/* User search or selected user display */}
@@ -249,7 +254,7 @@ export default function RoleManagement() {
                 }}
               >
                 <Avatar src={selectedUser.avatarUrl || undefined} sx={{ width: 32, height: 32, fontSize: 14 }}>
-                  {selectedUser.displayName?.[0] || 'U'}
+                  {selectedUser.displayName?.[0] || t('roles.dialog.fallbackUserInitial')}
                 </Avatar>
                 <Typography variant="body2" sx={{ flex: 1, fontWeight: 500 }}>
                   {selectedUser.displayName}
@@ -263,18 +268,18 @@ export default function RoleManagement() {
                   }}
                   sx={{ textTransform: 'none', fontSize: 12 }}
                 >
-                  Change
+                  {t('roles.dialog.change')}
                 </Button>
               </Box>
             ) : (
               <Box>
                 <TextField
-                  label="Search user"
+                  label={t('roles.dialog.search.label')}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   size="small"
                   fullWidth
-                  placeholder="Type a name to search..."
+                  placeholder={t('roles.dialog.search.placeholder')}
                   slotProps={{
                     input: {
                       endAdornment: searching ? <CircularProgress size={16} /> : null,
@@ -294,7 +299,7 @@ export default function RoleManagement() {
                         >
                           <ListItemAvatar sx={{ minWidth: 40 }}>
                             <Avatar src={user.avatarUrl || undefined} sx={{ width: 28, height: 28, fontSize: 12 }}>
-                              {user.displayName?.[0] || 'U'}
+                              {user.displayName?.[0] || t('roles.dialog.fallbackUserInitial')}
                             </Avatar>
                           </ListItemAvatar>
                           <ListItemText primary={user.displayName} />
@@ -306,33 +311,33 @@ export default function RoleManagement() {
               </Box>
             )}
             <FormControl size="small" fullWidth>
-              <InputLabel>Role</InputLabel>
+              <InputLabel>{t('roles.dialog.roleLabel')}</InputLabel>
               <Select
                 value={grantRole}
-                label="Role"
+                label={t('roles.dialog.roleLabel')}
                 onChange={(e) => setGrantRole(e.target.value as CommunityRoleType)}
               >
-                <MenuItem value="community_leader">Community Leader</MenuItem>
-                <MenuItem value="admin">Admin</MenuItem>
+                <MenuItem value="community_leader">{t('roles.dialog.roleOptions.communityLeader')}</MenuItem>
+                <MenuItem value="admin">{t('roles.dialog.roleOptions.admin')}</MenuItem>
               </Select>
             </FormControl>
             <FormControl size="small" fullWidth>
-              <InputLabel>Board Type (optional)</InputLabel>
+              <InputLabel>{t('roles.dialog.boardTypeLabel')}</InputLabel>
               <Select
                 value={grantBoardType}
-                label="Board Type (optional)"
+                label={t('roles.dialog.boardTypeLabel')}
                 onChange={(e) => setGrantBoardType(e.target.value)}
               >
-                <MenuItem value="">Global (all boards)</MenuItem>
-                <MenuItem value="kilter">Kilter</MenuItem>
-                <MenuItem value="tension">Tension</MenuItem>
+                <MenuItem value="">{t('roles.dialog.boardTypeOptions.global')}</MenuItem>
+                <MenuItem value="kilter">{t('roles.dialog.boardTypeOptions.kilter')}</MenuItem>
+                <MenuItem value="tension">{t('roles.dialog.boardTypeOptions.tension')}</MenuItem>
               </Select>
             </FormControl>
           </Box>
         </DialogContent>
         <DialogActions>
           <Button onClick={handleCloseDialog} sx={{ textTransform: 'none' }}>
-            Cancel
+            {t('roles.dialog.cancel')}
           </Button>
           <Button
             onClick={handleGrant}
@@ -344,7 +349,7 @@ export default function RoleManagement() {
               '&:hover': { bgcolor: themeTokens.colors.primaryHover },
             }}
           >
-            Grant
+            {t('roles.dialog.submit')}
           </Button>
         </DialogActions>
       </Dialog>

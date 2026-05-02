@@ -1,0 +1,114 @@
+{
+  "metadata": {
+    "admin": {
+      "title": "Panel de admin",
+      "description": "Panel de admin de Boardsesh"
+    }
+  },
+  "title": "Panel de admin",
+  "auth": {
+    "signInRequired": "Inicia sesión para acceder al panel de admin.",
+    "noAccess": "No tienes acceso de admin."
+  },
+  "tabs": {
+    "roles": "Roles",
+    "settings": "Ajustes"
+  },
+  "roles": {
+    "heading": "Roles de la comunidad",
+    "grant": "Asignar rol",
+    "table": {
+      "user": "Usuario",
+      "role": "Rol",
+      "board": "Board",
+      "grantedBy": "Asignado por",
+      "date": "Fecha",
+      "actions": "Acciones"
+    },
+    "labels": {
+      "admin": "Admin",
+      "leader": "Líder",
+      "global": "Global",
+      "fallbackUserInitial": "U",
+      "fallbackEmpty": "-"
+    },
+    "empty": "Aún no hay roles asignados",
+    "dialog": {
+      "title": "Asignar rol",
+      "search": {
+        "label": "Buscar usuario",
+        "placeholder": "Escribe un nombre para buscar..."
+      },
+      "fallbackUserInitial": "U",
+      "change": "Cambiar",
+      "roleLabel": "Rol",
+      "boardTypeLabel": "Tipo de board (opcional)",
+      "boardTypeOptions": {
+        "global": "Global (todos los boards)",
+        "kilter": "Kilter",
+        "tension": "Tension"
+      },
+      "roleOptions": {
+        "communityLeader": "Líder de comunidad",
+        "admin": "Admin"
+      },
+      "cancel": "Cancelar",
+      "submit": "Asignar"
+    },
+    "snackbar": {
+      "granted": "Rol asignado",
+      "grantFailed": "No se pudo asignar el rol",
+      "revoked": "Rol revocado",
+      "revokeFailed": "No se pudo revocar el rol"
+    }
+  },
+  "settings": {
+    "heading": "Ajustes de la comunidad",
+    "scope": {
+      "label": "Alcance",
+      "options": {
+        "global": "Global",
+        "board": "Board",
+        "climb": "Bloque"
+      },
+      "boardTypeLabel": "Tipo de board",
+      "boardTypePlaceholder": "kilter, tension",
+      "climbUuidLabel": "UUID del bloque",
+      "climbUuidPlaceholder": "UUID del bloque"
+    },
+    "table": {
+      "setting": "Ajuste",
+      "description": "Descripción",
+      "value": "Valor"
+    },
+    "rows": {
+      "approvalThreshold": {
+        "label": "Umbral de aprobación",
+        "description": "Votos ponderados para aprobación automática"
+      },
+      "outlierMinAscents": {
+        "label": "Mínimo de ascensiones (outlier)",
+        "description": "Mínimo de ascensiones para detectar outliers"
+      },
+      "outlierGradeDiff": {
+        "label": "Diferencia de grado (outlier)",
+        "description": "Umbral de diferencia de grado para outlier"
+      },
+      "adminVoteWeight": {
+        "label": "Peso del voto admin",
+        "description": "Multiplicador del peso del voto de admins"
+      },
+      "leaderVoteWeight": {
+        "label": "Peso del voto de líder",
+        "description": "Multiplicador del peso del voto de líderes"
+      }
+    },
+    "save": "Guardar todo",
+    "saving": "Guardando...",
+    "snackbar": {
+      "saved_one": "Se guardó {{count}} ajuste",
+      "saved_other": "Se guardaron {{count}} ajustes",
+      "saveFailed": "No se pudieron guardar los ajustes"
+    }
+  }
+}

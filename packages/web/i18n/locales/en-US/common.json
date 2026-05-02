@@ -15,5 +15,81 @@
     "stopParty": "Stop party",
     "partyUnsupported": "Party mode isn't available on this board",
     "clearFailed": "Couldn't clear the board"
+  },
+  "actions": {
+    "yes": "Yes",
+    "no": "No",
+    "ok": "OK",
+    "cancel": "Cancel",
+    "save": "Save",
+    "delete": "Delete",
+    "edit": "Edit",
+    "close": "Close",
+    "back": "Back",
+    "next": "Next",
+    "done": "Done",
+    "retry": "Try again",
+    "loadMore": "Load more",
+    "loading": "Loading...",
+    "share": "Share",
+    "copy": "Copy",
+    "submit": "Submit"
+  },
+  "ariaLabels": {
+    "close": "Close",
+    "back": "Back",
+    "menu": "Menu",
+    "search": "Search",
+    "clearSearch": "Clear search",
+    "openFilters": "Open filters",
+    "openStatsFilters": "Open stats filters",
+    "shareProfile": "Share profile",
+    "settings": "Settings",
+    "notifications": "Notifications",
+    "searchClimbsByName": "Search climbs by name"
+  },
+  "header": {
+    "you": "You",
+    "profile": "Profile",
+    "statistics": "Statistics",
+    "sessions": "Sessions",
+    "createdClimbs": "Created Climbs",
+    "auroraMigration": "Aurora Migration",
+    "searchPlaceholder": "What do you want to climb?",
+    "searchClimbsPlaceholder": "Search climbs..."
+  },
+  "share": {
+    "profileTitle": "{{name}}'s climbing profile",
+    "profileText": "Check out {{name}}'s climbing profile on Boardsesh",
+    "fallbackName": "My",
+    "viewedFallbackName": "Climber",
+    "linkCopied": "Link copied to clipboard!",
+    "shareFailed": "Failed to share"
+  },
+  "myBoards": {
+    "title": "My Boards",
+    "findBoard": "Find a Board",
+    "boardDetail": "Board",
+    "searchPlaceholder": "Search by name or location...",
+    "ariaFindBoard": "Find a board",
+    "ariaCreateBoard": "Create a board",
+    "empty": "No boards yet. Create one from the board selector to get started."
+  },
+  "loading": {
+    "messages": [
+      "Setting up your board...",
+      "Configuring climb routes...",
+      "Preparing the wall...",
+      "Loading hold sets...",
+      "Almost ready to climb...",
+      "Warming up the LEDs...",
+      "Syncing board configuration...",
+      "Calibrating difficulty grades...",
+      "Getting your climbing groove on...",
+      "Checking route conditions..."
+    ]
+  },
+  "emptyState": {
+    "default": "No data"
   }
 }

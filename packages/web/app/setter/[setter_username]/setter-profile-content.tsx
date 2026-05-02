@@ -8,6 +8,7 @@ import Box from '@mui/material/Box';
 import IconButton from '@mui/material/IconButton';
 import { PersonOutlined, SentimentDissatisfiedOutlined, IosShare } from '@mui/icons-material';
 import { useSession } from 'next-auth/react';
+import { useTranslation } from 'react-i18next';
 import BackButton from '@/app/components/back-button';
 import FollowButton from '@/app/components/ui/follow-button';
 import SetterClimbList from '@/app/components/climb-list/setter-climb-list';
@@ -33,6 +34,7 @@ type SetterProfileContentProps = {
 export default function SetterProfileContent({ username }: SetterProfileContentProps) {
   const { data: session } = useSession();
   const { showMessage } = useSnackbar();
+  const { t } = useTranslation('profile');
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState<SetterProfile | null>(null);
 
@@ -62,14 +64,14 @@ export default function SetterProfileContent({ username }: SetterProfileContentP
     const shareUrl = `${window.location.origin}/setter/${encodeURIComponent(username)}`;
     await shareWithFallback({
       url: shareUrl,
-      title: `${shareDisplayName} - Setter`,
-      text: `Check out ${shareDisplayName}'s climbs on Boardsesh`,
+      title: t('setter.shareTitle', { name: shareDisplayName }),
+      text: t('setter.shareText', { name: shareDisplayName }),
       trackingEvent: 'Setter Shared',
       trackingProps: { username },
-      onClipboardSuccess: () => showMessage('Link copied to clipboard!', 'success'),
-      onError: () => showMessage('Failed to share', 'error'),
+      onClipboardSuccess: () => showMessage(t('setter.linkCopied'), 'success'),
+      onError: () => showMessage(t('setter.shareFailed'), 'error'),
     });
-  }, [username, shareDisplayName, showMessage]);
+  }, [username, shareDisplayName, showMessage, t]);
 
   if (loading) {
     return (
@@ -83,8 +85,8 @@ export default function SetterProfileContent({ username }: SetterProfileContentP
     return (
       <div className={styles.errorContainer}>
         <SentimentDissatisfiedOutlined className={styles.errorIcon} />
-        <div className={styles.errorTitle}>Setter Not Found</div>
-        <div className={styles.errorMessage}>This setter profile may not exist or may have been removed.</div>
+        <div className={styles.errorTitle}>{t('setter.notFoundTitle')}</div>
+        <div className={styles.errorMessage}>{t('setter.notFoundMessage')}</div>
       </div>
     );
   }
@@ -98,7 +100,7 @@ export default function SetterProfileContent({ username }: SetterProfileContentP
       {/* Back Button & Share */}
       <div className={styles.actionsSection}>
         <BackButton fallbackUrl="/" />
-        <IconButton onClick={handleShare} aria-label="Share setter profile">
+        <IconButton onClick={handleShare} aria-label={t('setter.shareAriaLabel')}>
           <IosShare />
         </IconButton>
       </div>
@@ -124,10 +126,10 @@ export default function SetterProfileContent({ username }: SetterProfileContentP
               </Typography>
               <div className={styles.heroMeta}>
                 <span className={styles.heroMetaItem}>
-                  {profile.followerCount} {profile.followerCount === 1 ? 'follower' : 'followers'}
+                  {profile.followerCount} {t('setter.follower', { count: profile.followerCount })}
                 </span>
                 <span className={styles.heroMetaItem}>
-                  {profile.climbCount} {profile.climbCount === 1 ? 'climb' : 'climbs'}
+                  {profile.climbCount} {t('setter.climb', { count: profile.climbCount })}
                 </span>
               </div>
               <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mb: 1 }}>
