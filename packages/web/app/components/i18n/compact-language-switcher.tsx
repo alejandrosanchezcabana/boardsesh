@@ -3,6 +3,7 @@
 import React, { Suspense } from 'react';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { useTranslation } from 'react-i18next';
+import Box from '@mui/material/Box';
 import IconButton from '@mui/material/IconButton';
 import Tooltip from '@mui/material/Tooltip';
 import {
@@ -20,17 +21,29 @@ const FLAGS: Record<Locale, string> = {
   es: '🇪🇸',
 };
 const ONE_YEAR_SECONDS = 60 * 60 * 24 * 365;
+const flagSx = { fontSize: 20, lineHeight: 1 };
 
 function nextLocaleAfter(current: Locale): Locale {
   const idx = SUPPORTED_LOCALES.indexOf(current);
   return SUPPORTED_LOCALES[(idx + 1) % SUPPORTED_LOCALES.length];
 }
 
-function CompactLanguageSwitcherInner() {
+type LabelProps = {
+  ariaLabel: string;
+  flag: string;
+};
+
+function CompactLanguageSwitcherInner({
+  ariaLabelTemplate,
+  switchToTemplate,
+}: {
+  ariaLabelTemplate: (label: string) => string;
+  switchToTemplate: (label: string) => string;
+}) {
   const router = useRouter();
   const pathname = usePathname() ?? '/';
   const searchParams = useSearchParams();
-  const { i18n, t } = useTranslation('common');
+  const { i18n } = useTranslation('common');
   const current: Locale = isSupportedLocale(i18n.language) ? i18n.language : DEFAULT_LOCALE;
   const next = nextLocaleAfter(current);
 
@@ -44,34 +57,47 @@ function CompactLanguageSwitcherInner() {
   };
 
   return (
-    <Tooltip title={t('languageSwitcher.switchTo', { language: LOCALE_LABELS[next] })}>
-      <IconButton
-        onClick={handleClick}
-        aria-label={t('languageSwitcher.ariaLabelWithCurrent', { language: LOCALE_LABELS[current] })}
-        size="small"
-      >
-        <span style={{ fontSize: 20, lineHeight: 1 }} aria-hidden>
+    <Tooltip title={switchToTemplate(LOCALE_LABELS[next])}>
+      <IconButton onClick={handleClick} aria-label={ariaLabelTemplate(LOCALE_LABELS[current])} size="small">
+        <Box component="span" sx={flagSx} aria-hidden>
           {FLAGS[current]}
-        </span>
+        </Box>
       </IconButton>
     </Tooltip>
   );
 }
 
-function CompactLanguageSwitcherFallback() {
+function CompactLanguageSwitcherFallback({ ariaLabel, flag }: LabelProps) {
   return (
-    <IconButton disabled size="small" aria-label="Language">
-      <span style={{ fontSize: 20, lineHeight: 1 }} aria-hidden>
-        {FLAGS[DEFAULT_LOCALE]}
-      </span>
+    <IconButton disabled size="small" aria-label={ariaLabel}>
+      <Box component="span" sx={flagSx} aria-hidden>
+        {flag}
+      </Box>
     </IconButton>
   );
 }
 
 export default function CompactLanguageSwitcher() {
+  // Resolve translations at the parent so the Suspense fallback (which can't
+  // call hooks during the suspended render) still announces in the user's
+  // active language. The fallback shows for ~one tick while useSearchParams
+  // resolves; resolved labels prevent screen readers from reading English
+  // chrome on a Spanish page.
+  const { i18n, t } = useTranslation('common');
+  const fallbackLocale: Locale = isSupportedLocale(i18n.language) ? i18n.language : DEFAULT_LOCALE;
+  const ariaLabelTemplate = (label: string) => t('languageSwitcher.ariaLabelWithCurrent', { language: label });
+  const switchToTemplate = (label: string) => t('languageSwitcher.switchTo', { language: label });
+
   return (
-    <Suspense fallback={<CompactLanguageSwitcherFallback />}>
-      <CompactLanguageSwitcherInner />
+    <Suspense
+      fallback={
+        <CompactLanguageSwitcherFallback
+          ariaLabel={ariaLabelTemplate(LOCALE_LABELS[fallbackLocale])}
+          flag={FLAGS[fallbackLocale]}
+        />
+      }
+    >
+      <CompactLanguageSwitcherInner ariaLabelTemplate={ariaLabelTemplate} switchToTemplate={switchToTemplate} />
     </Suspense>
   );
 }

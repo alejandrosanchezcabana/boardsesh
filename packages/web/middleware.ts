@@ -71,7 +71,10 @@ export function middleware(request: NextRequest) {
     if (isSupportedLocale(cookieLocale) && cookieLocale !== DEFAULT_LOCALE) {
       const target = new URL(`/${cookieLocale}${pathname}`, request.url);
       target.search = request.nextUrl.search;
-      return NextResponse.redirect(target, 308);
+      // 307 (not 308): browsers cache 308 indefinitely, so a user who
+      // clears their locale cookie would still be redirected to /es/...
+      // from the browser cache. 307 is revalidated on every request.
+      return NextResponse.redirect(target, 307);
     }
   }
 
