@@ -20,8 +20,8 @@ import CloseOutlined from '@mui/icons-material/CloseOutlined';
 import CheckOutlined from '@mui/icons-material/CheckOutlined';
 import ChatBubbleOutlineOutlined from '@mui/icons-material/ChatBubbleOutlineOutlined';
 import DeleteOutlined from '@mui/icons-material/DeleteOutlined';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import LocaleLink from '@/app/components/i18n/locale-link';
+import { useLocaleRouter } from '@/app/lib/i18n/use-locale-router';
 import { useSession } from 'next-auth/react';
 import type {
   SessionDetail,
@@ -289,7 +289,7 @@ export default function SessionDetailContent({
   tourActiveSection,
 }: SessionDetailContentProps) {
   const { data: authSession } = useSession();
-  const router = useRouter();
+  const router = useLocaleRouter();
   const deleteTick = useDeleteTick();
   const { showMessage } = useSnackbar();
   const queueActions = useOptionalQueueActions();
@@ -671,7 +671,7 @@ export default function SessionDetailContent({
     return (
       <Box sx={{ p: 2 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
-          <IconButton component={Link} href="/">
+          <IconButton component={LocaleLink} href="/">
             <ArrowBackOutlined />
           </IconButton>
           <Typography variant="h6">Session Not Found</Typography>
@@ -700,7 +700,7 @@ export default function SessionDetailContent({
             borderBottom: `1px solid ${themeTokens.neutral[200]}`,
           }}
         >
-          <IconButton component={Link} href="/" size="small">
+          <IconButton component={LocaleLink} href="/" size="small">
             <ArrowBackOutlined />
           </IconButton>
           <Box sx={{ flex: 1, minWidth: 0 }}>

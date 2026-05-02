@@ -20,7 +20,8 @@ import BoardScrollCard from '@/app/components/board-scroll/board-scroll-card';
 import { useCreateSession } from '@/app/hooks/use-create-session';
 import { useSnackbar } from '@/app/components/providers/snackbar-provider';
 import { useSession } from 'next-auth/react';
-import { useRouter, usePathname } from 'next/navigation';
+import { usePathname } from 'next/navigation';
+import { useLocaleRouter } from '@/app/lib/i18n/use-locale-router';
 import {
   constructBoardSlugListUrl,
   getBaseBoardPath,
@@ -50,7 +51,7 @@ type StartSeshDrawerProps = {
 export default function StartSeshDrawer({ open, onClose, onTransitionEnd, boardConfigs }: StartSeshDrawerProps) {
   const { status } = useSession();
   const { paperRef, dragHandlers } = useDrawerDragResize({ open, onClose });
-  const router = useRouter();
+  const router = useLocaleRouter();
   const { showMessage } = useSnackbar();
   const { createSession, isCreating } = useCreateSession();
   const {

@@ -15,7 +15,7 @@ import FlashOnOutlined from '@mui/icons-material/FlashOnOutlined';
 import CheckCircleOutlineOutlined from '@mui/icons-material/CheckCircleOutlineOutlined';
 import ErrorOutlineOutlined from '@mui/icons-material/ErrorOutlineOutlined';
 import PersonOutlined from '@mui/icons-material/PersonOutlined';
-import Link from 'next/link';
+import LocaleLink from '@/app/components/i18n/locale-link';
 import type { SessionFeedItem } from '@boardsesh/shared-schema';
 import { CssBarChart } from '@/app/components/charts/css-bar-chart';
 import { buildSessionGradeBars } from '@/app/components/charts/session-grade-bars';
@@ -111,7 +111,7 @@ export default function SessionFeedCard({ session }: SessionFeedCardProps) {
                 <Avatar
                   key={p.userId}
                   src={p.avatarUrl ?? undefined}
-                  component={Link}
+                  component={LocaleLink}
                   href={`/profile/${p.userId}`}
                   onClick={(e: React.MouseEvent) => e.stopPropagation()}
                   sx={{ width: 28, height: 28, cursor: 'pointer' }}
@@ -123,7 +123,7 @@ export default function SessionFeedCard({ session }: SessionFeedCardProps) {
           ) : (
             <Avatar
               src={primaryParticipant?.avatarUrl ?? undefined}
-              {...(primaryParticipant ? { component: Link, href: `/profile/${primaryParticipant.userId}` } : {})}
+              {...(primaryParticipant ? { component: LocaleLink, href: `/profile/${primaryParticipant.userId}` } : {})}
               onClick={(e: React.MouseEvent) => e.stopPropagation()}
               sx={{ width: 32, height: 32, cursor: primaryParticipant ? 'pointer' : 'default' }}
             >
@@ -136,7 +136,7 @@ export default function SessionFeedCard({ session }: SessionFeedCardProps) {
               variant="body2"
               fontWeight={600}
               noWrap
-              {...(primaryParticipant ? { component: Link, href: `/profile/${primaryParticipant.userId}` } : {})}
+              {...(primaryParticipant ? { component: LocaleLink, href: `/profile/${primaryParticipant.userId}` } : {})}
               onClick={(e: React.MouseEvent) => e.stopPropagation()}
               sx={{
                 textDecoration: 'none',
@@ -176,7 +176,7 @@ export default function SessionFeedCard({ session }: SessionFeedCardProps) {
 
         {/* Clickable body that links to session detail */}
         <Box
-          component={Link}
+          component={LocaleLink}
           href={`/session/${sessionId}`}
           sx={{ textDecoration: 'none', color: 'inherit', display: 'block' }}
         >

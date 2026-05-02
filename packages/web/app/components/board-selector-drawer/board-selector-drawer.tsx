@@ -7,7 +7,7 @@ import CircularProgress from '@mui/material/CircularProgress';
 import CollapsibleSection, {
   type CollapsibleSectionConfig,
 } from '@/app/components/collapsible-section/collapsible-section';
-import { useRouter } from 'next/navigation';
+import { useLocaleRouter } from '@/app/lib/i18n/use-locale-router';
 import SwipeableDrawer from '../swipeable-drawer/swipeable-drawer';
 import type { BoardConfigData } from '@/app/lib/server-board-configs';
 import type { BoardName, BoardRouteIdentity } from '@/app/lib/types';
@@ -39,7 +39,7 @@ export default function BoardSelectorDrawer({
   placement = 'bottom',
   onBoardSelected,
 }: BoardSelectorDrawerProps) {
-  const router = useRouter();
+  const router = useLocaleRouter();
   const guardBoardSwitch = useBoardSwitchGuard();
   const [showCreateBoardForm, setShowCreateBoardForm] = useState(false);
 

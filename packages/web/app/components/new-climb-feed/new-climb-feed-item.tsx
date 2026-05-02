@@ -17,7 +17,7 @@ import { getDefaultBoardConfig, getDefaultClimbViewPath } from '@/app/lib/defaul
 import { getBoardDetailsForBoard } from '@/app/lib/board-utils';
 import { constructClimbViewUrlWithSlugs } from '@/app/lib/url-utils';
 import type { BoardName } from '@/app/lib/types';
-import Link from 'next/link';
+import LocaleLink from '@/app/components/i18n/locale-link';
 
 dayjs.extend(relativeTime);
 
@@ -81,7 +81,7 @@ export default function NewClimbFeedItem({ item }: NewClimbFeedItemProps) {
           )}
         </Box>
 
-        <Link href={climbViewPath ?? '#'} style={{ textDecoration: 'none', color: 'inherit' }}>
+        <LocaleLink href={climbViewPath ?? '#'} style={{ textDecoration: 'none', color: 'inherit' }}>
           <Box sx={{ display: 'flex', gap: 1.25 }}>
             {item.frames && (
               <AscentThumbnail
@@ -108,7 +108,7 @@ export default function NewClimbFeedItem({ item }: NewClimbFeedItemProps) {
               </Box>
             </Box>
           </Box>
-        </Link>
+        </LocaleLink>
       </CardContent>
     </Card>
   );

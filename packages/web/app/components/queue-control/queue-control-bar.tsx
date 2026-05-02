@@ -17,8 +17,9 @@ import OpenInFullOutlined from '@mui/icons-material/OpenInFullOutlined';
 import { track } from '@vercel/analytics';
 import { useQueueActions, useCurrentClimb, useQueueList, useSessionData } from '../graphql-queue';
 import NextClimbButton from './next-climb-button';
-import { usePathname, useParams, useSearchParams, useRouter } from 'next/navigation';
-import Link from 'next/link';
+import { usePathname, useParams, useSearchParams } from 'next/navigation';
+import { useLocaleRouter } from '@/app/lib/i18n/use-locale-router';
+import LocaleLink from '@/app/components/i18n/locale-link';
 import {
   constructPlayUrlWithSlugs,
   getContextAwareClimbViewUrl,
@@ -135,7 +136,7 @@ const QueueControlBar: React.FC<QueueControlBarProps> = ({ boardDetails, angle }
   const pathname = usePathname();
   const params = useParams<BoardRouteParameters>();
   const searchParams = useSearchParams();
-  const router = useRouter();
+  const router = useLocaleRouter();
   const queueListRef = useRef<QueueListHandle>(null);
   const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const enterFallbackRef = useRef<NodeJS.Timeout | null>(null);
@@ -1255,7 +1256,7 @@ const QueueControlBar: React.FC<QueueControlBarProps> = ({ boardDetails, angle }
                     {/* Play link - desktop only */}
                     {!isPlayPage && playUrl && (
                       <span className={styles.desktopOnly}>
-                        <Link
+                        <LocaleLink
                           href={playUrl}
                           onClick={() => {
                             track('Play Mode Entered', {
@@ -1266,7 +1267,7 @@ const QueueControlBar: React.FC<QueueControlBarProps> = ({ boardDetails, angle }
                           <IconButton aria-label="Enter play mode">
                             <OpenInFullOutlined />
                           </IconButton>
-                        </Link>
+                        </LocaleLink>
                       </span>
                     )}
                     {/* Navigation buttons - desktop only */}

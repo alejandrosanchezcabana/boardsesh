@@ -17,7 +17,8 @@ import { useDrawerDragResize } from '@/app/hooks/use-drawer-drag-resize';
 import BoardRenderer from '@/app/components/board-renderer/board-renderer';
 import { usePersistentSession } from '@/app/components/persistent-session/persistent-session-context';
 import { useQueueBridgeBoardInfo } from '@/app/components/queue-control/queue-bridge-context';
-import { useRouter, usePathname } from 'next/navigation';
+import { usePathname } from 'next/navigation';
+import { useLocaleRouter } from '@/app/lib/i18n/use-locale-router';
 import { themeTokens } from '@/app/theme/theme-config';
 import { useSessionTimer } from '@/app/hooks/use-session-timer';
 import { useSessionDetail } from '@/app/hooks/use-session-detail';
@@ -68,7 +69,7 @@ export default function SeshSettingsDrawer({
 }: SeshSettingsDrawerProps) {
   const { activeSession, session, users, deactivateSession } = usePersistentSession();
   const { boardDetails, angle } = useQueueBridgeBoardInfo();
-  const router = useRouter();
+  const router = useLocaleRouter();
   const pathname = usePathname();
   const sessionId = activeSession?.sessionId ?? null;
   const shareUrl = getShareUrl(sessionId);

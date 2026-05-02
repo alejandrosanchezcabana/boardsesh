@@ -5,7 +5,7 @@ import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import CircularProgress from '@mui/material/CircularProgress';
 import { useQuery } from '@tanstack/react-query';
-import { useRouter } from 'next/navigation';
+import { useLocaleRouter } from '@/app/lib/i18n/use-locale-router';
 import SwipeableDrawer from '../swipeable-drawer/swipeable-drawer';
 import ClimbListItem from '../climb-card/climb-list-item';
 import { useColorMode } from '@/app/hooks/use-color-mode';
@@ -45,7 +45,7 @@ export type DraftsDrawerProps = {
 };
 
 const DraftsDrawer: React.FC<DraftsDrawerProps> = ({ open, onClose, boardDetails, angle, onLoadDraft }) => {
-  const router = useRouter();
+  const router = useLocaleRouter();
   const { mode } = useColorMode();
   const isDark = mode === 'dark';
   const { token: wsAuthToken } = useWsAuthToken();

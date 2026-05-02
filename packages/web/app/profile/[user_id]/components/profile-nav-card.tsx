@@ -6,7 +6,7 @@ import CardContent from '@mui/material/CardContent';
 import Typography from '@mui/material/Typography';
 import Box from '@mui/material/Box';
 import ChevronRightOutlined from '@mui/icons-material/ChevronRightOutlined';
-import Link from 'next/link';
+import LocaleLink from '@/app/components/i18n/locale-link';
 import { themeTokens } from '@/app/theme/theme-config';
 
 type ProfileNavCardProps = {
@@ -19,7 +19,7 @@ type ProfileNavCardProps = {
 export default function ProfileNavCard({ title, subtitle, href, icon }: ProfileNavCardProps) {
   return (
     <MuiCard
-      component={Link}
+      component={LocaleLink}
       href={href}
       sx={{
         textDecoration: 'none',

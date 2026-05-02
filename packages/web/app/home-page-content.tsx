@@ -22,7 +22,7 @@ import { isNativeApp, isCapacitorWebView, waitForCapacitor } from '@/app/lib/ble
 import { IOS_APP_STORE_URL, ANDROID_PLAY_STORE_URL, ANDROID_SIDELOAD_URL } from '@/app/lib/store-urls';
 import { useCountdown } from '@/app/lib/hooks/use-countdown';
 import { useSession } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
+import { useLocaleRouter } from '@/app/lib/i18n/use-locale-router';
 import { useTranslation } from 'react-i18next';
 import { themeTokens } from '@/app/theme/theme-config';
 import { usePersistentSession } from '@/app/components/persistent-session';
@@ -252,7 +252,7 @@ function InstallAppCard({ platform }: { platform: InstallPlatform }) {
 export default function HomePageContent({ boardConfigs, initialPopularConfigs }: HomePageContentProps) {
   const { t } = useTranslation('marketing');
   const { status } = useSession();
-  const router = useRouter();
+  const router = useLocaleRouter();
   const { activeSession } = usePersistentSession();
   const onboardingTour = useOnboardingTourOptional();
   const [seshDrawerOpen, setSeshDrawerOpen] = useState(false);

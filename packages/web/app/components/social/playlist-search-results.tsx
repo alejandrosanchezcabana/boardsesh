@@ -7,7 +7,8 @@ import Typography from '@mui/material/Typography';
 import Chip from '@mui/material/Chip';
 import CircularProgress from '@mui/material/CircularProgress';
 import QueueMusicOutlined from '@mui/icons-material/QueueMusicOutlined';
-import { useRouter, usePathname } from 'next/navigation';
+import { usePathname } from 'next/navigation';
+import { useLocaleRouter } from '@/app/lib/i18n/use-locale-router';
 import { getContextAwarePlaylistUrl } from '@/app/lib/url-utils';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { createGraphQLHttpClient } from '@/app/lib/graphql/client';
@@ -32,7 +33,7 @@ type PlaylistPage = {
 };
 
 export default function PlaylistSearchResults({ query, authToken }: PlaylistSearchResultsProps) {
-  const router = useRouter();
+  const router = useLocaleRouter();
   const pathname = usePathname();
   const debouncedQuery = useDebouncedValue(query, 300);
 

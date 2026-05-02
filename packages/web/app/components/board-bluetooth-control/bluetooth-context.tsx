@@ -1,8 +1,9 @@
 'use client';
 
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
 import { track } from '@vercel/analytics';
+import { useLocaleRouter } from '@/app/lib/i18n/use-locale-router';
 import { useBoardBluetooth } from './use-board-bluetooth';
 import { useCurrentClimb } from '../graphql-queue';
 import type { BoardDetails } from '@/app/lib/types';
@@ -334,7 +335,7 @@ export function BluetoothProvider({
   // config doesn't match the route they're on, hold the picker promise open
   // and surface the BoardConfigMismatchDialog. The picker only emits the
   // selection — this provider decides whether to forward, switch, or cancel.
-  const router = useRouter();
+  const router = useLocaleRouter();
   const [mismatch, setMismatch] = useState<{
     deviceId: string;
     serial: string;

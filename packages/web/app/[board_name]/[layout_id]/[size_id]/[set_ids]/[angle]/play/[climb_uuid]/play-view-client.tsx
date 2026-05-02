@@ -2,8 +2,9 @@
 
 import React, { useCallback, useEffect, useRef } from 'react';
 import MuiButton from '@mui/material/Button';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import { track } from '@vercel/analytics';
+import { useLocaleRouter } from '@/app/lib/i18n/use-locale-router';
 import type { Climb, BoardDetails, Angle } from '@/app/lib/types';
 import { useQueueActions, useCurrentClimb, useQueueList } from '@/app/components/graphql-queue';
 import SwipeBoardCarousel from '@/app/components/board-renderer/swipe-board-carousel';
@@ -22,7 +23,7 @@ type PlayViewClientProps = {
 };
 
 const PlayViewClient: React.FC<PlayViewClientProps> = ({ boardDetails, initialClimb, angle }) => {
-  const router = useRouter();
+  const router = useLocaleRouter();
   const searchParams = useSearchParams();
   const { currentClimb } = useCurrentClimb();
   const { queue } = useQueueList();

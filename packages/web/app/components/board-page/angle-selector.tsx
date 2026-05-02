@@ -8,8 +8,9 @@ import Typography from '@mui/material/Typography';
 import CircularProgress from '@mui/material/CircularProgress';
 import Box from '@mui/material/Box';
 import SwipeableDrawer from '../swipeable-drawer/swipeable-drawer';
-import { useRouter, usePathname, useSearchParams } from 'next/navigation';
+import { usePathname, useSearchParams } from 'next/navigation';
 import { track } from '@vercel/analytics';
+import { useLocaleRouter } from '@/app/lib/i18n/use-locale-router';
 import { useQuery } from '@tanstack/react-query';
 import { ANGLES } from '@/app/lib/board-data';
 import type { BoardName, BoardDetails, Climb } from '@/app/lib/types';
@@ -37,7 +38,7 @@ export default function AngleSelector({
   onAngleChange: onAngleChangeProp,
 }: AngleSelectorProps) {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-  const router = useRouter();
+  const router = useLocaleRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const currentAngleRef = useRef<HTMLDivElement>(null);

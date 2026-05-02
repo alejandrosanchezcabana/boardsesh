@@ -8,7 +8,8 @@ import ActivityFeed from '@/app/components/activity-feed/activity-feed';
 import ProposalFeed from '@/app/components/activity-feed/proposal-feed';
 import CommentFeed from '@/app/components/activity-feed/comment-feed';
 import { useSession } from 'next-auth/react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
+import { useLocaleRouter } from '@/app/lib/i18n/use-locale-router';
 
 import BoardFilterStrip from '@/app/components/board-scroll/board-filter-strip';
 import type { SessionFeedResult, UserBoard } from '@boardsesh/shared-schema';
@@ -34,7 +35,7 @@ export default function FeedPageContent({
   initialMyBoards,
 }: FeedPageContentProps) {
   const { status } = useSession();
-  const router = useRouter();
+  const router = useLocaleRouter();
   const searchParams = useSearchParams();
 
   // Trust the SSR hint during the loading phase to prevent flash of unauthenticated content

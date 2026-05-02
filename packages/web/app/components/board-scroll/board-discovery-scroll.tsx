@@ -2,7 +2,7 @@
 
 import React, { useState, useCallback, useEffect, useMemo } from 'react';
 import { useSession } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
+import { useLocaleRouter } from '@/app/lib/i18n/use-locale-router';
 import BoardScrollSection from './board-scroll-section';
 import BoardScrollCard from './board-scroll-card';
 import FindNearbyCard, { type FindNearbyStatus } from './find-nearby-card';
@@ -57,7 +57,7 @@ export default function BoardDiscoveryScroll({
 }: BoardDiscoveryScrollProps) {
   const { status } = useSession();
   const isAuthenticated = status === 'authenticated';
-  const router = useRouter();
+  const router = useLocaleRouter();
 
   const [locationEnabled, setLocationEnabled] = useState(false);
   const [searchDrawerOpen, setSearchDrawerOpen] = useState(false);

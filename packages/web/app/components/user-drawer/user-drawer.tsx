@@ -24,8 +24,9 @@ import DarkModeOutlined from '@mui/icons-material/DarkModeOutlined';
 
 import { useSession, signOut } from 'next-auth/react';
 import { useColorMode } from '@/app/hooks/use-color-mode';
-import { useRouter, usePathname } from 'next/navigation';
-import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import LocaleLink from '@/app/components/i18n/locale-link';
+import { useLocaleRouter } from '@/app/lib/i18n/use-locale-router';
 import {
   getPlaylistsBasePath,
   constructBoardSlugListUrl,
@@ -37,6 +38,7 @@ import DashboardOutlined from '@mui/icons-material/DashboardOutlined';
 import BuildOutlined from '@mui/icons-material/BuildOutlined';
 import DeveloperBoardOutlined from '@mui/icons-material/DeveloperBoardOutlined';
 import SwipeableDrawer from '../swipeable-drawer/swipeable-drawer';
+import CompactLanguageSwitcher from '@/app/components/i18n/compact-language-switcher';
 import DevUrlDialog from '../dev-url-dialog/dev-url-dialog';
 import { useDevUrl } from '@/app/lib/dev-url';
 import { useAuthModal } from '@/app/components/providers/auth-modal-provider';
@@ -72,7 +74,7 @@ type UserDrawerProps = {
 
 export default function UserDrawer({ boardDetails, boardConfigs }: UserDrawerProps) {
   const { data: session } = useSession();
-  const router = useRouter();
+  const router = useLocaleRouter();
   const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
   const [drawerRendered, setDrawerRendered] = useState(false);
@@ -233,7 +235,7 @@ export default function UserDrawer({ boardDetails, boardConfigs }: UserDrawerPro
               {session?.user ? (
                 <>
                   <MuiAvatar
-                    component={Link}
+                    component={LocaleLink}
                     href={`/profile/${session.user.id}`}
                     onClick={handleClose}
                     sx={{ width: 64, height: 64, cursor: 'pointer' }}
@@ -312,12 +314,12 @@ export default function UserDrawer({ boardDetails, boardConfigs }: UserDrawerPro
                 </button>
               )}
 
-              <Link href="/settings" className={styles.menuItem} onClick={handleClose}>
+              <LocaleLink href="/settings" className={styles.menuItem} onClick={handleClose}>
                 <span className={styles.menuItemIcon}>
                   <SettingsOutlined />
                 </span>
                 <span className={styles.menuItemLabel}>Settings</span>
-              </Link>
+              </LocaleLink>
 
               {devUrlAvailable && (
                 <button
@@ -336,12 +338,12 @@ export default function UserDrawer({ boardDetails, boardConfigs }: UserDrawerPro
               )}
 
               {process.env.NODE_ENV === 'development' && (
-                <Link href="/development" className={styles.menuItem} onClick={handleClose}>
+                <LocaleLink href="/development" className={styles.menuItem} onClick={handleClose}>
                   <span className={styles.menuItemIcon}>
                     <DeveloperBoardOutlined />
                   </span>
                   <span className={styles.menuItemLabel}>Development</span>
-                </Link>
+                </LocaleLink>
               )}
 
               {boardDetails && !isMoonboard && (
@@ -360,12 +362,12 @@ export default function UserDrawer({ boardDetails, boardConfigs }: UserDrawerPro
                 </button>
               )}
 
-              <Link href={playlistsUrl} className={styles.menuItem} onClick={handleClose}>
+              <LocaleLink href={playlistsUrl} className={styles.menuItem} onClick={handleClose}>
                 <span className={styles.menuItemIcon}>
                   <LocalOfferOutlined />
                 </span>
                 <span className={styles.menuItemLabel}>My Playlists</span>
-              </Link>
+              </LocaleLink>
             </nav>
 
             {/* Recents section */}
@@ -407,19 +409,19 @@ export default function UserDrawer({ boardDetails, boardConfigs }: UserDrawerPro
             <div className={styles.divider} />
 
             {/* Help/About section */}
-            <Link href="/help" className={styles.menuItem} onClick={handleClose}>
+            <LocaleLink href="/help" className={styles.menuItem} onClick={handleClose}>
               <span className={styles.menuItemIcon}>
                 <HelpOutlineOutlined />
               </span>
               <span className={styles.menuItemLabel}>Help</span>
-            </Link>
+            </LocaleLink>
 
-            <Link href="/about" className={styles.menuItem} onClick={handleClose}>
+            <LocaleLink href="/about" className={styles.menuItem} onClick={handleClose}>
               <span className={styles.menuItemIcon}>
                 <InfoOutlined />
               </span>
               <span className={styles.menuItemLabel}>About</span>
-            </Link>
+            </LocaleLink>
 
             <button
               type="button"
@@ -465,7 +467,7 @@ export default function UserDrawer({ boardDetails, boardConfigs }: UserDrawerPro
             {/* Spacer to push toggle to bottom */}
             <div className={styles.bottomSpacer} />
 
-            {/* Sun/Moon toggle */}
+            {/* Sun/Moon toggle + language switcher */}
             <div className={styles.themeToggleContainer}>
               <div
                 className={styles.themeToggle}
@@ -484,6 +486,7 @@ export default function UserDrawer({ boardDetails, boardConfigs }: UserDrawerPro
                   <DarkModeOutlined sx={{ fontSize: 16 }} />
                 </div>
               </div>
+              <CompactLanguageSwitcher />
             </div>
           </div>
         </SwipeableDrawer>

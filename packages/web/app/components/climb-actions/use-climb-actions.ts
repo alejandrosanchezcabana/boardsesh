@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useCallback, useMemo } from 'react';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname } from 'next/navigation';
+import { useLocaleRouter } from '@/app/lib/i18n/use-locale-router';
 import { useSnackbar } from '@/app/components/providers/snackbar-provider';
 import { track } from '@vercel/analytics';
 import { useQueueActions } from '../graphql-queue';
@@ -27,7 +28,7 @@ export function useClimbActions({
   auroraAppUrl,
   onActionComplete,
 }: UseClimbActionsOptions): UseClimbActionsReturn {
-  const router = useRouter();
+  const router = useLocaleRouter();
   const pathname = usePathname();
   const { addToQueue, mirrorClimb } = useQueueActions();
   const { showMessage } = useSnackbar();
