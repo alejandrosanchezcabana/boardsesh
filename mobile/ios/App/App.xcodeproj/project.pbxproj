@@ -17,7 +17,6 @@
 		A084ECDBA7D38E1E42DFC39D /* Pods_App.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AF277DCFFFF123FFC6DF26C7 /* Pods_App.framework */; };
 		B1A2C3D4E5F60718 /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1A2C3D4E5F60717 /* SceneDelegate.swift */; };
 		C1A2B3D4E5F60720 /* BoardseshViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1A2B3D4E5F60719 /* BoardseshViewController.swift */; };
-
 		LA100001 /* SharedConstants.swift in Sources */ = {isa = PBXBuildFile; fileRef = LA200001 /* SharedConstants.swift */; };
 		LA100002 /* ClimbSessionAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = LA200002 /* ClimbSessionAttributes.swift */; };
 		LA100003 /* ThumbnailFetcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = LA200003 /* ThumbnailFetcher.swift */; };
@@ -305,8 +304,8 @@
 		504EC2FC1FED79650016851F /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastSwiftUpdateCheck = 0920;
-				LastUpgradeCheck = 0920;
+				LastSwiftUpdateCheck = 920;
+				LastUpgradeCheck = 920;
 				TargetAttributes = {
 					504EC3031FED79650016851F = {
 						CreatedOnToolsVersion = 9.2;
