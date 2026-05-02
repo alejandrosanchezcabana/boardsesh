@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import CircularProgress from '@mui/material/CircularProgress';
 import LightbulbOutlined from '@mui/icons-material/LightbulbOutlined';
 import Lightbulb from '@mui/icons-material/Lightbulb';
@@ -17,6 +17,8 @@ import { useBluetoothContext } from '../board-bluetooth-control/bluetooth-contex
 import { useSnackbar } from '@/app/components/providers/snackbar-provider';
 import { themeTokens } from '@/app/theme/theme-config';
 import { isCapacitor } from '@/app/lib/ble/capacitor-utils';
+import { useLongPress } from '@/app/lib/hooks/use-long-press';
+import { LightControlDrawer } from './light-control-drawer';
 
 export const ShareBoardButton = () => {
   const { showMessage } = useSnackbar();
@@ -31,10 +33,28 @@ export const ShareBoardButton = () => {
   } = useBluetoothContext();
   const { currentClimbQueueItem } = useCurrentClimb();
   const [unsupportedOpen, setUnsupportedOpen] = useState(false);
+  const [lightDrawerOpen, setLightDrawerOpen] = useState(false);
+  // Defer mounting the drawer until the user actually long-presses. Keeps it
+  // out of the initial board-page render path (the glyph-snap useMemo and
+  // related effects only run for users who opt into the feature).
+  const [hasOpenedDrawer, setHasOpenedDrawer] = useState(false);
 
   const isConnecting = !!(sessionId && !hasConnected);
 
+  // Long-press is only meaningful while connected — opening the light drawer
+  // when there's no board to control would dead-end the user.
+  const handleLongPress = useCallback(() => {
+    if (!isBoardConnected) return;
+    setHasOpenedDrawer(true);
+    setLightDrawerOpen(true);
+  }, [isBoardConnected]);
+
+  const { ref: longPressRef, consumeLongPress } = useLongPress<HTMLButtonElement>(handleLongPress);
+
   const handleLightbulbClick = async () => {
+    // Suppress the click that follows a long-press so opening the drawer
+    // doesn't also disconnect the board.
+    if (consumeLongPress()) return;
     // Allow connection in Capacitor apps even if the async isBluetoothSupported
     // state hasn't resolved yet — the native bridge is available by click time.
     if (!isBluetoothSupported && !isCapacitor()) {
@@ -79,12 +99,15 @@ export const ShareBoardButton = () => {
   return (
     <>
       <IconButton
+        ref={longPressRef}
         aria-label={isBoardConnected ? 'Disconnect from board' : 'Connect to board'}
         onClick={handleLightbulbClick}
         color={isSessionActive ? 'primary' : 'default'}
       >
         {lightbulbIcon}
       </IconButton>
+
+      {hasOpenedDrawer && <LightControlDrawer open={lightDrawerOpen} onClose={() => setLightDrawerOpen(false)} />}
 
       <Dialog open={unsupportedOpen} onClose={() => setUnsupportedOpen(false)}>
         <DialogTitle>Board lighting unavailable</DialogTitle>

@@ -493,6 +493,51 @@ describe('§4 Device Name Format — parseApiLevel', () => {
 });
 
 // =============================================================================
+// §7.5 — Empty-frames "clear all" packet
+// =============================================================================
+
+describe('§7.5 Empty-frames clear packet', () => {
+  it('emits a single-frame ONLY packet with no LED data on v3', () => {
+    const result = getBluetoothPacket('', {}, 'kilter', 3);
+    expect(result.totalPlacements).toBe(0);
+    expect(result.skippedPositionCount).toBe(0);
+    expect(result.skippedRoleCount).toBe(0);
+    expect(result.packet.length).toBeGreaterThan(0);
+
+    const parsed = parseFrames(result.packet);
+    expect(parsed).toHaveLength(1);
+    expect(parsed[0].commandByte).toBe(84); // T = ONLY
+    expect(parsed[0].payloadLength).toBe(1); // command byte only — no LED entries
+  });
+
+  it('emits a single-frame ONLY packet on v2', () => {
+    const result = getBluetoothPacket('', {}, 'kilter', 2);
+    const parsed = parseFrames(result.packet);
+    expect(parsed).toHaveLength(1);
+    expect(parsed[0].commandByte).toBe(80); // P = ONLY (v2)
+    expect(parsed[0].payloadLength).toBe(1);
+  });
+
+  it('does not require placement positions to clear', () => {
+    // The clear path must not look up the placement map — passing empty
+    // placements and an unknown layout still produces a valid clear packet.
+    const result = getBluetoothPacket('', {}, 'tension', 3);
+    expect(result.packet.length).toBeGreaterThan(0);
+    const parsed = parseFrames(result.packet);
+    expect(parsed).toHaveLength(1);
+    expect(parsed[0].commandByte).toBe(84);
+  });
+
+  it('still returns an empty packet when every placement is skipped (not the clear path)', () => {
+    // Non-empty frames with all-unknown placements must NOT take the clear
+    // path — that case represents a render failure, not an intentional clear.
+    const result = getBluetoothPacket('p999r42', {}, 'kilter', 3);
+    expect(result.packet.length).toBe(0);
+    expect(result.skippedPositionCount).toBe(1);
+  });
+});
+
+// =============================================================================
 // §8 — Multi-Part Message Sequencing
 // =============================================================================
 

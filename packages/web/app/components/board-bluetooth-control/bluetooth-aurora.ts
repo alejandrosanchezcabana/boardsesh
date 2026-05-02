@@ -188,6 +188,18 @@ export const getAuroraBluetoothPacket = (
   const isV2 = apiLevel < 3;
   const cmds = isV2 ? V2_COMMANDS : V3_COMMANDS;
 
+  // Empty frames is the "clear all LEDs" path — emit a valid ONLY-command
+  // packet with no LED entries so the board overwrites its state to "nothing
+  // lit". A zero-length Uint8Array would never reach the board over BLE.
+  if (frames === '') {
+    return {
+      packet: Uint8Array.from(wrapBytes([cmds.only])),
+      skippedPositionCount: 0,
+      skippedRoleCount: 0,
+      totalPlacements: 0,
+    };
+  }
+
   // Pre-collect LED entries for v2 power scaling
   const ledEntries: Array<{ position: number; color: string }> = [];
   let skippedPositionCount = 0;
