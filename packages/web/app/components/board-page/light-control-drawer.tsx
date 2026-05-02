@@ -77,7 +77,13 @@ export const LightControlDrawer: React.FC<LightControlDrawerProps> = ({ open, on
   }, [partyActive, isConnected, clearBoard]);
 
   const handleClearAll = async () => {
-    if (partyActive) setPartyActive(false);
+    // When party is active, the stop-party effect already issues a
+    // clearBoard() once partyActive flips false — calling clearBoard()
+    // here too would double up the BLE write for one tap.
+    if (partyActive) {
+      setPartyActive(false);
+      return;
+    }
     const result = await clearBoard();
     if (result === false) {
       showMessage(t('lightControl.clearFailed'), 'error');

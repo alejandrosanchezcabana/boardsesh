@@ -164,6 +164,7 @@ export function useBoardBluetooth({ boardDetails, boardUuid, onConnectionChange 
         if (frames === '') {
           const clearResult = getAuroraBluetoothPacket('', {}, boardDetails.board_name, apiLevelRef.current);
           await adapterRef.current.write(clearResult.packet, signal);
+          void incrementBluetoothSends().then(maybeFireFeedbackPromptEvent);
           return true;
         }
 

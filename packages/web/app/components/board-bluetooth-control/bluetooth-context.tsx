@@ -359,6 +359,7 @@ export function BluetoothProvider({
       clearBoard,
       boardDetails,
       partyActive,
+      setPartyActive,
       isBluetoothSupported,
       isIOS,
     ],
