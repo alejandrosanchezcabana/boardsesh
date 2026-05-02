@@ -18,6 +18,7 @@ import type { ClimbStatsForAngle } from '@/app/lib/data/queries';
 import { themeTokens } from '@/app/theme/theme-config';
 import { useIsDarkMode } from '@/app/hooks/use-is-dark-mode';
 import DrawerClimbHeader from '../climb-card/drawer-climb-header';
+import { useTranslation } from 'react-i18next';
 import styles from './angle-selector.module.css';
 
 type AngleSelectorProps = {
@@ -37,6 +38,7 @@ export default function AngleSelector({
   isAngleAdjustable = true,
   onAngleChange: onAngleChangeProp,
 }: AngleSelectorProps) {
+  const { t } = useTranslation('climbs');
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const router = useLocaleRouter();
   const pathname = usePathname();
@@ -167,7 +169,7 @@ export default function AngleSelector({
                     </Typography>
                   )}
                   <Typography variant="body2" component="span" color="text.secondary" sx={{ fontSize: 10 }}>
-                    {stats.ascensionist_count} sends
+                    {t('angleSelector.sends', { count: stats.ascensionist_count })}
                   </Typography>
                 </Box>
               </Box>
@@ -179,7 +181,7 @@ export default function AngleSelector({
                 color="text.secondary"
                 sx={{ fontSize: 10, marginTop: '4px' }}
               >
-                No data
+                {t('angleSelector.noData')}
               </Typography>
             )}
           </CardContent>

@@ -14,6 +14,7 @@ import Typography from '@mui/material/Typography';
 import CircularProgress from '@mui/material/CircularProgress';
 import Box from '@mui/material/Box';
 import PersonOutlined from '@mui/icons-material/PersonOutlined';
+import { useTranslation } from 'react-i18next';
 import { createGraphQLHttpClient } from '@/app/lib/graphql/client';
 import { useWsAuthToken } from '@/app/hooks/use-ws-auth-token';
 import {
@@ -36,6 +37,7 @@ type SearchResult = {
 };
 
 export default function UserSearchDialog({ open, onClose, onSelectUser, excludeUserIds = [] }: UserSearchDialogProps) {
+  const { t } = useTranslation('session');
   const { token: authToken } = useWsAuthToken();
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<SearchResult[]>([]);
@@ -95,12 +97,12 @@ export default function UserSearchDialog({ open, onClose, onSelectUser, excludeU
 
   return (
     <Dialog open={open} onClose={handleClose} fullWidth maxWidth="xs">
-      <DialogTitle>Add Climber</DialogTitle>
+      <DialogTitle>{t('detail.userSearch.title')}</DialogTitle>
       <DialogContent>
         <TextField
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search by name..."
+          placeholder={t('detail.userSearch.placeholder')}
           size="small"
           fullWidth
           autoFocus
@@ -115,7 +117,7 @@ export default function UserSearchDialog({ open, onClose, onSelectUser, excludeU
 
         {!loading && results.length === 0 && query.trim().length >= 2 && (
           <Typography variant="body2" color="text.secondary" sx={{ py: 2, textAlign: 'center' }}>
-            No users found
+            {t('detail.userSearch.noUsersFound')}
           </Typography>
         )}
 
@@ -128,7 +130,10 @@ export default function UserSearchDialog({ open, onClose, onSelectUser, excludeU
                     {!user.avatarUrl && <PersonOutlined sx={{ fontSize: 16 }} />}
                   </Avatar>
                 </ListItemAvatar>
-                <ListItemText primary={user.displayName || 'Climber'} primaryTypographyProps={{ variant: 'body2' }} />
+                <ListItemText
+                  primary={user.displayName || t('detail.climberFallback')}
+                  primaryTypographyProps={{ variant: 'body2' }}
+                />
               </ListItemButton>
             ))}
           </List>

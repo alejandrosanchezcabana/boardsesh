@@ -4,6 +4,8 @@ import { redirect } from 'next/navigation';
 import { getYouSession } from './you-auth';
 import YouTabBar from './you-tab-bar';
 import styles from '@/app/profile/[user_id]/profile-page.module.css';
+import { getLocale } from '@/app/lib/i18n/get-locale';
+import I18nProvider from '@/app/components/providers/i18n-provider';
 
 export default async function YouLayout({ children }: { children: React.ReactNode }) {
   const session = await getYouSession();
@@ -11,12 +13,16 @@ export default async function YouLayout({ children }: { children: React.ReactNod
     redirect('/');
   }
 
+  const locale = await getLocale();
+
   return (
-    <Box className={styles.layout}>
-      <Box component="main" className={styles.content}>
-        <YouTabBar />
-        {children}
+    <I18nProvider locale={locale} namespaces={['you']}>
+      <Box className={styles.layout}>
+        <Box component="main" className={styles.content}>
+          <YouTabBar />
+          {children}
+        </Box>
       </Box>
-    </Box>
+    </I18nProvider>
   );
 }

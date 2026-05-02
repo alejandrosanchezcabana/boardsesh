@@ -22,6 +22,7 @@ export default function BoardStatsSection({
   filteredLogbook,
   isOwnProfile,
 }: BoardStatsSectionProps) {
+  const { t } = useTranslation('profile');
   if (loading) {
     return (
       <div className={styles.loadingStats}>
@@ -38,5 +39,5 @@ export default function BoardStatsSection({
     return <BoardImportPrompt boardType={selectedBoard as AuroraBoardName} />;
   }
 
-  return <EmptyState description="No climbing data for this period" />;
+  return <EmptyState description={t('empty.noClimbingData')} />;
 }

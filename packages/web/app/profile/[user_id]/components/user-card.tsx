@@ -7,6 +7,7 @@ import CardContent from '@mui/material/CardContent';
 import Typography from '@mui/material/Typography';
 import Box from '@mui/material/Box';
 import { PersonOutlined, Instagram } from '@mui/icons-material';
+import { useTranslation } from 'react-i18next';
 import FollowButton from '@/app/components/ui/follow-button';
 import FollowerCount from '@/app/components/social/follower-count';
 import { FOLLOW_USER, UNFOLLOW_USER } from '@/app/lib/graphql/operations';
@@ -21,7 +22,8 @@ export type UserCardProps = {
 };
 
 export default function UserCard({ userId, profile, isOwnProfile, onProfileUpdate }: UserCardProps) {
-  const displayName = profile.profile?.displayName || profile.name || 'Climber';
+  const { t } = useTranslation('profile');
+  const displayName = profile.profile?.displayName || profile.name || t('page.displayNameFallback');
   const avatarUrl = profile.profile?.avatarUrl || profile.image;
   const instagramUrl = profile.profile?.instagramUrl;
 

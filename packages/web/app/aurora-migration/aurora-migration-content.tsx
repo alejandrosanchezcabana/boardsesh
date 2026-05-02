@@ -38,17 +38,14 @@ export default function AuroraMigrationContent() {
           <MuiCard>
             <CardContent>
               <Stack spacing={2} className={styles.cardContent}>
-                <Typography variant="h5">What Happened</Typography>
+                <Typography variant="h5">{t('migration.whatHappened.title')}</Typography>
 
                 <Typography variant="body1" component="p" sx={{ fontWeight: 600 }}>
-                  The Aurora Kilter backend is gone. Your playlists, logbook, and draft climbs go with it unless you
-                  export them.
+                  {t('migration.whatHappened.lead')}
                 </Typography>
 
                 <Typography variant="body1" component="p">
-                  On March 25, the Kilter board app suddenly disappeared, as Aurora randomly shut down its Kilter
-                  backend. In response Kilter rushed out their own app which was still in beta, but the outcome of these
-                  two entities fighting is that the customer gets left holding the bag. For more info read:
+                  {t('migration.whatHappened.body')}
                 </Typography>
 
                 <MuiLink
@@ -61,7 +58,7 @@ export default function AuroraMigrationContent() {
                   <Box
                     component="img"
                     src="https://cdn.climbing.com/wp-content/uploads/2026/03/Untitled-design-1-2.jpg"
-                    alt="The Kilter Board App Just Disappeared Without Warning"
+                    alt={t('migration.whatHappened.articleAlt')}
                     loading="lazy"
                     onError={(e: React.SyntheticEvent<HTMLImageElement>) => {
                       e.currentTarget.style.display = 'none';
@@ -70,31 +67,27 @@ export default function AuroraMigrationContent() {
                   />
                   <Box className={styles.articleBody}>
                     <Typography variant="subtitle2" color="text.primary" className={styles.articleTitle}>
-                      The Kilter Board App Just Disappeared Without Warning. Here&apos;s What Really Happened.
+                      {t('migration.whatHappened.articleTitle')}
                     </Typography>
                     <Typography variant="body2" color="text.secondary" className={styles.articleDescription}>
-                      For years, climbing&apos;s most successful training board has been at war with its app developer.
-                      Now, climbers are paying the price.
+                      {t('migration.whatHappened.articleDescription')}
                     </Typography>
                     <Typography variant="caption" color="text.disabled">
-                      climbing.com
+                      {t('migration.whatHappened.articleSource')}
                     </Typography>
                   </Box>
                 </MuiLink>
 
                 <Typography variant="body1" component="p">
-                  This single-vendor risk first became obvious 2 years ago, when you couldn&apos;t buy an LED kit for
-                  your Kilter holds due to an ongoing legal dispute between Kilter and Aurora.
+                  {t('migration.whatHappened.ledRisk')}
                 </Typography>
 
                 <Typography variant="body1" component="p">
-                  To remove this risk,{' '}
+                  {t('migration.whatHappened.boardseshIntroPrefix')}
                   <MuiLink href="https://www.boardsesh.com" target="_blank" rel="noopener noreferrer">
-                    Boardsesh
-                  </MuiLink>{' '}
-                  was created as an open-source alternative to all board climbing apps. Boardsesh has its own copy of
-                  the climb databases and will eventually support all boards. It can easily be self-hosted, and will
-                  provide data checkout functionality.
+                    {t('migration.whatHappened.boardseshLink')}
+                  </MuiLink>
+                  {t('migration.whatHappened.boardseshIntroSuffix')}
                 </Typography>
               </Stack>
             </CardContent>
@@ -104,7 +97,7 @@ export default function AuroraMigrationContent() {
           <MuiCard>
             <CardContent>
               <Stack spacing={3} className={styles.cardContent}>
-                <Typography variant="h5">How to Migrate</Typography>
+                <Typography variant="h5">{t('migration.howToMigrate.title')}</Typography>
 
                 {/* Step 1: Request data export */}
                 <div className={styles.stepRow}>
@@ -122,11 +115,10 @@ export default function AuroraMigrationContent() {
                   </MuiAvatar>
                   <div className={styles.stepContent}>
                     <Typography variant="h6" sx={{ mb: 1 }}>
-                      Request your data export
+                      {t('migration.howToMigrate.step1.title')}
                     </Typography>
                     <Typography variant="body1" component="p">
-                      Email Aurora to request an export of your data. This will give you a JSON file containing your
-                      ascents, attempts, and circuits.
+                      {t('migration.howToMigrate.step1.body')}
                     </Typography>
                     <MuiButton
                       variant="outlined"
@@ -135,7 +127,7 @@ export default function AuroraMigrationContent() {
                       href="mailto:peter@auroraclimbing.com?subject=Data%20Export%20Request&body=Hi%20Peter%2C%0A%0ACould%20you%20please%20send%20me%20an%20export%20of%20my%20Aurora%20data%3F%0A%0AThank%20you"
                       sx={{ mt: 1, textTransform: 'none' }}
                     >
-                      Email peter@auroraclimbing.com
+                      {t('migration.howToMigrate.step1.cta')}
                     </MuiButton>
                   </div>
                 </div>
@@ -156,29 +148,29 @@ export default function AuroraMigrationContent() {
                   </MuiAvatar>
                   <div className={styles.stepContent}>
                     <Typography variant="h6" sx={{ mb: 1 }}>
-                      Create a Boardsesh account
+                      {t('migration.howToMigrate.step2.title')}
                     </Typography>
                     {isAuthenticated ? (
                       <MuiAlert severity="success" icon={<CheckCircleOutlined />}>
-                        Signed in as {session?.user?.email}
+                        {t('migration.howToMigrate.step2.signedInAs', { email: session?.user?.email ?? '' })}
                       </MuiAlert>
                     ) : (
                       <>
                         <Typography variant="body1" component="p">
-                          Create an account or sign in so we have somewhere to put your data.
+                          {t('migration.howToMigrate.step2.body')}
                         </Typography>
                         <MuiButton
                           variant="contained"
                           size="small"
                           onClick={() =>
                             openAuthModal({
-                              title: 'Sign in to migrate your data',
-                              description: 'Create an account or sign in to import your Aurora data.',
+                              title: t('migration.howToMigrate.step2.modalTitle'),
+                              description: t('migration.howToMigrate.step2.modalDescription'),
                             })
                           }
                           sx={{ mt: 1, textTransform: 'none' }}
                         >
-                          Sign in or Create Account
+                          {t('migration.howToMigrate.step2.cta')}
                         </MuiButton>
                       </>
                     )}
@@ -201,11 +193,11 @@ export default function AuroraMigrationContent() {
                   </MuiAvatar>
                   <div className={styles.stepContent}>
                     <Typography variant="h6" sx={{ mb: 1 }}>
-                      Import your data
+                      {t('migration.howToMigrate.step3.title')}
                     </Typography>
                     {!isAuthenticated && (
                       <Typography variant="body2" color="text.secondary">
-                        Sign in first to import your data.
+                        {t('migration.howToMigrate.step3.signInFirst')}
                       </Typography>
                     )}
                   </div>
@@ -214,8 +206,7 @@ export default function AuroraMigrationContent() {
                 {isAuthenticated && (
                   <Stack spacing={2}>
                     <Typography variant="body1" component="p">
-                      The Kilter backend is down so only JSON import is available for Kilter. For Tension, linking your
-                      account will automatically sync your data every 12 hours so you always have a backup.
+                      {t('migration.howToMigrate.step3.body')}
                     </Typography>
                     <BoardImportPrompt boardType="kilter" onImportComplete={handleImportComplete} />
                     <BoardImportPrompt boardType="tension" onImportComplete={handleImportComplete} />

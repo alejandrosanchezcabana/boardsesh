@@ -28,6 +28,7 @@ import { SelectionStoreContext, useSelectionStore } from './selected-climb-store
 import { dispatchOpenPlayDrawer } from '../queue-control/play-drawer-event';
 import { useOnboardingTourOptional } from '@/app/components/onboarding/onboarding-tour-provider';
 import { dispatchTourClimbListPick } from '@/app/components/onboarding/onboarding-tour-events';
+import { useTranslation } from 'react-i18next';
 import listStyles from './climbs-list.module.css';
 
 const SwipeableDrawer = dynamic(() => import('../swipeable-drawer/swipeable-drawer'), {
@@ -305,6 +306,7 @@ const ClimbsList = ({
   renderItemExtra,
   showBottomSpacer,
 }: ClimbsListProps) => {
+  const { t } = useTranslation('climbs');
   // Hoisted once so every ClimbListItem receives the value as a prop
   // instead of each one doing its own context lookup.
   const pathname = usePathname();
@@ -583,7 +585,7 @@ const ClimbsList = ({
               <IconButton
                 id="onboarding-view-mode-list"
                 onClick={handleListView}
-                aria-label="List view"
+                aria-label={t('list.viewMode.list')}
                 size="small"
                 sx={listButtonSx}
               >
@@ -592,7 +594,7 @@ const ClimbsList = ({
               <IconButton
                 id="onboarding-view-mode-grid"
                 onClick={handleGridView}
-                aria-label="Grid view"
+                aria-label={t('list.viewMode.grid')}
                 size="small"
                 sx={gridButtonSx}
               >
@@ -698,7 +700,7 @@ const ClimbsList = ({
             ) : (
               <ClimbsListSkeleton aspectRatio={boardDetails.boardWidth / boardDetails.boardHeight} viewMode="list" />
             ))}
-          {!hasMore && climbs.length > 0 && !hideEndMessage && <Box sx={noMoreClimbsBoxSx}>No more climbs</Box>}
+          {!hasMore && climbs.length > 0 && !hideEndMessage && <Box sx={noMoreClimbsBoxSx}>{t('list.noMore')}</Box>}
         </Box>
 
         {showBottomSpacer && <Box sx={{ height: themeTokens.layout.bottomNavSpacer }} aria-hidden />}
@@ -713,8 +715,8 @@ const ClimbsList = ({
           anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
         >
           <Alert severity="warning" onClose={handleCloseBiggerBoard} variant="filled">
-            <AlertTitle>Won&apos;t fit your board</AlertTitle>
-            This one runs off the edge of your wall. You&apos;ll need a bigger size to send it.
+            <AlertTitle>{t('list.biggerBoard.title')}</AlertTitle>
+            {t('list.biggerBoard.description')}
           </Alert>
         </Snackbar>
       </Box>

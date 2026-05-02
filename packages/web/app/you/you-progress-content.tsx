@@ -3,6 +3,7 @@
 import React, { useCallback, useState } from 'react';
 import Box from '@mui/material/Box';
 import CircularProgress from '@mui/material/CircularProgress';
+import { useTranslation } from 'react-i18next';
 import type {
   GetUserClimbPercentileQueryResponse,
   GetUserProfileStatsQueryResponse,
@@ -32,6 +33,7 @@ export default function YouProgressContent({
   initialAllBoardsTicks,
   initialLogbook,
 }: YouProgressContentProps) {
+  const { t } = useTranslation('you');
   const {
     loading,
     selectedBoard,
@@ -92,7 +94,7 @@ export default function YouProgressContent({
     <>
       <StatsFilterBridgeInjector
         openDrawer={openDrawer}
-        pageTitle="Progress"
+        pageTitle={t('progress.title')}
         backUrl={null}
         hasActiveFilters={hasActiveFilters}
         isActive
