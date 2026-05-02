@@ -207,7 +207,7 @@ export default function AngleSelector({
       </MuiButton>
 
       <SwipeableDrawer
-        title="Select Angle"
+        title={t('angleSelector.selectAngle')}
         placement="right"
         onClose={() => setIsDrawerOpen(false)}
         open={isDrawerOpen}
@@ -222,7 +222,7 @@ export default function AngleSelector({
           <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1, mb: 2 }}>
             <CircularProgress size={20} />
             <Typography variant="body2" component="span" color="text.secondary" sx={{ fontSize: 12 }}>
-              Loading stats...
+              {t('angleSelector.loadingStats')}
             </Typography>
           </Box>
         )}

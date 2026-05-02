@@ -159,7 +159,17 @@ describe('SessionOverviewPanel', () => {
 });
 
 describe('buildSessionSummaryParts', () => {
-  const base = { totalFlashes: 0, totalSends: 0, totalAttempts: 0, tickCount: 0 };
+  const t = (key: string, options?: Record<string, unknown>) => {
+    const count = (options?.count as number | undefined) ?? 0;
+    const grade = options?.grade as string | undefined;
+    if (key === 'detail.flashesCount') return `${count} ${count === 1 ? 'flash' : 'flashes'}`;
+    if (key === 'detail.sendsCount') return `${count} ${count === 1 ? 'send' : 'sends'}`;
+    if (key === 'detail.attemptsCount') return `${count} ${count === 1 ? 'attempt' : 'attempts'}`;
+    if (key === 'detail.climbCount') return `${count} ${count === 1 ? 'climb' : 'climbs'}`;
+    if (key === 'detail.hardestLabel') return `Hardest: ${grade}`;
+    return key;
+  };
+  const base = { totalFlashes: 0, totalSends: 0, totalAttempts: 0, tickCount: 0, t };
 
   it('subtracts flashes from sends', () => {
     const parts = buildSessionSummaryParts({

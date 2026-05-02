@@ -7,6 +7,7 @@ import DialogContent from '@mui/material/DialogContent';
 import DialogActions from '@mui/material/DialogActions';
 import Button from '@mui/material/Button';
 import FavoriteOutlined from '@mui/icons-material/FavoriteOutlined';
+import { useTranslation } from 'react-i18next';
 import type { SessionSummary } from '@boardsesh/shared-schema';
 import SessionSummaryView from './session-summary-view';
 import { useHealthKitSync, useHealthKitAutoSync } from '@/app/hooks/use-healthkit-sync';
@@ -24,6 +25,7 @@ export default function SessionSummaryDialog({
   existingWorkoutId,
   onDismiss,
 }: SessionSummaryDialogProps) {
+  const { t } = useTranslation('session');
   const { available, state, save } = useHealthKitSync({ summary, boardType, existingWorkoutId });
   const { enabled: autoSyncEnabled, loaded: autoSyncLoaded } = useHealthKitAutoSync();
   const autoSyncedFor = useRef<string | null>(null);
@@ -37,18 +39,18 @@ export default function SessionSummaryDialog({
     void save();
   }, [summary, available, autoSyncEnabled, autoSyncLoaded, save]);
 
-  let buttonLabel = 'Save to Apple Health';
+  let buttonLabel = t('summary.saveToAppleHealth');
   if (state === 'saving') {
-    buttonLabel = 'Saving to Apple Health…';
+    buttonLabel = t('summary.savingToAppleHealth');
   } else if (state === 'saved') {
-    buttonLabel = 'Saved to Apple Health';
+    buttonLabel = t('summary.savedToAppleHealth');
   } else if (state === 'error') {
-    buttonLabel = 'Save to Apple Health (retry)';
+    buttonLabel = t('summary.saveToAppleHealthRetry');
   }
 
   return (
     <Dialog open={summary !== null} onClose={onDismiss} maxWidth="sm" fullWidth>
-      <DialogTitle>Session Summary</DialogTitle>
+      <DialogTitle>{t('summary.dialogTitle')}</DialogTitle>
       <DialogContent>{summary && <SessionSummaryView summary={summary} />}</DialogContent>
       <DialogActions>
         {available && (
@@ -62,7 +64,7 @@ export default function SessionSummaryDialog({
           </Button>
         )}
         <Button onClick={onDismiss} variant="contained">
-          Done
+          {t('summary.done')}
         </Button>
       </DialogActions>
     </Dialog>

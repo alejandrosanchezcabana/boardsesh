@@ -314,7 +314,7 @@ export default function SeshSettingsDrawer({
               <IconButton
                 size="small"
                 onClick={handleStopSession}
-                aria-label="Stop session"
+                aria-label={t('settings.stopSession')}
                 sx={{
                   color: themeTokens.colors.error,
                   flexShrink: 0,
@@ -323,7 +323,7 @@ export default function SeshSettingsDrawer({
                 <StopCircleOutlined />
               </IconButton>
             ) : (
-              <IconButton size="small" onClick={handleClose} aria-label="Dismiss" sx={{ flexShrink: 0 }}>
+              <IconButton size="small" onClick={handleClose} aria-label={t('settings.dismiss')} sx={{ flexShrink: 0 }}>
                 <CloseOutlined />
               </IconButton>
             )}
@@ -359,7 +359,7 @@ export default function SeshSettingsDrawer({
 
         {isError && (
           <Alert severity="warning" sx={{ mx: 1 }}>
-            Couldn&apos;t load full session details. Live stats will continue when available.
+            {t('settings.loadFailed')}
           </Alert>
         )}
 

@@ -32,6 +32,7 @@ import {
 import CollapsibleSection, {
   type CollapsibleSectionConfig,
 } from '@/app/components/collapsible-section/collapsible-section';
+import { useTranslation } from 'react-i18next';
 import styles from './accordion-search-form.module.css';
 
 import { KILTER_HOMEWALL_LAYOUT_ID } from '@/app/lib/board-constants';
@@ -42,6 +43,7 @@ type AccordionSearchFormProps = {
 };
 
 const AccordionSearchForm: React.FC<AccordionSearchFormProps> = ({ boardDetails, defaultActiveKey }) => {
+  const { t } = useTranslation('climbs');
   const { uiSearchParams, updateFilters } = useUISearchParams();
   const { isAuthenticated } = useBoardProvider();
   const grades = TENSION_KILTER_GRADES;
@@ -68,12 +70,12 @@ const AccordionSearchForm: React.FC<AccordionSearchFormProps> = ({ boardDetails,
   const climbContent = (
     <div className={styles.panelContent}>
       <div className={styles.inputGroup}>
-        <span className={styles.fieldLabel}>Climb Name</span>
+        <span className={styles.fieldLabel}>{t('search.fields.climbName')}</span>
         <SearchClimbNameInput />
       </div>
 
       <div className={styles.inputGroup}>
-        <span className={styles.fieldLabel}>Grade Range</span>
+        <span className={styles.fieldLabel}>{t('search.fields.gradeRange')}</span>
         <div className={styles.gradeRow}>
           <MuiSelect
             value={uiSearchParams.minGrade || 0}
@@ -83,7 +85,7 @@ const AccordionSearchForm: React.FC<AccordionSearchFormProps> = ({ boardDetails,
             displayEmpty
             MenuProps={{ disableScrollLock: true }}
           >
-            <MenuItem value={0}>Min</MenuItem>
+            <MenuItem value={0}>{t('search.fields.minGrade')}</MenuItem>
             {grades.map((grade) => (
               <MenuItem key={grade.difficulty_id} value={grade.difficulty_id}>
                 {grade.difficulty_name}
@@ -98,7 +100,7 @@ const AccordionSearchForm: React.FC<AccordionSearchFormProps> = ({ boardDetails,
             displayEmpty
             MenuProps={{ disableScrollLock: true }}
           >
-            <MenuItem value={0}>Max</MenuItem>
+            <MenuItem value={0}>{t('search.fields.maxGrade')}</MenuItem>
             {grades.map((grade) => (
               <MenuItem key={grade.difficulty_id} value={grade.difficulty_id}>
                 {grade.difficulty_name}
@@ -122,9 +124,9 @@ const AccordionSearchForm: React.FC<AccordionSearchFormProps> = ({ boardDetails,
               />
             }
             label={
-              <MuiTooltip title="Show only climbs that use holds in the bottom 8 rows (only available on 10x12 boards)">
+              <MuiTooltip title={t('search.fields.tallClimbsTooltip')}>
                 <MuiTypography variant="body2" component="span">
-                  Tall Climbs Only
+                  {t('search.fields.tallClimbsOnly')}
                 </MuiTypography>
               </MuiTooltip>
             }
@@ -133,7 +135,7 @@ const AccordionSearchForm: React.FC<AccordionSearchFormProps> = ({ boardDetails,
       )}
 
       <div className={styles.inputGroup}>
-        <span className={styles.fieldLabel}>Setter</span>
+        <span className={styles.fieldLabel}>{t('search.fields.setter')}</span>
         <SetterNameSelect />
       </div>
 
@@ -144,7 +146,7 @@ const AccordionSearchForm: React.FC<AccordionSearchFormProps> = ({ boardDetails,
         className={styles.sortToggle}
         onClick={() => setShowSort(!showSort)}
       >
-        Sort
+        {t('search.sortToggle')}
       </MuiButton>
 
       {showSort && (
@@ -157,12 +159,12 @@ const AccordionSearchForm: React.FC<AccordionSearchFormProps> = ({ boardDetails,
               size="small"
               MenuProps={{ disableScrollLock: true }}
             >
-              <MenuItem value="ascents">Ascents</MenuItem>
-              <MenuItem value="popular">Popular</MenuItem>
-              <MenuItem value="difficulty">Difficulty</MenuItem>
-              <MenuItem value="name">Name</MenuItem>
-              <MenuItem value="quality">Quality</MenuItem>
-              <MenuItem value="creation">Creation</MenuItem>
+              <MenuItem value="ascents">{t('list.sort.ascents')}</MenuItem>
+              <MenuItem value="popular">{t('list.sort.popular')}</MenuItem>
+              <MenuItem value="difficulty">{t('list.sort.difficulty')}</MenuItem>
+              <MenuItem value="name">{t('list.sort.name')}</MenuItem>
+              <MenuItem value="quality">{t('list.sort.quality')}</MenuItem>
+              <MenuItem value="creation">{t('list.sort.creation')}</MenuItem>
             </MuiSelect>
             <MuiSelect
               value={uiSearchParams.sortOrder}
@@ -171,8 +173,8 @@ const AccordionSearchForm: React.FC<AccordionSearchFormProps> = ({ boardDetails,
               size="small"
               MenuProps={{ disableScrollLock: true }}
             >
-              <MenuItem value="desc">Desc</MenuItem>
-              <MenuItem value="asc">Asc</MenuItem>
+              <MenuItem value="desc">{t('list.sort.descending')}</MenuItem>
+              <MenuItem value="asc">{t('list.sort.ascending')}</MenuItem>
             </MuiSelect>
           </div>
         </div>
@@ -183,15 +185,15 @@ const AccordionSearchForm: React.FC<AccordionSearchFormProps> = ({ boardDetails,
   const sections: CollapsibleSectionConfig[] = [
     {
       key: 'quality',
-      label: 'Quality',
-      title: 'Quality',
-      defaultSummary: 'Any',
+      label: t('search.panels.quality'),
+      title: t('search.panels.quality'),
+      defaultSummary: t('search.panels.anyDefault'),
       getSummary: () => getQualityPanelSummary(uiSearchParams),
       content: (
         <div className={styles.panelContent}>
           <div className={styles.qualityRow}>
             <div className={styles.compactInputGroup}>
-              <span className={styles.fieldLabel}>Min Ascents</span>
+              <span className={styles.fieldLabel}>{t('search.fields.minAscents')}</span>
               <TextField
                 type="number"
                 slotProps={{ htmlInput: { min: 1 } }}
@@ -200,12 +202,12 @@ const AccordionSearchForm: React.FC<AccordionSearchFormProps> = ({ boardDetails,
                 value={uiSearchParams.minAscents || ''}
                 onChange={(e) => updateFilters({ minAscents: Number(e.target.value) || 0 })}
                 className={styles.fullWidth}
-                placeholder="Any"
+                placeholder={t('search.fields.any')}
                 size="small"
               />
             </div>
             <div className={styles.compactInputGroup}>
-              <span className={styles.fieldLabel}>Min Rating</span>
+              <span className={styles.fieldLabel}>{t('search.fields.minRating')}</span>
               <TextField
                 type="number"
                 slotProps={{ htmlInput: { min: 1.0, max: 3.0, step: 0.1 } }}
@@ -214,14 +216,14 @@ const AccordionSearchForm: React.FC<AccordionSearchFormProps> = ({ boardDetails,
                 value={uiSearchParams.minRating || ''}
                 onChange={(e) => updateFilters({ minRating: Number(e.target.value) || 0 })}
                 className={styles.fullWidth}
-                placeholder="Any"
+                placeholder={t('search.fields.any')}
                 size="small"
               />
             </div>
           </div>
 
           <div className={styles.inputGroup}>
-            <span className={styles.fieldLabel}>Grade Accuracy</span>
+            <span className={styles.fieldLabel}>{t('search.fields.gradeAccuracy')}</span>
             <MuiSelect
               value={uiSearchParams.gradeAccuracy ?? 0}
               onChange={(e) => updateFilters({ gradeAccuracy: Number(e.target.value) || 0 })}
@@ -229,10 +231,10 @@ const AccordionSearchForm: React.FC<AccordionSearchFormProps> = ({ boardDetails,
               size="small"
               MenuProps={{ disableScrollLock: true }}
             >
-              <MenuItem value={0}>Any</MenuItem>
-              <MenuItem value={0.2}>Somewhat Accurate (&lt;0.2)</MenuItem>
-              <MenuItem value={0.1}>Very Accurate (&lt;0.1)</MenuItem>
-              <MenuItem value={0.05}>Extremely Accurate (&lt;0.05)</MenuItem>
+              <MenuItem value={0}>{t('search.fields.any')}</MenuItem>
+              <MenuItem value={0.2}>{t('search.fields.somewhatAccurate')}</MenuItem>
+              <MenuItem value={0.1}>{t('search.fields.veryAccurate')}</MenuItem>
+              <MenuItem value={0.05}>{t('search.fields.extremelyAccurate')}</MenuItem>
             </MuiSelect>
           </div>
 
@@ -250,7 +252,7 @@ const AccordionSearchForm: React.FC<AccordionSearchFormProps> = ({ boardDetails,
               }
               label={
                 <MuiTypography variant="body2" component="span">
-                  Classics Only
+                  {t('search.fields.classicsOnly')}
                 </MuiTypography>
               }
             />
@@ -260,9 +262,9 @@ const AccordionSearchForm: React.FC<AccordionSearchFormProps> = ({ boardDetails,
     },
     {
       key: 'status',
-      label: 'Ascent Status',
-      title: 'Ascent Status',
-      defaultSummary: 'Any',
+      label: t('search.panels.status'),
+      title: t('search.panels.status'),
+      defaultSummary: t('search.panels.anyDefault'),
       getSummary: () => getStatusPanelSummary(uiSearchParams),
       content: (
         <div className={styles.panelContent}>
@@ -306,7 +308,7 @@ const AccordionSearchForm: React.FC<AccordionSearchFormProps> = ({ boardDetails,
               control={<Radio size="small" color="primary" />}
               label={
                 <MuiTypography variant="body2" component="span">
-                  Any
+                  {t('search.status.any')}
                 </MuiTypography>
               }
             />
@@ -315,9 +317,9 @@ const AccordionSearchForm: React.FC<AccordionSearchFormProps> = ({ boardDetails,
               value="established"
               control={<Radio size="small" color="primary" />}
               label={
-                <MuiTooltip title="Climbs with 2 or more ascents">
+                <MuiTooltip title={t('search.status.establishedTooltip')}>
                   <MuiTypography variant="body2" component="span">
-                    Established
+                    {t('search.status.established')}
                   </MuiTypography>
                 </MuiTooltip>
               }
@@ -327,9 +329,9 @@ const AccordionSearchForm: React.FC<AccordionSearchFormProps> = ({ boardDetails,
               value="projects"
               control={<Radio size="small" color="primary" />}
               label={
-                <MuiTooltip title="Climbs with zero recorded ascents">
+                <MuiTooltip title={t('search.status.projectsTooltip')}>
                   <MuiTypography variant="body2" component="span">
-                    Projects
+                    {t('search.status.projects')}
                   </MuiTypography>
                 </MuiTooltip>
               }
@@ -341,7 +343,7 @@ const AccordionSearchForm: React.FC<AccordionSearchFormProps> = ({ boardDetails,
               control={<Radio size="small" color="primary" />}
               label={
                 <MuiTypography variant="body2" component="span">
-                  My Drafts{!isAuthenticated ? ' (sign in)' : ''}
+                  {!isAuthenticated ? t('search.status.myDraftsSignedOut') : t('search.status.myDrafts')}
                 </MuiTypography>
               }
             />
@@ -357,16 +359,16 @@ const AccordionSearchForm: React.FC<AccordionSearchFormProps> = ({ boardDetails,
                   startIcon={<LoginOutlined />}
                   onClick={() =>
                     openAuthModal({
-                      title: 'Sign in to Boardsesh',
-                      description: 'Sign in to browse your draft climbs.',
+                      title: t('search.status.signInModalTitle'),
+                      description: t('search.status.signInModalDescription'),
                     })
                   }
                 >
-                  Sign In
+                  {t('search.actions.signIn')}
                 </MuiButton>
               }
             >
-              Sign in to filter by your drafts.
+              {t('search.status.signInToFilterDrafts')}
             </MuiAlert>
           )}
         </div>

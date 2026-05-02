@@ -212,10 +212,10 @@ export const getGradeName = (difficultyId: number): string => {
   return grade?.difficulty_name || `Grade ${difficultyId}`;
 };
 
-// Group slots by section for display
+// Group slots by section for display. Callers translate `section` via the
+// `playlists` namespace at `generator.sections.<section>` to render the label.
 export type GroupedSlots = {
   section: PlannedClimbSlot['section'];
-  label: string;
   slots: PlannedClimbSlot[];
 };
 
@@ -224,20 +224,11 @@ export const groupSlotsBySection = (slots: PlannedClimbSlot[]): GroupedSlots[] =
   let currentSection: PlannedClimbSlot['section'] | null = null;
   let currentGroup: PlannedClimbSlot[] = [];
 
-  const sectionLabels: Record<PlannedClimbSlot['section'], string> = {
-    warmUp: 'Warm Up',
-    increasing: 'Increasing',
-    peak: 'Peak',
-    decreasing: 'Decreasing',
-    main: 'Main Set',
-  };
-
   for (const slot of slots) {
     if (slot.section !== currentSection) {
       if (currentSection && currentGroup.length > 0) {
         groups.push({
           section: currentSection,
-          label: sectionLabels[currentSection],
           slots: [...currentGroup],
         });
       }
@@ -252,7 +243,6 @@ export const groupSlotsBySection = (slots: PlannedClimbSlot[]): GroupedSlots[] =
   if (currentSection && currentGroup.length > 0) {
     groups.push({
       section: currentSection,
-      label: sectionLabels[currentSection],
       slots: currentGroup,
     });
   }

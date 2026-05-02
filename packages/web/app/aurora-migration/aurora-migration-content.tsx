@@ -229,11 +229,11 @@ export default function AuroraMigrationContent() {
                   </MuiAvatar>
                   <div className={styles.stepContent}>
                     <Typography variant="h6" sx={{ mb: 1 }}>
-                      Your Boardsesh profile
+                      {t('migration.howToMigrate.step4.title')}
                     </Typography>
                     {!isAuthenticated && (
                       <Typography variant="body2" color="text.secondary">
-                        Sign in first to see your profile.
+                        {t('migration.howToMigrate.step4.signInFirst')}
                       </Typography>
                     )}
                   </div>
@@ -252,19 +252,19 @@ export default function AuroraMigrationContent() {
               <Stack spacing={2} className={styles.cardContent}>
                 <Typography variant="h5">
                   <GitHub className={`${styles.sectionIcon}`} />
-                  Get Help
+                  {t('migration.getHelp.title')}
                 </Typography>
 
                 <Typography variant="body1" component="p">
-                  Boardsesh is open source. File bugs, request features, or just ask for help.
+                  {t('migration.getHelp.body')}
                 </Typography>
 
                 <Stack spacing={1}>
                   <MuiLink href="https://discord.gg/YXA8GsXfQK" target="_blank" rel="noopener noreferrer">
-                    Discord &mdash; Join for help and discussion
+                    {t('migration.getHelp.discord')}
                   </MuiLink>
                   <MuiLink href="https://github.com/boardsesh/boardsesh" target="_blank" rel="noopener noreferrer">
-                    GitHub &mdash; github.com/boardsesh/boardsesh
+                    {t('migration.getHelp.github')}
                   </MuiLink>
                 </Stack>
               </Stack>

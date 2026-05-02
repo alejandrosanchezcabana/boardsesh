@@ -22,6 +22,7 @@ import { useSnackbar } from '@/app/components/providers/snackbar-provider';
 import { useSession } from 'next-auth/react';
 import { usePathname } from 'next/navigation';
 import { useLocaleRouter } from '@/app/lib/i18n/use-locale-router';
+import { useTranslation } from 'react-i18next';
 import {
   constructBoardSlugListUrl,
   getBaseBoardPath,
@@ -49,6 +50,7 @@ type StartSeshDrawerProps = {
 };
 
 export default function StartSeshDrawer({ open, onClose, onTransitionEnd, boardConfigs }: StartSeshDrawerProps) {
+  const { t } = useTranslation('session');
   const { status } = useSession();
   const { paperRef, dragHandlers } = useDrawerDragResize({ open, onClose });
   const router = useLocaleRouter();
@@ -211,7 +213,7 @@ export default function StartSeshDrawer({ open, onClose, onTransitionEnd, boardC
     }
 
     if (!boardPath || !navigateUrl) {
-      showMessage('Please select a board first', 'warning');
+      showMessage(t('creation.selectBoardWarning'), 'warning');
       return;
     }
 
@@ -273,10 +275,10 @@ export default function StartSeshDrawer({ open, onClose, onTransitionEnd, boardC
       });
 
       handleClose();
-      showMessage('Session started!', 'success');
+      showMessage(t('creation.started'), 'success');
     } catch (error) {
       console.error('Failed to create session:', error);
-      showMessage('Failed to start session', 'error');
+      showMessage(t('creation.errors.createFailed'), 'error');
       throw error;
     }
   };
@@ -288,7 +290,7 @@ export default function StartSeshDrawer({ open, onClose, onTransitionEnd, boardC
       {hasSelection && !boardSelectorExpanded ? (
         <Box>
           <Typography sx={{ fontSize: 16, fontWeight: 600, color: 'var(--neutral-900)', mb: 1.5 }}>
-            Boards near you
+            {t('creation.boardsNearYou')}
           </Typography>
           <Box
             data-testid="selected-board-card"
@@ -346,7 +348,7 @@ export default function StartSeshDrawer({ open, onClose, onTransitionEnd, boardC
         title={
           <div data-swipe-blocked="" {...dragHandlers} className={drawerCss.dragHeaderWrapper}>
             <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
-              Start session
+              {t('creation.drawerTitle')}
             </Typography>
           </div>
         }
@@ -378,21 +380,19 @@ export default function StartSeshDrawer({ open, onClose, onTransitionEnd, boardC
             disabled={isCreating}
             fullWidth
           >
-            Sesh
+            {t('creation.submitDefault')}
           </Button>
         }
       >
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
           <Typography variant="body2" component="span">
-            {isLoggedIn
-              ? 'Track your climbs and invite others to join.'
-              : 'Jump in without an account. Sign in later to save your progress.'}
+            {isLoggedIn ? t('creation.loggedInBlurb') : t('creation.anonymousBlurb')}
           </Typography>
           <SessionCreationForm
             key={formKey}
             onSubmit={handleSubmit}
             isSubmitting={isCreating}
-            submitLabel="Sesh"
+            submitLabel={t('creation.submitDefault')}
             headerContent={boardSelector}
             isAnonymous={!isLoggedIn}
             renderSubmit={({ onSubmit: formSubmit }) => {
@@ -407,13 +407,13 @@ export default function StartSeshDrawer({ open, onClose, onTransitionEnd, boardC
               startIcon={<LoginOutlined />}
               onClick={() =>
                 openAuthModal({
-                  title: 'Sign in to save your session',
-                  description: "Your sends won't disappear when you close the tab.",
+                  title: t('creation.signInModalTitle'),
+                  description: t('creation.signInModalDescription'),
                 })
               }
               sx={{ alignSelf: 'center' }}
             >
-              Sign in for more features
+              {t('creation.signInForMore')}
             </Button>
           )}
         </Box>

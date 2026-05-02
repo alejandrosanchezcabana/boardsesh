@@ -11,6 +11,7 @@ import Typography from '@mui/material/Typography';
 import Chip from '@mui/material/Chip';
 import CircularProgress from '@mui/material/CircularProgress';
 import PlayCircleOutlineOutlined from '@mui/icons-material/PlayCircleOutlineOutlined';
+import { useTranslation } from 'react-i18next';
 
 const COLOR_OPTIONS = [
   '#F44336',
@@ -50,11 +51,13 @@ export default function SessionCreationForm({
   onSubmit,
   isGymAdmin = false,
   isSubmitting = false,
-  submitLabel = 'Sesh',
+  submitLabel,
   headerContent,
   isAnonymous = false,
   renderSubmit,
 }: SessionCreationFormProps) {
+  const { t } = useTranslation('session');
+  const effectiveSubmitLabel = submitLabel ?? t('creation.submitDefault');
   const [name, setName] = useState('');
   const [goal, setGoal] = useState('');
   const [color, setColor] = useState<string | undefined>(undefined);
@@ -87,17 +90,17 @@ export default function SessionCreationForm({
       {headerContent}
 
       <TextField
-        label="Session name"
+        label={t('creation.form.sessionNameLabel')}
         value={name}
         onChange={(e) => setName(e.target.value)}
         fullWidth
         size="small"
         inputProps={{ maxLength: 100 }}
-        placeholder="e.g., Tuesday Projecting"
+        placeholder={t('creation.form.sessionNamePlaceholder')}
       />
 
       <TextField
-        label="Session goal"
+        label={t('creation.form.sessionGoalLabel')}
         value={goal}
         onChange={(e) => setGoal(e.target.value)}
         fullWidth
@@ -106,14 +109,14 @@ export default function SessionCreationForm({
         minRows={2}
         maxRows={4}
         inputProps={{ maxLength: 500 }}
-        placeholder="e.g., Send V5 today"
-        helperText={`${goal.length}/500`}
+        placeholder={t('creation.form.sessionGoalPlaceholder')}
+        helperText={t('creation.form.sessionGoalHelper', { count: goal.length })}
       />
 
       {/* Color picker */}
       <Box>
         <Typography variant="body2" color="text.secondary" gutterBottom>
-          Session color
+          {t('creation.form.sessionColor')}
         </Typography>
         <Box sx={{ display: 'flex', gap: 0.75, flexWrap: 'wrap' }}>
           {COLOR_OPTIONS.map((c) => (
@@ -144,10 +147,10 @@ export default function SessionCreationForm({
         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <Stack spacing={0}>
             <Typography variant="body2" component="span" fontWeight={600}>
-              Discoverable by nearby climbers
+              {t('creation.form.discoverableLabel')}
             </Typography>
             <Typography variant="body2" component="span" color="text.secondary" sx={{ fontSize: '12px' }}>
-              Others nearby can find and join your session
+              {t('creation.form.discoverableDescription')}
             </Typography>
           </Stack>
           <Switch checked={discoverable} onChange={(e) => setDiscoverable(e.target.checked)} />
@@ -157,12 +160,12 @@ export default function SessionCreationForm({
       {isGymAdmin && (
         <FormControlLabel
           control={<Switch checked={isPermanent} onChange={(e) => setIsPermanent(e.target.checked)} />}
-          label="Permanent session (won't auto-end)"
+          label={t('creation.form.permanentLabel')}
         />
       )}
 
       {renderSubmit ? (
-        renderSubmit({ onSubmit: handleSubmit, isSubmitting, label: submitLabel })
+        renderSubmit({ onSubmit: handleSubmit, isSubmitting, label: effectiveSubmitLabel })
       ) : (
         <Button
           variant="contained"
@@ -172,7 +175,7 @@ export default function SessionCreationForm({
           disabled={isSubmitting}
           fullWidth
         >
-          {submitLabel}
+          {effectiveSubmitLabel}
         </Button>
       )}
     </Stack>
