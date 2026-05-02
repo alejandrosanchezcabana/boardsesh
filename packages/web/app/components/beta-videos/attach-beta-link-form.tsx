@@ -134,9 +134,7 @@ const AttachBetaLinkForm: React.FC<AttachBetaLinkFormProps> = ({
         helperText={
           validationError ??
           helperText ??
-          (climbName
-            ? `Paste a public Instagram reel or post that mentions ${climbName}, or a TikTok URL.`
-            : 'Paste a public Instagram reel/post or TikTok URL so others can see your beta.')
+          'Paste a public Instagram reel/post or TikTok URL so others can see your beta.'
         }
         onKeyDown={(e) => {
           if (e.key === 'Enter' && canSubmit) {

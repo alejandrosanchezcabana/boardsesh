@@ -21,20 +21,6 @@ import {
 } from '../../../utils/instagram-beta-validation';
 import { cacheInstagramThumbnail, isS3Configured } from '../../../lib/beta-link-thumbnails';
 
-async function getClimbNameForBetaValidation(boardType: string, climbUuid: string): Promise<string> {
-  const [climb] = await db
-    .select({ name: dbSchema.boardClimbs.name })
-    .from(dbSchema.boardClimbs)
-    .where(and(eq(dbSchema.boardClimbs.boardType, boardType), eq(dbSchema.boardClimbs.uuid, climbUuid)))
-    .limit(1);
-
-  const climbName = climb?.name?.trim();
-  if (!climbName) {
-    throw new InstagramBetaValidationError("We couldn't verify this Instagram link for the selected climb.");
-  }
-  return climbName;
-}
-
 // Beta links are only attached on successful ascents (flash / send), never on
 // `attempt`. Returns the URL to attach, or null if the tick shouldn't carry
 // one. Exported so the rule can be unit-tested without integration setup.
@@ -154,9 +140,8 @@ export async function validateAndEnrichBetaLinkInsert(
   // loop from getting our IP rate-limited or blocked by Instagram.
   await applyRateLimit(ctx, 30, 'instagram-beta-validation');
 
-  const climbName = await getClimbNameForBetaValidation(boardType, climbUuid);
   await ensureInstagramShortcodeIsNotAlreadyLinked(boardType, climbUuid, url);
-  const metadata = await validateInstagramBetaLink(url, climbName);
+  const metadata = await validateInstagramBetaLink(url);
   return enrichInstagramBetaInsert(metadata);
 }
 
