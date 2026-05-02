@@ -51,21 +51,20 @@ test.describe('i18n locale navigation', () => {
     expect(localeCookie).toBeUndefined();
   });
 
-  test('LocaleLink rewrites in-app hrefs but leaves /api/ paths alone', async ({ page }) => {
+  test('in-app hrefs render with the /es prefix on Spanish pages', async ({ page }) => {
     await page.goto('/es/about', { waitUntil: 'domcontentloaded' });
 
-    // Anchors generated through LocaleLink should keep the /es prefix.
     const localizedHrefs = await page
       .locator('a[href^="/es/"]')
       .evaluateAll((nodes) => nodes.map((n) => (n as HTMLAnchorElement).getAttribute('href')));
     expect(localizedHrefs.length).toBeGreaterThan(0);
 
-    // Any anchor pointing at /api/ must not be locale-prefixed.
-    const apiHrefs = await page
-      .locator('a[href^="/api/"], a[href^="/es/api/"]')
+    // Negative invariant: no anchor anywhere on the page should pretend
+    // /api/* is locale-scoped. If LocaleLink ever regresses this guard,
+    // a sign-in or webhook anchor will pollute the document.
+    const prefixedApi = await page
+      .locator('a[href^="/es/api/"]')
       .evaluateAll((nodes) => nodes.map((n) => (n as HTMLAnchorElement).getAttribute('href')));
-    for (const href of apiHrefs) {
-      expect(href).not.toMatch(/^\/es\/api\//);
-    }
+    expect(prefixedApi).toEqual([]);
   });
 });

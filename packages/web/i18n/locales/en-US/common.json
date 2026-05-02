@@ -1,6 +1,7 @@
 {
   "languageSwitcher": {
     "ariaLabel": "Language",
+    "ariaLabelWithCurrent": "Language: {{language}}",
     "switchTo": "Switch to {{language}}"
   },
   "languages": {

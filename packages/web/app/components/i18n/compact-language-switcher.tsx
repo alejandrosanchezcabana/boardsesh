@@ -47,7 +47,7 @@ function CompactLanguageSwitcherInner() {
     <Tooltip title={t('languageSwitcher.switchTo', { language: LOCALE_LABELS[next] })}>
       <IconButton
         onClick={handleClick}
-        aria-label={t('languageSwitcher.ariaLabel') + `: ${LOCALE_LABELS[current]}`}
+        aria-label={t('languageSwitcher.ariaLabelWithCurrent', { language: LOCALE_LABELS[current] })}
         size="small"
       >
         <span style={{ fontSize: 20, lineHeight: 1 }} aria-hidden>

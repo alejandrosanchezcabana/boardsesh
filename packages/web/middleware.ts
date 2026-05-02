@@ -59,25 +59,21 @@ export function middleware(request: NextRequest) {
   // Detect locale from URL prefix. API routes don't carry a locale prefix —
   // skip them so we don't mangle their paths.
   const isApi = pathname.startsWith('/api/');
+  const { locale, strippedPath, needsRewrite } = isApi
+    ? { locale: DEFAULT_LOCALE, strippedPath: pathname, needsRewrite: false }
+    : detectLocale(pathname);
 
   // Cookie-driven sticky locale: when a page request arrives without a locale
   // prefix and the visitor previously chose a non-default locale, send them
   // to the prefixed URL so subsequent navigation stays in their language.
-  if (!isApi) {
-    const preDetected = detectLocale(pathname);
-    if (preDetected.locale === DEFAULT_LOCALE) {
-      const cookieLocale = request.cookies.get(LOCALE_COOKIE)?.value;
-      if (isSupportedLocale(cookieLocale) && cookieLocale !== DEFAULT_LOCALE) {
-        const target = new URL(`/${cookieLocale}${pathname}`, request.url);
-        target.search = request.nextUrl.search;
-        return NextResponse.redirect(target, 308);
-      }
+  if (!isApi && locale === DEFAULT_LOCALE) {
+    const cookieLocale = request.cookies.get(LOCALE_COOKIE)?.value;
+    if (isSupportedLocale(cookieLocale) && cookieLocale !== DEFAULT_LOCALE) {
+      const target = new URL(`/${cookieLocale}${pathname}`, request.url);
+      target.search = request.nextUrl.search;
+      return NextResponse.redirect(target, 308);
     }
   }
-
-  const { locale, strippedPath, needsRewrite } = isApi
-    ? { locale: DEFAULT_LOCALE, strippedPath: pathname, needsRewrite: false }
-    : detectLocale(pathname);
 
   const requestHeaders = new Headers(request.headers);
   requestHeaders.set(LOCALE_HEADER, locale);

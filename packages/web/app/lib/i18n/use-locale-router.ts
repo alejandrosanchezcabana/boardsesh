@@ -3,38 +3,8 @@
 import { useCallback, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslation } from 'react-i18next';
-import { localeHref, stripLocalePrefix } from './locale-href';
-import { DEFAULT_LOCALE, SUPPORTED_LOCALES, isSupportedLocale, type Locale } from './config';
-
-const PASS_THROUGH_RE = /^(https?:|\/\/|mailto:|tel:|#)/i;
-
-function shouldPassThrough(href: string): boolean {
-  if (!href) return true;
-  if (href.startsWith('/api/')) return true;
-  return PASS_THROUGH_RE.test(href);
-}
-
-function alreadyPrefixed(href: string): boolean {
-  for (const locale of SUPPORTED_LOCALES) {
-    if (locale === DEFAULT_LOCALE) continue;
-    if (href === `/${locale}` || href.startsWith(`/${locale}/`) || href.startsWith(`/${locale}?`)) {
-      return true;
-    }
-  }
-  return false;
-}
-
-function applyLocale(href: string, locale: Locale): string {
-  if (shouldPassThrough(href)) return href;
-  if (!alreadyPrefixed(href)) return localeHref(href, locale);
-  // Strip whichever non-default prefix is present, then re-apply the active one.
-  let stripped = href;
-  for (const candidate of SUPPORTED_LOCALES) {
-    if (candidate === DEFAULT_LOCALE) continue;
-    stripped = stripLocalePrefix(stripped, candidate);
-  }
-  return localeHref(stripped, locale);
-}
+import { applyLocale } from './locale-href';
+import { DEFAULT_LOCALE, isSupportedLocale, type Locale } from './config';
 
 type RouterPushOptions = Parameters<ReturnType<typeof useRouter>['push']>[1];
 type RouterReplaceOptions = Parameters<ReturnType<typeof useRouter>['replace']>[1];

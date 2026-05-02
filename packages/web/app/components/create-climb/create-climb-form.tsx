@@ -31,7 +31,7 @@ import {
 import { themeTokens } from '@/app/theme/theme-config';
 import HoldIndicator from './hold-indicator';
 import { usePathname } from 'next/navigation';
-import Link from 'next/link';
+import LocaleLink from '@/app/components/i18n/locale-link';
 import { track } from '@vercel/analytics';
 import { useSession } from 'next-auth/react';
 import BoardRenderer from '../board-renderer/board-renderer';
@@ -1281,7 +1281,7 @@ export default function CreateClimbForm({
     if (boardType === 'moonboard' && !hasMoonBoardSessionUser) {
       return (
         <MuiTooltip title="Log in to save your climb">
-          <IconButton size="small" color="primary" component={Link} href="/api/auth/signin" aria-label="Log in to save">
+          <IconButton size="small" color="primary" component={LocaleLink} href="/api/auth/signin" aria-label="Log in to save">
             <LoginOutlined fontSize="small" />
           </IconButton>
         </MuiTooltip>
@@ -1564,7 +1564,7 @@ export default function CreateClimbForm({
               </span>
             </MuiTooltip>
             <MuiTooltip title="Bulk import">
-              <IconButton size="small" component={Link} href={bulkImportUrl} aria-label="Bulk import">
+              <IconButton size="small" component={LocaleLink} href={bulkImportUrl} aria-label="Bulk import">
                 <GetAppOutlined fontSize="small" />
               </IconButton>
             </MuiTooltip>
