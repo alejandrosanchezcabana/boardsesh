@@ -166,9 +166,9 @@ const SocialFeedItem: React.FC<SocialFeedItemProps> = ({ item, showUserHeader = 
               <MuiTypography variant="body2" component="span" color="text.secondary" className={styles.boardType}>
                 {boardDisplay}
               </MuiTypography>
-              // i18n-ignore-next-line
+              {/* i18n-ignore-next-line */}
               {item.isMirror && <Chip label="Mirrored" size="small" color="secondary" />}
-              // i18n-ignore-next-line
+              {/* i18n-ignore-next-line */}
               {item.isBenchmark && <Chip label="Benchmark" size="small" />}
             </Box>
 

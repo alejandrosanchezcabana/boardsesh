@@ -103,7 +103,7 @@ export const LogbookEntryCard: React.FC<LogbookEntryCardProps> = ({
                 <AscentStatusIcon status={ascentStatus} variant="icon" />
               </>
             )}
-            // i18n-ignore-next-line
+            {/* i18n-ignore-next-line */}
             {showMirrorTag && entry.isMirror && <Chip label="Mirrored" size="small" color="secondary" />}
           </Stack>
           {hasSuccess && entry.quality != null && entry.quality > 0 && (

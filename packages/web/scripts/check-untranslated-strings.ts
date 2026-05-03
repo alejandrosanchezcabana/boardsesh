@@ -105,7 +105,7 @@ function discoverFiles(): string[] {
   return files;
 }
 
-const URL_LIKE = /^(?:https?:\/\/|mailto:|tel:|ftp:|\/\/)/i;
+const URL_LIKE = /^(?:https?:\/\/|mailto:|tel:|ftp:|\/\/[a-zA-Z0-9-])/i;
 const PATH_LIKE = /^(?:\.{1,2}\/|\/[a-zA-Z0-9_-]+\/?$)/;
 const HEX_COLOR = /^#[0-9a-fA-F]{3,8}$/;
 const PURE_PUNCT_NUM = /^[\s\d\p{P}\p{S}]+$/u;
@@ -222,11 +222,13 @@ function chooseIgnoreCommentText(violation: Violation, lineText: string, previou
   }
 
   // JSX text and lines whose first character is `<` (start of a JSX
-  // element nested inside another JSX element) live in JSX-child position;
-  // use the JsxExpression form. For straight JS lines (e.g. `showMessage(…)`
-  // in a function body), use a line comment to avoid emitting a stray empty
-  // block.
-  if (violation.kind === 'jsx-text' || trimmed.startsWith('<')) {
+  // element nested inside another JSX element) or `{` (a JsxExpression
+  // child like `{cond && <Chip />}`) live in JSX-child position; use the
+  // JsxExpression form. A bare `//` comment in JSX-child position would
+  // render as visible DOM text. For straight JS lines (e.g.
+  // `showMessage(…)` in a function body), use a line comment to avoid
+  // emitting a stray empty block.
+  if (violation.kind === 'jsx-text' || trimmed.startsWith('<') || trimmed.startsWith('{')) {
     return `${indent}{/* i18n-ignore-next-line */}`;
   }
   return `${indent}// i18n-ignore-next-line`;
@@ -526,5 +528,5 @@ if (import.meta.main) {
   main();
 }
 
-export { checkFile, looksTranslatable, run };
+export { applyFixes, checkFile, looksTranslatable, run };
 export type { Violation };

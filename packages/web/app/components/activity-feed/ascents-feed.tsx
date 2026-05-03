@@ -204,9 +204,9 @@ const GroupedFeedItem: React.FC<{
               <MuiTypography variant="body2" component="span" color="text.secondary" className={styles.boardType}>
                 {boardDisplay}
               </MuiTypography>
-              // i18n-ignore-next-line
+              {/* i18n-ignore-next-line */}
               {group.isMirror && <Chip label="Mirrored" size="small" color="secondary" />}
-              // i18n-ignore-next-line
+              {/* i18n-ignore-next-line */}
               {group.isBenchmark && <Chip label="Benchmark" size="small" />}
             </Box>
 

@@ -1,10 +1,20 @@
+import { mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { checkFile, looksTranslatable } from './check-untranslated-strings';
+import { applyFixes, checkFile, looksTranslatable } from './check-untranslated-strings';
 
 const fakePath = '/tmp/fake-component.tsx';
 
 function scan(source: string) {
   return checkFile(fakePath, source);
+}
+
+function withTempFile(source: string, run: (path: string) => void) {
+  const dir = mkdtempSync(join(tmpdir(), 'i18n-scan-'));
+  const path = join(dir, 'component.tsx');
+  writeFileSync(path, source);
+  run(path);
 }
 
 describe('looksTranslatable', () => {
@@ -212,5 +222,110 @@ export default function Foo() {
 `);
     expect(violations).toHaveLength(0);
     expect(staleMarkers.length).toBeGreaterThan(0);
+  });
+
+  it('catches a bare `// i18n-ignore-next-line` accidentally rendered as JSX text', () => {
+    // Regression: URL_LIKE used to match `^//` and silently allow this
+    // bug through, masking incorrect output from --fix mode.
+    const { violations } = scan(`
+export default function Foo() {
+  return (
+    <div>
+      // i18n-ignore-next-line
+      hello world
+    </div>
+  );
+}
+`);
+    expect(violations.some((violation) => violation.text.includes('i18n-ignore-next-line'))).toBe(true);
+  });
+});
+
+describe('applyFixes — comment-form selection', () => {
+  it('uses {/* */} for jsx-attribute violations on a line that starts with `{` (JsxExpression child)', () => {
+    // Regression for the ascents-feed.tsx / social-feed-item.tsx bug where
+    // `// i18n-ignore-next-line` was inserted as a sibling of JSX children
+    // (where JS line comments render as DOM text).
+    const source = `
+export default function Foo({ group }: { group: { isMirror: boolean } }) {
+  return (
+    <div>
+      {group.isMirror && <Chip label="Mirrored" size="small" color="secondary" />}
+    </div>
+  );
+}
+`;
+    withTempFile(source, (path) => {
+      const { violations } = checkFile(path);
+      applyFixes(path, violations);
+      const result = readFileSync(path, 'utf8');
+      expect(result).toContain('{/* i18n-ignore-next-line */}');
+      // The bare `// i18n-ignore-next-line` form would render as DOM text
+      // when inserted as a JSX child sibling, so it must NOT appear here.
+      expect(result).not.toMatch(/^\s*\/\/ i18n-ignore-next-line\s*$/m);
+      const { violations: violationsAfter, staleMarkers } = checkFile(path);
+      expect(violationsAfter).toHaveLength(0);
+      expect(staleMarkers).toEqual([]);
+    });
+  });
+
+  it('uses // for jsx-attribute violations on a line that starts with the attribute name (multi-line tag)', () => {
+    const source = `
+export default function Foo() {
+  return (
+    <button
+      aria-label="Submit form"
+    />
+  );
+}
+`;
+    withTempFile(source, (path) => {
+      const { violations } = checkFile(path);
+      applyFixes(path, violations);
+      const result = readFileSync(path, 'utf8');
+      expect(result).toMatch(/^\s*\/\/ i18n-ignore-next-line\s*$/m);
+      const { violations: violationsAfter } = checkFile(path);
+      expect(violationsAfter).toHaveLength(0);
+    });
+  });
+
+  it('uses // for object-property violations inside a function-call argument', () => {
+    const source = `
+export default function Foo({ openAuthModal }: any) {
+  openAuthModal({
+    title: 'Sign in required',
+  });
+  return null;
+}
+`;
+    withTempFile(source, (path) => {
+      const { violations } = checkFile(path);
+      applyFixes(path, violations);
+      const result = readFileSync(path, 'utf8');
+      expect(result).toMatch(/^\s*\/\/ i18n-ignore-next-line\s*$/m);
+      const { violations: violationsAfter } = checkFile(path);
+      expect(violationsAfter).toHaveLength(0);
+    });
+  });
+
+  it('uses // when the line above ends with `(` so the parens-wrapped expression stays valid', () => {
+    const source = `
+export default function Foo() {
+  return (
+    <EmptyState description="Follow some climbers to fill this up" />
+  );
+}
+`;
+    withTempFile(source, (path) => {
+      const { violations } = checkFile(path);
+      applyFixes(path, violations);
+      const result = readFileSync(path, 'utf8');
+      expect(result).toContain('// i18n-ignore-next-line');
+      // The {/* */} form here would parse as `{}` followed by JSX and
+      // break the surrounding parens-wrapped expression.
+      expect(result).not.toContain('{/* i18n-ignore-next-line */}');
+      const { violations: violationsAfter } = checkFile(path);
+      expect(violationsAfter).toHaveLength(0);
+    });
   });
 });
