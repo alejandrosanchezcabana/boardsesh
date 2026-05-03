@@ -123,12 +123,12 @@
     "noGyms": "Aucune salle trouvée pour « {{query}} »",
     "noPlaylists": "Aucune playlist trouvée pour « {{query}} »",
     "noUsers": "Aucun utilisateur ou ouvreur trouvé pour « {{query}} »",
-    "climbCountOne": "{{count}} voie",
-    "climbCountMany": "{{count}} voies"
+    "climbCount_one": "{{count}} voie",
+    "climbCount_other": "{{count}} voies"
   },
   "sessionFeedCard": {
-    "climbCountOne": "{{count}} voie",
-    "climbCountMany": "{{count}} voies"
+    "climbCount_one": "{{count}} voie",
+    "climbCount_other": "{{count}} voies"
   },
   "sessionSummary": {
     "completed": "Session terminée"
@@ -142,34 +142,18 @@
     "unsubscribed": "Désabonné des nouvelles voies",
     "updateFailed": "Impossible de mettre à jour l'abonnement"
   },
-  "userDrawer": {
-    "signIn": "Se connecter",
-    "signInModalTitle": "Se connecter à Boardsesh",
-    "signInModalDescription": "Connectez-vous pour enregistrer vos favoris, journaliser vos ascensions et plus encore.",
-    "changeBoard": "Changer de board",
-    "devUrl": "URL de dev",
-    "development": "Développement",
-    "classifyHolds": "Classer les prises",
-    "myPlaylists": "Mes playlists",
-    "recentSessions": "Sessions récentes",
-    "help": "Aide",
-    "about": "À propos",
-    "rateBoardsesh": "Noter Boardsesh",
-    "reportBug": "Signaler un bug",
-    "logout": "Se déconnecter"
-  },
   "userSearch": {
     "ascentsThisMonth": "{{count}} ascensions ce mois-ci",
-    "climbsSetOne": "{{count}} voie ouverte",
-    "climbsSetMany": "{{count}} voies ouvertes",
-    "climbCountOne": "{{count}} voie",
-    "climbCountMany": "{{count}} voies"
+    "climbsSet_one": "{{count}} voie ouverte",
+    "climbsSet_other": "{{count}} voies ouvertes",
+    "climbCount_one": "{{count}} voie",
+    "climbCount_other": "{{count}} voies"
   },
   "userSmartCard": {
-    "followerOne": "{{count}} abonné",
-    "followerMany": "{{count}} abonnés",
+    "follower_one": "{{count}} abonné",
+    "follower_other": "{{count}} abonnés",
     "following": "{{count}} abonnements",
-    "distinctClimbOne": "{{count}} voie distincte",
-    "distinctClimbMany": "{{count}} voies distinctes"
+    "distinctClimb_one": "{{count}} voie distincte",
+    "distinctClimb_other": "{{count}} voies distinctes"
   }
 }

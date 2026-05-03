@@ -82,6 +82,22 @@
     "ariaCreateBoard": "Créer un board",
     "empty": "Aucun board pour le moment. Créez-en un depuis le sélecteur de board pour commencer."
   },
+  "userDrawer": {
+    "signIn": "Se connecter",
+    "signInModalTitle": "Se connecter à Boardsesh",
+    "signInModalDescription": "Connectez-vous pour enregistrer vos favoris, journaliser vos ascensions et plus encore.",
+    "changeBoard": "Changer de board",
+    "devUrl": "URL de dev",
+    "development": "Développement",
+    "classifyHolds": "Classer les prises",
+    "myPlaylists": "Mes playlists",
+    "recentSessions": "Sessions récentes",
+    "help": "Aide",
+    "about": "À propos",
+    "rateBoardsesh": "Noter Boardsesh",
+    "reportBug": "Signaler un bug",
+    "logout": "Se déconnecter"
+  },
   "loading": {
     "messages": [
       "Préparation de votre board...",
@@ -116,8 +132,8 @@
     "reply": "Répondre",
     "showRepliesOne": "Afficher 1 réponse",
     "showRepliesMany": "Afficher {{count}} réponses",
-    "countOne": "{{count}} commentaire",
-    "countMany": "{{count}} commentaires",
+    "count_one": "{{count}} commentaire",
+    "count_other": "{{count}} commentaires",
     "sort": {
       "new": "Récents",
       "top": "Top",

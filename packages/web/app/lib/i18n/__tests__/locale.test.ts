@@ -11,7 +11,7 @@ describe('isSupportedLocale', () => {
   });
 
   it('rejects unsupported strings, null, and undefined', () => {
-    expect(isSupportedLocale('fr')).toBe(false);
+    expect(isSupportedLocale('de')).toBe(false);
     expect(isSupportedLocale('en')).toBe(false); // we use 'en-US', not 'en'
     expect(isSupportedLocale('es-MX')).toBe(false);
     expect(isSupportedLocale('')).toBe(false);
