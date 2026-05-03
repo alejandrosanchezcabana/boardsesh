@@ -26,17 +26,18 @@ type TFunc = (key: string, options?: Record<string, unknown>) => string;
 /**
  * Build summary parts for collapsed activity pill display.
  */
-export function buildSessionSummaryParts(stats: {
-  totalFlashes: number;
-  totalSends: number;
-  totalAttempts: number;
-  tickCount: number;
-  hardestGrade?: string | null;
-  formatGrade?: (g: string) => string | null;
-  t: TFunc;
-}): string[] {
+export function buildSessionSummaryParts(
+  stats: {
+    totalFlashes: number;
+    totalSends: number;
+    totalAttempts: number;
+    tickCount: number;
+    hardestGrade?: string | null;
+    formatGrade?: (g: string) => string | null;
+  },
+  t: TFunc,
+): string[] {
   const parts: string[] = [];
-  const { t } = stats;
   if (stats.totalFlashes > 0) parts.push(t('detail.flashesCount', { count: stats.totalFlashes }));
   // totalSends includes flashes, so subtract to avoid double-counting
   const nonFlashSends = stats.totalSends - stats.totalFlashes;
@@ -73,7 +74,7 @@ type SessionOverviewPanelProps = {
   namedBoardName?: string;
 };
 
-function formatDuration(minutes: number, t: TFunc): string {
+export function formatDuration(minutes: number, t: TFunc): string {
   if (minutes < 60) return t('summary.minutes', { count: minutes });
   const hours = Math.floor(minutes / 60);
   const mins = minutes % 60;

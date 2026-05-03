@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { DEFAULT_LOCALE, LOCALE_OG, SUPPORTED_LOCALES, type Locale } from '@/app/lib/i18n/config';
 import { localeHref } from '@/app/lib/i18n/locale-href';
 import { absoluteUrl } from './base-url';
+import { OG_IMAGE_HEIGHT, OG_IMAGE_WIDTH } from './og';
 
 export const SITE_NAME = 'Boardsesh';
 export const DEFAULT_OG_IMAGE_PATH = '/opengraph-image';
@@ -12,6 +13,8 @@ type PageMetadataOptions = {
   path?: string;
   imagePath?: string | null;
   imageAlt?: string;
+  imageWidth?: number;
+  imageHeight?: number;
   robots?: Metadata['robots'];
   keywords?: string[];
   openGraphType?: 'website' | 'article' | 'profile';
@@ -54,6 +57,8 @@ export function createPageMetadata({
   path,
   imagePath = DEFAULT_OG_IMAGE_PATH,
   imageAlt,
+  imageWidth = OG_IMAGE_WIDTH,
+  imageHeight = OG_IMAGE_HEIGHT,
   robots,
   keywords,
   openGraphType = 'website',
@@ -89,6 +94,8 @@ export function createPageMetadata({
             {
               url: normalizedImagePath,
               alt: imageAlt ?? fullTitle,
+              width: imageWidth,
+              height: imageHeight,
             },
           ]
         : undefined,

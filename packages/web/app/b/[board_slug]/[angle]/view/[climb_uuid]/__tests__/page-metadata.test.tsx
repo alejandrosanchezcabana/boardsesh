@@ -4,14 +4,39 @@ vi.mock('next/navigation', () => ({
   notFound: vi.fn(),
 }));
 
-vi.mock('@/app/lib/board-slug-utils', () => ({
-  resolveBoardBySlug: vi.fn(async () => ({
-    slug: 'my-board',
-    boardType: 'kilter',
-    layoutId: 1,
-    sizeId: 7,
-    setIds: '1,20',
+// `page.tsx` uses `getServerTranslation` which imports `server-only`. Stub the i18n
+// helper so the test can import the page without crashing on the server-only guard.
+vi.mock('@/app/lib/i18n/server', () => ({
+  getServerTranslation: vi.fn(async () => ({
+    t: (key: string, options?: Record<string, unknown>) => {
+      if (!options) return key;
+      const flat = Object.entries(options)
+        .map(([k, v]) => `${k}=${String(v)}`)
+        .join(',');
+      return `${key}(${flat})`;
+    },
+    locale: 'en-US',
   })),
+}));
+
+type ResolvedBoard = {
+  slug: string;
+  boardType: string;
+  layoutId: number;
+  sizeId: number;
+  setIds: string;
+};
+
+const resolveBoardBySlug = vi.fn<(slug: string) => Promise<ResolvedBoard | null>>(async () => ({
+  slug: 'my-board',
+  boardType: 'kilter',
+  layoutId: 1,
+  sizeId: 7,
+  setIds: '1,20',
+}));
+
+vi.mock('@/app/lib/board-slug-utils', () => ({
+  resolveBoardBySlug,
   boardToRouteParams: vi.fn(() => ({
     board_name: 'kilter',
     layout_id: 1,
@@ -104,5 +129,32 @@ describe('board slug climb metadata', () => {
 
     expect(imageUrl).toBe('/api/internal/board-render?board_name=kilter&variant=og&format=png');
     expect(imageUrl).not.toContain('/api/og/climb');
+  });
+
+  it('emits explicit width and height on the OG image', async () => {
+    const metadata = await pageModule.generateMetadata({
+      params: Promise.resolve({
+        board_slug: 'my-board',
+        angle: '40',
+        climb_uuid: 'test-climb',
+      }),
+    });
+
+    const image = Array.isArray(metadata.openGraph?.images) ? metadata.openGraph.images[0] : metadata.openGraph?.images;
+    expect(image).toMatchObject({ width: 1200, height: 630 });
+  });
+
+  it('marks the fallback metadata as noindex when board lookup fails', async () => {
+    resolveBoardBySlug.mockResolvedValueOnce(null);
+
+    const metadata = await pageModule.generateMetadata({
+      params: Promise.resolve({
+        board_slug: 'unknown',
+        angle: '40',
+        climb_uuid: 'test-climb',
+      }),
+    });
+
+    expect(metadata.robots).toEqual({ index: false, follow: true });
   });
 });

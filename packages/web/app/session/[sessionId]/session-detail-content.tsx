@@ -574,15 +574,17 @@ export default function SessionDetailContent({
       title: t('detail.climbsLogged', { count: sessionClimbs.length }),
       defaultSummary: t('detail.noClimbsYet'),
       getSummary: () =>
-        buildSessionSummaryParts({
-          totalFlashes,
-          totalSends,
-          totalAttempts,
-          tickCount,
-          hardestGrade,
-          formatGrade: gradeFormatLoaded ? formatGrade : undefined,
+        buildSessionSummaryParts(
+          {
+            totalFlashes,
+            totalSends,
+            totalAttempts,
+            tickCount,
+            hardestGrade,
+            formatGrade: gradeFormatLoaded ? formatGrade : undefined,
+          },
           t,
-        }),
+        ),
       flush: true,
       content:
         effectiveBoardDetails && sessionClimbs.length > 0 ? (

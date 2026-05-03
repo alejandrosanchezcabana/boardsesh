@@ -59,6 +59,7 @@ export async function generateMetadata(props: { params: Promise<BoardRouteParame
       title: t('metadata.view.fallbackTitle'),
       description: t('metadata.view.fallbackDescription'),
       locale,
+      robots: { index: false, follow: true },
     });
   }
 }

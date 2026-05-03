@@ -28,6 +28,7 @@ export async function generateMetadata(props: BoardSlugViewPageProps): Promise<M
         title: t('metadata.view.fallbackTitle'),
         description: t('metadata.view.fallbackDescription'),
         locale,
+        robots: { index: false, follow: true },
       });
     }
 
@@ -59,6 +60,7 @@ export async function generateMetadata(props: BoardSlugViewPageProps): Promise<M
       title: t('metadata.view.fallbackTitle'),
       description: t('metadata.view.fallbackDescription'),
       locale,
+      robots: { index: false, follow: true },
     });
   }
 }

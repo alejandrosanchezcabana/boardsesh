@@ -45,6 +45,8 @@ describe('SEO metadata helper', () => {
           {
             url: DEFAULT_OG_IMAGE_PATH,
             alt: 'API Documentation | Boardsesh',
+            width: 1200,
+            height: 630,
           },
         ],
       });
