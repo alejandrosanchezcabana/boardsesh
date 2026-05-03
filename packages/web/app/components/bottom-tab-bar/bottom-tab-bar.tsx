@@ -15,8 +15,7 @@ import AddOutlined from '@mui/icons-material/AddOutlined';
 import LocalOfferOutlined from '@mui/icons-material/LocalOfferOutlined';
 import DynamicFeedOutlined from '@mui/icons-material/DynamicFeedOutlined';
 import PersonOutlined from '@mui/icons-material/PersonOutlined';
-import { usePathname } from 'next/navigation';
-import { useLocaleRouter } from '@/app/lib/i18n/use-locale-router';
+import { useLocaleRouter, usePathnameWithoutLocale } from '@/app/lib/i18n/use-locale-router';
 import { track } from '@vercel/analytics';
 import type { BoardDetails, BoardName, BoardRouteIdentity } from '@/app/lib/types';
 import {
@@ -128,7 +127,7 @@ function BottomTabBar({ boardDetails, angle, boardConfigs }: BottomTabBarProps) 
     if (!open) setIsBoardSelectorRendered(false);
   }, []);
 
-  const pathname = usePathname();
+  const pathname = usePathnameWithoutLocale();
   const router = useLocaleRouter();
   const guardBoardSwitch = useBoardSwitchGuard();
 

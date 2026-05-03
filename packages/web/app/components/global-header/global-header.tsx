@@ -24,7 +24,7 @@ import type { BoardConfigData } from '@/app/lib/server-board-configs';
 import { isBoardCreatePath } from '@/app/lib/board-route-paths';
 
 import TuneOutlined from '@mui/icons-material/TuneOutlined';
-import { usePathname } from 'next/navigation';
+import { usePathnameWithoutLocale } from '@/app/lib/i18n/use-locale-router';
 import BackButton from '@/app/components/back-button';
 import Typography from '@mui/material/Typography';
 import { useTranslation } from 'react-i18next';
@@ -122,10 +122,7 @@ function CenteredHeader({ left, title, right }: CenteredHeaderProps) {
   );
 }
 
-function getProfileHeaderConfig(
-  pathname: string,
-  t: (key: string) => string,
-): ProfileHeaderConfig | null {
+function getProfileHeaderConfig(pathname: string, t: (key: string) => string): ProfileHeaderConfig | null {
   const segments = pathname.split('/').filter(Boolean);
 
   if (segments[0] !== 'profile' || !segments[1]) {
@@ -175,7 +172,7 @@ export default function GlobalHeader({ boardConfigs }: GlobalHeaderProps) {
   } = useSearchDrawerBridge();
   const statsFilterBridge = useStatsFilterBridge();
   const profileHeaderShare = useProfileHeaderShare();
-  const pathname = usePathname();
+  const pathname = usePathnameWithoutLocale();
   const inputRef = useRef<HTMLInputElement>(null);
   const profileHeaderConfig = getProfileHeaderConfig(pathname, t);
 
