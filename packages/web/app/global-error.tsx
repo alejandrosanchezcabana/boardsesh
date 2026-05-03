@@ -34,9 +34,14 @@ function detectLocale(): Locale {
 }
 
 export default function GlobalError({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
-  // Lazy initializer so Spanish users on /es/* see Spanish copy on the first
-  // paint instead of flashing English between mount and the first effect.
-  // global-error always renders client-side so there's no hydration mismatch.
+  // Lazy initializer reads window.location on the client so /es/* renders
+  // Spanish copy after hydration. App Router still SSRs this client component:
+  // the server pass returns en-US (window is undefined), then the client
+  // initializer returns es for /es/*. The mismatch is hidden by
+  // suppressHydrationWarning on <html>, not prevented — Spanish users on a
+  // direct /es/* hit will briefly see English until React commits the hydrated
+  // tree. Acceptable for a rarely-hit root error boundary; the global-error
+  // API does not let us pass locale as a prop.
   const [locale] = useState<Locale>(detectLocale);
 
   useEffect(() => {
