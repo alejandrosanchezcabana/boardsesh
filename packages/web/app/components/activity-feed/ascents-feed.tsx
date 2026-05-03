@@ -16,6 +16,7 @@ import { PersonFallingIcon } from '@/app/components/icons/person-falling-icon';
 import LocationOnOutlined from '@mui/icons-material/LocationOnOutlined';
 import DeleteOutlined from '@mui/icons-material/DeleteOutlined';
 import { useInfiniteQuery } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { formatTickRelativeTime, tickTimeMs } from '@/app/lib/format-tick-time';
 import { createGraphQLHttpClient } from '@/app/lib/graphql/client';
 import {
@@ -102,6 +103,7 @@ const TickItemRow: React.FC<{
   onDelete: (uuid: string) => void;
   isDeleting: boolean;
 }> = ({ item, onDelete, isDeleting }) => {
+  const { t } = useTranslation('common');
   const timeAgo = formatTickRelativeTime(item.climbedAt);
   return (
     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, py: 0.5 }}>
@@ -124,7 +126,7 @@ const TickItemRow: React.FC<{
         // i18n-ignore-next-line
         description="Are you sure? This cannot be undone."
         onConfirm={() => onDelete(item.uuid)}
-        okText="Delete"
+        okText={t('actions.delete')}
         okButtonProps={{ color: 'error' }}
       >
         <IconButton size="small" disabled={isDeleting} sx={{ color: 'text.secondary' }}>

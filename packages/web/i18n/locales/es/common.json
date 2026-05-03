@@ -25,7 +25,9 @@
     "loading": "Cargando...",
     "share": "Compartir",
     "copy": "Copiar",
-    "submit": "Enviar"
+    "submit": "Enviar",
+    "clear": "Limpiar",
+    "remove": "Quitar"
   },
   "ariaLabels": {
     "close": "Cerrar",

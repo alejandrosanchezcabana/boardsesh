@@ -8,6 +8,7 @@ import MuiButton from '@mui/material/Button';
 import Box from '@mui/material/Box';
 import { DeleteOutlined } from '@mui/icons-material';
 import { track } from '@vercel/analytics';
+import { useTranslation } from 'react-i18next';
 import type { BoardDetails } from '@/app/lib/types';
 import dynamic from 'next/dynamic';
 
@@ -53,6 +54,7 @@ const QueueTabLabel: React.FC = () => {
 
 // Isolated component for the queue tab content - subscribes to context independently
 const QueueTabContent: React.FC<{ boardDetails: BoardDetails }> = ({ boardDetails }) => {
+  const { t } = useTranslation('common');
   const { queue } = useQueueList();
   const { setQueue } = useQueueActions();
   const [scrollContainerEl, setScrollContainerEl] = useState<HTMLDivElement | null>(null);
@@ -75,8 +77,8 @@ const QueueTabContent: React.FC<{ boardDetails: BoardDetails }> = ({ boardDetail
             // i18n-ignore-next-line
             description="Are you sure you want to clear all items from the queue?"
             onConfirm={handleClearQueue}
-            okText="Clear"
-            cancelText="Cancel"
+            okText={t('actions.clear')}
+            cancelText={t('actions.cancel')}
           >
             <MuiButton variant="text" startIcon={<DeleteOutlined />} size="small" sx={{ color: 'var(--neutral-400)' }}>
               {/* i18n-ignore-next-line */}

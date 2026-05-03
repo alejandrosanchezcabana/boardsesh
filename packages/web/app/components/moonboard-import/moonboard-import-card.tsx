@@ -101,8 +101,8 @@ export default function MoonBoardImportCard({
           // i18n-ignore-next-line
           description="This climb will not be imported."
           onConfirm={onRemove}
-          okText="Remove"
-          cancelText="Cancel"
+          okText={t('actions.remove')}
+          cancelText={t('actions.cancel')}
         >
           <MuiButton variant="text" color="error" startIcon={<DeleteOutlined />}>
             {/* i18n-ignore-next-line */}
