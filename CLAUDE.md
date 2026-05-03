@@ -101,6 +101,7 @@ This project uses [Vite+](https://viteplus.dev) (`vp`) as its unified toolchain 
 - `vp run typecheck:backend` - Type check backend package only
 - `vp run typecheck:db` - Type check db package only
 - `vp run typecheck:shared` - Type check shared-schema package only
+- `vp run check:i18n` - Scan `packages/web/app/**/*.tsx` for hardcoded user-facing English strings. Runs in CI on every PR; fails the build if a new untranslated string is introduced. Run `bun packages/web/scripts/check-untranslated-strings.ts --fix` to bulk-insert `// i18n-ignore-next-line` markers above existing violations.
 - `bun run backend:start` - Start backend in production mode
 
 ### Running E2E Tests
@@ -219,7 +220,7 @@ We are using next.js app router, it's important we try to use server side compon
 - While we work together, be careful to remove any code you no longer use, so we dont end up with lots of deadcode
 - **Dark mode uses white input fields** — This is intentional for contrast. All input components (TextField, Select, Autocomplete, etc.) have white backgrounds in dark mode via `darkTokens.semantic.inputSurface`. Do not change them to dark backgrounds.
 - **Never use `any` type** - The `no-explicit-any` lint rule is set to `deny` across all packages. Use `unknown`, proper types, or `as unknown as SpecificType` for type assertions. No exceptions - `any` defeats the purpose of TypeScript
-- **Never hardcode user-facing strings** - All visible text must come from the i18n catalogs in `packages/web/i18n/locales/`. See the Internationalisation section below for the call-site pattern.
+- **Never hardcode user-facing strings** - All visible text must come from the i18n catalogs in `packages/web/i18n/locales/`. See the Internationalisation section below for the call-site pattern. CI runs `vp run check:i18n` on every PR, which fails the build if a `.tsx` file under `packages/web/app/` introduces a hardcoded English string. Pre-existing violations are silenced with `// i18n-ignore-next-line` (or `{/* i18n-ignore-next-line */}`) comments — chip away at these by translating them and removing the marker.
 - **Variable names must describe their contents** - No single-letter aliases (`r`, `x`, `s`) or vague placeholders (`data`, `info`, `latest`, `temp`, `value`) outside of tight loops or well-known math conventions. The name should tell the next reader what's inside without forcing them to scroll back to the declaration. Prefer destructuring at the use site over a generic alias — `const { queue, currentClimb } = stateRef.current` reads better than `const s = stateRef.current` followed by `s.queue` / `s.currentClimb`.
 
 ### Internationalisation

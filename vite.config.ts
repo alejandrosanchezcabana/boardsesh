@@ -105,6 +105,10 @@ export default defineConfig({
         dependsOn: ['build:web'],
         cache: false,
       },
+      'check:i18n': {
+        command: 'bun packages/web/scripts/check-untranslated-strings.ts',
+        cache: false,
+      },
       build: {
         command: 'true',
         dependsOn: ['build:backend', 'build:web'],

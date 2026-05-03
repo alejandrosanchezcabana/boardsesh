@@ -61,6 +61,24 @@ jobs:
       - name: Run linting
         run: bun run lint
 
+  i18n-strings:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: oven-sh/setup-bun@v2
+
+      - uses: voidzero-dev/setup-vp@v1
+        with:
+          node-version: 'lts'
+          cache: true
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Check for hardcoded user-facing strings
+        run: vp run check:i18n
+
   codegen-drift:
     needs: setup
     runs-on: ubuntu-latest
