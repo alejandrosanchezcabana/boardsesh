@@ -17,6 +17,7 @@ import LocationOnOutlined from '@mui/icons-material/LocationOnOutlined';
 import DeleteOutlined from '@mui/icons-material/DeleteOutlined';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
+import type { TFunction } from 'i18next';
 import { formatTickRelativeTime, tickTimeMs } from '@/app/lib/format-tick-time';
 import { createGraphQLHttpClient } from '@/app/lib/graphql/client';
 import {
@@ -60,20 +61,20 @@ const getLayoutDisplayName = (boardType: string, layoutId: number | null): strin
   return layoutNames[key] || `${boardType.charAt(0).toUpperCase() + boardType.slice(1)}`;
 };
 
-// Generate status summary for grouped attempts
 const getGroupStatusSummary = (
   group: GroupedAscentFeedItem,
+  t: TFunction,
 ): { text: string; icon: React.ReactNode; color: string } => {
   const parts: string[] = [];
 
   if (group.flashCount > 0) {
-    parts.push(group.flashCount === 1 ? 'Flashed' : `${group.flashCount} flashes`);
+    parts.push(t('ascents.flashed', { count: group.flashCount }));
   }
   if (group.sendCount > 0) {
-    parts.push(group.sendCount === 1 ? 'Sent' : `${group.sendCount} sends`);
+    parts.push(t('ascents.sent', { count: group.sendCount }));
   }
   if (group.attemptCount > 0) {
-    parts.push(group.attemptCount === 1 ? '1 attempt' : `${group.attemptCount} attempts`);
+    parts.push(t('ascents.attempts', { count: group.attemptCount }));
   }
 
   let icon: React.ReactNode;
@@ -98,6 +99,13 @@ const getItemStatusColor = (status: string): 'success' | 'primary' | 'default' =
   return 'default';
 };
 
+const getItemStatusLabel = (status: string, t: TFunction): string => {
+  if (status === 'flash') return t('ascents.statusFlash');
+  if (status === 'send') return t('ascents.statusSend');
+  if (status === 'attempt') return t('ascents.statusAttempt');
+  return status;
+};
+
 const TickItemRow: React.FC<{
   item: AscentFeedItem;
   onDelete: (uuid: string) => void;
@@ -108,7 +116,7 @@ const TickItemRow: React.FC<{
   return (
     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, py: 0.5 }}>
       <Chip
-        label={item.status}
+        label={getItemStatusLabel(item.status, t)}
         size="small"
         color={getItemStatusColor(item.status)}
         variant={item.status === 'attempt' ? 'outlined' : 'filled'}
@@ -118,7 +126,7 @@ const TickItemRow: React.FC<{
         }}
       />
       <MuiTypography variant="caption" color="text.secondary" sx={{ flex: 1 }}>
-        {item.attemptCount > 1 ? `${item.attemptCount} attempts` : null} {timeAgo}
+        {item.attemptCount > 1 ? t('ascents.attempts', { count: item.attemptCount }) : null} {timeAgo}
       </MuiTypography>
       <ConfirmPopover
         title={t('ascents.deleteTitle')}
@@ -142,12 +150,13 @@ const GroupedFeedItem: React.FC<{
   onDeleteTick?: (uuid: string) => void;
   isDeleting?: boolean;
 }> = ({ group, isOwnProfile = false, onDeleteTick, isDeleting = false }) => {
+  const { t } = useTranslation('common');
   const latestItem = group.items.reduce((latest, item) =>
     tickTimeMs(item.climbedAt) > tickTimeMs(latest.climbedAt) ? item : latest,
   );
   const timeAgo = formatTickRelativeTime(latestItem.climbedAt);
   const boardDisplay = getLayoutDisplayName(group.boardType, group.layoutId);
-  const statusSummary = getGroupStatusSummary(group);
+  const statusSummary = getGroupStatusSummary(group, t);
   const hasSuccess = group.flashCount > 0 || group.sendCount > 0;
 
   return (

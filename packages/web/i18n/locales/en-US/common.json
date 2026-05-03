@@ -201,7 +201,16 @@
   },
   "ascents": {
     "deleteTitle": "Delete ascent",
-    "deleteDescription": "Are you sure? This cannot be undone."
+    "deleteDescription": "Are you sure? This cannot be undone.",
+    "statusFlash": "flash",
+    "statusSend": "send",
+    "statusAttempt": "attempt",
+    "flashed_one": "Flashed",
+    "flashed_other": "{{count}} flashes",
+    "sent_one": "Sent",
+    "sent_other": "{{count}} sends",
+    "attempts_one": "1 attempt",
+    "attempts_other": "{{count}} attempts"
   },
   "board": {
     "resetZoom": "Reset zoom"

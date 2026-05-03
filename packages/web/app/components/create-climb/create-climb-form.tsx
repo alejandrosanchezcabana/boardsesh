@@ -1536,19 +1536,15 @@ export default function CreateClimbForm({
           </MuiTooltip>
         )}
         <ConfirmPopover
-          // i18n-ignore-next-line
-          title="Clear climb"
-          // i18n-ignore-next-line
-          description="This will clear all holds and reset the form. Are you sure?"
+          title={t('create.clear.title')}
+          description={t('create.clear.description')}
           onConfirm={resetHolds}
           okText={tCommon('actions.clear')}
           cancelText={tCommon('actions.cancel')}
         >
-          {/* i18n-ignore-next-line */}
-          <MuiTooltip title="Clear all holds">
+          <MuiTooltip title={t('create.clear.tooltip')}>
             <span>
-              {/* i18n-ignore-next-line */}
-              <IconButton size="small" disabled={totalHolds === 0} aria-label="Clear all holds">
+              <IconButton size="small" disabled={totalHolds === 0} aria-label={t('create.clear.tooltip')}>
                 <DeleteOutlined fontSize="small" />
               </IconButton>
             </span>
