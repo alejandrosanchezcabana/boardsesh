@@ -94,17 +94,21 @@ test.describe('Bottom Tab Bar - Navigation', () => {
     // there). `/you` renders the full header with the bell unconditionally.
     await loginAs(page, '/you');
     await waitForPageReady(page);
+    // Wait for hydration so the NextLink click handler is wired up before we click.
+    // /you has no long-poll endpoints, so networkidle settles within ~2s.
+    await page.waitForLoadState('networkidle').catch(() => {});
 
     // The bell is rendered as `<IconButton component={LocaleLink} href="/notifications" />`.
-    // MUI 7 emits role="button" on the polymorphic anchor, so target by href to stay
-    // resilient regardless of whether the implicit role lands as "link" or "button".
-    // `.first()` because Next.js prefetch may emit a duplicate anchor in the same
-    // header during hydration; we only need to click the bell, not enforce uniqueness.
-    // The earlier visibility check ensures the global header has hydrated before we click.
+    // Target by href so we don't depend on whether MUI 7's polymorphic anchor surfaces
+    // as role="link" or role="button". `.first()` because Next.js prefetch may emit a
+    // duplicate anchor in the same header during hydration.
     const bell = page.locator('header a[href="/notifications"]').first();
     await expect(bell).toBeVisible({ timeout: 15000 });
-    await bell.click();
-    await expect(page).toHaveURL(/\/notifications/, { timeout: 15000 });
+
+    // NextLink does client-side routing, so we wait for the URL change atomically
+    // with the click rather than asserting after — the assertion timing window
+    // races with NextLink's own pushState in practice.
+    await Promise.all([page.waitForURL(/\/notifications/, { timeout: 15000 }), bell.click()]);
     await expect(page.locator(bottomTabBar)).toBeVisible();
   });
 
