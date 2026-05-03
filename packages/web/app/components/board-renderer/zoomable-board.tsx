@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useRef, memo } from 'react';
+import { useTranslation } from 'react-i18next';
 import Button from '@mui/material/Button';
 import CropFreeOutlined from '@mui/icons-material/CropFreeOutlined';
 import { useZoomPan } from '@/app/lib/hooks/use-zoom-pan';
@@ -13,6 +14,7 @@ type ZoomableBoardProps = {
 };
 
 const ZoomableBoard = memo(function ZoomableBoard({ children, onZoomChange, resetKey }: ZoomableBoardProps) {
+  const { t } = useTranslation('common');
   const { containerRef, contentRef, isZoomed, resetZoom, gestureHandlers } = useZoomPan();
   const prevResetKeyRef = useRef(resetKey);
 
@@ -43,7 +45,7 @@ const ZoomableBoard = memo(function ZoomableBoard({ children, onZoomChange, rese
       <Button
         className={`${styles.zoomResetButton} ${isZoomed ? styles.zoomResetButtonVisible : ''}`}
         onClick={resetZoom}
-        aria-label="Reset zoom"
+        aria-label={t('board.resetZoom')}
         size="small"
         startIcon={<CropFreeOutlined sx={{ fontSize: '18px !important' }} />}
         tabIndex={isZoomed ? 0 : -1}

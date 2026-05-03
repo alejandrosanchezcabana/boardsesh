@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useCallback, useEffect, useId, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import Paper from '@mui/material/Paper';
 import Fade from '@mui/material/Fade';
 import IconButton from '@mui/material/IconButton';
@@ -20,6 +21,7 @@ type BannerBodyProps = {
 };
 
 const FeedbackPromptBannerBody: React.FC<BannerBodyProps> = ({ onDismiss, onSubmitted, titleId }) => {
+  const { t } = useTranslation('common');
   const { mutate } = useSubmitAppFeedback();
   const { showMessage } = useSnackbar();
 
@@ -49,7 +51,7 @@ const FeedbackPromptBannerBody: React.FC<BannerBodyProps> = ({ onDismiss, onSubm
       </IconButton>
       <FeedbackForm
         mode="prompt"
-        title="Enjoying Boardsesh?"
+        title={t('feedback.title')}
         submitLabel="Save"
         onSubmit={handleSubmit}
         titleId={titleId}

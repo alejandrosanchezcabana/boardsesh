@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import MuiAlert from '@mui/material/Alert';
 import MuiTooltip from '@mui/material/Tooltip';
@@ -133,6 +134,7 @@ export default function CreateClimbForm({
   layoutId,
   holdSetImages,
 }: CreateClimbFormProps) {
+  const { t } = useTranslation('climbs');
   const pathname = usePathname();
   const { data: session } = useSession();
   const { mode } = useColorMode();
@@ -1086,8 +1088,8 @@ export default function CreateClimbForm({
       if (boardType === 'aurora') {
         setPendingFormValues({ name: climbName, description, isDraft });
         openAuthModal({
-          title: 'Sign in to save your climb',
-          description: 'Create an account or sign in to save your climb to the board.',
+          title: t('create.auth.signInTitle'),
+          description: t('create.auth.signInDescription'),
           onSuccess: handleAuthSuccess,
         });
       }
@@ -1113,6 +1115,7 @@ export default function CreateClimbForm({
     openAuthModal,
     handleAuthSuccess,
     showMessage,
+    t,
   ]);
 
   const canSave =
@@ -1259,18 +1262,18 @@ export default function CreateClimbForm({
   const saveIconButton = useMemo(() => {
     if (boardType === 'aurora' && !isAuthenticated) {
       return (
-        <MuiTooltip title="Sign in to save your climb">
+        <MuiTooltip title={t('create.auth.signInTitle')}>
           <IconButton
             size="small"
             color="primary"
             onClick={() =>
               openAuthModal({
-                title: 'Sign in to save your climb',
-                description: 'Create an account or sign in to save your climb to the board.',
+                title: t('create.auth.signInTitle'),
+                description: t('create.auth.signInDescription'),
                 onSuccess: handleAuthSuccess,
               })
             }
-            aria-label="Sign in to save"
+            aria-label={t('create.auth.signInAria')}
           >
             <LoginOutlined fontSize="small" />
           </IconButton>
@@ -1280,8 +1283,14 @@ export default function CreateClimbForm({
 
     if (boardType === 'moonboard' && !hasMoonBoardSessionUser) {
       return (
-        <MuiTooltip title="Log in to save your climb">
-          <IconButton size="small" color="primary" component={LocaleLink} href="/api/auth/signin" aria-label="Log in to save">
+        <MuiTooltip title={t('create.auth.logInTitle')}>
+          <IconButton
+            size="small"
+            color="primary"
+            component={LocaleLink}
+            href="/api/auth/signin"
+            aria-label={t('create.auth.logInAria')}
+          >
             <LoginOutlined fontSize="small" />
           </IconButton>
         </MuiTooltip>
@@ -1290,9 +1299,9 @@ export default function CreateClimbForm({
 
     if (editLocked) {
       return (
-        <MuiTooltip title="Published climbs can only be edited for 24 hours after first publish.">
+        <MuiTooltip title={t('create.auth.editLockedTitle')}>
           <span>
-            <IconButton size="small" disabled aria-label="Edit window closed">
+            <IconButton size="small" disabled aria-label={t('create.auth.editLockedAria')}>
               <LockOutlined fontSize="small" />
             </IconButton>
           </span>
@@ -1305,8 +1314,8 @@ export default function CreateClimbForm({
       // another save. Flips back automatically on the next edit or after
       // the 3s timeout.
       return (
-        <MuiTooltip title="Saved">
-          <IconButton size="small" color="success" disableRipple aria-label="Saved">
+        <MuiTooltip title={t('create.auth.savedTitle')}>
+          <IconButton size="small" color="success" disableRipple aria-label={t('create.auth.savedAria')}>
             <CheckCircleOutlined fontSize="small" />
           </IconButton>
         </MuiTooltip>
@@ -1359,6 +1368,7 @@ export default function CreateClimbForm({
     handlePublish,
     openAuthModal,
     handleAuthSuccess,
+    t,
   ]);
 
   const titleClimb: ClimbTitleData = useMemo(

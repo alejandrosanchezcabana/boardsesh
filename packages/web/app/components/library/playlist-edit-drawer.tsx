@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useState, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import dynamic from 'next/dynamic';
 import { useSnackbar } from '@/app/components/providers/snackbar-provider';
 import MuiButton from '@mui/material/Button';
@@ -62,6 +63,7 @@ type PlaylistEditDrawerProps = {
 const INITIAL_FORM_VALUES = { name: '', description: '', color: '', icon: '', isPublic: false };
 
 export default function PlaylistEditDrawer({ open, playlist, onClose, onSuccess }: PlaylistEditDrawerProps) {
+  const { t } = useTranslation('playlists');
   const [formValues, setFormValues] = useState(INITIAL_FORM_VALUES);
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
@@ -88,12 +90,12 @@ export default function PlaylistEditDrawer({ open, playlist, onClose, onSuccess 
   const validateForm = (): boolean => {
     const errors: Record<string, string> = {};
     if (!formValues.name.trim()) {
-      errors.name = 'Please enter a playlist name';
+      errors.name = t('edit.validation.nameRequired');
     } else if (formValues.name.length > 100) {
-      errors.name = 'Name must be 100 characters or less';
+      errors.name = t('edit.validation.nameTooLong');
     }
     if (formValues.description.length > 500) {
-      errors.description = 'Description must be 500 characters or less';
+      errors.description = t('edit.validation.descriptionTooLong');
     }
     setFormErrors(errors);
     return Object.keys(errors).length === 0;
@@ -128,12 +130,12 @@ export default function PlaylistEditDrawer({ open, playlist, onClose, onSuccess 
         token,
       );
 
-      showMessage('Playlist updated successfully', 'success');
+      showMessage(t('edit.messages.updated'), 'success');
       onSuccess(response.updatePlaylist);
       onClose();
     } catch (error) {
       console.error('Error updating playlist:', error);
-      showMessage('Failed to update playlist', 'error');
+      showMessage(t('edit.messages.updateFailed'), 'error');
     } finally {
       setLoading(false);
     }
@@ -153,7 +155,7 @@ export default function PlaylistEditDrawer({ open, playlist, onClose, onSuccess 
 
   return (
     <SwipeableDrawer
-      title="Edit Playlist"
+      title={t('edit.title')}
       open={open}
       onClose={handleCancel}
       placement="bottom"
@@ -166,10 +168,10 @@ export default function PlaylistEditDrawer({ open, playlist, onClose, onSuccess 
       extra={
         <Stack direction="row" spacing={1}>
           <MuiButton variant="outlined" onClick={handleCancel}>
-            Cancel
+            {t('edit.actions.cancel')}
           </MuiButton>
           <MuiButton variant="contained" onClick={handleSubmit} disabled={loading}>
-            {loading ? 'Saving...' : 'Save'}
+            {loading ? t('edit.actions.saving') : t('edit.actions.save')}
           </MuiButton>
         </Stack>
       }
@@ -177,10 +179,10 @@ export default function PlaylistEditDrawer({ open, playlist, onClose, onSuccess 
       <Box sx={{ maxWidth: 600, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 2 }}>
         <Box>
           <Typography variant="body2" fontWeight={600} sx={{ mb: 0.5 }}>
-            Playlist Name
+            {t('edit.fields.name')}
           </Typography>
           <TextField
-            placeholder="e.g., Hard Crimps"
+            placeholder={t('edit.fields.namePlaceholder')}
             slotProps={{ htmlInput: { maxLength: 100 } }}
             fullWidth
             size="small"
@@ -196,10 +198,10 @@ export default function PlaylistEditDrawer({ open, playlist, onClose, onSuccess 
 
         <Box>
           <Typography variant="body2" fontWeight={600} sx={{ mb: 0.5 }}>
-            Description
+            {t('edit.fields.description')}
           </Typography>
           <TextField
-            placeholder="Optional description for your playlist..."
+            placeholder={t('edit.fields.descriptionPlaceholder')}
             multiline
             rows={3}
             slotProps={{ htmlInput: { maxLength: 500 } }}
@@ -217,7 +219,7 @@ export default function PlaylistEditDrawer({ open, playlist, onClose, onSuccess 
 
         <Box>
           <Typography variant="body2" fontWeight={600} sx={{ mb: 0.5 }}>
-            Color
+            {t('edit.fields.color')}
           </Typography>
           <TextField
             type="color"
@@ -230,7 +232,7 @@ export default function PlaylistEditDrawer({ open, playlist, onClose, onSuccess 
 
         <Box>
           <Typography variant="body2" fontWeight={600} sx={{ mb: 0.5 }}>
-            Icon
+            {t('edit.fields.icon')}
           </Typography>
           <Stack direction="row" spacing={1} alignItems="center">
             <MuiButton
@@ -247,7 +249,7 @@ export default function PlaylistEditDrawer({ open, playlist, onClose, onSuccess 
                 startIcon={<CloseOutlined />}
                 onClick={() => setFormValues((prev) => ({ ...prev, icon: '' }))}
               >
-                Remove
+                {t('edit.fields.removeIcon')}
               </MuiButton>
             )}
           </Stack>
@@ -270,7 +272,7 @@ export default function PlaylistEditDrawer({ open, playlist, onClose, onSuccess 
 
         <Box>
           <Typography variant="body2" fontWeight={600} sx={{ mb: 0.5 }}>
-            Visibility
+            {t('edit.fields.visibility')}
           </Typography>
           <Stack spacing={0.5}>
             <Stack direction="row" spacing={1} alignItems="center">
@@ -279,9 +281,7 @@ export default function PlaylistEditDrawer({ open, playlist, onClose, onSuccess 
               <PublicOutlined sx={{ fontSize: 18, color: isPublic ? 'text.secondary' : 'text.disabled' }} />
             </Stack>
             <Typography variant="body2" component="span" color="text.secondary" sx={{ fontSize: 12 }}>
-              {isPublic
-                ? 'Public playlists can be viewed by anyone with the link'
-                : 'Private playlists are only visible to you'}
+              {isPublic ? t('edit.fields.publicHint') : t('edit.fields.privateHint')}
             </Typography>
           </Stack>
         </Box>

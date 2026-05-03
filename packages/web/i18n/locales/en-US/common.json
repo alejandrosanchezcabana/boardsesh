@@ -96,6 +96,7 @@
     "placeholder": "Add a comment...",
     "replyPlaceholder": "Write a reply...",
     "thoughtsPlaceholder": "Share your thoughts...",
+    "shortPlaceholder": "Comment...",
     "submit": "Post",
     "save": "Save",
     "cancel": "Cancel",
@@ -131,6 +132,14 @@
       "loadReplies": "Failed to load replies"
     }
   },
+  "vote": {
+    "upvote": "Upvote",
+    "downvote": "Downvote",
+    "like": "Like",
+    "unlike": "Unlike",
+    "signInPrompt": "Sign in to vote",
+    "failed": "Failed to vote"
+  },
   "proposal": {
     "trigger": "Propose Change",
     "drawerTitle": "Create Proposal",
@@ -158,10 +167,14 @@
     "outlierWarning": "The grade at this angle appears to be an outlier compared to adjacent angles. This proposal may be auto-approved if it aligns with neighboring data.",
     "validation": {
       "signIn": "Sign in to create proposals",
+      "signInToVote": "Sign in to vote on proposals",
       "missingValue": "Please enter a proposed value",
       "sameGrade": "Proposed grade is the same as the current grade",
       "noData": "Failed to create proposal: no data returned",
-      "failed": "Failed to create proposal"
+      "failed": "Failed to create proposal",
+      "failedToVote": "Failed to vote",
+      "failedToResolve": "Failed to resolve proposal",
+      "failedToDelete": "Failed to delete proposal"
     },
     "created": "Proposal created"
   },
@@ -169,5 +182,17 @@
     "follow": "Follow",
     "following": "Following",
     "unfollow": "Unfollow"
+  },
+  "feedback": {
+    "title": "Enjoying Boardsesh?"
+  },
+  "betaVideos": {
+    "empty": "No beta videos yet"
+  },
+  "moonboardImport": {
+    "removeConfirmTitle": "Remove this climb?"
+  },
+  "board": {
+    "resetZoom": "Reset zoom"
   }
 }

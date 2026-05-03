@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import Box from '@mui/material/Box';
 import MuiTypography from '@mui/material/Typography';
 import MuiAvatar from '@mui/material/Avatar';
@@ -57,6 +58,7 @@ export default function CommentItem({
   depth = 0,
   currentUserId,
 }: CommentItemProps) {
+  const { t } = useTranslation('common');
   const [isEditing, setIsEditing] = useState(false);
   const [showReplyForm, setShowReplyForm] = useState(false);
   const [replies, setReplies] = useState<CommentType[]>([]);
@@ -81,10 +83,10 @@ export default function CommentItem({
         onCommentUpdated(response.updateComment);
         setIsEditing(false);
       } catch {
-        showMessage('Failed to update comment', 'error');
+        showMessage(t('comment.errors.update'), 'error');
       }
     },
-    [token, comment.uuid, onCommentUpdated, showMessage],
+    [token, comment.uuid, onCommentUpdated, showMessage, t],
   );
 
   const handleDelete = useCallback(async () => {
@@ -96,9 +98,9 @@ export default function CommentItem({
       });
       onCommentDeleted(comment.uuid);
     } catch {
-      showMessage('Failed to delete comment', 'error');
+      showMessage(t('comment.errors.delete'), 'error');
     }
-  }, [token, comment.uuid, onCommentDeleted, showMessage]);
+  }, [token, comment.uuid, onCommentDeleted, showMessage, t]);
 
   const handleReply = useCallback(
     async (body: string) => {
@@ -117,10 +119,10 @@ export default function CommentItem({
         setShowReplyForm(false);
         setRepliesLoaded(true);
       } catch {
-        showMessage('Failed to post reply', 'error');
+        showMessage(t('comment.errors.reply'), 'error');
       }
     },
-    [token, entityType, entityId, comment.uuid, showMessage],
+    [token, entityType, entityId, comment.uuid, showMessage, t],
   );
 
   const loadReplies = useCallback(async () => {
@@ -141,11 +143,11 @@ export default function CommentItem({
       setReplies(response.comments.comments);
       setRepliesLoaded(true);
     } catch {
-      showMessage('Failed to load replies', 'error');
+      showMessage(t('comment.errors.loadReplies'), 'error');
     } finally {
       setRepliesLoading(false);
     }
-  }, [token, entityType, entityId, comment.uuid, repliesLoaded, repliesLoading, showMessage]);
+  }, [token, entityType, entityId, comment.uuid, repliesLoaded, repliesLoading, showMessage, t]);
 
   const handleReplyUpdated = useCallback((updated: CommentType) => {
     setReplies((prev) => prev.map((r) => (r.uuid === updated.uuid ? updated : r)));
@@ -163,7 +165,7 @@ export default function CommentItem({
     return (
       <Box sx={{ pl: depth > 0 ? 6 : 0, py: 0.5 }}>
         <MuiTypography variant="body2" color="text.disabled" sx={{ fontStyle: 'italic' }}>
-          [deleted]
+          {t('comment.deleted')}
         </MuiTypography>
         {/* Still show replies if they exist */}
         {comment.replyCount > 0 && !repliesLoaded && depth === 0 && (
@@ -173,7 +175,9 @@ export default function CommentItem({
             disabled={repliesLoading}
             sx={{ textTransform: 'none', ml: -0.5 }}
           >
-            Show {comment.replyCount} {comment.replyCount === 1 ? 'reply' : 'replies'}
+            {comment.replyCount === 1
+              ? t('comment.showRepliesOne')
+              : t('comment.showRepliesMany', { count: comment.replyCount })}
           </MuiButton>
         )}
         {replies.map((reply) => (
@@ -215,14 +219,14 @@ export default function CommentItem({
               href={`/profile/${comment.userId}`}
               sx={{ textDecoration: 'none', color: 'text.primary' }}
             >
-              {comment.userDisplayName || 'User'}
+              {comment.userDisplayName || t('comment.userFallback')}
             </MuiTypography>
             <MuiTypography variant="caption" color="text.secondary">
               {timeAgo}
             </MuiTypography>
             {wasEdited && (
               <MuiTypography variant="caption" color="text.secondary">
-                (edited)
+                {t('comment.edited')}
               </MuiTypography>
             )}
           </Box>
@@ -233,7 +237,7 @@ export default function CommentItem({
               initialBody={comment.body || ''}
               onSubmit={handleEdit}
               onCancel={() => setIsEditing(false)}
-              submitLabel="Save"
+              submitLabel={t('comment.save')}
               autoFocus
             />
           ) : (
@@ -263,7 +267,7 @@ export default function CommentItem({
                     fontSize: themeTokens.typography.fontSize.xs,
                   }}
                 >
-                  Reply
+                  {t('comment.reply')}
                 </MuiButton>
               )}
               {isAuthor && (
@@ -272,19 +276,23 @@ export default function CommentItem({
                     size="small"
                     onClick={() => setIsEditing(true)}
                     sx={{ color: 'var(--neutral-400)' }}
-                    aria-label="Edit comment"
+                    aria-label={t('comment.delete.editAria')}
                   >
                     <EditOutlined sx={{ fontSize: 16 }} />
                   </IconButton>
                   {/* TODO: Consider lifting ConfirmPopover to parent to avoid per-comment instances */}
                   <ConfirmPopover
-                    title="Delete comment"
-                    description="Are you sure you want to delete this comment? This cannot be undone."
+                    title={t('comment.delete.title')}
+                    description={t('comment.delete.description')}
                     onConfirm={handleDelete}
-                    okText="Delete"
+                    okText={t('comment.delete.confirm')}
                     okButtonProps={{ color: 'error' }}
                   >
-                    <IconButton size="small" sx={{ color: 'var(--neutral-400)' }} aria-label="Delete comment">
+                    <IconButton
+                      size="small"
+                      sx={{ color: 'var(--neutral-400)' }}
+                      aria-label={t('comment.delete.deleteAria')}
+                    >
                       <DeleteOutlined sx={{ fontSize: 16 }} />
                     </IconButton>
                   </ConfirmPopover>
@@ -299,7 +307,7 @@ export default function CommentItem({
               <CommentForm
                 onSubmit={handleReply}
                 onCancel={() => setShowReplyForm(false)}
-                placeholder="Write a reply..."
+                placeholder={t('comment.replyPlaceholder')}
                 autoFocus
               />
             </Box>
@@ -313,7 +321,9 @@ export default function CommentItem({
               disabled={repliesLoading}
               sx={{ textTransform: 'none', mt: 0.5, ml: -0.5 }}
             >
-              Show {comment.replyCount} {comment.replyCount === 1 ? 'reply' : 'replies'}
+              {comment.replyCount === 1
+                ? t('comment.showRepliesOne')
+                : t('comment.showRepliesMany', { count: comment.replyCount })}
             </MuiButton>
           )}
           {replies.map((reply) => (

@@ -194,6 +194,19 @@
       "to": "Hasta"
     }
   },
+  "create": {
+    "auth": {
+      "signInTitle": "Inicia sesión para guardar tu bloque",
+      "signInDescription": "Crea una cuenta o inicia sesión para guardar tu bloque en la tabla.",
+      "signInAria": "Inicia sesión para guardar",
+      "logInTitle": "Inicia sesión para guardar tu bloque",
+      "logInAria": "Inicia sesión para guardar",
+      "editLockedTitle": "Los bloques publicados solo se pueden editar durante 24 horas tras la primera publicación.",
+      "editLockedAria": "Periodo de edición cerrado",
+      "savedTitle": "Guardado",
+      "savedAria": "Guardado"
+    }
+  },
   "actions": {
     "playlist": {
       "toast": {

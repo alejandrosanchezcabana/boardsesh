@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useCallback, useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import Box from '@mui/material/Box';
 import IconButton from '@mui/material/IconButton';
 import MuiTypography from '@mui/material/Typography';
@@ -48,6 +49,7 @@ export default function VoteButton({
   const voteSummaryCtx = useVoteSummaryContext();
   const batchSummary = voteSummaryCtx?.getVoteSummary(entityId);
 
+  const { t } = useTranslation('common');
   const [upvotes, setUpvotes] = useState(initialUpvotes);
   const [downvotes, setDownvotes] = useState(initialDownvotes);
   const [userVote, setUserVote] = useState(initialUserVote ?? 0);
@@ -114,7 +116,7 @@ export default function VoteButton({
   const handleVote = useCallback(
     async (value: 1 | -1) => {
       if (!isAuthenticated || !token) {
-        showMessage('Sign in to vote', 'info');
+        showMessage(t('vote.signInPrompt'), 'info');
         return;
       }
 
@@ -177,12 +179,12 @@ export default function VoteButton({
           voteScore: prevUpvotes - prevDownvotes,
           userVote: prevUserVote,
         });
-        showMessage('Failed to vote', 'error');
+        showMessage(t('vote.failed'), 'error');
       } finally {
         setIsLoading(false);
       }
     },
-    [upvotes, downvotes, userVote, isAuthenticated, token, entityType, entityId, onVoteChange, showMessage],
+    [upvotes, downvotes, userVote, isAuthenticated, token, entityType, entityId, onVoteChange, showMessage, t],
   );
 
   const score = upvotes - downvotes;
@@ -196,7 +198,7 @@ export default function VoteButton({
           size="small"
           onClick={() => handleVote(1)}
           disabled={isLoading}
-          aria-label={isLiked ? 'Unlike' : 'Like'}
+          aria-label={isLiked ? t('vote.unlike') : t('vote.like')}
           sx={{
             color: isLiked ? themeTokens.colors.error : 'var(--neutral-400)',
             p: 0.5,
@@ -241,7 +243,7 @@ export default function VoteButton({
         size="small"
         onClick={() => handleVote(1)}
         disabled={isLoading}
-        aria-label="Upvote"
+        aria-label={t('vote.upvote')}
         sx={{
           color: userVote === 1 ? themeTokens.colors.success : 'var(--neutral-400)',
           p: 0.5,
@@ -264,7 +266,7 @@ export default function VoteButton({
         size="small"
         onClick={() => handleVote(-1)}
         disabled={isLoading}
-        aria-label="Downvote"
+        aria-label={t('vote.downvote')}
         sx={{
           color: userVote === -1 ? themeTokens.colors.error : 'var(--neutral-400)',
           p: 0.5,

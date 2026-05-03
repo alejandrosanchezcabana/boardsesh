@@ -66,6 +66,35 @@
       "tryAgain": "Try Again"
     }
   },
+  "edit": {
+    "title": "Edit Playlist",
+    "fields": {
+      "name": "Playlist Name",
+      "namePlaceholder": "e.g., Hard Crimps",
+      "description": "Description",
+      "descriptionPlaceholder": "Optional description for your playlist...",
+      "color": "Color",
+      "icon": "Icon",
+      "removeIcon": "Remove",
+      "visibility": "Visibility",
+      "publicHint": "Public playlists can be viewed by anyone with the link",
+      "privateHint": "Private playlists are only visible to you"
+    },
+    "actions": {
+      "cancel": "Cancel",
+      "save": "Save",
+      "saving": "Saving..."
+    },
+    "validation": {
+      "nameRequired": "Please enter a playlist name",
+      "nameTooLong": "Name must be 100 characters or less",
+      "descriptionTooLong": "Description must be 500 characters or less"
+    },
+    "messages": {
+      "updated": "Playlist updated successfully",
+      "updateFailed": "Failed to update playlist"
+    }
+  },
   "generator": {
     "drawerTitle": "Generate Playlist",
     "generatingTitle": "Generating...",

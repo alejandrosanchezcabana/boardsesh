@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import Skeleton from '@mui/material/Skeleton';
 import type { BetaLink } from '@/app/lib/api-wrappers/sync-api-types';
 import BoardseshBetaCard from './boardsesh-beta-card';
@@ -12,6 +13,7 @@ type BoardseshBetaListProps = {
 };
 
 const BoardseshBetaList: React.FC<BoardseshBetaListProps> = ({ links, isLoading }) => {
+  const { t } = useTranslation('common');
   return (
     <div className={styles.section}>
       <div className={styles.scrollContainer}>
@@ -28,7 +30,7 @@ const BoardseshBetaList: React.FC<BoardseshBetaListProps> = ({ links, isLoading 
             {links.map((link) => (
               <BoardseshBetaCard key={link.link} link={link} />
             ))}
-            {links.length === 0 && <span className={styles.emptyText}>No beta videos yet</span>}
+            {links.length === 0 && <span className={styles.emptyText}>{t('betaVideos.empty')}</span>}
           </>
         )}
       </div>

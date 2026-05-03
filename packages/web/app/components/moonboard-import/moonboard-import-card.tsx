@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import Stack from '@mui/material/Stack';
 import MuiCard from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
@@ -36,6 +37,7 @@ export default function MoonBoardImportCard({
   onEdit,
   onRemove,
 }: MoonBoardImportCardProps) {
+  const { t } = useTranslation('common');
   const totalHolds = climb.holds.start.length + climb.holds.hand.length + climb.holds.finish.length;
   const duplicateMessage = duplicateMatch?.existingClimbName
     ? `Skipping: Already Exists as "${duplicateMatch.existingClimbName}"`
@@ -93,7 +95,7 @@ export default function MoonBoardImportCard({
           Edit
         </MuiButton>
         <ConfirmPopover
-          title="Remove this climb?"
+          title={t('moonboardImport.removeConfirmTitle')}
           description="This climb will not be imported."
           onConfirm={onRemove}
           okText="Remove"
