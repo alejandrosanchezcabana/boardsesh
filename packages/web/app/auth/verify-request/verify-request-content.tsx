@@ -14,6 +14,8 @@ import Stack from '@mui/material/Stack';
 import MailOutlined from '@mui/icons-material/MailOutlined';
 import CancelOutlined from '@mui/icons-material/CancelOutlined';
 import { useSearchParams } from 'next/navigation';
+import { useTranslation } from 'react-i18next';
+import type { TFunction } from 'i18next';
 import Logo from '@/app/components/brand/logo';
 import BackButton from '@/app/components/back-button';
 import { useSnackbar } from '@/app/components/providers/snackbar-provider';
@@ -21,19 +23,22 @@ import { themeTokens } from '@/app/theme/theme-config';
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
+const KNOWN_VERIFY_ERROR_CODES = new Set(['EmailNotVerified', 'InvalidToken', 'TokenExpired', 'TooManyAttempts']);
+
 type EmailErrors = { email?: string };
 
-function validateEmail(email: string): EmailErrors {
+function validateEmail(email: string, t: TFunction<'auth'>): EmailErrors {
   const errors: EmailErrors = {};
   if (!email) {
-    errors.email = 'Please enter your email';
+    errors.email = t('login.validation.emailRequired');
   } else if (!EMAIL_REGEX.test(email)) {
-    errors.email = 'Please enter a valid email';
+    errors.email = t('login.validation.emailInvalid');
   }
   return errors;
 }
 
 export default function VerifyRequestContent() {
+  const { t } = useTranslation('auth');
   const searchParams = useSearchParams();
   const error = searchParams.get('error');
   const [resendLoading, setResendLoading] = useState(false);
@@ -42,22 +47,14 @@ export default function VerifyRequestContent() {
   const { showMessage } = useSnackbar();
 
   const getErrorMessage = () => {
-    switch (error) {
-      case 'EmailNotVerified':
-        return 'Please verify your email before signing in.';
-      case 'InvalidToken':
-        return 'The verification link is invalid. Please request a new one.';
-      case 'TokenExpired':
-        return 'The verification link has expired. Please request a new one.';
-      case 'TooManyAttempts':
-        return 'Too many verification attempts. Please wait a minute and try again.';
-      default:
-        return null;
+    if (error && KNOWN_VERIFY_ERROR_CODES.has(error)) {
+      return t(`verifyRequest.messages.${error}`);
     }
+    return null;
   };
 
   const handleResend = async () => {
-    const validationErrors = validateEmail(email);
+    const validationErrors = validateEmail(email, t);
     setErrors(validationErrors);
     if (Object.keys(validationErrors).length > 0) return;
 
@@ -73,9 +70,9 @@ export default function VerifyRequestContent() {
       const data = await response.json();
 
       if (response.ok) {
-        showMessage('Verification email sent! Check your inbox.', 'success');
+        showMessage(t('verifyRequest.toasts.sent'), 'success');
       } else {
-        showMessage(data.error || 'Failed to send verification email', 'error');
+        showMessage(data.error || t('verifyRequest.toasts.failed'), 'error');
       }
     } catch (err) {
       console.error('Resend error:', err);
@@ -103,7 +100,7 @@ export default function VerifyRequestContent() {
         <BackButton />
         <Logo size="sm" showText={false} />
         <Typography variant="h4" sx={{ margin: 0, flex: 1 }}>
-          Email Verification
+          {t('verifyRequest.header')}
         </Typography>
       </Box>
 
@@ -128,9 +125,9 @@ export default function VerifyRequestContent() {
               ) : (
                 <>
                   <MailOutlined sx={{ fontSize: 48, color: themeTokens.colors.primary, mx: 'auto' }} />
-                  <Typography variant="h3">Check your email</Typography>
+                  <Typography variant="h3">{t('verifyRequest.title')}</Typography>
                   <Typography variant="body1" component="p" color="text.secondary">
-                    We sent you a verification link. Click the link in your email to verify your account.
+                    {t('verifyRequest.description')}
                   </Typography>
                 </>
               )}
@@ -144,7 +141,7 @@ export default function VerifyRequestContent() {
                 sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}
               >
                 <TextField
-                  placeholder="Enter your email to resend"
+                  placeholder={t('verifyRequest.resendPlaceholder')}
                   variant="outlined"
                   size="medium"
                   fullWidth
@@ -174,12 +171,12 @@ export default function VerifyRequestContent() {
                   fullWidth
                   size="large"
                 >
-                  Resend Verification Email
+                  {t('verifyRequest.resend')}
                 </Button>
               </Box>
 
               <Button variant="text" href="/auth/login">
-                Back to Login
+                {t('verifyRequest.back')}
               </Button>
             </Stack>
           </CardContent>

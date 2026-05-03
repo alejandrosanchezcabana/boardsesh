@@ -21,6 +21,8 @@ import Favorite from '@mui/icons-material/Favorite';
 import Visibility from '@mui/icons-material/Visibility';
 import VisibilityOff from '@mui/icons-material/VisibilityOff';
 import { signIn } from 'next-auth/react';
+import { useTranslation } from 'react-i18next';
+import type { TFunction } from 'i18next';
 import SocialLoginButtons from '@/app/components/auth/social-login-buttons';
 import { TabPanel } from '@/app/components/ui/tab-panel';
 import { useSnackbar } from '@/app/components/providers/snackbar-provider';
@@ -35,38 +37,38 @@ const initialRegisterValues = { name: '', email: '', password: '', confirmPasswo
 type LoginErrors = Partial<Record<keyof typeof initialLoginValues, string>>;
 type RegisterErrors = Partial<Record<keyof typeof initialRegisterValues, string>>;
 
-function validateLoginFields(values: typeof initialLoginValues): LoginErrors {
+function validateLoginFields(values: typeof initialLoginValues, t: TFunction<'auth'>): LoginErrors {
   const errors: LoginErrors = {};
   if (!values.email) {
-    errors.email = 'Please enter your email';
+    errors.email = t('login.validation.emailRequired');
   } else if (!EMAIL_REGEX.test(values.email)) {
-    errors.email = 'Please enter a valid email';
+    errors.email = t('login.validation.emailInvalid');
   }
   if (!values.password) {
-    errors.password = 'Please enter your password';
+    errors.password = t('login.validation.passwordRequired');
   }
   return errors;
 }
 
-function validateRegisterFields(values: typeof initialRegisterValues): RegisterErrors {
+function validateRegisterFields(values: typeof initialRegisterValues, t: TFunction<'auth'>): RegisterErrors {
   const errors: RegisterErrors = {};
   if (values.name && values.name.length > 100) {
-    errors.name = 'Name must be less than 100 characters';
+    errors.name = t('login.validation.nameTooLong');
   }
   if (!values.email) {
-    errors.email = 'Please enter your email';
+    errors.email = t('login.validation.emailRequired');
   } else if (!EMAIL_REGEX.test(values.email)) {
-    errors.email = 'Please enter a valid email';
+    errors.email = t('login.validation.emailInvalid');
   }
   if (!values.password) {
-    errors.password = 'Please enter a password';
+    errors.password = t('login.validation.passwordRequiredCreate');
   } else if (values.password.length < 8) {
-    errors.password = 'Password must be at least 8 characters';
+    errors.password = t('login.validation.passwordTooShort');
   }
   if (!values.confirmPassword) {
-    errors.confirmPassword = 'Please confirm your password';
+    errors.confirmPassword = t('login.validation.confirmPasswordRequired');
   } else if (values.confirmPassword !== values.password) {
-    errors.confirmPassword = 'Passwords do not match';
+    errors.confirmPassword = t('login.validation.passwordsMismatch');
   }
   return errors;
 }
@@ -79,13 +81,10 @@ type AuthModalProps = {
   description?: string;
 };
 
-export default function AuthModal({
-  open,
-  onClose,
-  onSuccess,
-  title = 'Sign in to keep your progress',
-  description = 'Your logbook, playlists, and follows stay with your account.',
-}: AuthModalProps) {
+export default function AuthModal({ open, onClose, onSuccess, title, description }: AuthModalProps) {
+  const { t } = useTranslation('auth');
+  const resolvedTitle = title ?? t('modal.title');
+  const resolvedDescription = description ?? t('modal.description');
   const [loginValues, setLoginValues] = useState(initialLoginValues);
   const [loginErrors, setLoginErrors] = useState<LoginErrors>({});
   const [registerValues, setRegisterValues] = useState(initialRegisterValues);
@@ -99,7 +98,7 @@ export default function AuthModal({
   const { showMessage } = useSnackbar();
 
   const handleLogin = async () => {
-    const errors = validateLoginFields(loginValues);
+    const errors = validateLoginFields(loginValues, t);
     setLoginErrors(errors);
     if (Object.keys(errors).length > 0) return;
 
@@ -113,9 +112,9 @@ export default function AuthModal({
       });
 
       if (result?.error) {
-        showMessage('Invalid email or password', 'error');
+        showMessage(t('login.toasts.invalidCredentials'), 'error');
       } else if (result?.ok) {
-        showMessage('Logged in successfully', 'success');
+        showMessage(t('login.toasts.loggedIn'), 'success');
         setLoginValues(initialLoginValues);
         setLoginErrors({});
         onClose();
@@ -129,7 +128,7 @@ export default function AuthModal({
   };
 
   const handleRegister = async () => {
-    const errors = validateRegisterFields(registerValues);
+    const errors = validateRegisterFields(registerValues, t);
     setRegisterErrors(errors);
     if (Object.keys(errors).length > 0) return;
 
@@ -154,13 +153,13 @@ export default function AuthModal({
       const data = await response.json();
 
       if (!response.ok) {
-        showMessage(data.error || 'Registration failed', 'error');
+        showMessage(data.error || t('login.toasts.registrationFailed'), 'error');
         return;
       }
 
       // Check if email verification is required
       if (data.requiresVerification) {
-        showMessage('Please check your email to verify your account', 'info');
+        showMessage(t('login.toasts.checkEmail'), 'info');
         setActiveTab('login');
         setLoginValues((prev) => ({ ...prev, email: registerValues.email }));
         setRegisterValues(initialRegisterValues);
@@ -169,7 +168,7 @@ export default function AuthModal({
       }
 
       // Email verification disabled - auto-login after successful registration
-      showMessage('Account created! Logging you in...', 'success');
+      showMessage(t('login.toasts.accountCreated'), 'success');
 
       const loginResult = await signIn('credentials', {
         email: registerValues.email,
@@ -185,11 +184,11 @@ export default function AuthModal({
       } else {
         setActiveTab('login');
         setLoginValues((prev) => ({ ...prev, email: registerValues.email }));
-        showMessage('Please log in with your account', 'info');
+        showMessage(t('login.toasts.loginAfterCreate'), 'info');
       }
     } catch (error) {
       console.error('Registration error:', error);
-      showMessage('Registration failed. Please try again.', 'error');
+      showMessage(t('login.toasts.registrationFailedRetry'), 'error');
     } finally {
       setRegisterLoading(false);
     }
@@ -210,16 +209,16 @@ export default function AuthModal({
           <Stack spacing={1} sx={{ width: '100%', textAlign: 'center' }}>
             <Favorite sx={{ fontSize: 32, color: themeTokens.colors.error, mx: 'auto' }} />
             <Typography variant="body2" component="span" fontWeight={600} sx={{ fontSize: 18 }}>
-              {title}
+              {resolvedTitle}
             </Typography>
             <Typography variant="body2" component="span" color="text.secondary">
-              {description}
+              {resolvedDescription}
             </Typography>
           </Stack>
 
           <Tabs value={activeTab} onChange={(_, v) => setActiveTab(v)} centered>
-            <Tab label="Login" value="login" />
-            <Tab label="Create Account" value="register" />
+            <Tab label={t('login.tabs.signIn')} value="login" />
+            <Tab label={t('login.tabs.signUp')} value="register" />
           </Tabs>
 
           <TabPanel value={activeTab} index="login">
@@ -233,7 +232,7 @@ export default function AuthModal({
             >
               <TextField
                 id="login_email"
-                placeholder="your@email.com"
+                placeholder={t('login.placeholders.email')}
                 variant="outlined"
                 size="medium"
                 fullWidth
@@ -260,7 +259,7 @@ export default function AuthModal({
               <TextField
                 id="login_password"
                 type={showLoginPassword ? 'text' : 'password'}
-                placeholder="Password"
+                placeholder={t('login.placeholders.password')}
                 variant="outlined"
                 size="medium"
                 fullWidth
@@ -303,7 +302,7 @@ export default function AuthModal({
                 fullWidth
                 size="large"
               >
-                Login
+                {t('login.submit.signIn')}
               </Button>
             </Box>
           </TabPanel>
@@ -318,7 +317,7 @@ export default function AuthModal({
               sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}
             >
               <TextField
-                placeholder="Your name (optional)"
+                placeholder={t('login.placeholders.name')}
                 variant="outlined"
                 size="medium"
                 fullWidth
@@ -341,7 +340,7 @@ export default function AuthModal({
               />
 
               <TextField
-                placeholder="your@email.com"
+                placeholder={t('login.placeholders.email')}
                 variant="outlined"
                 size="medium"
                 fullWidth
@@ -367,7 +366,7 @@ export default function AuthModal({
 
               <TextField
                 type={showRegisterPassword ? 'text' : 'password'}
-                placeholder="Password (min 8 characters)"
+                placeholder={t('login.placeholders.passwordWithMin')}
                 variant="outlined"
                 size="medium"
                 fullWidth
@@ -404,7 +403,7 @@ export default function AuthModal({
 
               <TextField
                 type={showConfirmPassword ? 'text' : 'password'}
-                placeholder="Confirm password"
+                placeholder={t('login.placeholders.confirmPassword')}
                 variant="outlined"
                 size="medium"
                 fullWidth
@@ -448,14 +447,14 @@ export default function AuthModal({
                 fullWidth
                 size="large"
               >
-                Create Account
+                {t('login.submit.signUp')}
               </Button>
             </Box>
           </TabPanel>
 
           <MuiDivider sx={{ margin: '8px 0' }}>
             <Typography variant="body2" component="span" color="text.secondary">
-              or
+              {t('login.divider')}
             </Typography>
           </MuiDivider>
 
