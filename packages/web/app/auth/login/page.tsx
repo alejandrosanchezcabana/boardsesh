@@ -1,5 +1,7 @@
 import React, { Suspense } from 'react';
 import { createNoIndexMetadata } from '@/app/lib/seo/metadata';
+import { getLocale } from '@/app/lib/i18n/get-locale';
+import I18nProvider from '@/app/components/providers/i18n-provider';
 import AuthPageContent from './auth-page-content';
 
 export const metadata = createNoIndexMetadata({
@@ -33,10 +35,13 @@ function AuthPageFallback() {
   );
 }
 
-export default function AuthPage() {
+export default async function AuthPage() {
+  const locale = await getLocale();
   return (
-    <Suspense fallback={<AuthPageFallback />}>
-      <AuthPageContent />
-    </Suspense>
+    <I18nProvider locale={locale} namespaces={['auth']}>
+      <Suspense fallback={<AuthPageFallback />}>
+        <AuthPageContent />
+      </Suspense>
+    </I18nProvider>
   );
 }

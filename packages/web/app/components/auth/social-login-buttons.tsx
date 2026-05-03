@@ -6,6 +6,7 @@ import Button from '@mui/material/Button';
 import Box from '@mui/material/Box';
 
 import { signIn } from 'next-auth/react';
+import { useTranslation } from 'react-i18next';
 import { isNativeApp } from '@/app/lib/ble/capacitor-utils';
 import { buildNativeOAuthSignInUrl } from '@/app/lib/auth/native-oauth-url';
 
@@ -57,6 +58,7 @@ type SocialLoginButtonsProps = {
 };
 
 export default function SocialLoginButtons({ callbackUrl = '/', disabled = false }: SocialLoginButtonsProps) {
+  const { t } = useTranslation('auth');
   const [providers, setProviders] = useState<ProvidersConfig | null>(null);
   const [loading, setLoading] = useState(true);
   const [isCapacitorApp, setIsCapacitorApp] = useState(false);
@@ -128,7 +130,7 @@ export default function SocialLoginButtons({ callbackUrl = '/', disabled = false
           onClick={() => handleSocialSignIn('google')}
           disabled={disabled}
         >
-          Continue with Google
+          {t('login.providers.google')}
         </Button>
       )}
 
@@ -142,7 +144,7 @@ export default function SocialLoginButtons({ callbackUrl = '/', disabled = false
           disabled={disabled}
           sx={appleButtonStyles}
         >
-          Continue with Apple
+          {t('login.providers.apple')}
         </Button>
       )}
 
@@ -155,7 +157,7 @@ export default function SocialLoginButtons({ callbackUrl = '/', disabled = false
           onClick={() => handleSocialSignIn('facebook')}
           disabled={disabled}
         >
-          Continue with Facebook
+          {t('login.providers.facebook')}
         </Button>
       )}
     </Box>
