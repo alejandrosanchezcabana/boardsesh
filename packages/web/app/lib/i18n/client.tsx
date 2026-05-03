@@ -44,11 +44,6 @@ function getClientInstance(locale: Locale, resources: Record<string, Record<stri
       supportedLngs: SUPPORTED_LOCALES as unknown as string[],
       defaultNS: DEFAULT_NAMESPACE,
       resources: { [locale]: resources },
-      // Required when init is given pre-bundled `resources`: tells i18next those
-      // bundles aren't the complete set, so the backend is still consulted for
-      // namespaces the page didn't pre-load (e.g. `session` on board pages,
-      // `profile` stats on /you).
-      partialBundledLanguages: true,
       interpolation: { escapeValue: false },
       returnNull: false,
     });
