@@ -33,7 +33,9 @@
     "loading": "Loading...",
     "share": "Share",
     "copy": "Copy",
-    "submit": "Submit"
+    "submit": "Submit",
+    "clear": "Clear",
+    "remove": "Remove"
   },
   "ariaLabels": {
     "close": "Close",

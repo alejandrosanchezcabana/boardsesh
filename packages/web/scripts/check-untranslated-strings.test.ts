@@ -140,6 +140,39 @@ export default function Foo() {
 `);
     expect(violations).toHaveLength(0);
   });
+
+  it('flags hardcoded okText / cancelText on confirm-style components', () => {
+    const { violations } = scan(`
+export default function Foo() {
+  return (
+    <ConfirmPopover okText="Delete" cancelText="Cancel" onConfirm={() => {}}>
+      <button />
+    </ConfirmPopover>
+  );
+}
+`);
+    const flagged = violations
+      .filter((violation) => violation.kind === 'jsx-attribute')
+      .map((violation) => ({ attribute: violation.attribute, text: violation.text }))
+      .sort((a, b) => (a.attribute ?? '').localeCompare(b.attribute ?? ''));
+    expect(flagged).toEqual([
+      { attribute: 'cancelText', text: 'Cancel' },
+      { attribute: 'okText', text: 'Delete' },
+    ]);
+  });
+
+  it('passes when okText / cancelText use t()', () => {
+    const { violations } = scan(`
+export default function Foo({ t }: { t: (key: string) => string }) {
+  return (
+    <ConfirmPopover okText={t('actions.delete')} cancelText={t('actions.cancel')} onConfirm={() => {}}>
+      <button />
+    </ConfirmPopover>
+  );
+}
+`);
+    expect(violations).toHaveLength(0);
+  });
 });
 
 describe('checkFile — imperative call sites', () => {
@@ -238,6 +271,24 @@ export default function Foo() {
 }
 `);
     expect(violations.some((violation) => violation.text.includes('i18n-ignore-next-line'))).toBe(true);
+  });
+
+  it('returns fresh violations and stale markers from the same file in a single pass', () => {
+    // Combined-reporting guarantee: the data layer must surface both classes
+    // so main() can print them together without short-circuiting.
+    const { violations, staleMarkers } = scan(`
+export default function Foo({ t }: { t: (key: string) => string }) {
+  return (
+    <>
+      <button aria-label="Submit form" />
+      {/* i18n-ignore-next-line */}
+      <span>{t('translated.string')}</span>
+    </>
+  );
+}
+`);
+    expect(violations.length).toBeGreaterThan(0);
+    expect(staleMarkers.length).toBeGreaterThan(0);
   });
 });
 

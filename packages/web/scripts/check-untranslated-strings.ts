@@ -8,7 +8,8 @@
  *   1. JSX text nodes      e.g. <Button>Save</Button>
  *   2. Specific JSX string-literal attributes (aria-label, placeholder,
  *      title, alt, helperText, label, description, tooltip, primary,
- *      secondary, aria-description, aria-placeholder, aria-roledescription)
+ *      secondary, aria-description, aria-placeholder, aria-roledescription,
+ *      okText, cancelText)
  *   3. Imperative call sites: enqueueSnackbar / showMessage / openAuthModal
  *      with a literal message arg or a literal title/description/body/message
  *      object property
@@ -49,6 +50,8 @@ const FLAGGED_ATTRIBUTES = new Set([
   'tooltip',
   'primary',
   'secondary',
+  'okText',
+  'cancelText',
 ]);
 
 // Map of call name → which positional arguments to scan. For toast-style
@@ -491,8 +494,10 @@ function main(): never {
   }
 
   const report = run();
+  const hasViolations = report.violations.length > 0;
+  const hasStaleMarkers = report.staleMarkers.length > 0;
 
-  if (report.violations.length > 0) {
+  if (hasViolations) {
     for (const violation of report.violations) {
       console.error(describe(violation));
     }
@@ -505,18 +510,19 @@ function main(): never {
         '`// i18n-ignore-next-line` on the line above to mark it as deliberately untranslated. ' +
         'Run `bun packages/web/scripts/check-untranslated-strings.ts --fix` to bulk-add markers above existing violations.',
     );
-    process.exit(1);
   }
 
-  if (report.staleMarkers.length > 0) {
+  if (hasStaleMarkers) {
+    if (hasViolations) console.error('');
     for (const stale of report.staleMarkers) {
       const rel = relative(repoRoot, stale.file);
       console.error(`${rel}:${stale.line}  stale i18n-ignore-next-line marker (no violation on the next line)`);
     }
     console.error('');
     console.error(`Found ${report.staleMarkers.length} stale i18n-ignore-next-line marker(s); remove them.`);
-    process.exit(1);
   }
+
+  if (hasViolations || hasStaleMarkers) process.exit(1);
 
   console.info(
     `check-untranslated-strings: OK — scanned ${report.totalFiles} .tsx file(s), no hardcoded user-facing strings.`,

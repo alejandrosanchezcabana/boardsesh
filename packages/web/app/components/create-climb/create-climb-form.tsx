@@ -1540,8 +1540,8 @@ export default function CreateClimbForm({
           // i18n-ignore-next-line
           description="This will clear all holds and reset the form. Are you sure?"
           onConfirm={resetHolds}
-          okText="Clear"
-          cancelText="Cancel"
+          okText={t('common:actions.clear')}
+          cancelText={t('common:actions.cancel')}
         >
           {/* i18n-ignore-next-line */}
           <MuiTooltip title="Clear all holds">

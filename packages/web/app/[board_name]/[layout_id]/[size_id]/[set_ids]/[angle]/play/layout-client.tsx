@@ -6,6 +6,7 @@ import MuiButton from '@mui/material/Button';
 import Box from '@mui/material/Box';
 import { DeleteOutlined } from '@mui/icons-material';
 import { track } from '@vercel/analytics';
+import { useTranslation } from 'react-i18next';
 import type { BoardDetails } from '@/app/lib/types';
 
 import QueueList from '@/app/components/queue-control/queue-list';
@@ -18,6 +19,7 @@ type PlayLayoutClientProps = {
 };
 
 const QueueSidebar: React.FC<{ boardDetails: BoardDetails }> = ({ boardDetails }) => {
+  const { t } = useTranslation('common');
   const { queue } = useQueueList();
   const { setQueue } = useQueueActions();
 
@@ -51,8 +53,8 @@ const QueueSidebar: React.FC<{ boardDetails: BoardDetails }> = ({ boardDetails }
             // i18n-ignore-next-line
             description="Are you sure you want to clear all items from the queue?"
             onConfirm={handleClearQueue}
-            okText="Clear"
-            cancelText="Cancel"
+            okText={t('actions.clear')}
+            cancelText={t('actions.cancel')}
           >
             <MuiButton variant="text" startIcon={<DeleteOutlined />} size="small" sx={{ color: 'var(--neutral-400)' }}>
               {/* i18n-ignore-next-line */}
