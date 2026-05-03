@@ -1,8 +1,17 @@
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vite-plus/test';
+import { tFromCatalog } from '@/app/__test-helpers__/i18n-mock';
 import type { BoardDetails, SearchRequestPagination } from '@/app/lib/types';
 import { DEFAULT_SEARCH_PARAMS } from '@/app/lib/url-utils';
+
+vi.mock('react-i18next', () => ({
+  useTranslation: (ns?: string) => ({
+    t: (key: string, options?: Record<string, unknown>) => tFromCatalog(ns, key, options),
+    i18n: { language: 'en-US' },
+  }),
+  Trans: ({ children }: { children?: React.ReactNode }) => children ?? null,
+}));
 
 const mockUpdateFilters = vi.fn();
 let mockUISearchParams: SearchRequestPagination = { ...DEFAULT_SEARCH_PARAMS };

@@ -1,8 +1,17 @@
 import { describe, it, expect, vi, beforeEach } from 'vite-plus/test';
 import { render, screen } from '@testing-library/react';
 import React from 'react';
+import { tFromCatalog } from '@/app/__test-helpers__/i18n-mock';
 import UnifiedSearchDrawer from '../unified-search-drawer';
 import type { BoardDetails } from '@/app/lib/types';
+
+vi.mock('react-i18next', () => ({
+  useTranslation: (ns?: string) => ({
+    t: (key: string, options?: Record<string, unknown>) => tFromCatalog(ns, key, options),
+    i18n: { language: 'en-US' },
+  }),
+  Trans: ({ children }: { children?: React.ReactNode }) => children ?? null,
+}));
 
 // Capture the props passed to the underlying SwipeableDrawer so we can assert on them.
 const swipeableDrawerProps: Array<Record<string, unknown>> = [];

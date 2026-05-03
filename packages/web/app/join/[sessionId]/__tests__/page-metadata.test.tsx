@@ -1,4 +1,30 @@
 import { describe, expect, it, vi } from 'vite-plus/test';
+import { tFromCatalog } from '@/app/__test-helpers__/i18n-mock';
+
+vi.mock('server-only', () => ({}));
+
+vi.mock('@/app/lib/i18n/server', () => ({
+  getServerTranslation: vi.fn(async (ns?: string) => ({
+    t: (key: string, options?: Record<string, unknown>) => tFromCatalog(ns, key, options),
+    locale: 'en-US',
+  })),
+}));
+
+vi.mock('@/app/lib/i18n/get-locale', () => ({
+  getLocale: vi.fn(async () => 'en-US'),
+}));
+
+vi.mock('@/app/components/providers/i18n-provider', () => ({
+  default: ({ children }: { children?: unknown }) => children ?? null,
+}));
+
+vi.mock('react-i18next', () => ({
+  useTranslation: (ns?: string) => ({
+    t: (key: string, options?: Record<string, unknown>) => tFromCatalog(ns, key, options),
+    i18n: { language: 'en-US' },
+  }),
+  Trans: ({ children }: { children?: unknown }) => children ?? null,
+}));
 
 vi.mock('@/app/lib/seo/dynamic-og-data', () => ({
   getSessionOgSummary: vi.fn(),

@@ -1,12 +1,21 @@
 import { describe, it, expect, vi, beforeEach } from 'vite-plus/test';
 import { render, screen, fireEvent } from '@testing-library/react';
 import React from 'react';
+import { tFromCatalog } from '@/app/__test-helpers__/i18n-mock';
 import YouProgressContent from '../you-progress-content';
 import YouTabBar from '../you-tab-bar';
 import { useProfileData } from '@/app/profile/[user_id]/hooks/use-profile-data';
 import { usePathname } from 'next/navigation';
 
 // --- Mocks (before component imports) ---
+
+vi.mock('react-i18next', () => ({
+  useTranslation: (ns?: string) => ({
+    t: (key: string, options?: Record<string, unknown>) => tFromCatalog(ns, key, options),
+    i18n: { language: 'en-US' },
+  }),
+  Trans: ({ children }: { children?: React.ReactNode }) => children ?? null,
+}));
 
 const mockPush = vi.fn();
 
