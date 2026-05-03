@@ -16,7 +16,7 @@ export default async function YouLayout({ children }: { children: React.ReactNod
   const locale = await getLocale();
 
   return (
-    <I18nProvider locale={locale} namespaces={['you']}>
+    <I18nProvider locale={locale} namespaces={['you', 'profile']}>
       <Box className={styles.layout}>
         <Box component="main" className={styles.content}>
           <YouTabBar />
