@@ -1,0 +1,547 @@
+{
+  "metadata": {
+    "home": {
+      "title": "Boardsesh - Entraînez-vous plus malin sur votre board d'escalade",
+      "description": "Suivez vos sends sur Kilter, Tension et MoonBoard. Une seule app pour vos boards.",
+      "ogDescription": "Compatible avec Kilter, Tension et MoonBoard. Suivez vos sessions, pilotez les LEDs, grimpez ensemble."
+    },
+    "about": {
+      "title": "À propos",
+      "description": "Une seule app pour chaque board d'escalade. Open source, portée par la communauté."
+    },
+    "help": {
+      "title": "Aide",
+      "description": "Découvrez les fonctionnalités de Boardsesh : heatmap, mode party, générateur de playlists et bien plus."
+    },
+    "docs": {
+      "title": "Documentation API",
+      "description": "Documentation des API REST et WebSocket de Boardsesh - intégration des boards d'entraînement interactifs"
+    },
+    "legal": {
+      "title": "Politique légale et de propriété intellectuelle",
+      "description": "Politique légale et de propriété intellectuelle de Boardsesh, incluant notre position sur les données de voies, l'interopérabilité et l'usage des marques."
+    },
+    "privacy": {
+      "title": "Politique de confidentialité",
+      "description": "Politique de confidentialité de Boardsesh - comment nous gérons vos données."
+    }
+  },
+  "home": {
+    "hero": {
+      "title": "Au mur !",
+      "subtitle": "Suivez vos sends sur Kilter, Tension et MoonBoard.",
+      "ctaStart": "Commencer à grimper",
+      "ctaContinue": "Continuer à grimper"
+    },
+    "onboardingHeader": "Personnalisez",
+    "install": {
+      "iosTitle": "Installer l'app Boardsesh",
+      "iosDescription": "Allume les prises de votre board directement depuis votre téléphone",
+      "androidLiveTitle": "Installer l'app Boardsesh",
+      "androidLiveDescription": "Disponible sur Google Play",
+      "androidPreLaunchTitle": "L'app Android arrive bientôt",
+      "androidPreLaunchDescription": "Sortie dans {{days}}j {{hours}}h {{minutes}}m {{seconds}}s. Touchez pour installer la version preview."
+    },
+    "cards": {
+      "tourTitle": "Faites le tour",
+      "tourDescription": "Une minute pour découvrir la file d'attente, le suivi et les sessions entre potes",
+      "auroraTitle": "Vous arrivez de Kilter ?",
+      "auroraDescription": "Importez votre carnet et votre historique en une étape",
+      "crewTitle": "Trouvez votre crew",
+      "crewDescription": "Suivez vos amis et voyez ce qu'ils grimpent",
+      "playlistTitle": "Préparez une playlist",
+      "playlistDescription": "Alignez vos voies avant d'arriver à la salle",
+      "bluetoothTitle": "Connectez votre board",
+      "bluetoothDescription": "Appairez en Bluetooth et allumez votre prochaine voie",
+      "discordTitle": "Rejoignez le crew sur Discord",
+      "discordDescription": "Partagez la beta, signalez des bugs et façonnez la suite"
+    },
+    "feed": {
+      "callout": "Vos amis grimpent.",
+      "cta": "Voir le feed"
+    }
+  },
+  "about": {
+    "headerTitle": "À propos",
+    "hero": {
+      "title": "Suivez, entraînez-vous et grimpez ensemble",
+      "subtitle": "Une seule app pour chaque board d'escalade"
+    },
+    "vision": {
+      "title": "Notre vision",
+      "p1": "Kilter, Tension, MoonBoard, Decoy, Grasshopper. Chaque board a son app et son écosystème fermé. Votre entraînement ne devrait pas être prisonnier de l'un d'entre eux.",
+      "p2": "Boardsesh fonctionne avec tous, pour que vous puissiez juste grimper."
+    },
+    "features": {
+      "title": "Ce que Boardsesh propose",
+      "queueLabel": "Gestion de la file.",
+      "queueDescription": "Passez chacun votre tour sans le « c'est à qui ? » embarrassant",
+      "partyLabel": "Mode Party.",
+      "partyDescription": "Partagez une session et grimpez ensemble en temps réel",
+      "multiBoardLabel": "Multi-board.",
+      "multiBoardDescription": "Compatible avec Kilter, Tension, MoonBoard et d'autres",
+      "communityLabel": "Porté par la communauté.",
+      "communityDescription": "Construit et amélioré par des grimpeurs",
+      "selfHostedLabel": "Auto-hébergeable.",
+      "selfHostedDescription": "Lancez votre propre instance si ça vous tente"
+    },
+    "openSource": {
+      "title": "Open Source",
+      "body": "Boardsesh est open source sous licence Apache. Parcourez le code, envoyez une PR, ouvrez un bug ou forkez le projet entier.",
+      "cta": "Voir sur GitHub →"
+    },
+    "api": {
+      "title": "Documentation API",
+      "body": "Envie de construire avec les données d'escalade ? L'API est publique. Régalez-vous.",
+      "cta": "Explorer la documentation API →"
+    },
+    "community": {
+      "title": "Rejoignez la communauté",
+      "body": "Que vous codiez, ouvriez des voies ou vouliez juste nous dire ce qui cloche, on vous écoute."
+    },
+    "legalLink": "Politique légale et de propriété intellectuelle",
+    "footer": "Fait par des grimpeurs. Ouvert à tous."
+  },
+  "legal": {
+    "headerTitle": "Mentions légales",
+    "intro": {
+      "title": "Politique légale et de propriété intellectuelle",
+      "p1": "Boardsesh est une alternative gratuite, open source et communautaire pour parcourir et interagir avec les boards d'entraînement à LED standardisés (Kilter Board, Tension Board, MoonBoard et autres). Le projet est non commercial et entièrement maintenu par des bénévoles.",
+      "p2": "Nous pensons que les grimpeurs doivent être libres de choisir comment ils interagissent avec le matériel qu'ils ont acheté, et que les données créées par la communauté doivent rester accessibles à la communauté."
+    },
+    "climbData": {
+      "title": "Notre position sur les données de voies",
+      "facts": {
+        "title": "Les voies sont des données factuelles",
+        "p1": "Une voie sur un board standardisé est une liste de positions de prises sur une disposition fixe et standardisée (ex. : « départ sur A5, utilise B12, C3, D18, arrivée sur K11 »), associée à une cotation et un angle de mur. C'est de l'information factuelle et fonctionnelle — comparable à une position d'échecs, à un ensemble de coordonnées GPS ou à un numéro de téléphone — et non une œuvre de création originale.",
+        "p2": "Selon le droit d'auteur américain, les faits ne sont pas protégeables par le copyright (<em>Feist Publications, Inc. v. Rural Telephone Service Co.</em>, 499 U.S. 340 (1991)). Un board standardisé avec un nombre fini de prises (typiquement 200 à 500) produit des définitions de voies intrinsèquement contraintes, factuelles et fonctionnelles."
+      },
+      "community": {
+        "title": "La base de données est créée par la communauté",
+        "p1": "Les bases de données de voies de ces boards sont presque entièrement composées de contenu généré par les utilisateurs. Ce sont les grimpeurs qui créent et soumettent les voies. Les fabricants de boards n'ont pas écrit ce contenu — ils fournissent une plateforme de soumission et d'affichage.",
+        "p2": "La position de licence varie selon le fabricant, mais en aucun cas un fabricant ne possède les données de voies de la communauté :",
+        "aurora": "<strong>Aurora Climbing</strong> (Kilter Board, Tension Board, et autres) : les conditions d'utilisation d'Aurora leur accordent une « licence perpétuelle, sans restriction, illimitée, non exclusive et irrévocable » sur le contenu soumis par les utilisateurs. Surtout, cette licence est <strong>non exclusive</strong> — elle ne transfère pas la propriété à Aurora, et n'empêche pas le créateur original (ou des tiers) d'utiliser, collecter ou présenter de manière indépendante les mêmes données factuelles.",
+        "moonLabel": "Moon Climbing (MoonBoard) :",
+        "moonBody": "À la date du dernier examen des documents juridiques publics de Moon Climbing (février 2026), Moon Climbing n'a pas de conditions d'utilisation spécifiques à son app, pas de contrat utilisateur final, ni de licence de contenu contribué régissant l'app MoonBoard ou sa base de données de voies. En l'absence d'un tel accord, Moon Climbing n'a aucune revendication contractuelle sur les voies créées et soumises par ses utilisateurs."
+      },
+      "compilation": {
+        "title": "Les bases de données exhaustives ne bénéficient que d'une faible protection",
+        "body": "Même lorsqu'un agencement de base de données pourrait bénéficier d'une protection ténue par le copyright en tant que compilation, la Cour suprême américaine a jugé que cette protection ne s'étend qu'à la sélection ou à l'arrangement créatif — et non aux faits sous-jacents. Une base de données qui collecte exhaustivement toutes les soumissions des utilisateurs sans curation éditoriale (comme le font ces plateformes) est analogue à un annuaire téléphonique alphabétique, que la Cour a jugé non protégeable dans <em>Feist</em>."
+      }
+    },
+    "attribution": {
+      "title": "Attribution et respect des créateurs",
+      "intro": "Nous respectons la communauté de l'escalade et les personnes qui créent des voies.",
+      "item1": "Lorsque les informations sur le créateur d'une voie sont disponibles, nous l'attribuons par son nom d'utilisateur.",
+      "item2": "Nous ne revendiquons pas la paternité des voies que nous n'avons pas créées.",
+      "item3Start": "Si vous êtes le créateur d'une voie et souhaitez qu'elle soit retirée, veuillez",
+      "item3Link": "ouvrir un ticket",
+      "item3End": "ou nous contacter, et nous donnerons suite à votre demande rapidement."
+    },
+    "interop": {
+      "title": "Interopérabilité et compatibilité matérielle",
+      "intro": "Ce projet fournit des logiciels et des conceptions matérielles compatibles avec les boards d'escalade standardisés. Les grimpeurs qui ont acheté ces boards ont le droit d'utiliser des logiciels et contrôleurs tiers avec leur propre matériel.",
+      "software": {
+        "title": "Interopérabilité logicielle",
+        "body": "Notre app communique avec les contrôleurs des boards via des protocoles Bluetooth standards. Le protocole de communication Bluetooth utilisé par ces boards n'est pas chiffré et repose sur du matériel courant (LEDs adressables WS2812B pilotées par des contrôleurs Bluetooth standards). Implémenter une interface Bluetooth compatible à des fins d'interopérabilité est bien établi comme légal en droit américain et européen (<em>Sega Enterprises Ltd. v. Accolade, Inc.</em>, 977 F.2d 1510 (9th Cir. 1992) ; Directive UE 2009/24/CE, Article 6)."
+      },
+      "controller": {
+        "title": "Contrôleur open source",
+        "p1": "Ce projet propose également des conceptions matérielles et de firmware open source pour le contrôleur. Le contrôleur est une implémentation indépendante et originale qui communique en utilisant le même protocole Bluetooth que les contrôleurs officiels. Il est construit sur des composants courants (microcontrôleurs standards et LEDs WS2812B) et n'incorpore aucun firmware, code ou conception matérielle propriétaire d'un fabricant de boards. Aucun brevet connu ne couvre les systèmes de contrôleurs LED utilisés par les fabricants de boards actuels.",
+        "p2": "Notre contrôleur est conçu pour être interopérable avec le logiciel de ce projet et, à la discrétion de l'utilisateur, avec les apps officielles des fabricants. Toute interopérabilité de ce type est initiée par l'utilisateur final sur son propre matériel."
+      }
+    },
+    "trademark": {
+      "title": "Usage des marques",
+      "body": "Nous utilisons les noms de boards et de produits (par exemple « Kilter Board », « MoonBoard », « Tension Board ») uniquement pour décrire la compatibilité matérielle et l'interopérabilité. Ces noms sont des marques déposées de leurs propriétaires respectifs. Ce projet n'est pas affilié, approuvé ou sponsorisé par Aurora Climbing, Moon Climbing ou tout autre fabricant de board."
+    },
+    "dmca": {
+      "title": "DMCA et demandes de retrait",
+      "intro": "Nous prenons les questions de propriété intellectuelle au sérieux. Si vous estimez qu'un contenu de ce projet enfreint vos droits d'auteur, veuillez nous contacter avec les informations suivantes :",
+      "item1": "Identification de l'œuvre protégée que vous estimez enfreinte.",
+      "item2": "Identification du contenu que vous jugez contrefaisant, avec assez de détails pour que nous puissions le localiser.",
+      "item3": "Vos coordonnées (nom, adresse, e-mail, téléphone).",
+      "item4": "Une déclaration selon laquelle vous croyez de bonne foi que cet usage n'est pas autorisé par le titulaire des droits, son agent ou la loi.",
+      "item5": "Une déclaration, sous peine de parjure, que les informations de votre notification sont exactes et que vous êtes le titulaire des droits ou autorisé à agir en son nom.",
+      "review1": "Nous examinerons toutes les demandes valides rapidement et de bonne foi. Nous pouvons également déposer une contre-notification si nous estimons qu'une demande de retrait repose sur une mauvaise identification du contenu ou une mauvaise compréhension du droit.",
+      "contactLabel": "Contact :"
+    },
+    "community": {
+      "title": "Un mot à la communauté",
+      "p1": "La communauté de l'escalade a une longue tradition de partage ouvert de la beta. Ce projet existe dans cet esprit. Nous ne cherchons pas à nuire à une entreprise — nous voulons offrir aux grimpeurs de meilleurs outils pour interagir avec du matériel qu'ils possèdent déjà et des données qu'ils ont contribué à créer.",
+      "p2": "Les fabricants continuent de bénéficier de cet écosystème. Notre projet stimule la demande pour leurs produits physiques (prises, boards, panneaux) là où ils apportent une vraie valeur. Nous pensons simplement que les grimpeurs méritent un choix dans leur manière d'interagir avec leur matériel.",
+      "p3": "Si vous êtes fabricant de boards et souhaitez discuter d'une collaboration ou exprimer des inquiétudes, nous accueillons un dialogue ouvert. N'hésitez pas à nous contacter."
+    },
+    "thirdParty": {
+      "title": "Mentions tierces",
+      "iconLabel": "Icône Personne qui tombe",
+      "iconFrom": "depuis",
+      "fontAwesomeLink": "Font Awesome Free 6.7.2",
+      "byAuthor": "par @fontawesome.",
+      "licenseLabel": "Licence :",
+      "licenseLink": "CC BY 4.0",
+      "copyright": ". Copyright 2024 Fonticons, Inc."
+    },
+    "footer": "Ce document est fourni à titre informatif et ne constitue pas un avis juridique. Dernière mise à jour : 02-08-2026"
+  },
+  "help": {
+    "headerTitle": "Aide",
+    "hero": {
+      "title": "Comment pouvons-nous vous aider ?",
+      "subtitle": "Découvrez les fonctionnalités de Boardsesh et tirez le meilleur de vos sessions"
+    },
+    "sections": {
+      "visualization": { "label": "Visualisation et analyse" },
+      "collaboration": { "label": "Sessions et collaboration" },
+      "training": { "label": "Entraînement et workouts" },
+      "search": { "label": "Recherche et découverte" },
+      "connectivity": { "label": "Sync et connectivité" }
+    },
+    "heatmap": {
+      "q": "Comment utiliser la heatmap ?",
+      "imgAlt": "Visualisation de la heatmap",
+      "intro": "La heatmap montre les schémas d'utilisation des prises sur l'ensemble des voies, ce qui aide à identifier les prises populaires et les opportunités d'entraînement.",
+      "accessLabel": "Pour accéder à la heatmap :",
+      "access1": "Ouvrez le tiroir de recherche et déployez la section « Prises »",
+      "access2": "Cliquez sur le bouton « Afficher la heatmap »",
+      "access3": "Le board affichera un dégradé de couleurs allant du vert (faible utilisation) au rouge (forte utilisation)",
+      "modesLabel": "Modes de couleur disponibles :",
+      "modes": {
+        "ascentsLabel": "Ascensions :",
+        "ascentsBody": "Popularité globale basée sur le total des sends",
+        "startLabel": "Prises de départ :",
+        "startBody": "Positions de départ courantes",
+        "handFootLabel": "Prises mains/pieds :",
+        "handFootBody": "Utilisation par type de membre",
+        "finishLabel": "Prises d'arrivée :",
+        "finishBody": "Positions de top courantes"
+      },
+      "outro": "Utilisez les interrupteurs pour afficher/masquer les numéros des prises et inclure/exclure les prises de pied."
+    },
+    "holdClassification": {
+      "q": "Comment classifier les prises de mon board ?",
+      "imgAlt": "Assistant de classification des prises",
+      "intro": "La classification des prises vous permet de créer vos propres notations pour chaque prise de votre board, vous aidant à comprendre vos points forts et à trouver des voies adaptées.",
+      "attrsLabel": "Attributs de classification :",
+      "attrs": {
+        "holdTypeLabel": "Type de prise :",
+        "holdTypeBody": "Bac, Plat, Pince, Réglette ou Trou",
+        "handRatingLabel": "Note main :",
+        "handRatingBody": "Échelle de difficulté de 1 à 5 pour l'usage à la main",
+        "footRatingLabel": "Note pied :",
+        "footRatingBody": "Échelle de difficulté de 1 à 5 pour l'usage au pied",
+        "pullDirectionLabel": "Direction de traction :",
+        "pullDirectionBody": "Angle optimal de traction de 0 à 360"
+      },
+      "outro": "Les classifications sont personnelles et stockées dans votre compte, ce qui vous permet de construire au fil du temps une compréhension sur mesure de votre board."
+    },
+    "partyMode": {
+      "q": "Comment démarrer une session collaborative ?",
+      "imgAlt": "Session active en mode party",
+      "intro": "Le mode Party permet à plusieurs grimpeurs de partager une file d'attente et de se relayer sur le board en temps réel.",
+      "startLabel": "Pour démarrer une session :",
+      "start1": "Touchez l'icône ampoule dans la barre de file en bas",
+      "start2": "Allez à l'onglet « Démarrer la session » et connectez-vous si ce n'est pas déjà fait",
+      "start3": "Cliquez sur « Démarrer le mode Party » pour créer une nouvelle session",
+      "start4": "Partagez la session avec vos amis via QR code ou lien",
+      "joinLabel": "Pour rejoindre une session :",
+      "join": {
+        "qrLabel": "Scanner le QR code :",
+        "qrBody": "L'hôte de la session peut afficher un QR code que les autres peuvent scanner avec l'appareil photo de leur téléphone",
+        "shareLabel": "Partager le lien :",
+        "shareBody": "Copiez et partagez l'URL de la session — toute personne avec le lien peut rejoindre",
+        "idLabel": "Saisir l'ID de session :",
+        "idBody": "Allez à l'onglet « Rejoindre la session » et collez soit l'URL complète, soit juste l'ID de la session"
+      },
+      "featuresLabel": "Fonctionnalités de session :",
+      "feature1": "Synchronisation en temps réel de la file sur tous les appareils",
+      "feature2": "Plusieurs utilisateurs peuvent ajouter/retirer des voies",
+      "feature3": "Le leader de la session contrôle l'affichage du board",
+      "feature4": "Passage automatique du leadership si le leader actuel se déconnecte",
+      "feature5": "La session persiste à travers les rafraîchissements de page et les reconnexions"
+    },
+    "queueManagement": {
+      "q": "Comment gérer la file de voies ?",
+      "imgAlt": "Gestion de la file",
+      "intro": "La file vous permet d'organiser les voies de votre session, que vous grimpiez seul ou à plusieurs.",
+      "actionsLabel": "Actions sur la file :",
+      "actions": {
+        "addLabel": "Ajouter des voies :",
+        "addBody": "Double-touchez n'importe quelle voie de la liste pour l'ajouter à votre file",
+        "reorderLabel": "Réorganiser :",
+        "reorderBody": "Glissez-déposez les voies pour changer l'ordre",
+        "currentLabel": "Définir l'actuelle :",
+        "currentBody": "Cliquez sur une voie pour la rendre active",
+        "removeLabel": "Retirer :",
+        "removeBody": "Cliquez sur la croix d'une voie de la file",
+        "mirrorLabel": "Miroir :",
+        "mirrorBody": "Activez le mode miroir pour un entraînement bilatéral"
+      },
+      "outro": "La file se synchronise automatiquement avec les membres de la party et persiste hors-ligne pour des sessions sans interruption."
+    },
+    "playlistGenerator": {
+      "q": "Comment générer une playlist d'entraînement ?",
+      "intro": "Le générateur de playlist crée des workouts structurés adaptés à vos objectifs.",
+      "typesLabel": "Types de workout :",
+      "types": {
+        "volumeLabel": "Volume :",
+        "volumeBody": "Beaucoup de répétitions à une cotation constante pour l'endurance",
+        "pyramidLabel": "Pyramide :",
+        "pyramidBody": "Montée jusqu'à une cotation maximale, puis redescente",
+        "ladderLabel": "Échelle :",
+        "ladderBody": "Progression par paliers à travers des cotations croissantes",
+        "gradeFocusLabel": "Focus cotation :",
+        "gradeFocusBody": "Travail concentré sur une seule cotation cible"
+      },
+      "optionsLabel": "Options de configuration :",
+      "option1": "Style d'échauffement (Standard, Étendu ou Aucun)",
+      "option2": "Choix de la cotation cible",
+      "option3": "Biais de voie (Inconnues, Tentées ou Toutes)",
+      "option4": "Filtres de nombre minimum d'ascensions/de note",
+      "option5": "Nombre de voies par section"
+    },
+    "mirroring": {
+      "q": "Comment mettre une voie en miroir ?",
+      "intro": "Le miroir d'une voie inverse toutes les prises sur le côté opposé du board, parfait pour un entraînement de force bilatéral.",
+      "howLabel": "Pour mettre une voie en miroir :",
+      "step1": "Trouvez la voie que vous voulez inverser",
+      "step2": "Cherchez l'icône de bascule miroir dans les actions de la voie",
+      "step3": "Activez-la pour inverser la voie horizontalement",
+      "outro": "Quand vous êtes connecté en Bluetooth, le board LED affiche automatiquement le motif inversé. Cette fonctionnalité est disponible sur les boards compatibles comme le Kilter Homewall."
+    },
+    "searchFilters": {
+      "q": "Quels filtres de recherche sont disponibles ?",
+      "imgAlt": "Filtres de recherche",
+      "basicLabel": "Filtres de recherche basiques :",
+      "basic": {
+        "nameLabel": "Nom de voie :",
+        "nameBody": "Recherche par titre de voie",
+        "gradeLabel": "Plage de cotation :",
+        "gradeBody": "Définissez les cotations minimale et maximale",
+        "setterLabel": "Ouvreur :",
+        "setterBody": "Filtrer par créateur de voie",
+        "minAscentsLabel": "Ascensions min :",
+        "minAscentsBody": "Afficher uniquement les voies populaires",
+        "minRatingLabel": "Note min :",
+        "minRatingBody": "Filtrer par note de qualité",
+        "classicsLabel": "Classiques uniquement :",
+        "classicsBody": "Afficher seulement les voies classées classiques"
+      },
+      "personalLabel": "Filtres de progression personnelle",
+      "personalRequires": "(connexion requise) :",
+      "personalImgAlt": "Filtres de progression personnelle",
+      "personal1": "Masquer les voies réussies",
+      "personal2": "Masquer les voies tentées",
+      "personal3": "Afficher uniquement les voies tentées",
+      "personal4": "Afficher uniquement les voies réussies"
+    },
+    "searchByHold": {
+      "q": "Comment chercher par prises spécifiques ?",
+      "imgAlt": "Recherche par prise",
+      "intro": "La recherche par prise vous permet de trouver des voies qui utilisent (ou évitent) des prises spécifiques du board.",
+      "howLabel": "Pour rechercher par prises :",
+      "step1": "Ouvrez le tiroir de recherche et déployez la section « Prises »",
+      "step2": "Sélectionnez le mode « Inclure » ou « Exclure » dans le menu déroulant",
+      "step3": "Touchez les prises sur le board pour les sélectionner",
+      "step4": "Les résultats se mettent à jour automatiquement à mesure que vous sélectionnez",
+      "includeLabel": "Mode Inclure :",
+      "includeBody": "Les voies doivent utiliser les prises sélectionnées",
+      "excludeLabel": "Mode Exclure :",
+      "excludeBody": "Les voies ne doivent pas utiliser les prises sélectionnées"
+    },
+    "bluetooth": {
+      "q": "Comment connecter les LEDs de mon board ?",
+      "intro": "Boardsesh utilise Web Bluetooth pour piloter le système LED de votre board directement depuis le navigateur.",
+      "requirementsLabel": "Prérequis :",
+      "req1": "Navigateur Chrome (recommandé) ou autre navigateur compatible Web Bluetooth",
+      "req2": "Utilisateurs iOS : utilisez l'app Boardsesh (Safari ne supporte pas Web Bluetooth)",
+      "req3": "Bluetooth activé sur votre appareil",
+      "req4": "Board allumé et à portée",
+      "connectLabel": "Pour vous connecter :",
+      "connect1": "Touchez l'icône ampoule dans la barre de file",
+      "connect2": "Sélectionnez votre board dans la liste des appareils",
+      "connect3": "Une fois connecté, les LEDs affichent automatiquement la voie en cours",
+      "outro": "La connexion supporte les motifs en miroir et se met à jour automatiquement quand vous changez de voie."
+    },
+    "userSync": {
+      "q": "Comment synchroniser avec mon compte Kilter/Tension ?",
+      "imgAlt": "Paramètres de compte Aurora",
+      "intro": "Liez votre compte Aurora (Kilter ou Tension) pour synchroniser votre historique et votre progression.",
+      "linkLabel": "Pour lier votre compte :",
+      "link1": "Ouvrez le menu (touchez votre avatar) et allez dans Paramètres",
+      "link2": "Trouvez la section « Comptes Aurora »",
+      "link3": "Saisissez vos identifiants Kilter ou Tension",
+      "link4": "Cliquez sur « Lier le compte »",
+      "syncsLabel": "Ce qui est synchronisé :",
+      "syncs1": "Historique des ascensions (voies réussies)",
+      "syncs2": "Tentatives",
+      "syncs3": "Circuits/playlists",
+      "outro": "Les modifications se synchronisent dans les deux sens, donc les ascensions enregistrées dans Boardsesh apparaîtront dans les apps officielles."
+    },
+    "logbook": {
+      "q": "Comment suivre mes voies ?",
+      "imgAlt": "Détail de voie avec actions",
+      "intro": "Suivez votre progression en escalade en enregistrant vos ascensions et vos tentatives.",
+      "fromLabel": "Depuis n'importe quelle voie :",
+      "actions": {
+        "tickLabel": "Tentative :",
+        "tickBody": "Enregistre une tentative sur la voie",
+        "logLabel": "Enregistrer une ascension :",
+        "logBody": "Marque la voie comme réussie (send)",
+        "favoriteLabel": "Favori :",
+        "favoriteBody": "Sauvegardez des voies pour y accéder rapidement"
+      },
+      "outro": "Votre carnet se synchronise avec les comptes Aurora liés et peut être filtré dans les résultats de recherche pour trouver de nouveaux défis ou reprendre d'anciens projets."
+    },
+    "offline": {
+      "q": "Boardsesh fonctionne-t-il hors-ligne ?",
+      "intro": "Oui ! Boardsesh est conçu pour fonctionner de manière fiable même avec une connectivité intermittente.",
+      "worksLabel": "Ce qui fonctionne hors-ligne :",
+      "works1": "Votre file persiste localement via IndexedDB",
+      "works2": "Les jetons de session sont mis en cache pour une reconnexion rapide",
+      "works3": "Les données de profil sont stockées localement",
+      "works4": "Le contrôle Bluetooth des LEDs fonctionne indépendamment",
+      "outro": "Quand la connectivité est rétablie, toute modification en attente se synchronise automatiquement en arrière-plan."
+    }
+  },
+  "docs": {
+    "loading": "Chargement de la documentation…",
+    "headerTitle": "Documentation API",
+    "headerSubtitle": "Référence complète des API REST et WebSocket de Boardsesh",
+    "tabs": {
+      "overview": "Aperçu",
+      "rest": "API REST",
+      "graphql": "Schéma GraphQL",
+      "websocket": "Guide WebSocket"
+    },
+    "overview": {
+      "title": "Aperçu de l'API Boardsesh",
+      "intro": "Boardsesh fournit deux API complémentaires pour interagir avec les boards d'entraînement interactifs (Kilter, Tension) :",
+      "rest": {
+        "title": "API REST",
+        "intro": "Utilisez l'API REST pour des opérations sans état comme la recherche de voies, la récupération de la configuration du board et l'authentification utilisateur. L'API REST est idéale pour :",
+        "feature1": "Récupérer les données et statistiques de voies",
+        "feature2": "Inscription et authentification des utilisateurs",
+        "feature3": "Gestion de profil",
+        "feature4": "Intégration avec la plateforme Aurora",
+        "baseUrlLabel": "URL de base :"
+      },
+      "ws": {
+        "title": "API GraphQL WebSocket",
+        "intro": "Utilisez l'API WebSocket pour les fonctionnalités temps réel comme les sessions party et la synchronisation de file. L'API GraphQL fournit :",
+        "feature1": "Mises à jour de file en temps réel via les subscriptions",
+        "feature2": "Gestion de session (créer, rejoindre, quitter)",
+        "feature3": "Collaboration multi-utilisateur",
+        "feature4": "Toutes les fonctionnalités de l'API REST via queries/mutations",
+        "endpointLabel": "Endpoint :",
+        "endpointSuffix": "(via le protocole graphql-ws)"
+      },
+      "auth": {
+        "title": "Authentification",
+        "restLabel": "API REST :",
+        "restBody": "Utilise les cookies de session NextAuth. Authentifiez-vous via les endpoints",
+        "restBodyEnd": ".",
+        "wsLabel": "API WebSocket :",
+        "wsBody": "Obtenez un jeton JWT depuis",
+        "wsBodyEnd": "et incluez-le dans les paramètres de connexion :"
+      },
+      "rateLimit": {
+        "title": "Limitation de débit",
+        "body": "Les endpoints d'authentification sont limités en débit pour prévenir les abus. Les en-têtes de limite sont inclus dans les réponses. Les endpoints de lecture publics ont des limites généreuses."
+      }
+    },
+    "ws": {
+      "title": "Guide de connexion WebSocket",
+      "introStart": "L'API WebSocket de Boardsesh utilise le protocole",
+      "introEnd": "pour les subscriptions GraphQL en temps réel.",
+      "connection": {
+        "title": "Configuration de la connexion"
+      },
+      "session": {
+        "title": "Gestion des sessions",
+        "body": "Les sessions sont l'unité centrale de collaboration. Les utilisateurs rejoignent des sessions pour partager une file de voies."
+      },
+      "delta": {
+        "title": "Synchronisation delta",
+        "body": "Lors d'une reconnexion, utilisez la sync delta pour vous remettre à jour sans transfert d'état complet :"
+      },
+      "connectionHandling": {
+        "title": "Gestion de la connexion",
+        "body": "La connexion WebSocket peut être interrompue par des changements réseau. Implémentez une logique de reconnexion avec les options de retry de graphql-ws et utilisez la sync delta pour maintenir la cohérence d'état."
+      }
+    }
+  },
+  "privacy": {
+    "title": "Politique de confidentialité",
+    "lastUpdated": "Dernière mise à jour : avril 2026",
+    "intro1": "Boardsesh est une app open source pour piloter les boards d'entraînement (Kilter, Tension, MoonBoard) en Bluetooth. Cette politique explique quelles données nous collectons, pourquoi, et ce que nous en faisons.",
+    "intro2": "La version courte : nous collectons uniquement ce qui est nécessaire au fonctionnement de l'app. Nous ne vendons pas vos données, nous n'affichons pas de publicités, et nous n'utilisons pas de pisteurs tiers.",
+    "collect": {
+      "title": "Ce que nous collectons",
+      "accountLabel": "Informations de compte.",
+      "accountBody": "Quand vous créez un compte, nous stockons votre adresse e-mail et votre nom d'utilisateur. Votre e-mail sert à l'authentification. Votre nom d'utilisateur est affiché sur votre profil et visible par les autres utilisateurs dans les sessions Mode Party et les fonctionnalités sociales.",
+      "activityLabel": "Activité de grimpe.",
+      "activityBody": "Quand vous enregistrez un send ou une tentative, nous stockons les détails de la voie, la cotation, la date et toutes les notes que vous ajoutez. Cela alimente votre carnet et le suivi de progression.",
+      "locationLabel": "Localisation.",
+      "locationBody": "Si vous accordez la permission de localisation, nous utilisons votre position approximative pour vous aider à découvrir des sessions Mode Party à proximité. Nous ne suivons pas votre position en arrière-plan et ne stockons pas d'historique de localisation.",
+      "analyticsLabel": "Analytique.",
+      "analyticsBody": "Nous utilisons Vercel Analytics pour collecter des données anonymes de pages vues et de performance. Cela nous aide à comprendre quelles fonctionnalités sont utilisées et où l'app est lente. Ces données ne sont pas liées à votre compte."
+    },
+    "bluetooth": {
+      "title": "Bluetooth",
+      "body": "Boardsesh utilise Bluetooth Low Energy (BLE) pour se connecter au contrôleur LED de votre board. La connexion Bluetooth sert exclusivement à envoyer des commandes d'éclairage des prises au board. Aucune donnée personnelle n'est transmise par Bluetooth. L'app ne lit pas de données depuis le board, en dehors de l'identification basique de l'appareil lors de l'appairage."
+    },
+    "location": {
+      "title": "Données de localisation",
+      "body1": "L'accès à la localisation est optionnel. Lorsqu'il est accordé, il sert un seul objectif : rendre votre session Mode Party visible aux grimpeurs à proximité. Votre localisation n'est partagée avec le serveur que pendant qu'une session Mode Party est active. Nous ne stockons pas votre historique de localisation, ne construisons pas de profil de localisation et ne partageons pas de données de localisation en dehors de la fonctionnalité de découverte de sessions party.",
+      "body2": "Vous pouvez révoquer la permission de localisation à tout moment dans les paramètres de votre appareil. L'app fonctionne pleinement sans elle."
+    },
+    "thirdParty": {
+      "title": "Services tiers",
+      "vercelLabel": "Vercel.",
+      "vercelBody": "Nous utilisons Vercel pour l'hébergement et l'analytique. Vercel traite les requêtes pour servir l'app et collecte des métriques d'utilisation anonymes. Voir ",
+      "vercelLink": "la politique de confidentialité de Vercel",
+      "auroraLabel": "API Aurora Climbing.",
+      "auroraBody": "Si vous liez votre compte Aurora Climbing (utilisé par les boards Kilter et Tension), nous synchronisons vos données de voies avec les serveurs d'Aurora afin que votre carnet reste cohérent entre les apps. Cette synchronisation n'a lieu que lorsque vous l'initiez. Voir ",
+      "auroraLink": "Aurora Climbing",
+      "auroraBodyEnd": " pour leurs pratiques de données."
+    },
+    "sharing": {
+      "title": "Partage de données",
+      "body1": "Nous ne vendons pas vos données. Nous n'affichons pas de publicités. Nous ne partageons pas vos informations avec des marketeurs tiers ou des courtiers en données. Les seules données partagées en externe sont celles décrites ci-dessus (hébergement/analytique Vercel, sync Aurora Climbing si vous l'activez).",
+      "body2": "Les autres utilisateurs de Boardsesh peuvent voir votre nom d'utilisateur, votre profil et vos voies enregistrées si vous participez à des fonctionnalités sociales comme le Mode Party. C'est visible dans l'app et fait partie du fonctionnement du produit."
+    },
+    "retention": {
+      "title": "Conservation des données",
+      "body": "Nous conservons les données de votre compte et votre historique de voies tant que votre compte est actif. Si vous arrêtez d'utiliser Boardsesh, vos données restent jusqu'à ce que vous supprimiez votre compte."
+    },
+    "deletion": {
+      "title": "Suppression du compte",
+      "intro": "Vous pouvez supprimer votre compte et toutes les données associées à tout moment. Il y a deux façons de le faire :",
+      "inApp": "Dans l'app :",
+      "inAppBody": " Allez dans Paramètres, descendez tout en bas et touchez Supprimer le compte. Une confirmation vous sera demandée avant toute suppression.",
+      "onWeb": "Sur le web :",
+      "onWebBody": " Connectez-vous sur ",
+      "onWebLink": "boardsesh.com/settings",
+      "onWebBodyEnd": " et descendez tout en bas de la page pour trouver le même bouton Supprimer le compte.",
+      "permanent": "La suppression est immédiate et définitive. Une fois confirmée, nous retirons de nos serveurs votre adresse e-mail, votre nom d'utilisateur, vos entrées de carnet, vos données de file et l'historique de vos sessions party. Cela ne peut pas être annulé."
+    },
+    "children": {
+      "title": "Enfants",
+      "body": "Boardsesh ne s'adresse pas aux enfants de moins de 13 ans. Nous ne collectons pas sciemment d'informations personnelles auprès d'enfants de moins de 13 ans. Si vous pensez qu'un enfant de moins de 13 ans a créé un compte, contactez-nous et nous le supprimerons."
+    },
+    "changes": {
+      "title": "Modifications de cette politique",
+      "body": "Si nous modifions cette politique de confidentialité, nous mettrons à jour cette page avec le nouveau texte et la date de « dernière mise à jour ». Pour les changements significatifs, nous pourrons aussi vous notifier dans l'app."
+    },
+    "contact": {
+      "title": "Contact",
+      "body1Start": "Des questions sur cette politique ou vos données ? Écrivez-nous à ",
+      "body1Email": "support@boardsesh.com",
+      "body1End": ".",
+      "body2Start": "Boardsesh est open source. Vous pouvez voir exactement quelles données l'app collecte et comment elles sont traitées en lisant le code source sur ",
+      "body2Link": "GitHub",
+      "body2End": "."
+    }
+  }
+}

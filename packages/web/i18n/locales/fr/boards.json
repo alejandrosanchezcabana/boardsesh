@@ -1,0 +1,287 @@
+{
+  "discovery": {
+    "section": {
+      "nearby": "Boards près de chez vous"
+    },
+    "findNearby": {
+      "loading": "Recherche de boards…",
+      "geoDenied": "Localisation indisponible",
+      "error": "Échec du chargement des boards à proximité",
+      "noResults": "Aucun board à proximité",
+      "idle": "Trouver à proximité"
+    },
+    "search": {
+      "ariaLabel": "Rechercher un board",
+      "label": "Rechercher"
+    },
+    "custom": {
+      "ariaLabel": "Créer un board personnalisé",
+      "label": "Board personnalisé"
+    },
+    "create": {
+      "defaultLabel": "Nouveau board"
+    },
+    "bluetooth": {
+      "scanning": "Recherche en cours…",
+      "boardsFound": "Boards trouvés",
+      "noBoardsFound": "Aucun board trouvé",
+      "unavailable": "Bluetooth indisponible",
+      "idle": "Démarrage rapide"
+    }
+  },
+  "boardEntity": {
+    "notFound": "Board introuvable",
+    "chips": {
+      "unlisted": "Non répertorié",
+      "locationHidden": "Emplacement masqué"
+    },
+    "tabs": {
+      "leaderboard": "Classement",
+      "comments": "Commentaires"
+    },
+    "actions": {
+      "addToGym": "Ajouter à la salle",
+      "edit": "Modifier",
+      "delete": "Supprimer"
+    },
+    "stats": {
+      "ascents": "ascensions",
+      "climbers": "grimpeurs",
+      "followers": "abonnés",
+      "comments": "commentaires"
+    },
+    "delete": {
+      "title": "Supprimer le board",
+      "confirm": "Supprimer « {{name}} » ? Cette action est irréversible.",
+      "cancel": "Annuler",
+      "delete": "Supprimer"
+    },
+    "snackbar": {
+      "deleted": "Board supprimé",
+      "deleteFailed": "Échec de la suppression du board",
+      "linkedToGym": "Board lié à la salle",
+      "unlinkedFromGym": "Board dissocié de la salle",
+      "linkFailed": "Échec de l'association du board à la salle"
+    },
+    "comments": {
+      "title": "Discussion sur le board"
+    },
+    "follow": {
+      "entityLabel": "board"
+    }
+  },
+  "boardForm": {
+    "create": {
+      "submit": "Créer le board",
+      "authRequired": "Vous devez être connecté pour créer un board",
+      "errorMessage": "Échec de la création du board. Il existe peut-être déjà pour cette configuration.",
+      "nameRequired": "Le nom du board est obligatoire",
+      "createdNamed": "Board « {{name}} » créé !",
+      "namePlaceholder": "ex. Home Board, nom de la salle",
+      "locationPlaceholder": "ex. ville, nom de la salle"
+    },
+    "fields": {
+      "name": "Nom du board",
+      "slug": "Slug d'URL",
+      "description": "Description",
+      "location": "Emplacement",
+      "serialNumber": "Numéro de série du contrôleur",
+      "defaultAngle": "Inclinaison par défaut",
+      "angleAdjustable": "Inclinaison réglable",
+      "isPublic": "Board public",
+      "unlisted": "Non répertorié",
+      "hideLocation": "Masquer des boards à proximité",
+      "isOwned": "Je possède ce board",
+      "layout": "Disposition",
+      "size": "Taille",
+      "holdSets": "Jeux de prises"
+    },
+    "placeholders": {
+      "description": "Description facultative",
+      "serialNumber": "ex. ABC-12345"
+    },
+    "helperText": {
+      "unlisted": "Masqué des résultats de recherche mais accessible via un lien direct",
+      "hideLocation": "Masqué des recherches de boards à proximité, sauf si vous suivez la personne qui cherche"
+    },
+    "alerts": {
+      "configEditable": "Vous pouvez modifier la disposition du board car aucune voie n'a encore été enregistrée."
+    }
+  },
+  "editBoard": {
+    "title": "Modifier le board",
+    "submitLabel": "Enregistrer les modifications",
+    "snackbar": {
+      "updated": "Board mis à jour !",
+      "updateFailed": "Échec de la mise à jour du board"
+    }
+  },
+  "editGym": {
+    "title": "Modifier la salle",
+    "submitLabel": "Enregistrer les modifications",
+    "snackbar": {
+      "updated": "Salle mise à jour !",
+      "updateFailed": "Échec de la mise à jour de la salle"
+    }
+  },
+  "mapLocationPicker": {
+    "locationDisplay": "Emplacement : {{lat}}, {{lng}}",
+    "setOnMap": "Définir l'emplacement sur la carte",
+    "searchPlaceholder": "Rechercher une adresse ou une ville...",
+    "myLocation": "Ma position",
+    "helpText": "Cliquez sur la carte pour définir l'emplacement de votre board, ou faites glisser le repère pour ajuster"
+  },
+  "boardLeaderboard": {
+    "empty": "Aucune activité pour cette période.",
+    "period": {
+      "week": "Semaine",
+      "month": "Mois",
+      "year": "Année",
+      "all": "Toujours"
+    },
+    "columns": {
+      "climber": "Grimpeur",
+      "sends": "Réussites",
+      "flashes": "Flashs",
+      "hardest": "Plus dur"
+    }
+  },
+  "boardHeatmap": {
+    "loading": "Chargement de la carte de chaleur...",
+    "legend": {
+      "low": "Faible ({{value}})",
+      "mid": "Moyen ({{value}})",
+      "high": "Élevé ({{value}})"
+    }
+  },
+  "boardConfigSelects": {
+    "board": "Board",
+    "layout": "Disposition",
+    "size": "Taille",
+    "holdSets": "Jeux de prises",
+    "angle": "Inclinaison"
+  },
+  "boardFilterStrip": {
+    "all": "Tous",
+    "allBoards": "Tous les boards"
+  },
+  "boardSwitchConfirm": {
+    "session": {
+      "title": "Quitter votre session ?",
+      "body": "Vous êtes en session sur {{lockedLabel}}. Passer à {{targetLabel}} déconnecte votre board mais maintient la session active."
+    },
+    "connection": {
+      "title": "Déconnecter votre board ?",
+      "body": "Votre {{lockedLabel}} est encore connecté. Passer à {{targetLabel}} le déconnecte."
+    },
+    "stay": "Rester",
+    "switch": "Changer de board"
+  },
+  "boardSearchDrawer": {
+    "title": "Trouver un board",
+    "searchPlaceholder": "Rechercher des boards par nom ou emplacement",
+    "clear": "Effacer",
+    "radiusInfo": "Affichage des boards dans un rayon de {{radiusKm}} km autour du centre de la carte",
+    "empty": "Aucun board dans cette zone. Déplacez la carte ou dézoomez pour en trouver d'autres.",
+    "emptyWithQuery": "Aucun board ne correspond à « {{query}} » ici. Essayez de dézoomer ou de chercher ailleurs.",
+    "open": "Ouvrir"
+  },
+  "boardSearchMap": {
+    "myLocation": "Ma position"
+  },
+  "zoomableBoard": {
+    "reset": "Réinitialiser"
+  },
+  "zoomHint": {
+    "pinchToZoom": "Pincez pour zoomer"
+  },
+  "gymMemberManagement": {
+    "removeConfirm": "Retirer ce membre de la salle ?",
+    "empty": "Aucun membre pour le moment",
+    "unknownUser": "Utilisateur inconnu",
+    "loadMore": "Charger plus ({{count}} sur {{total}})",
+    "snackbar": {
+      "removed": "Membre retiré",
+      "removeFailed": "Échec du retrait du membre"
+    }
+  },
+  "gymSelector": {
+    "loading": "Chargement des salles...",
+    "linkToGym": "Associer à une salle",
+    "noGym": "Aucune salle",
+    "createNew": "Créer"
+  },
+  "selectorDrawer": {
+    "customTitle": "Board personnalisé",
+    "createTitle": "Créer un board",
+    "createButton": "Créer un board",
+    "quickSession": "Session rapide",
+    "configSection": {
+      "label": "Configuration du board",
+      "title": "Configuration du board",
+      "defaultSummary": "Sélectionner un board"
+    }
+  },
+  "gymEntity": {
+    "notFound": "Salle introuvable",
+    "tabs": {
+      "members": "Membres",
+      "comments": "Commentaires"
+    },
+    "actions": {
+      "edit": "Modifier",
+      "delete": "Supprimer"
+    },
+    "stats": {
+      "boards": "boards",
+      "members": "membres",
+      "followers": "abonnés",
+      "comments": "commentaires"
+    },
+    "delete": {
+      "title": "Supprimer la salle",
+      "confirm": "Supprimer « {{name}} » ? Cette action est irréversible.",
+      "cancel": "Annuler",
+      "delete": "Supprimer"
+    },
+    "snackbar": {
+      "deleted": "Salle supprimée",
+      "deleteFailed": "Échec de la suppression de la salle"
+    },
+    "comments": {
+      "title": "Discussion sur la salle"
+    },
+    "follow": {
+      "entityLabel": "salle"
+    }
+  },
+  "gymForm": {
+    "fields": {
+      "name": "Nom de la salle",
+      "slug": "Slug d'URL",
+      "description": "Description",
+      "address": "Adresse",
+      "contactEmail": "E-mail de contact",
+      "contactPhone": "Téléphone de contact",
+      "isPublic": "Salle publique"
+    },
+    "placeholders": {
+      "name": "ex. Boulder World, The Climbing Factory",
+      "description": "Description facultative",
+      "address": "ex. 123 rue Principale, ville",
+      "contactEmail": "E-mail de contact facultatif",
+      "contactPhone": "Téléphone de contact facultatif"
+    },
+    "actions": {
+      "cancel": "Annuler"
+    },
+    "create": {
+      "title": "Créer une salle",
+      "submit": "Créer la salle",
+      "authRequired": "Vous devez être connecté pour créer une salle",
+      "errorMessage": "Échec de la création de la salle",
+      "nameRequired": "Le nom de la salle est obligatoire",
+      "createdNamed": "Salle « {{name}} » créée !"
+    }
+  }
+}

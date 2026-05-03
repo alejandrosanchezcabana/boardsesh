@@ -1,7 +1,7 @@
 'use client';
 
 import React, { Suspense } from 'react';
-import { useRouter, usePathname, useSearchParams } from 'next/navigation';
+import { usePathname, useSearchParams } from 'next/navigation';
 import { useTranslation } from 'react-i18next';
 import MenuItem from '@mui/material/MenuItem';
 import Select, { type SelectChangeEvent } from '@mui/material/Select';
@@ -16,7 +16,6 @@ import {
 import { localeHref, stripLocalePrefix } from '@/app/lib/i18n/locale-href';
 
 function LanguageSwitcherInner() {
-  const router = useRouter();
   const pathname = usePathname() ?? '/';
   // useSearchParams forces the consumer into a client-rendered Suspense
   // boundary; the wrapper below provides it.
@@ -32,7 +31,7 @@ function LanguageSwitcherInner() {
     const basePath = stripLocalePrefix(pathname, currentLocale);
     const target = localeHref(basePath, next);
     const query = searchParams?.toString();
-    router.push(query ? `${target}?${query}` : target);
+    window.location.assign(query ? `${target}?${query}` : target);
   };
 
   return (

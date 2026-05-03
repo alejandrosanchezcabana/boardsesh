@@ -1,0 +1,217 @@
+{
+  "metadata": {
+    "profile": {
+      "title": "{{name}}",
+      "description": "Profil d'escalade de {{name}} sur Boardsesh",
+      "fallbackTitle": "Profil",
+      "fallbackDescription": "Voir le profil et les statistiques d'escalade",
+      "notFoundTitle": "Profil introuvable",
+      "notFoundDescription": "Ce profil d'escalade est introuvable.",
+      "ogAlt": "Profil d'escalade de {{name}}"
+    },
+    "statistics": {
+      "title": "Statistiques"
+    },
+    "sessions": {
+      "title": "Sessions"
+    },
+    "climbs": {
+      "title": "Voies créées"
+    },
+    "setter": {
+      "title": "{{name}} - Ouvreur",
+      "description": "Voies créées par {{name}} sur Boardsesh",
+      "fallbackTitle": "Profil d'ouvreur",
+      "fallbackDescription": "Voir le profil d'ouvreur et ses voies sur Boardsesh",
+      "ogAlt": "Profil d'ouvreur de {{name}}"
+    }
+  },
+  "page": {
+    "lastThreeMonths": "3 derniers mois",
+    "activityChartLabel": "Activité des 3 derniers mois",
+    "displayNameFallback": "Grimpeur"
+  },
+  "nav": {
+    "statistics": {
+      "title": "Statistiques",
+      "subtitleSent": "{{count}} blocs réussis",
+      "subtitleEmpty": "Cotations, progression et plus encore"
+    },
+    "sessions": {
+      "title": "Sessions",
+      "subtitle": "Sessions et activité d'escalade"
+    },
+    "createdClimbs": {
+      "title": "Voies créées",
+      "subtitleOwn": "Voies que vous avez créées",
+      "subtitleOther": "Voies qu'iels ont créées"
+    }
+  },
+  "stats": {
+    "problems": "blocs",
+    "send": "réussite",
+    "flash": "flash",
+    "percentile": "Percentile",
+    "topPercent": "Top {{value}} %",
+    "moreSentThan": "Plus de blocs réussis que {{value}} % des grimpeurs",
+    "activity": "Activité",
+    "gradeDistribution": "Distribution des cotations",
+    "flashVsRedpoint": "Flash vs Après-travail",
+    "vPoints": "V-Points",
+    "vPointsTotal": "{{value}} au total",
+    "gradeDistributionAria": "Distribution des cotations entre les boards",
+    "weeklyAttemptsAria": "Essais hebdomadaires par difficulté",
+    "flashRedpointAria": "Flash vs après-travail par cotation",
+    "layoutTooltip": "{{name}} : {{count}} blocs ({{percentage}} %)"
+  },
+  "empty": {
+    "userNotFound": "Utilisateur introuvable",
+    "noAscentData": "Aucune donnée d'ascension pour cette période",
+    "noClimbingData": "Aucune donnée d'escalade pour cette période"
+  },
+  "filter": {
+    "pageTitle": "Statistiques",
+    "drawer": {
+      "title": "Filtres",
+      "board": "Board",
+      "timeRange": "Période",
+      "from": "Du",
+      "to": "Au"
+    }
+  },
+  "analytics": {
+    "noData": "Aucune donnée d'analyse disponible pour le moment. Les données sont collectées lors de la synchronisation.",
+    "ascentsOverTime": "Ascensions au fil du temps",
+    "qualityOverTime": "Qualité au fil du temps"
+  },
+  "logbook": {
+    "section": {
+      "noAscentsLogged": "Aucune ascension enregistrée pour cette voie"
+    },
+    "crew": {
+      "signInPrompt": "Connectez-vous pour voir le carnet de votre crew pour cette voie",
+      "loadError": "Impossible de charger le carnet de votre crew. Réessayez dans un instant.",
+      "noneYet": "Personne de votre crew n'a encore enregistré cette voie"
+    },
+    "entry": {
+      "mirroredTag": "Inversée",
+      "attemptsLabel": "Essais : {{count}}"
+    },
+    "form": {
+      "ascent": "Ascension",
+      "attempt": "Essai",
+      "boulder": "Bloc",
+      "dateAndTime": "Date et heure",
+      "angle": "Angle",
+      "attempts": "Essais",
+      "quality": "Qualité",
+      "difficulty": "Difficulté",
+      "notes": "Notes",
+      "video": "Vidéo",
+      "videoPlaceholder": "URL Instagram ou TikTok",
+      "videoHelper": "Collez un lien Instagram ou TikTok pour montrer votre beta. (Facultatif)",
+      "mirrored": "Inversée",
+      "submit": "Envoyer",
+      "cancel": "Annuler"
+    },
+    "feed": {
+      "deleteSwipeLabel": "Supprimer",
+      "cancelEditing": "Annuler la modification",
+      "saveEdit": "Enregistrer",
+      "moreActions": "Plus d'actions",
+      "editLog": "Modifier l'entrée",
+      "deleteLog": "Supprimer l'entrée",
+      "postToInstagram": "Publier sur Instagram",
+      "linkInstagramPost": "Lier la publication Instagram",
+      "stars": "étoiles",
+      "user": "utilisateur",
+      "grade": "cotation",
+      "tries": "essais",
+      "selectGrade": "Sélectionner la cotation enregistrée",
+      "status": {
+        "flash": "Flash",
+        "send": "Réussite",
+        "attempt": "Essai"
+      },
+      "snackbar": {
+        "boardsLinkMissing": "Impossible de trouver le board lié — affichage de toutes vos entrées.",
+        "deleteFailed": "Échec de la suppression du tick",
+        "tickDeleted": "Tick supprimé",
+        "undo": "Annuler"
+      }
+    },
+    "search": {
+      "placeholder": "Rechercher des voies ou des notes",
+      "openFilters": "Ouvrir les filtres",
+      "search": "Rechercher",
+      "gradeRange": "Plage de cotations",
+      "sort": "Trier",
+      "clearAll": "Tout effacer",
+      "filterCount_one": "filtre actif",
+      "filterCount_other": "filtres actifs",
+      "resultType": {
+        "includeSends": "Inclure les réussites",
+        "includeAttempts": "Inclure les essais",
+        "flashOnly": "Flash uniquement",
+        "benchmarkOnly": "Références uniquement"
+      },
+      "dateAngle": {
+        "dateRange": "Plage de dates",
+        "startDate": "Date de début",
+        "endDate": "Date de fin",
+        "wallAngleRange": "Plage d'angle du mur ({{min}}°–{{max}}°)"
+      },
+      "sortFields": {
+        "date": "Date",
+        "climbName": "Nom de la voie",
+        "loggedGrade": "Cotation enregistrée",
+        "consensusGrade": "Cotation consensuelle",
+        "attemptCount": "Essais"
+      },
+      "sortDirection": {
+        "desc": "Décr."
+      }
+    },
+    "instagram": {
+      "back": "Retour",
+      "title": "Publier sur Instagram",
+      "subtitle": "Partagez votre ascension et reliez-la à Boardsesh.",
+      "betaLoadFailed": "Impossible de charger les vidéos beta.",
+      "retry": "Réessayer",
+      "steps": {
+        "copy": "Copiez la légende et ouvrez Instagram.",
+        "paste": "Collez la légende lors de la création de votre publication.",
+        "comeBack": "Une fois votre publication en ligne, revenez ici.",
+        "pasteLink": "Collez le lien Instagram pour que nous puissions afficher votre vidéo d'ascension ici."
+      },
+      "addLinkSubmit": "Ajouter le lien Instagram",
+      "shareYourBeta": "Partagez votre vidéo beta",
+      "shareYourBetaBody": "Nous copions la légende, ouvrons Instagram, et vous laissons coller le lien final dans Boardsesh.",
+      "howItWorks": "Comment ça marche",
+      "caption": "Légende",
+      "copyAndOpen": "Copier et ouvrir Instagram",
+      "pasteLinkTitle": "Collez votre lien Instagram",
+      "pasteLinkBody": "Quand votre publication est en ligne, collez le lien du reel ou de la publication ici pour que Boardsesh affiche votre vidéo d'ascension.",
+      "pasteLinkHelper": "Collez l'URL du reel ou de la publication Instagram en ligne.",
+      "existingBetaVideos": "Vidéos beta existantes",
+      "snackbar": {
+        "copyFailed": "Impossible de copier la légende. Réessayez.",
+        "openFailed": "Impossible d'ouvrir Instagram. Ouvrez-le manuellement et collez la légende copiée.",
+        "copied": "Légende copiée. Instagram devrait s'ouvrir."
+      }
+    }
+  },
+  "setter": {
+    "notFoundTitle": "Ouvreur introuvable",
+    "notFoundMessage": "Ce profil d'ouvreur n'existe peut-être pas ou a été supprimé.",
+    "shareAriaLabel": "Partager le profil d'ouvreur",
+    "shareTitle": "{{name}} - Ouvreur",
+    "shareText": "Découvrez les voies de {{name}} sur Boardsesh",
+    "linkCopied": "Lien copié dans le presse-papiers !",
+    "shareFailed": "Échec du partage",
+    "follower_one": "abonné",
+    "follower_other": "abonnés",
+    "climb_one": "voie",
+    "climb_other": "voies"
+  }
+}

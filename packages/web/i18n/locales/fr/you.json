@@ -1,0 +1,24 @@
+{
+  "metadata": {
+    "dashboard": {
+      "title": "Vous",
+      "description": "Votre tableau de bord d'escalade sur Boardsesh"
+    },
+    "logbook": {
+      "title": "Carnet",
+      "description": "Votre carnet d'escalade sur Boardsesh"
+    },
+    "sessions": {
+      "title": "Sessions",
+      "description": "Vos sessions d'escalade sur Boardsesh"
+    }
+  },
+  "tabs": {
+    "progress": "Progression",
+    "sessions": "Sessions",
+    "logbook": "Carnet"
+  },
+  "progress": {
+    "title": "Progression"
+  }
+}

@@ -1,0 +1,359 @@
+{
+  "metadata": {
+    "settings": {
+      "title": "Paramètres",
+      "description": "Gérez votre compte Boardsesh, votre profil et vos préférences"
+    }
+  },
+  "title": "Paramètres",
+  "loading": {
+    "profileError": "Échec du chargement du profil"
+  },
+  "profile": {
+    "title": "Profil",
+    "subtitle": "Personnalisez votre apparence sur Boardsesh",
+    "avatar": {
+      "label": "Avatar",
+      "upload": "Téléverser",
+      "change": "Modifier",
+      "remove": "Supprimer",
+      "hint": "JPG, PNG, GIF ou WebP. Jusqu'à 10 Mo — compression automatique."
+    },
+    "displayName": {
+      "label": "Nom d'affichage",
+      "placeholder": "Saisissez votre nom d'affichage"
+    },
+    "instagram": {
+      "label": "Profil Instagram",
+      "placeholder": "https://instagram.com/username"
+    },
+    "email": {
+      "label": "E-mail",
+      "help": "L'e-mail ne peut pas être modifié"
+    },
+    "save": "Enregistrer les modifications",
+    "saved": "Paramètres enregistrés avec succès",
+    "saveError": "Échec de l'enregistrement des paramètres",
+    "validation": {
+      "displayNameTooLong": "Le nom d'affichage doit comporter moins de 100 caractères",
+      "invalidInstagramUrl": "Veuillez saisir une URL de profil Instagram valide",
+      "invalidImageType": "Seules les images JPG, PNG, GIF et WebP sont autorisées",
+      "imageTooLarge": "L'image doit être inférieure à 10 Mo",
+      "compressionFailed": "Compression impossible — essayez une image plus petite"
+    },
+    "avatarUploadFailed": "Échec du téléversement de l'avatar"
+  },
+  "preferences": {
+    "title": "Préférences d'affichage",
+    "subtitle": "Personnalisez l'affichage des cotations et autres données",
+    "gradeFormat": {
+      "label": "Format d'affichage des cotations",
+      "vGrade": "Cotation V (V3, V6, ...)",
+      "font": "Font (6A, 7C+, ...)"
+    },
+    "appleHealth": {
+      "label": "Apple Health",
+      "switchLabel": "Enregistrer automatiquement les sessions dans Apple Health",
+      "subtitle": "Désactivez cette option pour n'enregistrer les sessions que lorsque vous appuyez sur le bouton Enregistrer dans Apple Health."
+    }
+  },
+  "logbook": {
+    "title": "Votre carnet",
+    "subtitle": "Consultez et filtrez vos voies enregistrées"
+  },
+  "deleteAccount": {
+    "title": "Supprimer le compte",
+    "warning": "Supprimez définitivement votre compte et toutes les données associées. Cette action est irréversible.",
+    "button": "Supprimer le compte",
+    "dialog": {
+      "title": "Supprimer votre compte ?",
+      "warning": "Cette action est définitive. Votre profil, vos brouillons de voies, votre carnet et toutes les autres données seront supprimés et ne pourront pas être récupérés.",
+      "checking": "Vérification de vos voies...",
+      "publishedClimbs_one": "Vous avez <strong>{{count}}</strong> voie publiée qui sera conservée après la suppression.",
+      "publishedClimbs_other": "Vous avez <strong>{{count}}</strong> voies publiées qui seront conservées après la suppression.",
+      "removeSetterName": "Retirer mon nom d'ouvreur des voies publiées",
+      "confirmInstruction": "Saisissez <strong>DELETE</strong> pour confirmer.",
+      "confirmPlaceholder": "DELETE",
+      "cancel": "Annuler",
+      "confirm": "Supprimer mon compte"
+    },
+    "error": "Échec de la suppression du compte. Veuillez réessayer."
+  },
+  "password": {
+    "enabledTitle": "Connexion par e-mail et mot de passe",
+    "enabledDescription": "La connexion par mot de passe est activée pour {{email}}",
+    "title": "Connexion par e-mail et mot de passe",
+    "description": "Définissez un mot de passe pour vous connecter avec votre adresse e-mail. Cela est utile pour les navigateurs qui ne prennent pas en charge la connexion Google (par exemple, l'application Boardsesh iOS).",
+    "linkedProviderInfo_one": "Vous êtes actuellement connecté avec {{providers}}. Définir un mot de passe n'affectera pas votre connexion {{providers}}.",
+    "linkedProviderInfo_other": "Vous êtes actuellement connecté avec {{providers}}. Définir un mot de passe n'affectera pas votre connexion sociale.",
+    "passwordLabel": "Mot de passe",
+    "passwordPlaceholder": "Mot de passe (min. 8 caractères)",
+    "confirmLabel": "Confirmer le mot de passe",
+    "confirmPlaceholder": "Confirmez le mot de passe",
+    "submit": "Définir le mot de passe",
+    "success": "Mot de passe défini ! Vous pouvez maintenant vous connecter avec votre e-mail et votre mot de passe.",
+    "validation": {
+      "enterPassword": "Veuillez saisir un mot de passe",
+      "tooShort": "Le mot de passe doit comporter au moins 8 caractères",
+      "tooLong": "Le mot de passe doit comporter moins de 128 caractères",
+      "confirmRequired": "Veuillez confirmer votre mot de passe",
+      "mismatch": "Les mots de passe ne correspondent pas",
+      "saveError": "Échec de la définition du mot de passe",
+      "retryError": "Échec de la définition du mot de passe. Veuillez réessayer."
+    }
+  },
+  "controllers": {
+    "title": "Contrôleurs ESP32",
+    "subtitle": "Enregistrez des appareils ESP32 pour contrôler votre board via un pont Bluetooth. Cela vous permet d'utiliser BoardSesh avec les applications officielles Kilter/Tension.",
+    "empty": "Aucun contrôleur enregistré. Ajoutez un ESP32 pour utiliser BoardSesh avec les applications officielles.",
+    "add": "Ajouter un contrôleur",
+    "card": {
+      "unnamed": "Contrôleur sans nom",
+      "board": "Board :",
+      "layout": "Layout :",
+      "layoutValue": "{{layoutId}} / Taille {{sizeId}}",
+      "lastSeen": "Vu pour la dernière fois :",
+      "delete": "Supprimer le contrôleur",
+      "deleteConfirm": {
+        "title": "Supprimer le contrôleur",
+        "description": "Voulez-vous vraiment supprimer ce contrôleur ? Cette action est irréversible.",
+        "ok": "Oui, supprimer",
+        "cancel": "Annuler"
+      }
+    },
+    "status": {
+      "online": "En ligne",
+      "offline": "Hors ligne",
+      "neverConnected": "Jamais connecté",
+      "never": "Jamais",
+      "justNow": "À l'instant",
+      "minutesAgo_one": "il y a {{count}} minute",
+      "minutesAgo_other": "il y a {{count}} minutes",
+      "hoursAgo_one": "il y a {{count}} heure",
+      "hoursAgo_other": "il y a {{count}} heures"
+    },
+    "register": {
+      "title": "Enregistrer un contrôleur ESP32",
+      "description": "Enregistrez un nouveau contrôleur ESP32 pour recevoir les commandes LED de BoardSesh. Vous recevrez une clé API à configurer sur l'appareil.",
+      "nameLabel": "Nom du contrôleur (facultatif)",
+      "namePlaceholder": "ex. Board du salon",
+      "boardLabel": "Type de board",
+      "layoutLabel": "Layout",
+      "sizeLabel": "Taille",
+      "setsLabel": "Sets de prises",
+      "submit": "Enregistrer le contrôleur",
+      "submitting": "Enregistrement...",
+      "registerError": "Échec de l'enregistrement du contrôleur"
+    },
+    "apiKey": {
+      "title": "Contrôleur enregistré",
+      "warningTitle": "Enregistrez cette clé API maintenant !",
+      "warning": "C'est la seule fois où vous verrez cette clé. Si vous la perdez, vous devrez supprimer et réenregistrer le contrôleur.",
+      "registered": "Votre contrôleur <strong>{{name}}</strong> a été enregistré.",
+      "instruction": "Saisissez cette clé API dans la configuration de votre ESP32 :",
+      "copy": "Copier la clé API",
+      "done": "Terminé",
+      "copySuccess": "Clé API copiée dans le presse-papiers",
+      "copyError": "Échec de la copie — veuillez sélectionner et copier manuellement"
+    },
+    "deleteSuccess": "Contrôleur supprimé avec succès",
+    "deleteError": "Échec de la suppression du contrôleur"
+  },
+  "aurora": {
+    "title": "Comptes de board",
+    "subtitle": "Liez vos comptes de board pour importer vos données Aurora dans Boardsesh, ou importez à partir d'un fichier d'export JSON. Nous synchroniserons automatiquement votre carnet, vos ascensions et vos voies DEPUIS Aurora toutes les 12 heures. Les données créées dans Boardsesh restent locales et ne sont pas renvoyées vers Aurora.",
+    "card": {
+      "boardSuffix": "Board",
+      "username": "Nom d'utilisateur :",
+      "lastSynced": "Dernière synchronisation :",
+      "never": "Jamais",
+      "kilterShutdown": "Le backend Kilter a été arrêté. Vous pouvez importer vos données à l'aide d'un fichier d'export JSON Aurora, ou envoyer un e-mail à Aurora Climbing pour demander un export de vos données.",
+      "notConnected": "Non connecté. Liez votre compte {{boardName}} pour importer vos données Aurora, ou importez à partir d'un fichier d'export JSON.",
+      "link": "Lier",
+      "import": "Importer",
+      "requestData": "Demander vos données",
+      "unlink": "Délier",
+      "unlinkConfirm": {
+        "title": "Supprimer le lien du compte",
+        "description": "Voulez-vous vraiment délier votre compte {{boardName}} ?",
+        "ok": "Oui, délier"
+      }
+    },
+    "status": {
+      "connected": "Connecté",
+      "error": "Erreur",
+      "expired": "Expiré",
+      "syncing": "Synchronisation"
+    },
+    "unsynced": {
+      "title_one": "{{count}} élément en attente de synchronisation",
+      "title_other": "{{count}} éléments en attente de synchronisation",
+      "ascents_one": "{{count}} ascension",
+      "ascents_other": "{{count}} ascensions",
+      "climbs_one": "{{count}} voie",
+      "climbs_other": "{{count}} voies"
+    },
+    "linkDialog": {
+      "title": "Lier le compte {{boardName}}",
+      "description": "Saisissez votre nom d'utilisateur et votre mot de passe {{boardName}} Board pour importer vos données Aurora. Vos identifiants sont chiffrés et stockés en toute sécurité. Les données se synchronisent toutes les 12 heures.",
+      "usernameLabel": "Nom d'utilisateur",
+      "usernamePlaceholder": "Saisissez votre nom d'utilisateur",
+      "passwordLabel": "Mot de passe",
+      "passwordPlaceholder": "Saisissez votre mot de passe",
+      "submit": "Lier le compte",
+      "submitting": "Liaison en cours...",
+      "linkError": "Échec de la liaison du compte",
+      "linkSuccess": "Compte {{boardName}} lié. Vos données apparaîtront dans les 12 heures."
+    },
+    "unlinkSuccess": "Compte délié avec succès",
+    "unlinkError": "Échec de la déliaison du compte",
+    "import": {
+      "steps": {
+        "climbs": "Importation des brouillons de voies",
+        "resolving": "Résolution des noms de voies",
+        "dedup": "Vérification des doublons",
+        "ascents": "Importation des ascensions",
+        "attempts": "Importation des essais",
+        "circuits": "Importation des circuits",
+        "sessions": "Construction des sessions"
+      },
+      "fileLabel": "Téléverser le fichier d'export JSON Aurora",
+      "tooLarge": "Le fichier est trop volumineux (max 200 Mo). Veuillez vérifier que vous avez sélectionné le bon fichier.",
+      "parseError": "Échec de l'analyse du fichier JSON. Veuillez vérifier le format du fichier.",
+      "readError": "Échec de la lecture du fichier. Veuillez réessayer.",
+      "interrupted": "L'importation a été interrompue. Le serveur a peut-être expiré. Vos données ont peut-être été partiellement importées.",
+      "interruptedShort": "Importation interrompue",
+      "failed": "Échec de l'importation",
+      "successCount": "{{count}} éléments importés avec succès",
+      "dialog": {
+        "previewTitle": "Importer les données Aurora",
+        "importingTitle": "Importation des données Aurora...",
+        "completeTitle": "Importation terminée",
+        "errorTitle": "Échec de l'importation",
+        "previewIntro": "Importer les données de <strong>{{username}}</strong> vers <strong>{{boardName}}</strong> :",
+        "draftClimbs": "{{count}} brouillons de voies",
+        "ascents": "{{count}} ascensions",
+        "attempts": "{{count}} essais",
+        "circuits": "{{count}} circuits",
+        "previewNote": "Les voies seront associées par nom. Celles qui ne pourront pas être associées seront signalées après l'importation. Réimporter le même fichier ne créera pas de doublons.",
+        "cancel": "Annuler",
+        "confirm": "Importer",
+        "close": "Fermer",
+        "errorTitleShort": "Échec de l'importation"
+      },
+      "results": {
+        "draftClimbs": "Brouillons de voies",
+        "draftClimbsSummary": "{{imported}} importées, {{skipped}} ignorées, {{failed}} échouées",
+        "ascents": "Ascensions",
+        "ascentsSummary": "{{imported}} importées, {{skipped}} ignorées (déjà existantes), {{failed}} non associées",
+        "attempts": "Essais",
+        "attemptsSummary": "{{imported}} importés, {{skipped}} ignorés (déjà existants), {{failed}} non associés",
+        "circuits": "Circuits",
+        "circuitsSummary": "{{imported}} importés, {{skipped}} ignorés, {{failed}} échoués",
+        "unresolvedTitle_one": "{{count}} voie n'a pas pu être associée",
+        "unresolvedTitle_other": "{{count}} voies n'ont pas pu être associées",
+        "unresolvedMore": "...et {{count}} de plus"
+      }
+    },
+    "kilterEmail": {
+      "subject": "Données Kilterboard",
+      "namePlaceholder": "[VOTRE NOM]",
+      "emailPlaceholder": "[VOTRE E-MAIL]",
+      "body": "Bonjour !\n\nJe suis un ancien utilisateur de l'application. Je me demandais si je pouvais obtenir une copie de mes données afin de conserver mes carnets et autres données pour mon suivi personnel.\n\nMon nom d'utilisateur est {{name}}, et cela devrait être sous cet e-mail ({{email}}).\n\nMerci !\n\n{{name}}"
+    }
+  },
+  "healthkit": {
+    "save": "Enregistrer dans Apple Health",
+    "saving": "Enregistrement dans Apple Health…",
+    "saved": "Enregistré dans Apple Health",
+    "retry": "Enregistrer dans Apple Health (réessayer)"
+  },
+  "feedbackDialog": {
+    "titleRating": "Noter Boardsesh",
+    "titleBug": "Signaler un bug",
+    "submitRating": "Envoyer",
+    "submitBug": "Envoyer le rapport de bug",
+    "successRating": "Merci — enregistré.",
+    "successBug": "Bug enregistré — merci.",
+    "errorRating": "Échec de l'envoi — nous conserverons votre retour.",
+    "closeAria": "Fermer"
+  },
+  "feedbackForm": {
+    "missingHeading": "Qu'est-ce qui manque ?",
+    "compactPlaceholder": "Dites-nous ce qui pourrait aider",
+    "skip": "Passer",
+    "sendAria": "Envoyer",
+    "cancel": "Annuler",
+    "saveDefault": "Enregistrer",
+    "bugPlaceholder": "Que faisiez-vous ? Qu'attendiez-vous et qu'avez-vous vu ?",
+    "ratingPlaceholder": "Qu'avez-vous en tête ?",
+    "remainingChars": "Encore {{count}} caractères",
+    "nextAria": "Suivant"
+  },
+  "feedbackBanner": {
+    "successToast": "Merci — enregistré.",
+    "errorToast": "Échec de l'envoi — nous conserverons votre note.",
+    "dismissAria": "Ignorer"
+  },
+  "shakeToReport": {
+    "disabledToast": "Secouer pour signaler désactivé. Touchez votre avatar en haut pour envoyer un retour.",
+    "dontShowAgain": "Ne plus afficher"
+  },
+  "storeReview": {
+    "title": "Aidez les autres à découvrir Boardsesh",
+    "body": "Merci pour votre note. Pourriez-vous aussi laisser un avis rapide sur votre app store ? C'est la meilleure chose que vous puissiez faire pour aider d'autres grimpeurs à nous trouver.",
+    "notNow": "Pas maintenant",
+    "leaveReview": "Laisser un avis"
+  },
+  "sessionProvider": {
+    "deepLinkError": "La connexion avec Google, Apple ou Facebook peut ne pas fonctionner. Essayez de redémarrer l'application."
+  },
+  "onboarding": {
+    "skipTour": "Passer la visite",
+    "finish": "Terminer",
+    "next": "Suivant",
+    "stepProgress": "{{current}} sur {{total}}"
+  },
+  "devUrlDialog": {
+    "title": "URL de dev",
+    "intro": "Pointez la WebView vers une autre origine. L'application redémarrera après l'enregistrement.",
+    "urlLabel": "URL du serveur",
+    "useProduction": "Utiliser la production",
+    "currentlyOverriding": "Remplacement actuel par : {{url}}",
+    "cancel": "Annuler",
+    "clearOverride": "Effacer le remplacement",
+    "save": "Enregistrer et redémarrer",
+    "restarting": "Redémarrage…",
+    "validation": {
+      "enterUrl": "Saisissez une URL",
+      "mustBeHttp": "L'URL doit commencer par http:// ou https://",
+      "invalid": "URL non valide",
+      "generic": "Une erreur s'est produite"
+    }
+  },
+  "boardConfigMismatch": {
+    "title": "La configuration du board ne correspond pas",
+    "intro": "Nos enregistrements indiquent que ce board a une configuration différente de celle que vous avez configurée.",
+    "currentLabel": "<strong>Vous êtes configuré pour :</strong>",
+    "recordedLabel": "<strong>Enregistré pour ce contrôleur :</strong>",
+    "cancel": "Annuler",
+    "connectAnyway": "Connecter quand même",
+    "switchToCorrect": "Passer à la bonne configuration"
+  },
+  "devicePicker": {
+    "title": "Sélectionnez votre board",
+    "scanning": "Recherche de boards à proximité…",
+    "lastConnected": "Dernier board connecté",
+    "unknownDevice": "Appareil inconnu",
+    "lastConnectedAt": "Dernière connexion {{time}}",
+    "cancel": "Annuler"
+  },
+  "bluetoothMismatch": {
+    "switchNoAngleToast": "Impossible de changer — ouvrez d'abord une voie à un angle spécifique.",
+    "switchUrlFailedToast": "Impossible de passer à la configuration de ce board. Essayez Connecter quand même."
+  },
+  "auroraImport": {
+    "unlinkSuccessToast": "Compte délié avec succès",
+    "uploadAriaLabel": "Téléverser le fichier d'export JSON Aurora"
+  }
+}

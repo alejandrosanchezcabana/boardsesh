@@ -1,0 +1,43 @@
+{
+  "metadata": {
+    "notifications": {
+      "title": "Notifications",
+      "description": "Tes notifications sur Boardsesh"
+    }
+  },
+  "title": "Notifications",
+  "empty": "Rien pour l'instant",
+  "markAllRead": "Tout marquer comme lu",
+  "actorSummary": {
+    "fallback": "Quelqu'un",
+    "secondaryFallback": "quelqu'un",
+    "two": "{{first}} et {{second}}",
+    "many": "{{first}} et {{count}} autres",
+    "manyOne": "{{first}} et 1 autre"
+  },
+  "items": {
+    "newFollower": "{{actor}} a commencé à te suivre",
+    "commentReplyWithBody": "{{actor}} a répondu : « {{body}} »",
+    "commentReply": "{{actor}} a répondu à ton commentaire",
+    "commentOnTickWithBody": "{{actor}} a commenté : « {{body}} »",
+    "commentOnTick": "{{actor}} a commenté ton ascension",
+    "commentOnClimbWithBody": "{{actor}} a commenté : « {{body}} »",
+    "commentOnClimb": "{{actor}} a commenté une voie",
+    "voteOnTick": "{{actor}} a aimé ton ascension",
+    "voteOnComment": "{{actor}} a aimé ton commentaire",
+    "proposalCreated": "{{actor}} a créé une nouvelle proposition",
+    "proposalApproved": "La proposition de {{actor}} a été approuvée",
+    "proposalRejected": "La proposition de {{actor}} a été rejetée",
+    "proposalVote": "{{actor}} a voté sur ta proposition",
+    "newClimb": "{{actor}} a créé une nouvelle voie",
+    "newClimbsSyncedSetter": "{{setter}} a ouvert de nouvelles voies",
+    "newClimbsSynced": "{{actor}} a ouvert de nouvelles voies",
+    "default": "Tu as une nouvelle notification"
+  },
+  "time": {
+    "justNow": "à l'instant",
+    "minutes": "{{count}} min",
+    "hours": "{{count}} h",
+    "days": "{{count}} j"
+  }
+}
