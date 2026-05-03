@@ -14,31 +14,12 @@ import { useTranslation } from 'react-i18next';
 import Logo from '@/app/components/brand/logo';
 import BackButton from '@/app/components/back-button';
 import { themeTokens } from '@/app/theme/theme-config';
-
-const KNOWN_ERROR_CODES = new Set([
-  'Configuration',
-  'AccessDenied',
-  'Verification',
-  'OAuthSignin',
-  'OAuthCallback',
-  'OAuthCreateAccount',
-  'EmailCreateAccount',
-  'Callback',
-  'OAuthAccountNotLinked',
-  'SessionRequired',
-]);
+import { getAuthErrorMessage } from './get-error-message';
 
 export default function AuthErrorContent() {
   const { t } = useTranslation('auth');
   const searchParams = useSearchParams();
   const error = searchParams.get('error');
-
-  const getErrorMessage = () => {
-    if (error && KNOWN_ERROR_CODES.has(error)) {
-      return t(`error.messages.${error}`);
-    }
-    return t('error.messages.default');
-  };
 
   return (
     <Box sx={{ minHeight: '100vh', background: 'var(--semantic-background)' }}>
@@ -76,7 +57,7 @@ export default function AuthErrorContent() {
             <Stack spacing={3} sx={{ width: '100%' }}>
               <CancelOutlined sx={{ fontSize: 48, color: themeTokens.colors.error, mx: 'auto' }} />
               <Typography variant="h3">{t('error.title')}</Typography>
-              <MuiAlert severity="error">{getErrorMessage()}</MuiAlert>
+              <MuiAlert severity="error">{getAuthErrorMessage(error, t)}</MuiAlert>
               <Button variant="contained" href="/auth/login" fullWidth size="large">
                 {t('error.back')}
               </Button>

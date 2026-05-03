@@ -19,58 +19,21 @@ import MailOutlined from '@mui/icons-material/MailOutlined';
 import { signIn, useSession } from 'next-auth/react';
 import { useSearchParams } from 'next/navigation';
 import { useTranslation } from 'react-i18next';
-import type { TFunction } from 'i18next';
 import { useLocaleRouter } from '@/app/lib/i18n/use-locale-router';
 import Logo from '@/app/components/brand/logo';
 import BackButton from '@/app/components/back-button';
 import SocialLoginButtons from '@/app/components/auth/social-login-buttons';
+import {
+  initialLoginValues,
+  initialRegisterValues,
+  validateLoginFields,
+  validateRegisterFields,
+  type LoginErrors,
+  type RegisterErrors,
+} from '@/app/components/auth/validate-fields';
 import { TabPanel } from '@/app/components/ui/tab-panel';
 import { useSnackbar } from '@/app/components/providers/snackbar-provider';
 import { themeTokens } from '@/app/theme/theme-config';
-
-const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-const initialLoginValues = { email: '', password: '' };
-const initialRegisterValues = { name: '', email: '', password: '', confirmPassword: '' };
-
-type LoginErrors = Partial<Record<keyof typeof initialLoginValues, string>>;
-type RegisterErrors = Partial<Record<keyof typeof initialRegisterValues, string>>;
-
-function validateLoginFields(values: typeof initialLoginValues, t: TFunction<'auth'>): LoginErrors {
-  const errors: LoginErrors = {};
-  if (!values.email) {
-    errors.email = t('login.validation.emailRequired');
-  } else if (!EMAIL_REGEX.test(values.email)) {
-    errors.email = t('login.validation.emailInvalid');
-  }
-  if (!values.password) {
-    errors.password = t('login.validation.passwordRequired');
-  }
-  return errors;
-}
-
-function validateRegisterFields(values: typeof initialRegisterValues, t: TFunction<'auth'>): RegisterErrors {
-  const errors: RegisterErrors = {};
-  if (values.name && values.name.length > 100) {
-    errors.name = t('login.validation.nameTooLong');
-  }
-  if (!values.email) {
-    errors.email = t('login.validation.emailRequired');
-  } else if (!EMAIL_REGEX.test(values.email)) {
-    errors.email = t('login.validation.emailInvalid');
-  }
-  if (!values.password) {
-    errors.password = t('login.validation.passwordRequiredCreate');
-  } else if (values.password.length < 8) {
-    errors.password = t('login.validation.passwordTooShort');
-  }
-  if (!values.confirmPassword) {
-    errors.confirmPassword = t('login.validation.confirmPasswordRequired');
-  } else if (values.confirmPassword !== values.password) {
-    errors.confirmPassword = t('login.validation.passwordsMismatch');
-  }
-  return errors;
-}
 
 export default function AuthPageContent() {
   const { t } = useTranslation('auth');
