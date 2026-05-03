@@ -123,12 +123,12 @@
     "noGyms": "No hay gimnasios para \"{{query}}\"",
     "noPlaylists": "No hay listas para \"{{query}}\"",
     "noUsers": "No hay usuarios ni setters para \"{{query}}\"",
-    "climbCountOne": "{{count}} bloque",
-    "climbCountMany": "{{count}} bloques"
+    "climbCount_one": "{{count}} bloque",
+    "climbCount_other": "{{count}} bloques"
   },
   "sessionFeedCard": {
-    "climbCountOne": "{{count}} bloque",
-    "climbCountMany": "{{count}} bloques"
+    "climbCount_one": "{{count}} bloque",
+    "climbCount_other": "{{count}} bloques"
   },
   "sessionSummary": {
     "completed": "Sesión completada"
@@ -160,16 +160,16 @@
   },
   "userSearch": {
     "ascentsThisMonth": "{{count}} ascensos este mes",
-    "climbsSetOne": "{{count}} bloque creado",
-    "climbsSetMany": "{{count}} bloques creados",
-    "climbCountOne": "{{count}} bloque",
-    "climbCountMany": "{{count}} bloques"
+    "climbsSet_one": "{{count}} bloque creado",
+    "climbsSet_other": "{{count}} bloques creados",
+    "climbCount_one": "{{count}} bloque",
+    "climbCount_other": "{{count}} bloques"
   },
   "userSmartCard": {
-    "followerOne": "{{count}} seguidor",
-    "followerMany": "{{count}} seguidores",
+    "follower_one": "{{count}} seguidor",
+    "follower_other": "{{count}} seguidores",
     "following": "{{count}} siguiendo",
-    "distinctClimbOne": "{{count}} bloque distinto",
-    "distinctClimbMany": "{{count}} bloques distintos"
+    "distinctClimb_one": "{{count}} bloque distinto",
+    "distinctClimb_other": "{{count}} bloques distintos"
   }
 }

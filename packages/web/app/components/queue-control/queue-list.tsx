@@ -75,7 +75,7 @@ const QueueList = forwardRef<QueueListHandle, QueueListProps>(
     },
     ref,
   ) => {
-    const { t } = useTranslation('climbs');
+    const { t } = useTranslation(['climbs', 'session']);
     const currentClimbUuid = useCurrentClimbUuid();
     const { queue, suggestedClimbs } = useQueueList();
     const { hasMoreResults, isFetchingClimbs, isFetchingNextPage } = useSearchData();

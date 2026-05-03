@@ -305,9 +305,7 @@ export default function SessionFeedCard({ session }: SessionFeedCardProps) {
                 {boardTypes.map((bt) => bt.charAt(0).toUpperCase() + bt.slice(1)).join(', ')}
               </Typography>
               <Typography variant="caption" color="text.secondary" sx={{ ml: 'auto' }}>
-                {tickCount === 1
-                  ? t('sessionFeedCard.climbCountOne', { count: tickCount })
-                  : t('sessionFeedCard.climbCountMany', { count: tickCount })}
+                {t('sessionFeedCard.climbCount', { count: tickCount })}
               </Typography>
             </Box>
           )}
