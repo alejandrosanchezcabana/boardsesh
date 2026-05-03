@@ -132,7 +132,7 @@ export type QueueControlBarProps = {
 };
 
 const QueueControlBar: React.FC<QueueControlBarProps> = ({ boardDetails, angle }) => {
-  const { t } = useTranslation(['session', 'common']);
+  const { t } = useTranslation('session');
   const [activeDrawer, setActiveDrawer] = useState<ActiveDrawer>('none');
   const [startSeshOpen, setStartSeshOpen] = useState(false);
   const pathname = usePathname();
@@ -1330,7 +1330,7 @@ const QueueControlBar: React.FC<QueueControlBarProps> = ({ boardDetails, angle }
               description={t('queueDrawer.clearDescription')}
               onConfirm={handleClearQueue}
               okText={t('queueDrawer.clearConfirm')}
-              cancelText={t('actions.cancel', { ns: 'common' })}
+              cancelText={t('common:actions.cancel')}
             >
               <MuiButton variant="text" startIcon={<DeleteOutlined />} sx={{ color: 'var(--neutral-400)' }}>
                 {t('queueDrawer.clearConfirm')}

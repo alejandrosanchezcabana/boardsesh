@@ -101,7 +101,7 @@ const actionSx = {
 };
 
 function BottomTabBar({ boardDetails, angle, boardConfigs }: BottomTabBarProps) {
-  const { t } = useTranslation(['playlists', 'climbs', 'common']);
+  const { t } = useTranslation('playlists');
   const { mode } = useColorMode();
   const isDark = mode === 'dark';
   const [isCreatePlaylistOpen, setIsCreatePlaylistOpen] = useState(false);
@@ -464,12 +464,12 @@ function BottomTabBar({ boardDetails, angle, boardConfigs }: BottomTabBarProps) 
   const validatePlaylistForm = useCallback((): boolean => {
     const errors: Record<string, string> = {};
     if (!playlistFormValues.name.trim()) {
-      errors.name = t('actions.playlist.validation.nameRequired', { ns: 'climbs' });
+      errors.name = t('climbs:actions.playlist.validation.nameRequired');
     } else if (playlistFormValues.name.length > 100) {
-      errors.name = t('actions.playlist.validation.nameTooLong', { ns: 'climbs' });
+      errors.name = t('climbs:actions.playlist.validation.nameTooLong');
     }
     if (playlistFormValues.description.length > 500) {
-      errors.description = t('actions.playlist.validation.descriptionTooLong', { ns: 'climbs' });
+      errors.description = t('climbs:actions.playlist.validation.descriptionTooLong');
     }
     setPlaylistFormErrors(errors);
     return Object.keys(errors).length === 0;
@@ -662,7 +662,7 @@ function BottomTabBar({ boardDetails, angle, boardConfigs }: BottomTabBarProps) 
       {/* Board Selector Drawer */}
       {isBoardSelectorRendered && (
         <SwipeableDrawer
-          title={t('boardSelector.title', { ns: 'common' })}
+          title={t('common:boardSelector.title')}
           placement="bottom"
           open={isBoardSelectorOpen}
           onClose={() => {
