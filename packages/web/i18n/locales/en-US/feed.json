@@ -123,12 +123,12 @@
     "noGyms": "No gyms found for \"{{query}}\"",
     "noPlaylists": "No playlists found for \"{{query}}\"",
     "noUsers": "No users or setters found for \"{{query}}\"",
-    "climbCountOne": "{{count}} climb",
-    "climbCountMany": "{{count}} climbs"
+    "climbCount_one": "{{count}} climb",
+    "climbCount_other": "{{count}} climbs"
   },
   "sessionFeedCard": {
-    "climbCountOne": "{{count}} climb",
-    "climbCountMany": "{{count}} climbs"
+    "climbCount_one": "{{count}} climb",
+    "climbCount_other": "{{count}} climbs"
   },
   "sessionSummary": {
     "completed": "Session completed"
@@ -144,16 +144,16 @@
   },
   "userSearch": {
     "ascentsThisMonth": "{{count}} ascents this month",
-    "climbsSetOne": "{{count}} climb set",
-    "climbsSetMany": "{{count}} climbs set",
-    "climbCountOne": "{{count}} climb",
-    "climbCountMany": "{{count}} climbs"
+    "climbsSet_one": "{{count}} climb set",
+    "climbsSet_other": "{{count}} climbs set",
+    "climbCount_one": "{{count}} climb",
+    "climbCount_other": "{{count}} climbs"
   },
   "userSmartCard": {
-    "followerOne": "{{count}} follower",
-    "followerMany": "{{count}} followers",
+    "follower_one": "{{count}} follower",
+    "follower_other": "{{count}} followers",
     "following": "{{count}} following",
-    "distinctClimbOne": "{{count}} distinct climb",
-    "distinctClimbMany": "{{count}} distinct climbs"
+    "distinctClimb_one": "{{count}} distinct climb",
+    "distinctClimb_other": "{{count}} distinct climbs"
   }
 }

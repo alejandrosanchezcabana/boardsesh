@@ -124,8 +124,8 @@
     "reply": "Responder",
     "showRepliesOne": "Mostrar 1 respuesta",
     "showRepliesMany": "Mostrar {{count}} respuestas",
-    "countOne": "{{count}} comentario",
-    "countMany": "{{count}} comentarios",
+    "count_one": "{{count}} comentario",
+    "count_other": "{{count}} comentarios",
     "sort": {
       "new": "Nuevos",
       "top": "Top",

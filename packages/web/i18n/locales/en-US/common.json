@@ -132,8 +132,8 @@
     "reply": "Reply",
     "showRepliesOne": "Show 1 reply",
     "showRepliesMany": "Show {{count}} replies",
-    "countOne": "{{count}} comment",
-    "countMany": "{{count}} comments",
+    "count_one": "{{count}} comment",
+    "count_other": "{{count}} comments",
     "sort": {
       "new": "New",
       "top": "Top",

@@ -139,9 +139,7 @@ export default function CommentList({ entityType, entityId, refreshKey = 0, curr
       {totalCount > 0 && (
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
           <MuiTypography variant="caption" color="text.secondary">
-            {totalCount === 1
-              ? t('comment.countOne', { count: totalCount })
-              : t('comment.countMany', { count: totalCount })}
+            {t('comment.count', { count: totalCount })}
           </MuiTypography>
           <ToggleButtonGroup value={sortBy} exclusive onChange={handleSortChange} size="small">
             <ToggleButton value="new" sx={{ textTransform: 'none', px: 1, py: 0.25, fontSize: 12 }}>

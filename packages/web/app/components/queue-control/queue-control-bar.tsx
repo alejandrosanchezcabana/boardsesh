@@ -248,8 +248,8 @@ const QueueControlBar: React.FC<QueueControlBarProps> = ({ boardDetails, angle }
     if (!sessionShareUrl) return;
     await shareWithFallback({
       url: sessionShareUrl,
-      title: 'Join my climbing session',
-      text: 'Jump in and climb with me on Boardsesh',
+      title: t('settings.share.shareTitle'),
+      text: t('settings.share.shareText'),
       trackingEvent: 'Session Shared',
       trackingProps: { sessionId: activeSession?.sessionId ?? '' },
       onClipboardSuccess: () => showMessage(t('queueBar.linkCopied'), 'success'),

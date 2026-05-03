@@ -133,10 +133,7 @@ export default function PlaylistSearchResults({ query, authToken }: PlaylistSear
                 {playlist.name}
               </Typography>
               <Typography variant="body2" color="text.secondary" noWrap>
-                {playlist.creatorName} ·{' '}
-                {playlist.climbCount === 1
-                  ? t('search.climbCountOne', { count: playlist.climbCount })
-                  : t('search.climbCountMany', { count: playlist.climbCount })}
+                {playlist.creatorName} · {t('search.climbCount', { count: playlist.climbCount })}
               </Typography>
             </Box>
             <Chip label={playlist.boardType} size="small" variant="outlined" sx={{ flexShrink: 0 }} />

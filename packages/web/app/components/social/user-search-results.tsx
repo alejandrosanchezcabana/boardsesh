@@ -140,9 +140,7 @@ export default function UserSearchResults({ query, authToken }: UserSearchResult
                       )}
                       {result.setter && (
                         <Typography variant="caption" component="span" color="text.secondary">
-                          {result.setter.climbCount === 1
-                            ? t('userSearch.climbsSetOne', { count: result.setter.climbCount })
-                            : t('userSearch.climbsSetMany', { count: result.setter.climbCount })}
+                          {t('userSearch.climbsSet', { count: result.setter.climbCount })}
                         </Typography>
                       )}
                     </Box>
@@ -184,9 +182,7 @@ export default function UserSearchResults({ query, authToken }: UserSearchResult
                   secondary={
                     <Box component="span" sx={{ display: 'flex', gap: 1, alignItems: 'center', flexWrap: 'wrap' }}>
                       <Typography variant="caption" component="span" color="text.secondary">
-                        {result.setter.climbCount === 1
-                          ? t('userSearch.climbCountOne', { count: result.setter.climbCount })
-                          : t('userSearch.climbCountMany', { count: result.setter.climbCount })}
+                        {t('userSearch.climbCount', { count: result.setter.climbCount })}
                       </Typography>
                       {result.setter.boardTypes.map((bt) => (
                         <Chip

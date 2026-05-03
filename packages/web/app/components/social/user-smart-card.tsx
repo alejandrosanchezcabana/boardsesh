@@ -162,9 +162,7 @@ export default function UserSmartCard({ userId, refreshKey = 0 }: UserSmartCardP
               </div>
 
               <Typography variant="caption" component="span" color="text.secondary">
-                {profile.followerCount === 1
-                  ? t('userSmartCard.followerOne', { count: profile.followerCount })
-                  : t('userSmartCard.followerMany', { count: profile.followerCount })}
+                {t('userSmartCard.follower', { count: profile.followerCount })}
                 {' · '}
                 {t('userSmartCard.following', { count: profile.followingCount })}
               </Typography>
@@ -190,9 +188,7 @@ export default function UserSmartCard({ userId, refreshKey = 0 }: UserSmartCardP
           {gradeBars.length > 0 && (
             <div className={styles.chartSection}>
               <Typography variant="caption" component="span" color="text.secondary" className={styles.chartLabel}>
-                {totalClimbs === 1
-                  ? t('userSmartCard.distinctClimbOne', { count: totalClimbs })
-                  : t('userSmartCard.distinctClimbMany', { count: totalClimbs })}
+                {t('userSmartCard.distinctClimb', { count: totalClimbs })}
               </Typography>
 
               <div className={styles.gradeBarContainer}>
