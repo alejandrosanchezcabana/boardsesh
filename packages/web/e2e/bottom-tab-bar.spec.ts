@@ -95,7 +95,14 @@ test.describe('Bottom Tab Bar - Navigation', () => {
     await loginAs(page, '/you');
     await waitForPageReady(page);
 
-    await page.getByRole('link', { name: 'Notifications' }).click();
+    // The bell is rendered as `<IconButton component={LocaleLink} href="/notifications" />`.
+    // MUI 7 emits role="button" on the polymorphic anchor, so target by href to stay
+    // resilient regardless of whether the implicit role lands as "link" or "button".
+    // Also wait for the anchor (not just the bottom tab bar) to ensure the
+    // global-header has hydrated before we click.
+    const bell = page.locator('header a[href="/notifications"]').first();
+    await expect(bell).toBeVisible({ timeout: 15000 });
+    await bell.click();
     await expect(page).toHaveURL(/\/notifications/, { timeout: 15000 });
     await expect(page.locator(bottomTabBar)).toBeVisible();
   });

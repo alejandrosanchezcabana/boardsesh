@@ -135,6 +135,7 @@ export default function CreateClimbForm({
   holdSetImages,
 }: CreateClimbFormProps) {
   const { t } = useTranslation('climbs');
+  const { t: tCommon } = useTranslation('common');
   const pathname = usePathname();
   const { data: session } = useSession();
   const { mode } = useColorMode();
@@ -1540,8 +1541,8 @@ export default function CreateClimbForm({
           // i18n-ignore-next-line
           description="This will clear all holds and reset the form. Are you sure?"
           onConfirm={resetHolds}
-          okText={t('common:actions.clear')}
-          cancelText={t('common:actions.cancel')}
+          okText={tCommon('actions.clear')}
+          cancelText={tCommon('actions.cancel')}
         >
           {/* i18n-ignore-next-line */}
           <MuiTooltip title="Clear all holds">

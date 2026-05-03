@@ -127,6 +127,7 @@ const TickItemRow: React.FC<{
         description="Are you sure? This cannot be undone."
         onConfirm={() => onDelete(item.uuid)}
         okText={t('actions.delete')}
+        cancelText={t('actions.cancel')}
         okButtonProps={{ color: 'error' }}
       >
         <IconButton size="small" disabled={isDeleting} sx={{ color: 'text.secondary' }}>

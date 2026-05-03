@@ -2,7 +2,7 @@ import { mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { applyFixes, checkFile, looksTranslatable } from './check-untranslated-strings';
+import { applyFixes, checkFile, formatReport, looksTranslatable } from './check-untranslated-strings';
 
 const fakePath = '/tmp/fake-component.tsx';
 
@@ -378,5 +378,80 @@ export default function Foo() {
       const { violations: violationsAfter } = checkFile(path);
       expect(violationsAfter).toHaveLength(0);
     });
+  });
+});
+
+describe('formatReport — exit code', () => {
+  it('exits 0 with stdout only when there are neither violations nor stale markers', () => {
+    const result = formatReport({
+      totalFiles: 5,
+      filesWithViolations: 0,
+      totalViolations: 0,
+      staleMarkers: [],
+      violations: [],
+    });
+    expect(result.exitCode).toBe(0);
+    expect(result.stderr).toEqual([]);
+    expect(result.stdout.join('\n')).toMatch(/scanned 5/);
+  });
+
+  it('exits 1 when only stale markers exist (no violations)', () => {
+    // Combined-exit guarantee: stale markers alone must fail the check so
+    // the next contributor can't ignore the warning into oblivion.
+    const result = formatReport({
+      totalFiles: 3,
+      filesWithViolations: 0,
+      totalViolations: 0,
+      staleMarkers: [{ file: '/repo/packages/web/app/foo.tsx', line: 42 }],
+      violations: [],
+    });
+    expect(result.exitCode).toBe(1);
+    expect(result.stdout).toEqual([]);
+    const stderr = result.stderr.join('\n');
+    expect(stderr).toMatch(/foo\.tsx:42\s+stale i18n-ignore-next-line marker/);
+    expect(stderr).toMatch(/Found 1 stale i18n-ignore-next-line marker/);
+  });
+
+  it('exits 1 when only violations exist (no stale markers)', () => {
+    const result = formatReport({
+      totalFiles: 3,
+      filesWithViolations: 1,
+      totalViolations: 1,
+      staleMarkers: [],
+      violations: [
+        {
+          file: '/repo/packages/web/app/bar.tsx',
+          line: 10,
+          column: 5,
+          kind: 'jsx-text',
+          text: 'Hello world',
+        },
+      ],
+    });
+    expect(result.exitCode).toBe(1);
+    expect(result.stdout).toEqual([]);
+    expect(result.stderr.join('\n')).toMatch(/Found 1 hardcoded user-facing string/);
+  });
+
+  it('exits 1 and reports both classes when violations and stale markers coexist', () => {
+    const result = formatReport({
+      totalFiles: 3,
+      filesWithViolations: 1,
+      totalViolations: 1,
+      staleMarkers: [{ file: '/repo/packages/web/app/foo.tsx', line: 7 }],
+      violations: [
+        {
+          file: '/repo/packages/web/app/bar.tsx',
+          line: 10,
+          column: 5,
+          kind: 'jsx-text',
+          text: 'Hello world',
+        },
+      ],
+    });
+    expect(result.exitCode).toBe(1);
+    const stderr = result.stderr.join('\n');
+    expect(stderr).toMatch(/Found 1 hardcoded user-facing string/);
+    expect(stderr).toMatch(/Found 1 stale i18n-ignore-next-line marker/);
   });
 });
