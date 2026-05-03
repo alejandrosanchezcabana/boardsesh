@@ -74,6 +74,22 @@
     "ariaCreateBoard": "Crear tabla",
     "empty": "Aún no tienes tablas. Crea una desde el selector de tablas."
   },
+  "userDrawer": {
+    "signIn": "Iniciar sesión",
+    "signInModalTitle": "Inicia sesión en Boardsesh",
+    "signInModalDescription": "Inicia sesión para guardar favoritos, registrar ascensos y más.",
+    "changeBoard": "Cambiar tabla",
+    "devUrl": "URL de dev",
+    "development": "Desarrollo",
+    "classifyHolds": "Clasificar presas",
+    "myPlaylists": "Mis listas",
+    "recentSessions": "Sesiones recientes",
+    "help": "Ayuda",
+    "about": "Sobre",
+    "rateBoardsesh": "Valorar Boardsesh",
+    "reportBug": "Reportar un bug",
+    "logout": "Cerrar sesión"
+  },
   "loading": {
     "messages": [
       "Preparando tu tabla...",

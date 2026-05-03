@@ -82,6 +82,22 @@
     "ariaCreateBoard": "Create a board",
     "empty": "No boards yet. Create one from the board selector to get started."
   },
+  "userDrawer": {
+    "signIn": "Sign in",
+    "signInModalTitle": "Sign in to Boardsesh",
+    "signInModalDescription": "Sign in to save favorites, log ascents, and more.",
+    "changeBoard": "Change board",
+    "devUrl": "Dev URL",
+    "development": "Development",
+    "classifyHolds": "Classify holds",
+    "myPlaylists": "My playlists",
+    "recentSessions": "Recent sessions",
+    "help": "Help",
+    "about": "About",
+    "rateBoardsesh": "Rate Boardsesh",
+    "reportBug": "Report a bug",
+    "logout": "Log out"
+  },
   "loading": {
     "messages": [
       "Setting up your board...",

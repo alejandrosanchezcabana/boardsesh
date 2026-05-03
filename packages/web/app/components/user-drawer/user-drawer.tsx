@@ -268,12 +268,12 @@ export default function UserDrawer({ boardDetails, boardConfigs }: UserDrawerPro
                     onClick={() => {
                       handleClose();
                       openAuthModal({
-                        title: t('feed:userDrawer.signInModalTitle'),
-                        description: t('feed:userDrawer.signInModalDescription'),
+                        title: t('userDrawer.signInModalTitle'),
+                        description: t('userDrawer.signInModalDescription'),
                       });
                     }}
                   >
-                    {t('feed:userDrawer.signIn')}
+                    {t('userDrawer.signIn')}
                   </MuiButton>
                 </>
               )}
@@ -295,7 +295,7 @@ export default function UserDrawer({ boardDetails, boardConfigs }: UserDrawerPro
                 <span className={styles.menuItemIcon}>
                   <SwapHorizOutlined />
                 </span>
-                <span className={styles.menuItemLabel}>{t('feed:userDrawer.changeBoard')}</span>
+                <span className={styles.menuItemLabel}>{t('userDrawer.changeBoard')}</span>
               </button>
 
               {session?.user && (
@@ -334,7 +334,7 @@ export default function UserDrawer({ boardDetails, boardConfigs }: UserDrawerPro
                   <span className={styles.menuItemIcon}>
                     <BuildOutlined />
                   </span>
-                  <span className={styles.menuItemLabel}>{t('feed:userDrawer.devUrl')}</span>
+                  <span className={styles.menuItemLabel}>{t('userDrawer.devUrl')}</span>
                 </button>
               )}
 
@@ -343,7 +343,7 @@ export default function UserDrawer({ boardDetails, boardConfigs }: UserDrawerPro
                   <span className={styles.menuItemIcon}>
                     <DeveloperBoardOutlined />
                   </span>
-                  <span className={styles.menuItemLabel}>{t('feed:userDrawer.development')}</span>
+                  <span className={styles.menuItemLabel}>{t('userDrawer.development')}</span>
                 </LocaleLink>
               )}
 
@@ -359,7 +359,7 @@ export default function UserDrawer({ boardDetails, boardConfigs }: UserDrawerPro
                   <span className={styles.menuItemIcon}>
                     <GpsFixedOutlined />
                   </span>
-                  <span className={styles.menuItemLabel}>{t('feed:userDrawer.classifyHolds')}</span>
+                  <span className={styles.menuItemLabel}>{t('userDrawer.classifyHolds')}</span>
                 </button>
               )}
 
@@ -367,7 +367,7 @@ export default function UserDrawer({ boardDetails, boardConfigs }: UserDrawerPro
                 <span className={styles.menuItemIcon}>
                   <LocalOfferOutlined />
                 </span>
-                <span className={styles.menuItemLabel}>{t('feed:userDrawer.myPlaylists')}</span>
+                <span className={styles.menuItemLabel}>{t('userDrawer.myPlaylists')}</span>
               </LocaleLink>
             </nav>
 
@@ -376,7 +376,7 @@ export default function UserDrawer({ boardDetails, boardConfigs }: UserDrawerPro
               <>
                 <div className={styles.divider} />
                 <MuiTypography variant="body2" component="span" color="text.secondary" className={styles.sectionLabel}>
-                  {t('feed:userDrawer.recentSessions')}
+                  {t('userDrawer.recentSessions')}
                 </MuiTypography>
                 {recentSessions.slice(0, 5).map((storedSession) => (
                   <button
@@ -414,14 +414,14 @@ export default function UserDrawer({ boardDetails, boardConfigs }: UserDrawerPro
               <span className={styles.menuItemIcon}>
                 <HelpOutlineOutlined />
               </span>
-              <span className={styles.menuItemLabel}>{t('feed:userDrawer.help')}</span>
+              <span className={styles.menuItemLabel}>{t('userDrawer.help')}</span>
             </LocaleLink>
 
             <LocaleLink href="/about" className={styles.menuItem} onClick={handleClose}>
               <span className={styles.menuItemIcon}>
                 <InfoOutlined />
               </span>
-              <span className={styles.menuItemLabel}>{t('feed:userDrawer.about')}</span>
+              <span className={styles.menuItemLabel}>{t('userDrawer.about')}</span>
             </LocaleLink>
 
             <button
@@ -435,7 +435,7 @@ export default function UserDrawer({ boardDetails, boardConfigs }: UserDrawerPro
               <span className={styles.menuItemIcon}>
                 <StarBorderOutlined />
               </span>
-              <span className={styles.menuItemLabel}>{t('feed:userDrawer.rateBoardsesh')}</span>
+              <span className={styles.menuItemLabel}>{t('userDrawer.rateBoardsesh')}</span>
             </button>
 
             <button
@@ -449,7 +449,7 @@ export default function UserDrawer({ boardDetails, boardConfigs }: UserDrawerPro
               <span className={styles.menuItemIcon}>
                 <BugReportOutlined />
               </span>
-              <span className={styles.menuItemLabel}>{t('feed:userDrawer.reportBug')}</span>
+              <span className={styles.menuItemLabel}>{t('userDrawer.reportBug')}</span>
             </button>
 
             {/* Logout */}
@@ -460,7 +460,7 @@ export default function UserDrawer({ boardDetails, boardConfigs }: UserDrawerPro
                   <span className={styles.menuItemIcon}>
                     <LogoutOutlined />
                   </span>
-                  <span className={styles.menuItemLabel}>{t('feed:userDrawer.logout')}</span>
+                  <span className={styles.menuItemLabel}>{t('userDrawer.logout')}</span>
                 </button>
               </>
             )}
