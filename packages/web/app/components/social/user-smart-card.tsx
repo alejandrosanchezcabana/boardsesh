@@ -160,8 +160,10 @@ export default function UserSmartCard({ userId, refreshKey = 0 }: UserSmartCardP
               </div>
 
               <Typography variant="caption" component="span" color="text.secondary">
+                {/* i18n-ignore-next-line */}
                 {profile.followerCount} follower{profile.followerCount !== 1 ? 's' : ''}
                 {' · '}
+                {/* i18n-ignore-next-line */}
                 {profile.followingCount} following
               </Typography>
 
@@ -186,6 +188,7 @@ export default function UserSmartCard({ userId, refreshKey = 0 }: UserSmartCardP
           {gradeBars.length > 0 && (
             <div className={styles.chartSection}>
               <Typography variant="caption" component="span" color="text.secondary" className={styles.chartLabel}>
+                {/* i18n-ignore-next-line */}
                 {totalClimbs} distinct climb{totalClimbs !== 1 ? 's' : ''}
               </Typography>
 

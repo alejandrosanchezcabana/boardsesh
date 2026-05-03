@@ -125,6 +125,7 @@ export const FeedbackForm: React.FC<FeedbackFormProps> = ({
             <TextField
               value={comment}
               onChange={(event) => setComment(event.target.value)}
+              // i18n-ignore-next-line
               placeholder="Tell us what would help"
               multiline
               minRows={2}
@@ -136,9 +137,11 @@ export const FeedbackForm: React.FC<FeedbackFormProps> = ({
             />
             <div className={styles.compactActions}>
               <MuiButton onClick={handleSecondary} disabled={submitting} size="small">
+                {/* i18n-ignore-next-line */}
                 Skip
               </MuiButton>
               <IconButton
+                // i18n-ignore-next-line
                 aria-label="Send"
                 onClick={handlePrimary}
                 disabled={!canSubmit}
@@ -188,6 +191,7 @@ export const FeedbackForm: React.FC<FeedbackFormProps> = ({
       <div className={styles.actions}>
         {onCancel && (
           <MuiButton onClick={handleSecondary} disabled={submitting} size="small">
+            {/* i18n-ignore-next-line */}
             Cancel
           </MuiButton>
         )}

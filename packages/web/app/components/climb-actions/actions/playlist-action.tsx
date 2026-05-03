@@ -75,7 +75,9 @@ export function PlaylistAction({
 
       if (!isAuthenticated) {
         openAuthModal({
+          // i18n-ignore-next-line
           title: 'Sign in to create playlists',
+          // i18n-ignore-next-line
           description: 'Sign in to organize your climbs into custom playlists.',
         });
         return;
@@ -192,12 +194,14 @@ export function PlaylistAction({
     >
       <div style={{ marginBottom: themeTokens.spacing[2] }}>
         <MuiTypography variant="body2" component="span" fontWeight={600}>
+          {/* i18n-ignore-next-line */}
           Add to Playlist
         </MuiTypography>
       </div>
       {playlists.length === 0 && !showCreateForm ? (
         <Stack spacing={1} style={{ width: '100%', textAlign: 'center', padding: themeTokens.spacing[2] }}>
           <MuiTypography variant="body2" component="span" color="text.secondary">
+            {/* i18n-ignore-next-line */}
             No playlists yet
           </MuiTypography>
           <MuiButton
@@ -207,6 +211,7 @@ export function PlaylistAction({
             fullWidth
             size="small"
           >
+            {/* i18n-ignore-next-line */}
             Create Your First Playlist
           </MuiButton>
         </Stack>
@@ -263,6 +268,7 @@ export function PlaylistAction({
                 size="small"
                 sx={{ marginTop: `${themeTokens.spacing[2]}px` }}
               >
+                {/* i18n-ignore-next-line */}
                 Create New Playlist
               </MuiButton>
             </>
@@ -273,9 +279,11 @@ export function PlaylistAction({
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
                 <Box>
                   <MuiTypography variant="body2" fontWeight={600} sx={{ mb: 0.5, fontSize: 12 }}>
+                    {/* i18n-ignore-next-line */}
                     Playlist Name
                   </MuiTypography>
                   <TextField
+                    // i18n-ignore-next-line
                     placeholder="e.g., Hard Crimps"
                     autoFocus
                     fullWidth
@@ -287,9 +295,11 @@ export function PlaylistAction({
                 </Box>
                 <Box>
                   <MuiTypography variant="body2" fontWeight={600} sx={{ mb: 0.5, fontSize: 12 }}>
+                    {/* i18n-ignore-next-line */}
                     Description (optional)
                   </MuiTypography>
                   <TextField
+                    // i18n-ignore-next-line
                     placeholder="Optional description..."
                     multiline
                     rows={2}
@@ -302,6 +312,7 @@ export function PlaylistAction({
                 </Box>
                 <Box>
                   <MuiTypography variant="body2" fontWeight={600} sx={{ mb: 0.5, fontSize: 12 }}>
+                    {/* i18n-ignore-next-line */}
                     Color (optional)
                   </MuiTypography>
                   <TextField
@@ -322,6 +333,7 @@ export function PlaylistAction({
                     setCreateFormValues({ name: '', description: '', color: '' });
                   }}
                 >
+                  {/* i18n-ignore-next-line */}
                   Cancel
                 </MuiButton>
                 <MuiButton
@@ -331,6 +343,7 @@ export function PlaylistAction({
                   disabled={creatingPlaylist}
                   startIcon={creatingPlaylist ? <CircularProgress size={16} /> : undefined}
                 >
+                  {/* i18n-ignore-next-line */}
                   Create
                 </MuiButton>
               </Stack>

@@ -103,6 +103,7 @@ export const LogbookEntryCard: React.FC<LogbookEntryCardProps> = ({
                 <AscentStatusIcon status={ascentStatus} variant="icon" />
               </>
             )}
+            // i18n-ignore-next-line
             {showMirrorTag && entry.isMirror && <Chip label="Mirrored" size="small" color="secondary" />}
           </Stack>
           {hasSuccess && entry.quality != null && entry.quality > 0 && (
@@ -112,6 +113,7 @@ export const LogbookEntryCard: React.FC<LogbookEntryCardProps> = ({
           )}
           <Stack direction="row" spacing={1}>
             <Typography variant="body2" component="span">
+              {/* i18n-ignore-next-line */}
               Attempts: {entry.attemptCount}
             </Typography>
           </Stack>

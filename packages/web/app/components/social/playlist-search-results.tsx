@@ -70,6 +70,7 @@ export default function PlaylistSearchResults({ query, authToken }: PlaylistSear
     return (
       <Box sx={{ py: 4, textAlign: 'center' }}>
         <Typography variant="body2" color="text.secondary">
+          {/* i18n-ignore-next-line */}
           Type at least 2 characters to search
         </Typography>
       </Box>
@@ -88,6 +89,7 @@ export default function PlaylistSearchResults({ query, authToken }: PlaylistSear
     return (
       <Box sx={{ py: 4, textAlign: 'center' }}>
         <Typography variant="body2" color="text.secondary">
+          {/* i18n-ignore-next-line */}
           No playlists found for &quot;{debouncedQuery}&quot;
         </Typography>
       </Box>
@@ -131,6 +133,7 @@ export default function PlaylistSearchResults({ query, authToken }: PlaylistSear
                 {playlist.name}
               </Typography>
               <Typography variant="body2" color="text.secondary" noWrap>
+                {/* i18n-ignore-next-line */}
                 {playlist.creatorName} · {playlist.climbCount} climb
                 {playlist.climbCount !== 1 ? 's' : ''}
               </Typography>

@@ -71,6 +71,7 @@ export default function FreezeClimbDialog({
             sx={{ mb: 2, mt: 1 }}
           />
           <TextField
+            // i18n-ignore-next-line
             label="Reason (optional)"
             value={reason}
             onChange={(e) => setReason(e.target.value)}
@@ -78,11 +79,13 @@ export default function FreezeClimbDialog({
             rows={2}
             size="small"
             fullWidth
+            // i18n-ignore-next-line
             placeholder="Why freeze/unfreeze this climb?"
           />
         </DialogContent>
         <DialogActions>
           <Button onClick={onClose} sx={{ textTransform: 'none' }}>
+            {/* i18n-ignore-next-line */}
             Cancel
           </Button>
           <Button

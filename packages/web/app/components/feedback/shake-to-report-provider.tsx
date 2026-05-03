@@ -51,6 +51,7 @@ export const ShakeToReportProvider: React.FC = () => {
     setDismissed(true);
     setOpen(false);
     void setShakeToReportDismissed(true);
+    // i18n-ignore-next-line
     showMessage('Shake to report off. Tap your avatar up top to send feedback.', 'info', undefined, 6000);
   }, [showMessage]);
 

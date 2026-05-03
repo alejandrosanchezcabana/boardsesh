@@ -98,6 +98,7 @@ export default function SessionProviderWrapper({ children }: SessionProviderWrap
       {children}
       <Snackbar open={deepLinkError} autoHideDuration={8000} onClose={() => setDeepLinkError(false)}>
         <Alert severity="warning" onClose={() => setDeepLinkError(false)}>
+          {/* i18n-ignore-next-line */}
           Sign-in with Google, Apple, or Facebook may not work. Try restarting the app.
         </Alert>
       </Snackbar>

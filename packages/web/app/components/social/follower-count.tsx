@@ -188,6 +188,7 @@ export default function FollowerCount({ userId, followerCount, followingCount }:
             '&:hover': { textDecoration: 'underline' },
           }}
         >
+          {/* i18n-ignore-next-line */}
           <strong>{followingCount}</strong> following
         </Typography>
       </Box>

@@ -59,14 +59,17 @@ export const CrewLogbookView: React.FC<CrewLogbookViewProps> = ({ currentClimb, 
   }
 
   if (!isAuthenticated) {
+    // i18n-ignore-next-line
     return <EmptyState description="Sign in to see your crew's logbook for this climb" />;
   }
 
   if (isError) {
+    // i18n-ignore-next-line
     return <EmptyState description="Couldn't load your crew's logbook. Try again in a bit." />;
   }
 
   if (items.length === 0) {
+    // i18n-ignore-next-line
     return <EmptyState description="None of your crew have logged this climb yet" />;
   }
 

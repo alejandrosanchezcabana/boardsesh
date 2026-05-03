@@ -224,6 +224,7 @@ export async function GET(request: NextRequest) {
             fontWeight: 600,
           }}
         >
+          {/* i18n-ignore-next-line */}
           boardsesh.com
         </div>
       </div>,

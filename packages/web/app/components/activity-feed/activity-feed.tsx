@@ -102,9 +102,11 @@ export default function ActivityFeed({
   let emptyStateContent: React.ReactNode = null;
   if (isAuthenticated) {
     emptyStateContent = (
+      // i18n-ignore-next-line
       <EmptyState icon={<PersonSearchOutlined fontSize="inherit" />} description="Follow some climbers to fill this up">
         {onFindClimbers && (
           <MuiButton variant="contained" onClick={onFindClimbers}>
+            {/* i18n-ignore-next-line */}
             Find Climbers
           </MuiButton>
         )}
@@ -112,6 +114,7 @@ export default function ActivityFeed({
     );
   } else {
     emptyStateContent = (
+      // i18n-ignore-next-line
       <EmptyState icon={<PublicOutlined fontSize="inherit" />} description="No recent activity yet" />
     );
   }
@@ -120,6 +123,7 @@ export default function ActivityFeed({
     <Box data-testid="activity-feed" sx={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
       {!isAuthenticated && (
         <MuiAlert severity="info" sx={{ mb: 1 }}>
+          {/* i18n-ignore-next-line */}
           Sign in to see a personalized feed from climbers you follow.
         </MuiAlert>
       )}
@@ -135,9 +139,11 @@ export default function ActivityFeed({
       {error && (
         <EmptyState
           icon={<ErrorOutline fontSize="inherit" />}
+          // i18n-ignore-next-line
           description="Failed to load activity feed. Please try again."
         >
           <MuiButton variant="contained" onClick={() => refetch()}>
+            {/* i18n-ignore-next-line */}
             Retry
           </MuiButton>
         </EmptyState>

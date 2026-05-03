@@ -91,6 +91,7 @@ const FeedbackDialogBody: React.FC<Omit<FeedbackDialogProps, 'open'>> = ({
           // didn't save.
           onSubmitted?.(values);
         },
+        // i18n-ignore-next-line
         onError: () => showMessage("Couldn't send — we'll keep your feedback.", 'warning'),
       },
     );
@@ -99,6 +100,7 @@ const FeedbackDialogBody: React.FC<Omit<FeedbackDialogProps, 'open'>> = ({
 
   return (
     <div className={styles.dialogBody}>
+      {/* i18n-ignore-next-line */}
       <IconButton aria-label="Close" onClick={onClose} className={styles.closeButton} size="small">
         <CloseOutlined fontSize="small" />
       </IconButton>

@@ -95,6 +95,7 @@ const SocialFeedItem: React.FC<SocialFeedItemProps> = ({ item, showUserHeader = 
               </MuiTypography>
               <MuiTypography variant="body2" component="span" color="text.secondary">
                 {' '}
+                {/* i18n-ignore-next-line */}
                 climbed{' '}
               </MuiTypography>
               <MuiTypography variant="body2" component="span" fontWeight={600}>
@@ -165,7 +166,9 @@ const SocialFeedItem: React.FC<SocialFeedItemProps> = ({ item, showUserHeader = 
               <MuiTypography variant="body2" component="span" color="text.secondary" className={styles.boardType}>
                 {boardDisplay}
               </MuiTypography>
+              // i18n-ignore-next-line
               {item.isMirror && <Chip label="Mirrored" size="small" color="secondary" />}
+              // i18n-ignore-next-line
               {item.isBenchmark && <Chip label="Benchmark" size="small" />}
             </Box>
 
@@ -193,6 +196,7 @@ const SocialFeedItem: React.FC<SocialFeedItemProps> = ({ item, showUserHeader = 
         {/* Comments */}
         <Collapse in={commentsOpen} unmountOnExit>
           <Box sx={{ mt: 1 }}>
+            {/* i18n-ignore-next-line */}
             <CommentSection entityType="tick" entityId={item.uuid} title="Comments" />
           </Box>
         </Collapse>

@@ -183,6 +183,7 @@ export const InlineListTickBar: React.FC<InlineListTickBarProps> = ({
               ref={saveButtonRef}
               size="small"
               onClick={handleSaveClick}
+              // i18n-ignore-next-line
               aria-label="Log ascent"
               sx={{
                 width: 36,
@@ -198,6 +199,7 @@ export const InlineListTickBar: React.FC<InlineListTickBarProps> = ({
               ref={attemptButtonRef}
               size="small"
               onClick={handleAttemptClick}
+              // i18n-ignore-next-line
               aria-label="Log attempt"
               sx={{
                 width: 36,
@@ -212,6 +214,7 @@ export const InlineListTickBar: React.FC<InlineListTickBarProps> = ({
             <IconButton
               size="small"
               onClick={onClose}
+              // i18n-ignore-next-line
               aria-label="Cancel"
               sx={{
                 width: 28,

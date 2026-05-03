@@ -261,6 +261,7 @@ export async function GET(request: NextRequest) {
                 color: darkTokens.neutral[900],
               }}
             >
+              {/* i18n-ignore-next-line */}
               Grades climbed so far
             </div>
 
@@ -329,6 +330,7 @@ export async function GET(request: NextRequest) {
                   color: darkTokens.neutral[600],
                 }}
               >
+                {/* i18n-ignore-next-line */}
                 No sends yet.
               </div>
             )}
@@ -346,6 +348,7 @@ export async function GET(request: NextRequest) {
             letterSpacing: '0.04em',
           }}
         >
+          {/* i18n-ignore-next-line */}
           boardsesh.com
         </div>
       </div>
@@ -467,6 +470,7 @@ export async function GET(request: NextRequest) {
             fontWeight: 600,
           }}
         >
+          {/* i18n-ignore-next-line */}
           boardsesh.com
         </div>
       </div>

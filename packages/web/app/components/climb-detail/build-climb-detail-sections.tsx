@@ -22,6 +22,7 @@ import type { Climb } from '@/app/lib/types';
 const betaLabel = (
   <Box component="span" sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.75 }}>
     <VideocamOutlined sx={{ fontSize: 16 }} />
+    {/* i18n-ignore-next-line */}
     Beta
   </Box>
 );
@@ -29,6 +30,7 @@ const betaLabel = (
 const betaTitle = (
   <Box component="span" sx={{ display: 'inline-flex', alignItems: 'center', gap: 1 }}>
     <VideocamOutlined sx={{ fontSize: 22 }} />
+    {/* i18n-ignore-next-line */}
     Beta
   </Box>
 );

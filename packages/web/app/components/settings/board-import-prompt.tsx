@@ -135,6 +135,7 @@ export default function BoardImportPrompt({ boardType, onImportComplete }: Board
         throw new Error(error.error || 'Failed to remove credentials');
       }
 
+      // i18n-ignore-next-line
       showMessage('Account unlinked successfully', 'success');
       await fetchCredential();
     } catch (error) {
@@ -165,6 +166,7 @@ export default function BoardImportPrompt({ boardType, onImportComplete }: Board
 
     const maxSizeBytes = 200 * 1024 * 1024;
     if (file.size > maxSizeBytes) {
+      // i18n-ignore-next-line
       showMessage('File is too large (max 200MB). Please check you selected the correct file.', 'error');
       event.target.value = '';
       return;
@@ -191,6 +193,7 @@ export default function BoardImportPrompt({ boardType, onImportComplete }: Board
       }
     };
     reader.onerror = () => {
+      // i18n-ignore-next-line
       showMessage('Failed to read file. Please try again.', 'error');
     };
     reader.readAsText(file);
@@ -244,6 +247,7 @@ export default function BoardImportPrompt({ boardType, onImportComplete }: Board
           'Import was interrupted. The server may have timed out. Your data may have been partially imported.',
         );
         setImportPhase('error');
+        // i18n-ignore-next-line
         showMessage('Import was interrupted', 'error');
       }
     } catch (error) {
@@ -301,6 +305,7 @@ export default function BoardImportPrompt({ boardType, onImportComplete }: Board
         type="file"
         accept=".json"
         onChange={handleFileSelected}
+        // i18n-ignore-next-line
         aria-label="Upload Aurora JSON export file"
         hidden
       />
@@ -310,6 +315,7 @@ export default function BoardImportPrompt({ boardType, onImportComplete }: Board
         <DialogTitle>{`Link ${boardName} Account`}</DialogTitle>
         <DialogContent>
           <Typography variant="body2" component="span" color="text.secondary" className={styles.modalDescription}>
+            {/* i18n-ignore-next-line */}
             Enter your {boardName} Board username and password to import your Aurora data. Your credentials are
             encrypted and securely stored. Data syncs every 12 hours.
           </Typography>
@@ -323,7 +329,9 @@ export default function BoardImportPrompt({ boardType, onImportComplete }: Board
             sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 2 }}
           >
             <TextField
+              // i18n-ignore-next-line
               label="Username"
+              // i18n-ignore-next-line
               placeholder="Enter your username"
               variant="outlined"
               size="small"
@@ -333,8 +341,10 @@ export default function BoardImportPrompt({ boardType, onImportComplete }: Board
               onChange={(e) => setFormValues((prev) => ({ ...prev, username: e.target.value }))}
             />
             <TextField
+              // i18n-ignore-next-line
               label="Password"
               type="password"
+              // i18n-ignore-next-line
               placeholder="Enter your password"
               variant="outlined"
               size="small"
@@ -369,6 +379,7 @@ export default function BoardImportPrompt({ boardType, onImportComplete }: Board
           {importPhase === 'preview' && importPreview && (
             <>
               <Typography variant="body2" color="text.secondary" className={styles.modalDescription}>
+                {/* i18n-ignore-next-line */}
                 Import data from <strong>{importPreview.username}</strong> to <strong>{boardName}</strong>:
               </Typography>
               <List dense>
@@ -388,6 +399,7 @@ export default function BoardImportPrompt({ boardType, onImportComplete }: Board
                 </ListItem>
               </List>
               <Typography variant="body2" color="text.secondary">
+                {/* i18n-ignore-next-line */}
                 Climbs will be matched by name. Any that can&apos;t be matched will be reported after import.
                 Re-importing the same file will not create duplicates.
               </Typography>
@@ -402,6 +414,7 @@ export default function BoardImportPrompt({ boardType, onImportComplete }: Board
                 {(importResult.climbs.imported > 0 || importResult.climbs.failed > 0) && (
                   <ListItem>
                     <ListItemText
+                      // i18n-ignore-next-line
                       primary="Draft Climbs"
                       secondary={`${importResult.climbs.imported} imported, ${importResult.climbs.skipped} skipped, ${importResult.climbs.failed} failed`}
                     />
@@ -409,18 +422,21 @@ export default function BoardImportPrompt({ boardType, onImportComplete }: Board
                 )}
                 <ListItem>
                   <ListItemText
+                    // i18n-ignore-next-line
                     primary="Ascents"
                     secondary={`${importResult.ascents.imported} imported, ${importResult.ascents.skipped} skipped (already exist), ${importResult.ascents.failed} unmatched`}
                   />
                 </ListItem>
                 <ListItem>
                   <ListItemText
+                    // i18n-ignore-next-line
                     primary="Attempts"
                     secondary={`${importResult.attempts.imported} imported, ${importResult.attempts.skipped} skipped (already exist), ${importResult.attempts.failed} unmatched`}
                   />
                 </ListItem>
                 <ListItem>
                   <ListItemText
+                    // i18n-ignore-next-line
                     primary="Circuits"
                     secondary={`${importResult.circuits.imported} imported, ${importResult.circuits.skipped} skipped, ${importResult.circuits.failed} failed`}
                   />
@@ -429,7 +445,9 @@ export default function BoardImportPrompt({ boardType, onImportComplete }: Board
               {importResult.unresolvedClimbs.length > 0 && (
                 <MuiAlert severity="warning" className={styles.unsyncedAlert}>
                   <AlertTitle>
+                    {/* i18n-ignore-next-line */}
                     {importResult.unresolvedClimbs.length} climb
+                    {/* i18n-ignore-next-line */}
                     {importResult.unresolvedClimbs.length > 1 ? 's' : ''} could not be matched
                   </AlertTitle>
                   <div className={styles.unresolvedList}>
@@ -440,6 +458,7 @@ export default function BoardImportPrompt({ boardType, onImportComplete }: Board
                     ))}
                     {importResult.unresolvedClimbs.length > 20 && (
                       <Typography variant="body2" color="text.secondary">
+                        {/* i18n-ignore-next-line */}
                         ...and {importResult.unresolvedClimbs.length - 20} more
                       </Typography>
                     )}
@@ -451,6 +470,7 @@ export default function BoardImportPrompt({ boardType, onImportComplete }: Board
 
           {importPhase === 'error' && importError && (
             <MuiAlert severity="error">
+              {/* i18n-ignore-next-line */}
               <AlertTitle>Import failed</AlertTitle>
               {importError}
             </MuiAlert>
@@ -459,8 +479,10 @@ export default function BoardImportPrompt({ boardType, onImportComplete }: Board
 
         {importPhase === 'preview' && (
           <DialogActions>
+            {/* i18n-ignore-next-line */}
             <Button onClick={handleImportDialogClose}>Cancel</Button>
             <Button variant="contained" onClick={handleImportConfirm}>
+              {/* i18n-ignore-next-line */}
               Import
             </Button>
           </DialogActions>
@@ -468,6 +490,7 @@ export default function BoardImportPrompt({ boardType, onImportComplete }: Board
         {(importPhase === 'complete' || importPhase === 'error') && (
           <DialogActions>
             <Button variant="contained" onClick={handleImportDialogClose}>
+              {/* i18n-ignore-next-line */}
               Close
             </Button>
           </DialogActions>

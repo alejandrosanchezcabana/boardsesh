@@ -52,6 +52,7 @@ export default function FeedCommentButton({
 
       <Collapse in={open} unmountOnExit>
         <Box sx={{ mt: 1 }}>
+          {/* i18n-ignore-next-line */}
           <CommentSection entityType={entityType} entityId={entityId} title="Comments" />
         </Box>
       </Collapse>

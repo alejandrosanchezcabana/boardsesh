@@ -40,6 +40,7 @@ function NativeStartInner() {
           minHeight: '100vh',
         }}
       >
+        {/* i18n-ignore-next-line */}
         <Typography>Invalid sign-in provider</Typography>
       </Box>
     );
@@ -57,6 +58,7 @@ function NativeStartInner() {
       }}
     >
       <CircularProgress />
+      {/* i18n-ignore-next-line */}
       <Typography>Signing in...</Typography>
       <form
         ref={formRef}

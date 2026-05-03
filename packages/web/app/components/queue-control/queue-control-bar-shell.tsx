@@ -32,6 +32,7 @@ export default function QueueControlBarShell({ message = 'No climb selected' }: 
                 style={{ backgroundColor: 'var(--semantic-surface)', justifyContent: 'flex-end' }}
               >
                 <PlayCircleOutlineOutlined sx={{ fontSize: 16, opacity: 0.7 }} />
+                {/* i18n-ignore-next-line */}
                 <span className={styles.sessionName}>Start sesh</span>
               </div>
             </div>

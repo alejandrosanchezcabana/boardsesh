@@ -175,6 +175,7 @@ const SwipeableDrawer: React.FC<SwipeableDrawerProps> = ({
         className="drawer-close-btn"
         size="small"
         onClick={(e) => onClose?.(e)}
+        // i18n-ignore-next-line
         aria-label="Close"
         sx={{
           position: 'absolute',

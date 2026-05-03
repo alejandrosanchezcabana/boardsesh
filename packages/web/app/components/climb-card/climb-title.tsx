@@ -235,6 +235,7 @@ const ClimbTitle: React.FC<ClimbTitleProps> = React.memo(
     if (!climb) {
       return (
         <Typography variant="body2" component="span" sx={noClimbSx}>
+          {/* i18n-ignore-next-line */}
           No climb selected
         </Typography>
       );
@@ -318,6 +319,7 @@ const ClimbTitle: React.FC<ClimbTitleProps> = React.memo(
           subtitleParts.join(' \u00b7 ')
         ) : (
           <Box component="span" sx={italicSx}>
+            {/* i18n-ignore-next-line */}
             project
           </Box>
         ));
@@ -382,6 +384,7 @@ const ClimbTitle: React.FC<ClimbTitleProps> = React.memo(
                 secondLineContent.join(' · ')
               ) : (
                 <Box component="span" sx={italicSx}>
+                  {/* i18n-ignore-next-line */}
                   project
                 </Box>
               )}

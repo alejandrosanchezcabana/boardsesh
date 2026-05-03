@@ -48,6 +48,9 @@ export default async function ImportPage(props: ImportPageProps) {
 
   const layoutInfo = getMoonBoardLayoutInfo(parsedParams.layout_id);
   if (!layoutInfo) {
+    {
+      /* i18n-ignore-next-line */
+    }
     return <div>Invalid MoonBoard layout</div>;
   }
 

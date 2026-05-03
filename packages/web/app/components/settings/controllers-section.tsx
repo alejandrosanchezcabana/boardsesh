@@ -49,10 +49,14 @@ function ControllerCard({ controller, onRemove, isRemoving }: ControllerCardProp
 
   const getStatusTag = () => {
     if (controller.isOnline) {
-      return <Chip icon={<CheckCircleOutlined />} label={t('controllers.status.online')} size="small" color="success" />;
+      return (
+        <Chip icon={<CheckCircleOutlined />} label={t('controllers.status.online')} size="small" color="success" />
+      );
     }
     if (controller.lastSeen) {
-      return <Chip icon={<AccessTimeOutlined />} label={t('controllers.status.offline')} size="small" color="default" />;
+      return (
+        <Chip icon={<AccessTimeOutlined />} label={t('controllers.status.offline')} size="small" color="default" />
+      );
     }
     return <Chip label={t('controllers.status.neverConnected')} size="small" color="default" />;
   };
@@ -456,7 +460,9 @@ export default function ControllersSection() {
                 label={t('controllers.register.boardLabel')}
                 onChange={(e) => handleBoardChange(e.target.value)}
               >
+                {/* i18n-ignore-next-line */}
                 <MenuItem value="kilter">Kilter</MenuItem>
+                {/* i18n-ignore-next-line */}
                 <MenuItem value="tension">Tension</MenuItem>
               </MuiSelect>
             </FormControl>

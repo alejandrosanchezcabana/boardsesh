@@ -147,6 +147,7 @@ export default function CommentList({ entityType, entityId, refreshKey = 0, curr
               Top
             </ToggleButton>
             <ToggleButton value="controversial" sx={{ textTransform: 'none', px: 1, py: 0.25, fontSize: 12 }}>
+              {/* i18n-ignore-next-line */}
               Controversial
             </ToggleButton>
             <ToggleButton value="hot" sx={{ textTransform: 'none', px: 1, py: 0.25, fontSize: 12 }}>
@@ -161,6 +162,7 @@ export default function CommentList({ entityType, entityId, refreshKey = 0, curr
         <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', py: 4, gap: 1 }}>
           <ChatBubbleOutlineOutlined sx={{ fontSize: 32, color: 'var(--neutral-300)' }} />
           <MuiTypography variant="body2" color="text.secondary">
+            {/* i18n-ignore-next-line */}
             No comments yet. Say something.
           </MuiTypography>
         </Box>

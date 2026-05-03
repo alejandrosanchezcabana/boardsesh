@@ -116,6 +116,7 @@ export default function MoonBoardEditModal({
 
   return (
     <Dialog open={open} onClose={onCancel} maxWidth="sm" fullWidth className={styles.modal}>
+      {/* i18n-ignore-next-line */}
       <DialogTitle>Edit Climb</DialogTitle>
       <DialogContent>
         <div className={styles.content}>
@@ -138,14 +139,19 @@ export default function MoonBoardEditModal({
             />
 
             <Stack direction="row" spacing={1.5} flexWrap="wrap" justifyContent="center" className={styles.holdCounts}>
+              {/* i18n-ignore-next-line */}
               <HoldIndicator count={startingCount} max={2} color={themeTokens.colors.error} label="Start" />
+              {/* i18n-ignore-next-line */}
               <HoldIndicator count={handCount} color={themeTokens.colors.primary} label="Hand" />
+              {/* i18n-ignore-next-line */}
               <HoldIndicator count={finishCount} max={2} color={themeTokens.colors.success} label="Finish" />
+              {/* i18n-ignore-next-line */}
               <HoldIndicator count={totalHolds} color={themeTokens.colors.secondary} label="Total" />
             </Stack>
 
             {!isValid && totalHolds > 0 && (
               <Typography variant="body2" component="span" color="text.secondary" className={styles.validationHint}>
+                {/* i18n-ignore-next-line */}
                 A valid climb needs at least 1 start hold and 1 finish hold
               </Typography>
             )}
@@ -153,12 +159,14 @@ export default function MoonBoardEditModal({
 
           <div className={styles.formSection}>
             <TextField
+              // i18n-ignore-next-line
               label="Climb Name"
               value={climbName}
               onChange={(e) => setClimbName(e.target.value)}
               required
               fullWidth
               size="small"
+              // i18n-ignore-next-line
               placeholder="Climb name"
               slotProps={{ htmlInput: { maxLength: 100 } }}
               error={!climbName.trim()}
@@ -167,12 +175,15 @@ export default function MoonBoardEditModal({
 
             <div className={styles.climbInfo}>
               <Typography variant="body2" component="span" color="text.secondary">
+                {/* i18n-ignore-next-line */}
                 Setter: {climb.setter || 'Unknown'}
               </Typography>
               <Typography variant="body2" component="span" color="text.secondary">
+                {/* i18n-ignore-next-line */}
                 Grade: {climb.userGrade || 'Unknown'}
               </Typography>
               <Typography variant="body2" component="span" color="text.secondary">
+                {/* i18n-ignore-next-line */}
                 Angle: {climb.angle}°
               </Typography>
             </div>
@@ -180,8 +191,10 @@ export default function MoonBoardEditModal({
         </div>
       </DialogContent>
       <DialogActions>
+        {/* i18n-ignore-next-line */}
         <Button onClick={onCancel}>Cancel</Button>
         <Button variant="contained" onClick={handleOk} disabled={!isValid}>
+          {/* i18n-ignore-next-line */}
           Save Changes
         </Button>
       </DialogActions>

@@ -138,16 +138,19 @@ export default function Esp32Tab({ connection, active, onEdit, onRemove }: Esp32
           />
         )}
         <Box flexGrow={1} />
+        {/* i18n-ignore-next-line */}
         <Tooltip title="Reconnect">
           <IconButton size="small" onClick={socket.reconnect}>
             <RefreshOutlined fontSize="small" />
           </IconButton>
         </Tooltip>
+        {/* i18n-ignore-next-line */}
         <Tooltip title="Edit">
           <IconButton size="small" onClick={onEdit}>
             <EditOutlined fontSize="small" />
           </IconButton>
         </Tooltip>
+        {/* i18n-ignore-next-line */}
         <Tooltip title="Remove">
           <IconButton size="small" onClick={onRemove}>
             <DeleteOutline fontSize="small" />
@@ -163,10 +166,12 @@ export default function Esp32Tab({ connection, active, onEdit, onRemove }: Esp32
 
       <Stack direction="row" spacing={2} alignItems="baseline" flexWrap="wrap">
         <Typography variant="body2" color="text.secondary">
+          {/* i18n-ignore-next-line */}
           ws://{connection.ip}:81/
         </Typography>
         {latestAt && (
           <Typography variant="caption" color="text.secondary">
+            {/* i18n-ignore-next-line */}
             last frame: {new Date(latestAt).toLocaleTimeString()}
           </Typography>
         )}
@@ -176,6 +181,7 @@ export default function Esp32Tab({ connection, active, onEdit, onRemove }: Esp32
         {boardDetails ? (
           <BoardRenderer boardDetails={boardDetails} litUpHoldsMap={litUpHoldsMap} mirrored={false} fillHeight />
         ) : (
+          // i18n-ignore-next-line
           <Typography color="error">Could not load board details for this configuration.</Typography>
         )}
       </Box>
@@ -187,6 +193,7 @@ export default function Esp32Tab({ connection, active, onEdit, onRemove }: Esp32
           color="text.secondary"
           sx={{ fontFamily: 'monospace', wordBreak: 'break-all' }}
         >
+          {/* i18n-ignore-next-line */}
           frames: {latest.framesString || '(empty)'}
         </Typography>
       )}

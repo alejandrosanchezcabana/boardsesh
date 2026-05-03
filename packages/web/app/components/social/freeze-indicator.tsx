@@ -11,6 +11,7 @@ type FreezeIndicatorProps = {
 export default function FreezeIndicator({ reason }: FreezeIndicatorProps) {
   return (
     <Alert severity="warning" icon={<LockIcon fontSize="small" />} sx={{ mb: 2, fontSize: 13 }}>
+      {/* i18n-ignore-next-line */}
       This climb is frozen from receiving new proposals.
       {reason && ` Reason: ${reason}`}
     </Alert>

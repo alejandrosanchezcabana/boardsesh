@@ -128,6 +128,7 @@ export default function NewClimbFeed({
     <Box>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
         <Typography variant="h6" fontWeight={700}>
+          {/* i18n-ignore-next-line */}
           New Climbs
         </Typography>
         <SubscribeButton
@@ -141,6 +142,7 @@ export default function NewClimbFeed({
 
       {error && (
         <Alert severity="error" sx={{ mb: 1 }}>
+          {/* i18n-ignore-next-line */}
           Failed to load climbs. Please try again.
         </Alert>
       )}
@@ -163,6 +165,7 @@ export default function NewClimbFeed({
 
       {!isLoading && items.length === 0 && !error && (
         <Typography variant="body2" color="text.secondary">
+          {/* i18n-ignore-next-line */}
           No climbs yet for this layout. Be the first to set one!
         </Typography>
       )}

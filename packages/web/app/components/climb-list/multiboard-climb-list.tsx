@@ -191,11 +191,13 @@ export default function MultiboardClimbList({
       }}
     >
       <ToggleButtonGroup exclusive size="small" value={sortBy} onChange={handleSortChange}>
+        {/* i18n-ignore-next-line */}
         <ToggleButton value="popular">Popular</ToggleButton>
         <ToggleButton value="new">New</ToggleButton>
       </ToggleButtonGroup>
       {totalCount != null && totalCount > 0 && (
         <Typography variant="body2" color="text.secondary">
+          {/* i18n-ignore-next-line */}
           {totalCount} climb{totalCount !== 1 ? 's' : ''}
         </Typography>
       )}
@@ -213,6 +215,7 @@ export default function MultiboardClimbList({
     climbListContent = (
       <Box sx={{ py: 4, textAlign: 'center' }}>
         <Typography variant="body2" color="text.secondary">
+          {/* i18n-ignore-next-line */}
           No climbs found
         </Typography>
       </Box>

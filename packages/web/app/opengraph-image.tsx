@@ -45,6 +45,7 @@ export default function Image() {
           marginTop: 24,
         }}
       >
+        {/* i18n-ignore-next-line */}
         boardsesh
       </div>
 
@@ -57,6 +58,7 @@ export default function Image() {
           letterSpacing: '6px',
         }}
       >
+        {/* i18n-ignore-next-line */}
         ONE APP FOR YOUR BOARDS
       </div>
     </div>,

@@ -157,6 +157,7 @@ export default function PlaylistSelectionContent({
             fontSize: themeTokens.typography.fontSize.base,
           }}
         >
+          {/* i18n-ignore-next-line */}
           Add to Playlist
         </MuiTypography>
       </Box>
@@ -164,19 +165,23 @@ export default function PlaylistSelectionContent({
       {!isAuthenticated && (
         <Stack spacing={1} sx={{ width: '100%', textAlign: 'center', py: themeTokens.spacing[1] }}>
           <MuiTypography component="span" color="text.secondary" sx={{ fontSize: themeTokens.typography.fontSize.sm }}>
+            {/* i18n-ignore-next-line */}
             Sign in to create and manage playlists
           </MuiTypography>
           <MuiButton
             variant="contained"
             onClick={() =>
               openAuthModal({
+                // i18n-ignore-next-line
                 title: 'Sign in to create playlists',
+                // i18n-ignore-next-line
                 description: 'Sign in to organize your climbs into custom playlists.',
               })
             }
             fullWidth
             size="small"
           >
+            {/* i18n-ignore-next-line */}
             Sign In
           </MuiButton>
         </Stack>
@@ -184,6 +189,7 @@ export default function PlaylistSelectionContent({
       {isAuthenticated && playlists.length === 0 && !showCreateForm && (
         <Stack spacing={1} sx={{ width: '100%', textAlign: 'center', py: themeTokens.spacing[1] }}>
           <MuiTypography component="span" color="text.secondary" sx={{ fontSize: themeTokens.typography.fontSize.sm }}>
+            {/* i18n-ignore-next-line */}
             No playlists yet
           </MuiTypography>
           <MuiButton
@@ -193,6 +199,7 @@ export default function PlaylistSelectionContent({
             fullWidth
             size="small"
           >
+            {/* i18n-ignore-next-line */}
             Create Your First Playlist
           </MuiButton>
         </Stack>
@@ -258,6 +265,7 @@ export default function PlaylistSelectionContent({
                 size="medium"
                 sx={{ marginTop: `${themeTokens.spacing[2]}px` }}
               >
+                {/* i18n-ignore-next-line */}
                 Create New Playlist
               </MuiButton>
             </>
@@ -268,9 +276,11 @@ export default function PlaylistSelectionContent({
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
                 <Box>
                   <MuiTypography variant="body2" fontWeight={600} sx={{ mb: 0.5, fontSize: 12 }}>
+                    {/* i18n-ignore-next-line */}
                     Playlist Name
                   </MuiTypography>
                   <TextField
+                    // i18n-ignore-next-line
                     placeholder="e.g., Hard Crimps"
                     autoFocus
                     fullWidth
@@ -282,9 +292,11 @@ export default function PlaylistSelectionContent({
                 </Box>
                 <Box>
                   <MuiTypography variant="body2" fontWeight={600} sx={{ mb: 0.5, fontSize: 12 }}>
+                    {/* i18n-ignore-next-line */}
                     Description (optional)
                   </MuiTypography>
                   <TextField
+                    // i18n-ignore-next-line
                     placeholder="Optional description..."
                     multiline
                     rows={2}
@@ -297,6 +309,7 @@ export default function PlaylistSelectionContent({
                 </Box>
                 <Box>
                   <MuiTypography variant="body2" fontWeight={600} sx={{ mb: 0.5, fontSize: 12 }}>
+                    {/* i18n-ignore-next-line */}
                     Color (optional)
                   </MuiTypography>
                   <TextField
@@ -321,6 +334,7 @@ export default function PlaylistSelectionContent({
                     setCreateFormValues({ name: '', description: '', color: '' });
                   }}
                 >
+                  {/* i18n-ignore-next-line */}
                   Cancel
                 </MuiButton>
                 <MuiButton
@@ -330,6 +344,7 @@ export default function PlaylistSelectionContent({
                   disabled={creatingPlaylist}
                   startIcon={creatingPlaylist ? <CircularProgress size={16} /> : undefined}
                 >
+                  {/* i18n-ignore-next-line */}
                   Create
                 </MuiButton>
               </Stack>

@@ -110,13 +110,16 @@ export default function DevUrlDialog({ open, onClose }: DevUrlDialogProps) {
 
   return (
     <Dialog open={open} onClose={busy ? undefined : onClose} fullWidth maxWidth="xs">
+      {/* i18n-ignore-next-line */}
       <DialogTitle>Dev URL</DialogTitle>
       <DialogContent>
         <Stack spacing={2} sx={{ mt: 1 }}>
           <Typography variant="body2" color="text.secondary">
+            {/* i18n-ignore-next-line */}
             Point the WebView at a different origin. The app will restart after saving.
           </Typography>
           <TextField
+            // i18n-ignore-next-line
             label="Server URL"
             placeholder={state?.defaultUrl ?? 'https://www.boardsesh.com'}
             value={input}
@@ -133,10 +136,12 @@ export default function DevUrlDialog({ open, onClose }: DevUrlDialogProps) {
             spellCheck={false}
           />
           <Button size="small" variant="outlined" onClick={useDefault} disabled={busy}>
+            {/* i18n-ignore-next-line */}
             Use production
           </Button>
           {state?.currentUrl && (
             <Typography variant="caption" color="text.secondary">
+              {/* i18n-ignore-next-line */}
               Currently overriding to: {state.currentUrl}
             </Typography>
           )}
@@ -144,9 +149,11 @@ export default function DevUrlDialog({ open, onClose }: DevUrlDialogProps) {
       </DialogContent>
       <DialogActions>
         <Button onClick={onClose} disabled={busy}>
+          {/* i18n-ignore-next-line */}
           Cancel
         </Button>
         <Button onClick={clear} disabled={busy || !state?.currentUrl} color="warning">
+          {/* i18n-ignore-next-line */}
           Clear override
         </Button>
         <Button

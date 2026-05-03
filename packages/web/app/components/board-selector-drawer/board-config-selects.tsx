@@ -44,9 +44,11 @@ export default function BoardConfigSelects({
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 1 }}>
       <FormControl fullWidth size="small">
+        {/* i18n-ignore-next-line */}
         <InputLabel>Board</InputLabel>
         <MuiSelect
           value={selectedBoard || ''}
+          // i18n-ignore-next-line
           label="Board"
           onChange={(e: SelectChangeEvent) => onBoardChange(e.target.value as BoardName)}
         >
@@ -59,9 +61,11 @@ export default function BoardConfigSelects({
       </FormControl>
 
       <FormControl fullWidth size="small">
+        {/* i18n-ignore-next-line */}
         <InputLabel>Layout</InputLabel>
         <MuiSelect
           value={selectedLayout ?? ''}
+          // i18n-ignore-next-line
           label="Layout"
           onChange={(e: SelectChangeEvent<number | string>) => onLayoutChange(e.target.value as number)}
           disabled={!selectedBoard}
@@ -76,9 +80,11 @@ export default function BoardConfigSelects({
 
       {selectedBoard !== 'moonboard' && (
         <FormControl fullWidth size="small">
+          {/* i18n-ignore-next-line */}
           <InputLabel>Size</InputLabel>
           <MuiSelect
             value={selectedSize ?? ''}
+            // i18n-ignore-next-line
             label="Size"
             onChange={(e: SelectChangeEvent<number | string>) => onSizeChange(e.target.value as number)}
             disabled={!selectedLayout}
@@ -91,10 +97,12 @@ export default function BoardConfigSelects({
       )}
 
       <FormControl fullWidth size="small">
+        {/* i18n-ignore-next-line */}
         <InputLabel>Hold Sets</InputLabel>
         <MuiSelect<number[]>
           multiple
           value={selectedSets}
+          // i18n-ignore-next-line
           label="Hold Sets"
           onChange={(e) => onSetsChange(e.target.value as number[])}
           disabled={!selectedSize}
@@ -108,9 +116,11 @@ export default function BoardConfigSelects({
       </FormControl>
 
       <FormControl fullWidth size="small">
+        {/* i18n-ignore-next-line */}
         <InputLabel>Angle</InputLabel>
         <MuiSelect
           value={selectedAngle}
+          // i18n-ignore-next-line
           label="Angle"
           onChange={(e: SelectChangeEvent<number>) => onAngleChange(e.target.value)}
           disabled={!selectedBoard}

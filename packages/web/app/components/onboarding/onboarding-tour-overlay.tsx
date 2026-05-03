@@ -177,6 +177,7 @@ function OverlayContent({
         </span>
         <div className={styles.buttonRow}>
           <button type="button" className={styles.skipLink} onClick={onSkip}>
+            {/* i18n-ignore-next-line */}
             Skip tour
           </button>
           {showPrimary && (

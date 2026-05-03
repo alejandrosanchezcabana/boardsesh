@@ -99,44 +99,44 @@ export default async function BoardLayout(props: PropsWithChildren<BoardLayoutPr
           background: 'var(--semantic-surface)',
         }}
       >
-      <LastUsedBoardTracker
-        url={listUrl}
-        boardName={boardDetails.board_name}
-        layoutName={boardDetails.layout_name || ''}
-        sizeName={boardDetails.size_name || ''}
-        sizeDescription={boardDetails.size_description}
-        setNames={boardDetails.set_names || []}
-        angle={angle}
-      />
-      <BoardSessionBridge boardDetails={boardDetails} parsedParams={parsedParams}>
-        <ConnectionSettingsProvider>
-          <WebSocketConnectionProvider>
-            <GraphQLQueueProvider parsedParams={parsedParams} boardDetails={boardDetails}>
-              <PartyProvider>
-                <BluetoothProvider boardDetails={boardDetails}>
-                  <UISearchParamsProvider>
-                    <QueueBridgeInjector boardDetails={boardDetails} angle={angle} />
+        <LastUsedBoardTracker
+          url={listUrl}
+          boardName={boardDetails.board_name}
+          layoutName={boardDetails.layout_name || ''}
+          sizeName={boardDetails.size_name || ''}
+          sizeDescription={boardDetails.size_description}
+          setNames={boardDetails.set_names || []}
+          angle={angle}
+        />
+        <BoardSessionBridge boardDetails={boardDetails} parsedParams={parsedParams}>
+          <ConnectionSettingsProvider>
+            <WebSocketConnectionProvider>
+              <GraphQLQueueProvider parsedParams={parsedParams} boardDetails={boardDetails}>
+                <PartyProvider>
+                  <BluetoothProvider boardDetails={boardDetails}>
+                    <UISearchParamsProvider>
+                      <QueueBridgeInjector boardDetails={boardDetails} angle={angle} />
 
-                    <main
-                      id="content-for-scrollable"
-                      style={{
-                        flex: 1,
-                        paddingLeft: `${themeTokens.spacing[2]}px`,
-                        paddingRight: `${themeTokens.spacing[2]}px`,
-                        paddingTop: 'var(--global-header-height)',
-                        paddingBottom: 'var(--bottom-bar-height)',
-                      }}
-                    >
-                      <BoardSeshHeader boardDetails={boardDetails} angle={angle} />
-                      {children}
-                    </main>
-                  </UISearchParamsProvider>
-                </BluetoothProvider>
-              </PartyProvider>
-            </GraphQLQueueProvider>
-          </WebSocketConnectionProvider>
-        </ConnectionSettingsProvider>
-      </BoardSessionBridge>
+                      <main
+                        id="content-for-scrollable"
+                        style={{
+                          flex: 1,
+                          paddingLeft: `${themeTokens.spacing[2]}px`,
+                          paddingRight: `${themeTokens.spacing[2]}px`,
+                          paddingTop: 'var(--global-header-height)',
+                          paddingBottom: 'var(--bottom-bar-height)',
+                        }}
+                      >
+                        <BoardSeshHeader boardDetails={boardDetails} angle={angle} />
+                        {children}
+                      </main>
+                    </UISearchParamsProvider>
+                  </BluetoothProvider>
+                </PartyProvider>
+              </GraphQLQueueProvider>
+            </WebSocketConnectionProvider>
+          </ConnectionSettingsProvider>
+        </BoardSessionBridge>
       </div>
     </I18nProvider>
   );

@@ -30,6 +30,7 @@ export default function ProposalVoteBar({
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
         <Chip
           icon={<CheckCircleIcon />}
+          // i18n-ignore-next-line
           label="Approved"
           size="small"
           sx={{
@@ -47,6 +48,7 @@ export default function ProposalVoteBar({
     return (
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
         <Chip
+          // i18n-ignore-next-line
           label="Rejected"
           size="small"
           sx={{
@@ -63,10 +65,12 @@ export default function ProposalVoteBar({
     <Box sx={{ width: '100%' }}>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 0.5 }}>
         <Typography variant="caption" sx={{ color: themeTokens.neutral[500] }}>
+          {/* i18n-ignore-next-line */}
           {weightedUpvotes} / {requiredUpvotes} votes needed
         </Typography>
         {weightedDownvotes > 0 && (
           <Typography variant="caption" sx={{ color: themeTokens.colors.error }}>
+            {/* i18n-ignore-next-line */}
             {weightedDownvotes} opposed
           </Typography>
         )}

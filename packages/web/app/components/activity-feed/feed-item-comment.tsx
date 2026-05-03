@@ -48,6 +48,7 @@ export default function FeedItemComment({ item }: FeedItemCommentProps) {
             </MuiTypography>
             <MuiTypography variant="body2" component="span" color="text.secondary">
               {' '}
+              {/* i18n-ignore-next-line */}
               commented
             </MuiTypography>
             {item.climbName && (

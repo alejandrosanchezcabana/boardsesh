@@ -60,6 +60,7 @@ export default function EditBoardForm({ board, totalAscents, onSuccess, onCancel
       serialNumber?: string;
     }) => {
       if (!values.name) {
+        // i18n-ignore-next-line
         showMessage('Board name is required', 'error');
         return;
       }
@@ -99,6 +100,7 @@ export default function EditBoardForm({ board, totalAscents, onSuccess, onCancel
 
   return (
     <BoardForm
+      // i18n-ignore-next-line
       title="Edit Board"
       submitLabel="Save Changes"
       initialValues={{

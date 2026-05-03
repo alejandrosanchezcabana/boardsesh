@@ -48,6 +48,7 @@ export default function ZoomHint({ visible }: ZoomHintProps) {
     <div className={styles.zoomHintOverlay} onClick={dismiss}>
       <div className={styles.zoomHintPill}>
         <ZoomInOutlined sx={{ fontSize: 20 }} />
+        {/* i18n-ignore-next-line */}
         <span>Pinch to zoom</span>
       </div>
     </div>

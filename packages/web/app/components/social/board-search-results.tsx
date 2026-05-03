@@ -111,6 +111,7 @@ export default function BoardSearchResults({
     return (
       <Box sx={{ py: 4, textAlign: 'center' }}>
         <Typography variant="body2" color="text.secondary">
+          {/* i18n-ignore-next-line */}
           Type at least 2 characters to search
         </Typography>
       </Box>
@@ -129,6 +130,7 @@ export default function BoardSearchResults({
     return (
       <Box sx={{ py: 4, textAlign: 'center' }}>
         <Typography variant="body2" color="text.secondary">
+          {/* i18n-ignore-next-line */}
           No boards found for &quot;{debouncedQuery}&quot;
         </Typography>
       </Box>

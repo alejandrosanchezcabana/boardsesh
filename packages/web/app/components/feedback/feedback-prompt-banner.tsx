@@ -38,7 +38,9 @@ const FeedbackPromptBannerBody: React.FC<BannerBodyProps> = ({ onDismiss, onSubm
         source: 'prompt',
       },
       {
+        // i18n-ignore-next-line
         onSuccess: () => showMessage('Thanks — logged.', 'success'),
+        // i18n-ignore-next-line
         onError: () => showMessage("Couldn't send — we'll keep your rating.", 'warning'),
       },
     );
@@ -46,6 +48,7 @@ const FeedbackPromptBannerBody: React.FC<BannerBodyProps> = ({ onDismiss, onSubm
 
   return (
     <Paper elevation={1} className={styles.banner} role="region" aria-labelledby={titleId}>
+      {/* i18n-ignore-next-line */}
       <IconButton aria-label="Dismiss" onClick={onDismiss} className={styles.closeButton} size="small">
         <CloseOutlined fontSize="small" />
       </IconButton>

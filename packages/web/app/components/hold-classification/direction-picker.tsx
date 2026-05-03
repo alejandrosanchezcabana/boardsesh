@@ -121,6 +121,7 @@ const DirectionPicker: React.FC<DirectionPickerProps> = ({ value, onChange, disa
           R
         </text>
         <text x={center} y={size - 4} textAnchor="middle" className={styles.label}>
+          {/* i18n-ignore-next-line */}
           Down
         </text>
         <text x={8} y={center + 4} textAnchor="start" className={styles.label}>

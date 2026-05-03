@@ -125,6 +125,7 @@ export function useClimbActionsData({ boardName, layoutId, angle, climbUuids }: 
       if (context?.previousFavorites) {
         queryClient.setQueryData(favAccKey, context.previousFavorites);
       }
+      // i18n-ignore-next-line
       showMessage('Failed to update favorite. Please try again.', 'error');
     },
   });

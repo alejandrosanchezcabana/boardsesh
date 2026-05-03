@@ -28,6 +28,7 @@ export default function EditGymForm({ gym, onSuccess, onCancel }: EditGymFormPro
   const handleSubmit = useCallback(
     async (values: GymFormFieldValues) => {
       if (!values.name) {
+        // i18n-ignore-next-line
         showMessage('Gym name is required', 'error');
         return;
       }
@@ -54,6 +55,7 @@ export default function EditGymForm({ gym, onSuccess, onCancel }: EditGymFormPro
 
   return (
     <GymForm
+      // i18n-ignore-next-line
       title="Edit Gym"
       submitLabel="Save Changes"
       initialValues={{

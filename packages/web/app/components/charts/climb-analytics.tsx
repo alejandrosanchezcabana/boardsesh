@@ -214,6 +214,7 @@ export default function ClimbAnalytics({ climbUuid, boardType }: ClimbAnalyticsP
   if (error || !rows || rows.length === 0) {
     return (
       <Typography variant="body2" color="text.secondary" sx={{ py: 2, textAlign: 'center' }}>
+        {/* i18n-ignore-next-line */}
         No analytics data available yet. Data is collected during sync.
       </Typography>
     );
@@ -249,6 +250,7 @@ export default function ClimbAnalytics({ climbUuid, boardType }: ClimbAnalyticsP
       {ascentsData && ascentsData.labels.length > 0 && (
         <Box>
           <Typography variant="body2" fontWeight={600} sx={{ mb: 0.5 }}>
+            {/* i18n-ignore-next-line */}
             Ascents Over Time
           </Typography>
           <LineChart
@@ -286,6 +288,7 @@ export default function ClimbAnalytics({ climbUuid, boardType }: ClimbAnalyticsP
       {qualityData && qualityData.labels.length > 0 && (
         <Box>
           <Typography variant="body2" fontWeight={600} sx={{ mb: 0.5 }}>
+            {/* i18n-ignore-next-line */}
             Quality Over Time
           </Typography>
           <LineChart

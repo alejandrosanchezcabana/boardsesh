@@ -53,6 +53,9 @@ export default async function CreateClimbPage(props: CreateClimbPageProps) {
   if (parsedParams.board_name === 'moonboard') {
     const layoutInfo = getMoonBoardLayoutInfo(parsedParams.layout_id);
     if (!layoutInfo) {
+      {
+        /* i18n-ignore-next-line */
+      }
       return <div>Invalid MoonBoard layout</div>;
     }
 

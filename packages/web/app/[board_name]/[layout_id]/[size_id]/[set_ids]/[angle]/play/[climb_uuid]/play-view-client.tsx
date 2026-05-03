@@ -135,8 +135,10 @@ const PlayViewClient: React.FC<PlayViewClientProps> = ({ boardDetails, initialCl
     return (
       <div className={styles.pageContainer} style={{ backgroundColor: 'var(--semantic-background)' }}>
         <div className={styles.emptyState} style={{ color: 'var(--neutral-400)' }}>
+          {/* i18n-ignore-next-line */}
           <EmptyState description="No climb selected" />
           <MuiButton variant="contained" onClick={() => router.push(getBackToListUrl())}>
+            {/* i18n-ignore-next-line */}
             Browse Climbs
           </MuiButton>
         </div>

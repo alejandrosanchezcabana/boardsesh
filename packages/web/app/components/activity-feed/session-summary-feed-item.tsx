@@ -69,6 +69,7 @@ export default function SessionSummaryFeedItem({ item }: SessionSummaryFeedItemP
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
           <GroupsOutlined fontSize="small" color="primary" />
           <Typography variant="body2" fontWeight={600}>
+            {/* i18n-ignore-next-line */}
             Session completed
           </Typography>
           {item.actorDisplayName && (

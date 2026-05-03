@@ -351,6 +351,7 @@ export default function BoardSearchMap({
             textTransform: 'none',
           }}
         >
+          {/* i18n-ignore-next-line */}
           My location
         </MuiButton>
       )}

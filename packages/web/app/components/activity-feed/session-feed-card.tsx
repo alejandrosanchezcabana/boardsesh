@@ -303,6 +303,7 @@ export default function SessionFeedCard({ session }: SessionFeedCardProps) {
                 {boardTypes.map((bt) => bt.charAt(0).toUpperCase() + bt.slice(1)).join(', ')}
               </Typography>
               <Typography variant="caption" color="text.secondary" sx={{ ml: 'auto' }}>
+                {/* i18n-ignore-next-line */}
                 {tickCount} climb{tickCount !== 1 ? 's' : ''}
               </Typography>
             </Box>

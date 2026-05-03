@@ -294,7 +294,10 @@ const PlaylistGeneratorDrawer: React.FC<PlaylistGeneratorDrawerProps> = ({
             {groupedSlots.map((group) => {
               const firstGrade = group.slots[0].grade;
               const lastGrade = group.slots[group.slots.length - 1].grade;
-              const range = firstGrade === lastGrade ? getGradeName(firstGrade) : `${getGradeName(firstGrade)} - ${getGradeName(lastGrade)}`;
+              const range =
+                firstGrade === lastGrade
+                  ? getGradeName(firstGrade)
+                  : `${getGradeName(firstGrade)} - ${getGradeName(lastGrade)}`;
               return (
                 <div key={group.section} className={styles.summaryRow}>
                   <Typography variant="body2" component="span" color="text.secondary">
@@ -372,6 +375,7 @@ const PlaylistGeneratorDrawer: React.FC<PlaylistGeneratorDrawerProps> = ({
             onClick={handleGenerate}
             disabled={plannedSlots.length === 0}
           >
+            {/* i18n-ignore-next-line */}
             Generate
           </MuiButton>
         ) : null

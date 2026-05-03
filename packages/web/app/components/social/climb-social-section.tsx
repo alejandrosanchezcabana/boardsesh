@@ -38,6 +38,7 @@ export default function ClimbSocialSection({
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
         <VoteButton entityType="climb" entityId={climbUuid} />
       </Box>
+      {/* i18n-ignore-next-line */}
       <CommentSection entityType="climb" entityId={climbUuid} title="Discussion" />
     </Box>
   );

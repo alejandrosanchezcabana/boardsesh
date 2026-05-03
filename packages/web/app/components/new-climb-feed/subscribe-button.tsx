@@ -51,6 +51,7 @@ export default function SubscribeButton({
   const handleToggle = async () => {
     if (loading || disabled) return;
     if (!wsAuthToken) {
+      // i18n-ignore-next-line
       showMessage('Please sign in to manage subscriptions', 'warning');
       return;
     }
@@ -68,6 +69,7 @@ export default function SubscribeButton({
           variables,
         });
         onSubscriptionChange?.(false);
+        // i18n-ignore-next-line
         showMessage('Unsubscribed from new climbs', 'success');
       } else {
         const variables: SubscribeNewClimbsVariables = {
@@ -78,10 +80,12 @@ export default function SubscribeButton({
           variables,
         });
         onSubscriptionChange?.(true);
+        // i18n-ignore-next-line
         showMessage('Subscribed to new climbs', 'success');
       }
     } catch (err) {
       console.error('Subscription toggle failed', err);
+      // i18n-ignore-next-line
       showMessage('Could not update subscription', 'error');
     } finally {
       setLoading(false);

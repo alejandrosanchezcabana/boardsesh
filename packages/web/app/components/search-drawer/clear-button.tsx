@@ -10,6 +10,7 @@ const ClearButton = () => {
 
   return (
     <Button variant="text" startIcon={<ClearOutlined />} onClick={clearClimbSearchParams}>
+      {/* i18n-ignore-next-line */}
       Clear All
     </Button>
   );

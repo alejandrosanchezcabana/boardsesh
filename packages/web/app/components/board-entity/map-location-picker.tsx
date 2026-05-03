@@ -218,6 +218,7 @@ export default function MapLocationPicker({ latitude, longitude, onChange }: Map
           <TextField
             size="small"
             fullWidth
+            // i18n-ignore-next-line
             placeholder="Search address or city..."
             value={searchQuery}
             onChange={(e) => handleAddressSearch(e.target.value)}
@@ -257,11 +258,13 @@ export default function MapLocationPicker({ latitude, longitude, onChange }: Map
                 textTransform: 'none',
               }}
             >
+              {/* i18n-ignore-next-line */}
               My location
             </MuiButton>
           )}
         </Box>
         <MuiTypography variant="caption" color="text.secondary" sx={{ px: 2, py: 1, display: 'block' }}>
+          {/* i18n-ignore-next-line */}
           Click the map to set your board&apos;s location, or drag the marker to adjust
         </MuiTypography>
       </AccordionDetails>

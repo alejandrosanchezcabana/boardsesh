@@ -52,6 +52,7 @@ const PlayViewComments: React.FC<PlayViewCommentsProps> = ({ climbUuid }) => {
         }}
       >
         <ChatBubbleOutlineOutlined sx={{ fontSize: themeTokens.typography.fontSize.sm }} />
+        {/* i18n-ignore-next-line */}
         Your Ascents ({ascents.length})
       </Typography>
 
@@ -109,6 +110,7 @@ const PlayViewComments: React.FC<PlayViewCommentsProps> = ({ climbUuid }) => {
                       color="text.secondary"
                       sx={{ fontSize: themeTokens.typography.fontSize.xs }}
                     >
+                      {/* i18n-ignore-next-line */}
                       {ascent.tries} tries
                     </Typography>
                   )}
