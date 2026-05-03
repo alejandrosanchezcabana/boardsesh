@@ -2,6 +2,7 @@
 
 import React from 'react';
 import AddOutlined from '@mui/icons-material/AddOutlined';
+import { useTranslation } from 'react-i18next';
 import BoardThumbnailGrid from './board-thumbnail-grid';
 import styles from './board-scroll.module.css';
 
@@ -11,6 +12,7 @@ type CustomBoardCardProps = {
 };
 
 export default function CustomBoardCard({ onClick, size = 'default' }: CustomBoardCardProps) {
+  const { t } = useTranslation('boards');
   const isSmall = size === 'small';
   const iconSize = isSmall ? 28 : 36;
 
@@ -28,7 +30,7 @@ export default function CustomBoardCard({ onClick, size = 'default' }: CustomBoa
       onKeyDown={handleKeyDown}
       role="button"
       tabIndex={0}
-      aria-label="Build a custom board"
+      aria-label={t('discovery.custom.ariaLabel')}
     >
       <div className={styles.cardSquare}>
         <BoardThumbnailGrid />
@@ -36,7 +38,7 @@ export default function CustomBoardCard({ onClick, size = 'default' }: CustomBoa
           <AddOutlined sx={{ fontSize: iconSize, color: 'var(--color-primary)' }} />
         </div>
       </div>
-      <div className={styles.cardName}>Custom board</div>
+      <div className={styles.cardName}>{t('discovery.custom.label')}</div>
     </div>
   );
 }

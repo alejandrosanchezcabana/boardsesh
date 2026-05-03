@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import Box from '@mui/material/Box';
 import TextField from '@mui/material/TextField';
 import Switch from '@mui/material/Switch';
@@ -36,6 +37,7 @@ export default function GymForm({
   onSubmit,
   onCancel,
 }: GymFormProps) {
+  const { t } = useTranslation('boards');
   const [name, setName] = useState(initialValues.name);
   const [slug, setSlug] = useState(initialValues.slug ?? '');
   const [description, setDescription] = useState(initialValues.description);
@@ -69,19 +71,19 @@ export default function GymForm({
       <MuiTypography variant="h6">{title}</MuiTypography>
 
       <TextField
-        label="Gym Name"
+        label={t('gymForm.fields.name')}
         value={name}
         onChange={(e) => setName(e.target.value)}
         required
         fullWidth
         size="small"
-        placeholder="e.g., Boulder World, The Climbing Factory"
+        placeholder={t('gymForm.placeholders.name')}
         inputProps={{ maxLength: 100 }}
       />
 
       {showSlugField && (
         <TextField
-          label="URL Slug"
+          label={t('gymForm.fields.slug')}
           value={slug}
           onChange={(e) => setSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
           fullWidth
@@ -91,7 +93,7 @@ export default function GymForm({
       )}
 
       <TextField
-        label="Description"
+        label={t('gymForm.fields.description')}
         value={description}
         onChange={(e) => setDescription(e.target.value)}
         fullWidth
@@ -99,46 +101,46 @@ export default function GymForm({
         multiline
         minRows={2}
         maxRows={4}
-        placeholder="Optional description"
+        placeholder={t('gymForm.placeholders.description')}
       />
 
       <TextField
-        label="Address"
+        label={t('gymForm.fields.address')}
         value={address}
         onChange={(e) => setAddress(e.target.value)}
         fullWidth
         size="small"
-        placeholder="e.g., 123 Main St, City"
+        placeholder={t('gymForm.placeholders.address')}
       />
 
       <TextField
-        label="Contact Email"
+        label={t('gymForm.fields.contactEmail')}
         value={contactEmail}
         onChange={(e) => setContactEmail(e.target.value)}
         fullWidth
         size="small"
         type="email"
-        placeholder="Optional contact email"
+        placeholder={t('gymForm.placeholders.contactEmail')}
       />
 
       <TextField
-        label="Contact Phone"
+        label={t('gymForm.fields.contactPhone')}
         value={contactPhone}
         onChange={(e) => setContactPhone(e.target.value)}
         fullWidth
         size="small"
-        placeholder="Optional contact phone"
+        placeholder={t('gymForm.placeholders.contactPhone')}
       />
 
       <FormControlLabel
         control={<Switch checked={isPublic} onChange={(e) => setIsPublic(e.target.checked)} />}
-        label="Public gym"
+        label={t('gymForm.fields.isPublic')}
       />
 
       <Box sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end', mt: 1 }}>
         {onCancel && (
           <MuiButton variant="text" onClick={onCancel} disabled={isSubmitting}>
-            Cancel
+            {t('gymForm.actions.cancel')}
           </MuiButton>
         )}
         <MuiButton type="submit" variant="contained" disabled={isSubmitting || !name.trim()}>

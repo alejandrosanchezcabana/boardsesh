@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import Box from '@mui/material/Box';
 import Avatar from '@mui/material/Avatar';
 import MuiTypography from '@mui/material/Typography';
@@ -71,6 +72,7 @@ export function BoardDetailContent({
   onDeleted,
   onFollowChange,
 }: BoardDetailContentProps) {
+  const { t } = useTranslation('boards');
   const [board, setBoard] = useState<UserBoard | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState(0);
@@ -113,7 +115,7 @@ export function BoardDetailContent({
 
   const handleDelete = async () => {
     if (!token || !board) return;
-    if (!window.confirm(`Delete "${board.name}"? This action can be undone later.`)) return;
+    if (!window.confirm(t('boardEntity.delete.confirm', { name: board.name }))) return;
 
     setIsDeleting(true);
     try {
@@ -121,11 +123,11 @@ export function BoardDetailContent({
       await client.request<DeleteBoardMutationResponse, DeleteBoardMutationVariables>(DELETE_BOARD, {
         boardUuid: board.uuid,
       });
-      showMessage('Board deleted', 'success');
+      showMessage(t('boardEntity.snackbar.deleted'), 'success');
       onDeleted?.();
     } catch (error) {
       console.error('Failed to delete board:', error);
-      showMessage('Failed to delete board', 'error');
+      showMessage(t('boardEntity.snackbar.deleteFailed'), 'error');
     } finally {
       setIsDeleting(false);
     }
@@ -143,12 +145,15 @@ export function BoardDetailContent({
       await client.request<LinkBoardToGymMutationResponse, LinkBoardToGymMutationVariables>(LINK_BOARD_TO_GYM, {
         input: { boardUuid: board.uuid, gymUuid },
       });
-      showMessage(gymUuid ? 'Board linked to gym' : 'Board unlinked from gym', 'success');
+      showMessage(
+        gymUuid ? t('boardEntity.snackbar.linkedToGym') : t('boardEntity.snackbar.unlinkedFromGym'),
+        'success',
+      );
       setShowGymSelector(false);
       void fetchBoard();
     } catch (error) {
       console.error('Failed to link board to gym:', error);
-      showMessage('Failed to link board to gym', 'error');
+      showMessage(t('boardEntity.snackbar.linkFailed'), 'error');
     }
   };
 
@@ -173,7 +178,7 @@ export function BoardDetailContent({
   if (!board) {
     return (
       <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', flex: 1 }}>
-        <MuiTypography color="text.secondary">Board not found</MuiTypography>
+        <MuiTypography color="text.secondary">{t('boardEntity.notFound')}</MuiTypography>
       </Box>
     );
   }
@@ -237,8 +242,12 @@ export function BoardDetailContent({
 
         {isOwner && (board.isUnlisted || board.hideLocation) && (
           <Box sx={{ display: 'flex', gap: 1, mt: 1.5, flexWrap: 'wrap' }}>
-            {board.isUnlisted && <Chip label="Unlisted" size="small" variant="outlined" color="warning" />}
-            {board.hideLocation && <Chip label="Location hidden" size="small" variant="outlined" color="warning" />}
+            {board.isUnlisted && (
+              <Chip label={t('boardEntity.chips.unlisted')} size="small" variant="outlined" color="warning" />
+            )}
+            {board.hideLocation && (
+              <Chip label={t('boardEntity.chips.locationHidden')} size="small" variant="outlined" color="warning" />
+            )}
           </Box>
         )}
 
@@ -269,7 +278,7 @@ export function BoardDetailContent({
             onClick={() => setShowGymSelector(true)}
             sx={{ textTransform: 'none', mt: 1, alignSelf: 'flex-start' }}
           >
-            Add to Gym
+            {t('boardEntity.actions.addToGym')}
           </MuiButton>
         )}
         {showGymSelector && isOwner && (
@@ -280,10 +289,26 @@ export function BoardDetailContent({
 
         {/* Stats */}
         <Box sx={{ display: 'flex', gap: 2.5, mt: 2, flexWrap: 'wrap' }}>
-          <StatChip icon={<TrendingUpOutlined sx={{ fontSize: 16 }} />} value={board.totalAscents} label="ascents" />
-          <StatChip icon={<PersonOutlined sx={{ fontSize: 16 }} />} value={board.uniqueClimbers} label="climbers" />
-          <StatChip icon={<PeopleOutlined sx={{ fontSize: 16 }} />} value={board.followerCount} label="followers" />
-          <StatChip icon={<ChatBubbleOutlined sx={{ fontSize: 16 }} />} value={board.commentCount} label="comments" />
+          <StatChip
+            icon={<TrendingUpOutlined sx={{ fontSize: 16 }} />}
+            value={board.totalAscents}
+            label={t('boardEntity.stats.ascents')}
+          />
+          <StatChip
+            icon={<PersonOutlined sx={{ fontSize: 16 }} />}
+            value={board.uniqueClimbers}
+            label={t('boardEntity.stats.climbers')}
+          />
+          <StatChip
+            icon={<PeopleOutlined sx={{ fontSize: 16 }} />}
+            value={board.followerCount}
+            label={t('boardEntity.stats.followers')}
+          />
+          <StatChip
+            icon={<ChatBubbleOutlined sx={{ fontSize: 16 }} />}
+            value={board.commentCount}
+            label={t('boardEntity.stats.comments')}
+          />
         </Box>
 
         {/* Actions */}
@@ -294,7 +319,7 @@ export function BoardDetailContent({
               initialIsFollowing={board.isFollowedByMe}
               followMutation={FOLLOW_BOARD}
               unfollowMutation={UNFOLLOW_BOARD}
-              entityLabel="board"
+              entityLabel={t('boardEntity.follow.entityLabel')}
               getFollowVariables={(id) => ({ input: { boardUuid: id } })}
               onFollowChange={handleFollowChange}
             />
@@ -308,7 +333,7 @@ export function BoardDetailContent({
                 onClick={() => setIsEditing(true)}
                 sx={{ textTransform: 'none' }}
               >
-                Edit
+                {t('boardEntity.actions.edit')}
               </MuiButton>
               <MuiButton
                 variant="outlined"
@@ -319,7 +344,7 @@ export function BoardDetailContent({
                 disabled={isDeleting}
                 sx={{ textTransform: 'none' }}
               >
-                {isDeleting ? <CircularProgress size={16} /> : 'Delete'}
+                {isDeleting ? <CircularProgress size={16} /> : t('boardEntity.actions.delete')}
               </MuiButton>
             </>
           )}
@@ -330,14 +355,16 @@ export function BoardDetailContent({
 
       {/* Tabs */}
       <Tabs value={activeTab} onChange={(_, v) => setActiveTab(v)} sx={{ px: 2 }}>
-        <Tab label="Leaderboard" sx={{ textTransform: 'none' }} />
-        <Tab label="Comments" sx={{ textTransform: 'none' }} />
+        <Tab label={t('boardEntity.tabs.leaderboard')} sx={{ textTransform: 'none' }} />
+        <Tab label={t('boardEntity.tabs.comments')} sx={{ textTransform: 'none' }} />
       </Tabs>
 
       {/* Tab content */}
       <Box sx={{ flex: 1, overflow: 'auto', px: 2, py: 2 }}>
         {activeTab === 0 && <BoardLeaderboard boardUuid={board.uuid} />}
-        {activeTab === 1 && <CommentSection entityType="board" entityId={board.uuid} title="Board Discussion" />}
+        {activeTab === 1 && (
+          <CommentSection entityType="board" entityId={board.uuid} title={t('boardEntity.comments.title')} />
+        )}
       </Box>
 
       {/* Gym detail drawer */}

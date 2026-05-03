@@ -26,6 +26,7 @@
 import enAdmin from '@/i18n/locales/en-US/admin.json';
 import enAurora from '@/i18n/locales/en-US/aurora.json';
 import enAuth from '@/i18n/locales/en-US/auth.json';
+import enBoards from '@/i18n/locales/en-US/boards.json';
 import enClimbs from '@/i18n/locales/en-US/climbs.json';
 import enCommon from '@/i18n/locales/en-US/common.json';
 import enErrors from '@/i18n/locales/en-US/errors.json';
@@ -42,6 +43,7 @@ const CATALOGS: Record<string, unknown> = {
   admin: enAdmin,
   aurora: enAurora,
   auth: enAuth,
+  boards: enBoards,
   climbs: enClimbs,
   common: enCommon,
   errors: enErrors,

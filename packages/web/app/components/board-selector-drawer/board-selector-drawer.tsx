@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useMemo, useCallback, lazy, Suspense } from 'react';
+import { useTranslation } from 'react-i18next';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import CircularProgress from '@mui/material/CircularProgress';
@@ -39,6 +40,7 @@ export default function BoardSelectorDrawer({
   placement = 'bottom',
   onBoardSelected,
 }: BoardSelectorDrawerProps) {
+  const { t } = useTranslation('boards');
   const router = useLocaleRouter();
   const guardBoardSwitch = useBoardSwitchGuard();
   const [showCreateBoardForm, setShowCreateBoardForm] = useState(false);
@@ -210,7 +212,7 @@ export default function BoardSelectorDrawer({
   return (
     <>
       <SwipeableDrawer
-        title="Custom Board"
+        title={t('selectorDrawer.customTitle')}
         placement={placement}
         {...topDrawerDismissProps}
         open={open}
@@ -243,10 +245,10 @@ export default function BoardSelectorDrawer({
               onClick={() => setShowCreateBoardForm(true)}
               disabled={!isFormComplete}
             >
-              Create board
+              {t('selectorDrawer.createButton')}
             </Button>
             <Button variant="contained" size="large" fullWidth onClick={handleStartClimbing} disabled={!isFormComplete}>
-              Quick session
+              {t('selectorDrawer.quickSession')}
             </Button>
           </Box>
         </Box>
@@ -255,7 +257,7 @@ export default function BoardSelectorDrawer({
       {/* Create Board form drawer */}
       {selectedBoard && selectedLayout && selectedSize && (
         <SwipeableDrawer
-          title="Create Board"
+          title={t('selectorDrawer.createTitle')}
           placement={placement}
           {...topDrawerDismissProps}
           open={showCreateBoardForm}
@@ -267,9 +269,9 @@ export default function BoardSelectorDrawer({
               sections={[
                 {
                   key: 'config',
-                  label: 'Board config',
-                  title: 'Board config',
-                  defaultSummary: 'Select a board',
+                  label: t('selectorDrawer.configSection.label'),
+                  title: t('selectorDrawer.configSection.title'),
+                  defaultSummary: t('selectorDrawer.configSection.defaultSummary'),
                   getSummary: () => {
                     const parts: string[] = [];
                     if (selectedBoard) parts.push(selectedBoard.charAt(0).toUpperCase() + selectedBoard.slice(1));

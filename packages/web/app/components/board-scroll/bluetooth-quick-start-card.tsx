@@ -6,6 +6,7 @@ import BluetoothSearching from '@mui/icons-material/BluetoothSearching';
 import BluetoothDisabled from '@mui/icons-material/BluetoothDisabled';
 import SearchOffOutlined from '@mui/icons-material/SearchOffOutlined';
 import CircularProgress from '@mui/material/CircularProgress';
+import { useTranslation } from 'react-i18next';
 import { getBoardDetails, FALLBACK_BOARD_PREVIEW_CONFIGS } from '@/app/lib/board-constants';
 import BoardRenderer from '../board-renderer/board-renderer';
 import styles from './board-scroll.module.css';
@@ -25,6 +26,7 @@ export default function BluetoothQuickStartCard({
   hasResults = false,
   size = 'default',
 }: BluetoothQuickStartCardProps) {
+  const { t } = useTranslation('boards');
   const isSmall = size === 'small';
   const iconSize = isSmall ? 28 : 36;
 
@@ -45,24 +47,24 @@ export default function BluetoothQuickStartCard({
   switch (status) {
     case 'scanning':
       icon = <CircularProgress size={iconSize} className={styles.findNearbyIconPrimary} />;
-      label = 'Scanning…';
+      label = t('discovery.bluetooth.scanning');
       break;
     case 'done':
       if (hasResults) {
         icon = <BluetoothSearching className={styles.findNearbyIconPrimary} />;
-        label = 'Boards found';
+        label = t('discovery.bluetooth.boardsFound');
       } else {
         icon = <SearchOffOutlined className={styles.findNearbyIconMuted} />;
-        label = 'No boards found';
+        label = t('discovery.bluetooth.noBoardsFound');
       }
       break;
     case 'unavailable':
       icon = <BluetoothDisabled sx={{ fontSize: iconSize, color: 'var(--neutral-500)' }} />;
-      label = 'Bluetooth unavailable';
+      label = t('discovery.bluetooth.unavailable');
       break;
     default:
       icon = <BluetoothOutlined className={styles.findNearbyIconPrimary} />;
-      label = 'Quick start';
+      label = t('discovery.bluetooth.idle');
       break;
   }
 
