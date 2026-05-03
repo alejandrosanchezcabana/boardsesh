@@ -60,7 +60,7 @@ export default async function BoardSlugLayout(props: PropsWithChildren<{ params:
   const locale = await getLocale();
 
   return (
-    <I18nProvider locale={locale} namespaces={['common', 'climbs', 'session']}>
+    <I18nProvider locale={locale} namespaces={['common', 'climbs', 'session', 'boards', 'profile', 'feed']}>
       <div
         style={{
           minHeight: '100dvh',
