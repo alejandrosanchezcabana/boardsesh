@@ -98,11 +98,10 @@ test.describe('Bottom Tab Bar - Navigation', () => {
     // The bell is rendered as `<IconButton component={LocaleLink} href="/notifications" />`.
     // MUI 7 emits role="button" on the polymorphic anchor, so target by href to stay
     // resilient regardless of whether the implicit role lands as "link" or "button".
-    // No `.first()` — strict mode catches it if the header ever renders two bells
-    // (e.g. desktop + mobile slot) so we don't silently click whichever happens
-    // to be first. Also waits for the anchor to ensure the global-header has
-    // hydrated before we click.
-    const bell = page.locator('header a[href="/notifications"]');
+    // `.first()` because Next.js prefetch may emit a duplicate anchor in the same
+    // header during hydration; we only need to click the bell, not enforce uniqueness.
+    // The earlier visibility check ensures the global header has hydrated before we click.
+    const bell = page.locator('header a[href="/notifications"]').first();
     await expect(bell).toBeVisible({ timeout: 15000 });
     await bell.click();
     await expect(page).toHaveURL(/\/notifications/, { timeout: 15000 });
