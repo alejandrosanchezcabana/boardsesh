@@ -89,7 +89,7 @@ export default async function BoardLayout(props: PropsWithChildren<BoardLayoutPr
   const locale = await getLocale();
 
   return (
-    <I18nProvider locale={locale} namespaces={['common', 'climbs']}>
+    <I18nProvider locale={locale} namespaces={['common', 'climbs', 'session']}>
       <div
         style={{
           minHeight: '100dvh',
