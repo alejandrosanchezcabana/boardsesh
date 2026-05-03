@@ -66,6 +66,35 @@
       "tryAgain": "Reintentar"
     }
   },
+  "edit": {
+    "title": "Editar lista",
+    "fields": {
+      "name": "Nombre de la lista",
+      "namePlaceholder": "ej., Crimps duros",
+      "description": "Descripción",
+      "descriptionPlaceholder": "Descripción opcional para tu lista...",
+      "color": "Color",
+      "icon": "Icono",
+      "removeIcon": "Quitar",
+      "visibility": "Visibilidad",
+      "publicHint": "Las listas públicas pueden ser vistas por cualquiera con el enlace",
+      "privateHint": "Las listas privadas solo son visibles para ti"
+    },
+    "actions": {
+      "cancel": "Cancelar",
+      "save": "Guardar",
+      "saving": "Guardando..."
+    },
+    "validation": {
+      "nameRequired": "Introduce un nombre de lista",
+      "nameTooLong": "El nombre debe tener 100 caracteres o menos",
+      "descriptionTooLong": "La descripción debe tener 500 caracteres o menos"
+    },
+    "messages": {
+      "updated": "Lista actualizada correctamente",
+      "updateFailed": "No se pudo actualizar la lista"
+    }
+  },
   "generator": {
     "drawerTitle": "Generar playlist",
     "generatingTitle": "Generando...",

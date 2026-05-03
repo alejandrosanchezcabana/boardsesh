@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useCallback, useEffect, useRef, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
@@ -60,6 +61,7 @@ type ProposalCardProps = {
 };
 
 export default function ProposalCard({ proposal, isAdminOrLeader, onUpdate, onDelete, highlight }: ProposalCardProps) {
+  const { t } = useTranslation('common');
   const pathname = usePathname();
   const isDark = useIsDarkMode();
   const { token } = useWsAuthToken();
@@ -78,7 +80,7 @@ export default function ProposalCard({ proposal, isAdminOrLeader, onUpdate, onDe
   const handleVote = useCallback(
     async (value: number) => {
       if (!token) {
-        setSnackbar('Sign in to vote on proposals');
+        setSnackbar(t('proposal.validation.signInToVote'));
         return;
       }
       setLoading(true);
@@ -90,12 +92,12 @@ export default function ProposalCard({ proposal, isAdminOrLeader, onUpdate, onDe
         setLocalProposal(result.voteOnProposal);
         onUpdate?.(result.voteOnProposal);
       } catch {
-        setSnackbar('Failed to vote');
+        setSnackbar(t('proposal.validation.failedToVote'));
       } finally {
         setLoading(false);
       }
     },
-    [token, localProposal.uuid, onUpdate],
+    [token, localProposal.uuid, onUpdate, t],
   );
 
   const handleResolve = useCallback(
@@ -110,12 +112,12 @@ export default function ProposalCard({ proposal, isAdminOrLeader, onUpdate, onDe
         setLocalProposal(result.resolveProposal);
         onUpdate?.(result.resolveProposal);
       } catch {
-        setSnackbar('Failed to resolve proposal');
+        setSnackbar(t('proposal.validation.failedToResolve'));
       } finally {
         setLoading(false);
       }
     },
-    [token, localProposal.uuid, onUpdate],
+    [token, localProposal.uuid, onUpdate, t],
   );
 
   const handleDelete = useCallback(async () => {
@@ -129,11 +131,11 @@ export default function ProposalCard({ proposal, isAdminOrLeader, onUpdate, onDe
       setShowDeleteDialog(false);
       onDelete?.(localProposal.uuid);
     } catch {
-      setSnackbar('Failed to delete proposal');
+      setSnackbar(t('proposal.validation.failedToDelete'));
     } finally {
       setLoading(false);
     }
-  }, [token, localProposal.uuid, onDelete]);
+  }, [token, localProposal.uuid, onDelete, t]);
 
   const climbAndBoardDetails = useMemo(() => {
     const { climbUuid, climbName, frames, layoutId, boardType, angle } = localProposal;

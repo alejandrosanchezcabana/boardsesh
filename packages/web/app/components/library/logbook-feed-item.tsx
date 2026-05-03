@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useCallback, useMemo, useRef, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import IconButton from '@mui/material/IconButton';
 import MenuItem from '@mui/material/MenuItem';
 import ListItemIcon from '@mui/material/ListItemIcon';
@@ -306,6 +307,7 @@ const LogbookFeedItem: React.FC<LogbookFeedItemProps> = React.memo(
     allowInstagramLinking,
     isSwipeHintTarget,
   }) => {
+    const { t } = useTranslation('common');
     const [isActionsOpen, setIsActionsOpen] = useState(false);
     const [instagramDialogOpen, setInstagramDialogOpen] = useState(false);
     const [betaLinkDialogOpen, setBetaLinkDialogOpen] = useState(false);
@@ -771,7 +773,7 @@ const LogbookFeedItem: React.FC<LogbookFeedItemProps> = React.memo(
                     fullWidth
                     size="small"
                     variant="outlined"
-                    placeholder="Comment..."
+                    placeholder={t('comment.shortPlaceholder')}
                     multiline
                     minRows={1}
                     maxRows={commentFocused ? 4 : 1}

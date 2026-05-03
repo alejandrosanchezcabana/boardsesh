@@ -88,6 +88,7 @@
     "placeholder": "Escribe un comentario...",
     "replyPlaceholder": "Escribe una respuesta...",
     "thoughtsPlaceholder": "Comparte tus pensamientos...",
+    "shortPlaceholder": "Comentar...",
     "submit": "Publicar",
     "save": "Guardar",
     "cancel": "Cancelar",
@@ -123,6 +124,14 @@
       "loadReplies": "No se pudieron cargar las respuestas"
     }
   },
+  "vote": {
+    "upvote": "Voto positivo",
+    "downvote": "Voto negativo",
+    "like": "Me gusta",
+    "unlike": "Quitar me gusta",
+    "signInPrompt": "Inicia sesión para votar",
+    "failed": "No se pudo votar"
+  },
   "proposal": {
     "trigger": "Proponer cambio",
     "drawerTitle": "Crear propuesta",
@@ -150,10 +159,14 @@
     "outlierWarning": "El grado en este ángulo parece atípico comparado con los ángulos adyacentes. Esta propuesta puede aprobarse automáticamente si concuerda con los datos vecinos.",
     "validation": {
       "signIn": "Inicia sesión para proponer cambios",
+      "signInToVote": "Inicia sesión para votar propuestas",
       "missingValue": "Introduce un valor propuesto",
       "sameGrade": "El grado propuesto es el mismo que el actual",
       "noData": "No se pudo crear la propuesta: sin datos",
-      "failed": "No se pudo crear la propuesta"
+      "failed": "No se pudo crear la propuesta",
+      "failedToVote": "No se pudo votar",
+      "failedToResolve": "No se pudo resolver la propuesta",
+      "failedToDelete": "No se pudo eliminar la propuesta"
     },
     "created": "Propuesta creada"
   },
@@ -161,5 +174,17 @@
     "follow": "Seguir",
     "following": "Siguiendo",
     "unfollow": "Dejar de seguir"
+  },
+  "feedback": {
+    "title": "¿Te gusta Boardsesh?"
+  },
+  "betaVideos": {
+    "empty": "Sin vídeos de beta todavía"
+  },
+  "moonboardImport": {
+    "removeConfirmTitle": "¿Quitar este bloque?"
+  },
+  "board": {
+    "resetZoom": "Restablecer zoom"
   }
 }

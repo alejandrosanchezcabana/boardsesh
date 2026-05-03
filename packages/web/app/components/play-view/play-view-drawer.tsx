@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useCallback, useEffect, useLayoutEffect, useRef, useState, useMemo, useDeferredValue } from 'react';
+import { useTranslation } from 'react-i18next';
 import { track } from '@vercel/analytics';
 import MuiBadge from '@mui/material/Badge';
 import IconButton from '@mui/material/IconButton';
@@ -194,6 +195,7 @@ export const PlayViewTickBar = React.memo<PlayViewTickBarProps>(function PlayVie
   onClose,
   onError,
 }) {
+  const { t } = useTranslation('common');
   const { logbook } = useBoardProvider();
   const [tickComment, setTickComment] = useState('');
   const [commentFocused, setCommentFocused] = useState(false);
@@ -309,7 +311,7 @@ export const PlayViewTickBar = React.memo<PlayViewTickBarProps>(function PlayVie
                     fullWidth
                     size="small"
                     variant="outlined"
-                    placeholder="Comment..."
+                    placeholder={t('comment.shortPlaceholder')}
                     multiline
                     minRows={1}
                     maxRows={commentFocused ? 4 : 1}

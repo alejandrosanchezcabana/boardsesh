@@ -194,6 +194,19 @@
       "to": "To"
     }
   },
+  "create": {
+    "auth": {
+      "signInTitle": "Sign in to save your climb",
+      "signInDescription": "Create an account or sign in to save your climb to the board.",
+      "signInAria": "Sign in to save",
+      "logInTitle": "Log in to save your climb",
+      "logInAria": "Log in to save",
+      "editLockedTitle": "Published climbs can only be edited for 24 hours after first publish.",
+      "editLockedAria": "Edit window closed",
+      "savedTitle": "Saved",
+      "savedAria": "Saved"
+    }
+  },
   "actions": {
     "playlist": {
       "toast": {
