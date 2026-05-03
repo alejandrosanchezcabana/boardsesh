@@ -84,10 +84,5 @@
     "follower_other": "followers",
     "climb_one": "climb",
     "climb_other": "climbs"
-  },
-  "follow": {
-    "follow": "Follow",
-    "following": "Following",
-    "unfollow": "Unfollow"
   }
 }

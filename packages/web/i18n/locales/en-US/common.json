@@ -91,5 +91,83 @@
   },
   "emptyState": {
     "default": "No data"
+  },
+  "comment": {
+    "placeholder": "Add a comment...",
+    "replyPlaceholder": "Write a reply...",
+    "thoughtsPlaceholder": "Share your thoughts...",
+    "submit": "Post",
+    "save": "Save",
+    "cancel": "Cancel",
+    "signInPrompt": "Sign in to leave a comment.",
+    "discussionTitle": "Discussion",
+    "empty": "No comments yet. Say something.",
+    "deleted": "[deleted]",
+    "edited": "(edited)",
+    "userFallback": "User",
+    "reply": "Reply",
+    "showRepliesOne": "Show 1 reply",
+    "showRepliesMany": "Show {{count}} replies",
+    "countOne": "{{count}} comment",
+    "countMany": "{{count}} comments",
+    "sort": {
+      "new": "New",
+      "top": "Top",
+      "controversial": "Controversial",
+      "hot": "Hot"
+    },
+    "delete": {
+      "title": "Delete comment",
+      "description": "Are you sure you want to delete this comment? This cannot be undone.",
+      "confirm": "Delete",
+      "editAria": "Edit comment",
+      "deleteAria": "Delete comment"
+    },
+    "errors": {
+      "post": "Failed to post comment",
+      "update": "Failed to update comment",
+      "delete": "Failed to delete comment",
+      "reply": "Failed to post reply",
+      "loadReplies": "Failed to load replies"
+    }
+  },
+  "proposal": {
+    "trigger": "Propose Change",
+    "drawerTitle": "Create Proposal",
+    "submit": "Create Proposal",
+    "submitting": "Creating...",
+    "cancel": "Cancel",
+    "types": {
+      "grade": "Grade",
+      "classic": "Classic",
+      "benchmark": "Benchmark"
+    },
+    "fields": {
+      "angle": "Angle",
+      "proposedGrade": "Proposed Grade",
+      "proposedStatus": "Proposed Status",
+      "reasonLabel": "Reason (optional)",
+      "reasonPlaceholder": "Why do you think this change is needed?",
+      "yes": "Yes",
+      "no": "No"
+    },
+    "hints": {
+      "classic": "Classic proposals apply to all angles.",
+      "benchmark": "Benchmark proposals are per-angle."
+    },
+    "outlierWarning": "The grade at this angle appears to be an outlier compared to adjacent angles. This proposal may be auto-approved if it aligns with neighboring data.",
+    "validation": {
+      "signIn": "Sign in to create proposals",
+      "missingValue": "Please enter a proposed value",
+      "sameGrade": "Proposed grade is the same as the current grade",
+      "noData": "Failed to create proposal: no data returned",
+      "failed": "Failed to create proposal"
+    },
+    "created": "Proposal created"
+  },
+  "follow": {
+    "follow": "Follow",
+    "following": "Following",
+    "unfollow": "Unfollow"
   }
 }

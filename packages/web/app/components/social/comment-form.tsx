@@ -28,7 +28,7 @@ export default function CommentForm({
   autoFocus = false,
   submitLabel,
 }: CommentFormProps) {
-  const { t } = useTranslation('feed');
+  const { t } = useTranslation('common');
   const [body, setBody] = useState(initialBody);
   const [isSubmitting, setIsSubmitting] = useState(false);
 

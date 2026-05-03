@@ -26,7 +26,7 @@ export default function FollowButton({
   getFollowVariables,
   onFollowChange,
 }: FollowButtonProps) {
-  const { t } = useTranslation('profile');
+  const { t } = useTranslation('common');
   const { isFollowing, isLoading, isHovered, isAuthenticated, handleToggle, setIsHovered } = useFollowToggle({
     entityId,
     initialIsFollowing,

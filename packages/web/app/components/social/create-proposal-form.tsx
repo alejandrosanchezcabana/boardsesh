@@ -47,7 +47,7 @@ export default function CreateProposalForm({
   boardName,
   onCreated,
 }: CreateProposalFormProps) {
-  const { t } = useTranslation('feed');
+  const { t } = useTranslation('common');
   const { token } = useWsAuthToken();
   const [open, setOpen] = useState(false);
   const [type, setType] = useState<ProposalType>('grade');
