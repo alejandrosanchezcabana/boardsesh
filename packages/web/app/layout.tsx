@@ -76,7 +76,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           <SessionProviderWrapper>
             <AppRouterCacheProvider>
               <ColorModeProvider>
-                <I18nProvider locale={locale}>
+                <I18nProvider locale={locale} namespaces={['common', 'auth']}>
                   <SnackbarProvider>
                     <AuthModalProvider>
                       <FeatureFlagsProvider flags={EMPTY_FEATURE_FLAGS}>
