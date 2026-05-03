@@ -25,7 +25,7 @@ export default async function Home() {
   ]);
 
   return (
-    <I18nProvider locale={locale} namespaces={['marketing']}>
+    <I18nProvider locale={locale} namespaces={['marketing', 'boards']}>
       <HomePageContent boardConfigs={boardConfigs} initialPopularConfigs={popularConfigs} />
     </I18nProvider>
   );
