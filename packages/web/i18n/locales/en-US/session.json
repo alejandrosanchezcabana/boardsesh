@@ -204,6 +204,7 @@
     "goal": "Goal: {{goal}}"
   },
   "queueBar": {
+    "cancelReconnectConfirm": "Cancelling will leave the session. Is that what you want?",
     "ariaLabels": {
       "leaveSession": "Leave session",
       "keepReconnecting": "Keep reconnecting",

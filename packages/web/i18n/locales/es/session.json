@@ -204,6 +204,7 @@
     "goal": "Objetivo: {{goal}}"
   },
   "queueBar": {
+    "cancelReconnectConfirm": "Cancelar te sacará de la sesión. ¿Es lo que quieres?",
     "ariaLabels": {
       "leaveSession": "Salir de la sesión",
       "keepReconnecting": "Seguir reconectando",

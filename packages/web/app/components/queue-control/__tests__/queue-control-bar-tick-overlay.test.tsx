@@ -1,9 +1,17 @@
 import { describe, it, expect, vi, beforeEach } from 'vite-plus/test';
 import { render, screen, fireEvent, act, waitFor } from '@testing-library/react';
 import React from 'react';
+import { tFromCatalog } from '@/app/__test-helpers__/i18n-mock';
 import QueueControlBar from '../queue-control-bar';
 
 // -- All mocks before imports --
+
+vi.mock('react-i18next', () => ({
+  useTranslation: (ns?: string | readonly string[]) => ({
+    i18n: { language: 'en-US' },
+    t: (key: string, options?: Record<string, unknown>) => tFromCatalog(ns, key, options),
+  }),
+}));
 
 const mockShowMessage = vi.fn();
 vi.mock('@/app/components/providers/snackbar-provider', () => ({

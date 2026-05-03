@@ -87,10 +87,26 @@ function interpolate(template: string, options?: Record<string, unknown>): strin
  *   is provided
  * - Performs simple `{{var}}` interpolation
  * - Returns the bare key if nothing matches, mirroring i18next's fallback
+ * - Accepts namespace as a string, an array (uses first entry), or undefined
+ * - Honors `options.ns` overrides, mirroring `t(key, { ns: 'common' })`
  */
-export function tFromCatalog(namespace: string | undefined, key: string, options?: Record<string, unknown>): string {
-  // Allow `t('ns:key')` style; otherwise default to common when no namespace
-  let resolvedNs = namespace ?? DEFAULT_NAMESPACE;
+export function tFromCatalog(
+  namespace: string | readonly string[] | undefined,
+  key: string,
+  options?: Record<string, unknown>,
+): string {
+  // Resolve namespace: explicit options.ns wins, then `ns:key` colon syntax,
+  // then the namespace passed to useTranslation (string or first of array),
+  // then the default.
+  const optsNs = typeof options?.ns === 'string' ? (options.ns as string) : undefined;
+  let resolvedNs: string;
+  if (optsNs) {
+    resolvedNs = optsNs;
+  } else if (Array.isArray(namespace)) {
+    resolvedNs = namespace[0] ?? DEFAULT_NAMESPACE;
+  } else {
+    resolvedNs = (namespace as string | undefined) ?? DEFAULT_NAMESPACE;
+  }
   let resolvedKey = key;
   const colon = key.indexOf(':');
   if (colon > 0) {
