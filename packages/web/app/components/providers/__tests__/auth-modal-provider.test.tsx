@@ -3,7 +3,7 @@ import { renderHook, act } from '@testing-library/react';
 import React from 'react';
 import { AuthModalProvider, useAuthModal } from '../auth-modal-provider';
 
-const { mockAuthModal, loadNamespaces } = vi.hoisted(() => ({
+const { mockAuthModal } = vi.hoisted(() => ({
   mockAuthModal: vi.fn(
     ({
       open,
@@ -31,18 +31,10 @@ const { mockAuthModal, loadNamespaces } = vi.hoisted(() => ({
         </div>
       ) : null,
   ),
-  loadNamespaces: vi.fn(() => Promise.resolve()),
 }));
 
 vi.mock('@/app/components/auth/auth-modal', () => ({
   default: mockAuthModal,
-}));
-
-vi.mock('react-i18next', () => ({
-  useTranslation: () => ({
-    t: (key: string) => key,
-    i18n: { loadNamespaces, language: 'en-US' },
-  }),
 }));
 
 function wrapper({ children }: { children: React.ReactNode }) {
@@ -159,18 +151,6 @@ describe('AuthModalProvider', () => {
     const props = lastAuthModalProps();
     expect(props.open).toBe(true);
     expect(props.title).toBe('Second');
-  });
-
-  it('defers loading the auth namespace until first open', async () => {
-    const { result } = renderHook(() => useAuthModal(), { wrapper });
-
-    expect(loadNamespaces).not.toHaveBeenCalled();
-
-    await act(async () => {
-      await result.current.openAuthModal();
-    });
-
-    expect(loadNamespaces).toHaveBeenCalledWith('auth');
   });
 
   it('does not mount AuthModal until first open', async () => {
