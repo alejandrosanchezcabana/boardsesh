@@ -2,10 +2,18 @@ import { describe, it, expect, vi, beforeEach } from 'vite-plus/test';
 import { render, screen, fireEvent } from '@testing-library/react';
 import React from 'react';
 import type { Climb, BoardDetails } from '@/app/lib/types';
+import { tFromCatalog } from '@/app/__test-helpers__/i18n-mock';
 import type { ClimbQueueItem } from '../types';
 import QueueClimbListItem from '../queue-climb-list-item';
 
 // --- Mocks ---
+
+vi.mock('react-i18next', () => ({
+  useTranslation: (ns?: string | readonly string[]) => ({
+    i18n: { language: 'en-US' },
+    t: (key: string, options?: Record<string, unknown>) => tFromCatalog(ns, key, options),
+  }),
+}));
 
 let capturedSwipeOptions: Record<string, unknown> | null = null;
 
