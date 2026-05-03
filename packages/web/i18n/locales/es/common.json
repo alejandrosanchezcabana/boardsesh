@@ -38,7 +38,12 @@
     "shareProfile": "Compartir perfil",
     "settings": "Ajustes",
     "notifications": "Notificaciones",
-    "searchClimbsByName": "Buscar bloques por nombre"
+    "searchClimbsByName": "Buscar bloques por nombre",
+    "userMenu": "Menú de usuario",
+    "toggleDarkMode": "Cambiar modo oscuro"
+  },
+  "boardSelector": {
+    "title": "Elige un panel"
   },
   "header": {
     "you": "Tú",

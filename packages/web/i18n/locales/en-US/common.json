@@ -46,7 +46,12 @@
     "shareProfile": "Share profile",
     "settings": "Settings",
     "notifications": "Notifications",
-    "searchClimbsByName": "Search climbs by name"
+    "searchClimbsByName": "Search climbs by name",
+    "userMenu": "User menu",
+    "toggleDarkMode": "Toggle dark mode"
+  },
+  "boardSelector": {
+    "title": "Pick a board"
   },
   "header": {
     "you": "You",

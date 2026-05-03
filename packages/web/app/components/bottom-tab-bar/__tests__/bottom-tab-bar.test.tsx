@@ -3,6 +3,7 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import React from 'react';
 import type { BoardDetails } from '@/app/lib/types';
 import type { BoardConfigData } from '@/app/lib/server-board-configs';
+import { tFromCatalog } from '@/app/__test-helpers__/i18n-mock';
 import BottomTabBar from '../bottom-tab-bar';
 
 const mockPush = vi.fn();
@@ -34,9 +35,9 @@ vi.mock('next/navigation', () => ({
 }));
 
 vi.mock('react-i18next', () => ({
-  useTranslation: () => ({
+  useTranslation: (ns?: string | readonly string[]) => ({
     i18n: { language: mockLanguage },
-    t: (key: string) => key,
+    t: (key: string, options?: Record<string, unknown>) => tFromCatalog(ns, key, options),
   }),
 }));
 

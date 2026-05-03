@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vite-plus/test';
 import { render, screen, fireEvent, act } from '@testing-library/react';
 import React from 'react';
 import type { UserBoard, PopularBoardConfig } from '@boardsesh/shared-schema';
+import { tFromCatalog } from '@/app/__test-helpers__/i18n-mock';
 import UserDrawer from '../user-drawer';
 
 // -------------------------------------------------------------------------
@@ -38,7 +39,10 @@ vi.mock('next/navigation', () => ({
 }));
 
 vi.mock('react-i18next', () => ({
-  useTranslation: () => ({ i18n: { language: 'en-US', changeLanguage: vi.fn() }, t: (key: string) => key }),
+  useTranslation: (ns?: string | readonly string[]) => ({
+    i18n: { language: 'en-US', changeLanguage: vi.fn() },
+    t: (key: string, options?: Record<string, unknown>) => tFromCatalog(ns, key, options),
+  }),
 }));
 
 vi.mock('next/link', () => ({

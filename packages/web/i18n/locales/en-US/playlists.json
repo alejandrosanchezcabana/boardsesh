@@ -95,6 +95,18 @@
       "updateFailed": "Failed to update playlist"
     }
   },
+  "create": {
+    "drawerTitle": "Create Playlist",
+    "submit": "Create",
+    "submitting": "Creating...",
+    "fields": {
+      "name": "Name",
+      "namePlaceholder": "e.g., Hard Crimps",
+      "description": "Description (optional)",
+      "descriptionPlaceholder": "Optional description...",
+      "color": "Color (optional)"
+    }
+  },
   "generator": {
     "drawerTitle": "Generate Playlist",
     "generatingTitle": "Generating...",

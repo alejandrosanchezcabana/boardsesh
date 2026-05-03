@@ -227,8 +227,21 @@
       "drawer": {
         "signInRequired": "Iniciar sesión requerido",
         "selectBoard": "Selecciona una tabla",
-        "logAscent": "Registrar encadene"
+        "logAscent": "Registrar encadene",
+        "signInToRecord": "Inicia sesión para registrar marcas",
+        "createAccountBlurb": "Crea una cuenta de Boardsesh para registrar tus bloques y seguir tu progreso.",
+        "signIn": "Iniciar sesión",
+        "orLogInOfficialApp": "O registra tu marca en la app oficial:",
+        "openInApp": "Abrir en la app",
+        "alwaysOpenInApp": "Abrir siempre en la app",
+        "authModalTitle": "Inicia sesión para registrar marcas",
+        "authModalDescription": "Crea una cuenta para registrar tus bloques y seguir tu progreso.",
+        "mirroredTooltip": "Pulsa la etiqueta para indicar si completaste este bloque en el lado espejo."
       }
+    },
+    "navigation": {
+      "nextClimb": "Bloque siguiente",
+      "previousClimb": "Bloque anterior"
     },
     "mirror": {
       "label": {

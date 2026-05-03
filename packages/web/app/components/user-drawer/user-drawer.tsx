@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import MuiAvatar from '@mui/material/Avatar';
 import MuiTypography from '@mui/material/Typography';
 import MuiButton from '@mui/material/Button';
@@ -73,6 +74,7 @@ type UserDrawerProps = {
 };
 
 export default function UserDrawer({ boardDetails, boardConfigs }: UserDrawerProps) {
+  const { t } = useTranslation('common');
   const { data: session } = useSession();
   const router = useLocaleRouter();
   const pathname = usePathname();
@@ -212,7 +214,7 @@ export default function UserDrawer({ boardDetails, boardConfigs }: UserDrawerPro
           setDrawerRendered(true);
           setIsOpen(true);
         }}
-        aria-label="User menu"
+        aria-label={t('ariaLabels.userMenu')}
         className={styles.avatarButton}
       >
         <MuiAvatar sx={{ width: 28, height: 28 }} src={userAvatar} className={avatarClass}>
@@ -474,7 +476,7 @@ export default function UserDrawer({ boardDetails, boardConfigs }: UserDrawerPro
                 onClick={toggleMode}
                 role="button"
                 tabIndex={0}
-                aria-label="Toggle dark mode"
+                aria-label={t('ariaLabels.toggleDarkMode')}
               >
                 <div className={`${styles.themeToggleThumb} ${mode === 'dark' ? styles.themeToggleThumbDark : ''}`} />
                 <div

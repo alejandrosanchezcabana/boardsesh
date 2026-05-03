@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useCallback, useRef, useEffect, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { createPortal } from 'react-dom';
 import MuiButton from '@mui/material/Button';
 import IconButton from '@mui/material/IconButton';
@@ -131,6 +132,7 @@ export type QueueControlBarProps = {
 };
 
 const QueueControlBar: React.FC<QueueControlBarProps> = ({ boardDetails, angle }) => {
+  const { t } = useTranslation('session');
   const [activeDrawer, setActiveDrawer] = useState<ActiveDrawer>('none');
   const [startSeshOpen, setStartSeshOpen] = useState(false);
   const pathname = usePathname();
@@ -758,9 +760,9 @@ const QueueControlBar: React.FC<QueueControlBarProps> = ({ boardDetails, angle }
 
   const renderConfirmRow = () => (
     <div className={styles.reconnectRow}>
-      <span className={styles.confirmText}>Cancelling will leave the session. Is that what you want?</span>
+      <span className={styles.confirmText}>{t('queueBar.cancelReconnectConfirm')}</span>
       <IconButton
-        aria-label="Leave session"
+        aria-label={t('queueBar.ariaLabels.leaveSession')}
         color="error"
         onClick={() => {
           handleLeaveSession();
@@ -769,7 +771,7 @@ const QueueControlBar: React.FC<QueueControlBarProps> = ({ boardDetails, angle }
       >
         <CloseOutlined />
       </IconButton>
-      <IconButton aria-label="Keep reconnecting" onClick={() => setShowCancelConfirm(false)}>
+      <IconButton aria-label={t('queueBar.ariaLabels.keepReconnecting')} onClick={() => setShowCancelConfirm(false)}>
         <CheckOutlined />
       </IconButton>
     </div>
@@ -868,7 +870,7 @@ const QueueControlBar: React.FC<QueueControlBarProps> = ({ boardDetails, angle }
                   onClick={() => setDismissedDisconnect(true)}
                   role="button"
                   tabIndex={0}
-                  aria-label="Dismiss offline notice"
+                  aria-label={t('queueBar.ariaLabels.dismissOfflineNotice')}
                   onKeyDown={(e) => {
                     if (e.key === 'Enter' || e.key === ' ') {
                       e.preventDefault();
@@ -988,9 +990,9 @@ const QueueControlBar: React.FC<QueueControlBarProps> = ({ boardDetails, angle }
                       >
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                           <Typography variant="caption" color="text.secondary" sx={{ flex: 1 }}>
-                            Get your crew in by sharing this link or scanning the QR code
+                            {t('settings.share.inviteCopy')}
                           </Typography>
-                          <IconButton size="small" onClick={handleInviteShare} aria-label="Share session link">
+                          <IconButton size="small" onClick={handleInviteShare} aria-label={t('queueBar.ariaLabels.shareSessionLink')}>
                             <IosShare sx={{ fontSize: 18 }} />
                           </IconButton>
                         </Box>
@@ -1060,7 +1062,7 @@ const QueueControlBar: React.FC<QueueControlBarProps> = ({ boardDetails, angle }
                     <IconButton
                       onClick={() => setActiveDrawer('none')}
                       size="small"
-                      aria-label="Close tick bar"
+                      aria-label={t('queueBar.ariaLabels.closeTickBar')}
                       sx={{
                         color: 'text.primary',
                         backgroundColor: 'action.selected',
@@ -1264,7 +1266,7 @@ const QueueControlBar: React.FC<QueueControlBarProps> = ({ boardDetails, angle }
                             });
                           }}
                         >
-                          <IconButton aria-label="Enter play mode">
+                          <IconButton aria-label={t('queueBar.ariaLabels.enterPlayMode')}>
                             <OpenInFullOutlined />
                           </IconButton>
                         </LocaleLink>
@@ -1287,7 +1289,7 @@ const QueueControlBar: React.FC<QueueControlBarProps> = ({ boardDetails, angle }
                             color: themeTokens.colors.error,
                             '&:hover': { backgroundColor: themeTokens.colors.errorMutedHover },
                           }}
-                          aria-label="Log attempt"
+                          aria-label={t('queueBar.ariaLabels.logAttempt')}
                         >
                           <PersonFallingIcon />
                         </IconButton>
@@ -1315,7 +1317,7 @@ const QueueControlBar: React.FC<QueueControlBarProps> = ({ boardDetails, angle }
 
       {/* Drawer for showing the queue */}
       <SwipeableDrawer
-        title="Queue"
+        title={t('queueDrawer.title')}
         placement="bottom"
         open={activeDrawer === 'queue'}
         onClose={handleCloseDrawer}
@@ -1324,14 +1326,14 @@ const QueueControlBar: React.FC<QueueControlBarProps> = ({ boardDetails, angle }
         extra={
           queue.length > 0 && (
             <ConfirmPopover
-              title="Clear queue"
-              description="Are you sure you want to clear all items from the queue?"
+              title={t('queueDrawer.clearTitle')}
+              description={t('queueDrawer.clearDescription')}
               onConfirm={handleClearQueue}
-              okText="Clear"
-              cancelText="Cancel"
+              okText={t('queueDrawer.clearConfirm')}
+              cancelText={t('common:actions.cancel')}
             >
               <MuiButton variant="text" startIcon={<DeleteOutlined />} sx={{ color: 'var(--neutral-400)' }}>
-                Clear
+                {t('queueDrawer.clearConfirm')}
               </MuiButton>
             </ConfirmPopover>
           )

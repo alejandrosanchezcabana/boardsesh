@@ -95,6 +95,18 @@
       "updateFailed": "No se pudo actualizar la lista"
     }
   },
+  "create": {
+    "drawerTitle": "Crear playlist",
+    "submit": "Crear",
+    "submitting": "Creando...",
+    "fields": {
+      "name": "Nombre",
+      "namePlaceholder": "p. ej., Regletas duras",
+      "description": "Descripción (opcional)",
+      "descriptionPlaceholder": "Descripción opcional...",
+      "color": "Color (opcional)"
+    }
+  },
   "generator": {
     "drawerTitle": "Generar playlist",
     "generatingTitle": "Generando...",

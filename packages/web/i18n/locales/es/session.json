@@ -202,5 +202,27 @@
   },
   "overview": {
     "goal": "Objetivo: {{goal}}"
+  },
+  "queueBar": {
+    "cancelReconnectConfirm": "Cancelar te sacará de la sesión. ¿Es lo que quieres?",
+    "ariaLabels": {
+      "leaveSession": "Salir de la sesión",
+      "keepReconnecting": "Seguir reconectando",
+      "dismissOfflineNotice": "Descartar aviso sin conexión",
+      "shareSessionLink": "Compartir enlace de sesión",
+      "closeTickBar": "Cerrar barra de marca",
+      "enterPlayMode": "Entrar en modo juego",
+      "logAttempt": "Registrar intento"
+    }
+  },
+  "queueDrawer": {
+    "title": "Cola",
+    "clearTitle": "Vaciar cola",
+    "clearDescription": "¿Seguro que quieres vaciar la cola?",
+    "clearConfirm": "Vaciar"
+  },
+  "queueList": {
+    "editClimb": "Editar este bloque",
+    "addedViaBluetooth": "Añadido por Bluetooth"
   }
 }
