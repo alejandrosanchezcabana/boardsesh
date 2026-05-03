@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useSnackbar } from '@/app/components/providers/snackbar-provider';
 import { useEntityMutation } from '@/app/hooks/use-entity-mutation';
 import {
@@ -34,14 +35,15 @@ export default function CreateBoardForm({
   onSuccess,
   onCancel,
 }: CreateBoardFormProps) {
+  const { t } = useTranslation('boards');
   const { showMessage } = useSnackbar();
   const router = useLocaleRouter();
 
   const availableAngles = ANGLES[boardType as BoardName] ?? [];
 
   const { execute } = useEntityMutation<CreateBoardMutationResponse, CreateBoardMutationVariables>(CREATE_BOARD, {
-    errorMessage: 'Failed to create board. It may already exist for this configuration.',
-    authRequiredMessage: 'You must be signed in to create a board',
+    errorMessage: t('boardForm.create.errorMessage'),
+    authRequiredMessage: t('boardForm.create.authRequired'),
   });
 
   const handleSubmit = useCallback(
@@ -59,7 +61,7 @@ export default function CreateBoardForm({
       isAngleAdjustable?: boolean;
     }) => {
       if (!values.name) {
-        showMessage('Board name is required', 'error');
+        showMessage(t('boardForm.create.nameRequired'), 'error');
         return;
       }
 
@@ -85,7 +87,7 @@ export default function CreateBoardForm({
 
       if (data) {
         const board = data.createBoard;
-        showMessage(`Board "${board.name}" created!`, 'success');
+        showMessage(t('boardForm.create.createdNamed', { name: board.name }), 'success');
 
         if (onSuccess) {
           onSuccess(board);
@@ -94,13 +96,13 @@ export default function CreateBoardForm({
         }
       }
     },
-    [execute, boardType, layoutId, sizeId, setIds, defaultAngle, showMessage, router, onSuccess],
+    [execute, boardType, layoutId, sizeId, setIds, defaultAngle, showMessage, router, onSuccess, t],
   );
 
   return (
     <BoardForm
       title=""
-      submitLabel="Create Board"
+      submitLabel={t('boardForm.create.submit')}
       initialValues={{
         name: '',
         description: '',
@@ -110,8 +112,8 @@ export default function CreateBoardForm({
         hideLocation: false,
         isOwned: true,
       }}
-      namePlaceholder="e.g., Home Board, Gym Name"
-      locationPlaceholder="e.g., City, Gym Name"
+      namePlaceholder={t('boardForm.create.namePlaceholder')}
+      locationPlaceholder={t('boardForm.create.locationPlaceholder')}
       availableAngles={availableAngles}
       onSubmit={handleSubmit}
       onCancel={onCancel}

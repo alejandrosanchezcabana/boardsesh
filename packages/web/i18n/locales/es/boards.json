@@ -1,0 +1,154 @@
+{
+  "discovery": {
+    "section": {
+      "nearby": "Tableros cerca de ti"
+    },
+    "findNearby": {
+      "loading": "Buscando tableros…",
+      "geoDenied": "Ubicación no disponible",
+      "error": "Error al cargar tableros cercanos",
+      "noResults": "No se encontraron tableros cercanos",
+      "idle": "Buscar cerca"
+    },
+    "search": {
+      "ariaLabel": "Buscar un tablero",
+      "label": "Buscar"
+    },
+    "custom": {
+      "ariaLabel": "Crear un tablero personalizado",
+      "label": "Tablero personalizado"
+    },
+    "create": {
+      "defaultLabel": "Nuevo tablero"
+    },
+    "bluetooth": {
+      "scanning": "Escaneando…",
+      "boardsFound": "Tableros encontrados",
+      "noBoardsFound": "No se encontraron tableros",
+      "unavailable": "Bluetooth no disponible",
+      "idle": "Inicio rápido"
+    }
+  },
+  "boardEntity": {
+    "notFound": "Tablero no encontrado",
+    "chips": {
+      "unlisted": "No listado",
+      "locationHidden": "Ubicación oculta"
+    },
+    "tabs": {
+      "leaderboard": "Clasificación",
+      "comments": "Comentarios"
+    },
+    "actions": {
+      "addToGym": "Añadir al gimnasio",
+      "edit": "Editar",
+      "delete": "Eliminar"
+    },
+    "stats": {
+      "ascents": "ascensiones",
+      "climbers": "escaladores",
+      "followers": "seguidores",
+      "comments": "comentarios"
+    },
+    "delete": {
+      "confirm": "¿Eliminar \"{{name}}\"? Esta acción se puede deshacer más tarde."
+    },
+    "snackbar": {
+      "deleted": "Tablero eliminado",
+      "deleteFailed": "Error al eliminar el tablero",
+      "linkedToGym": "Tablero vinculado al gimnasio",
+      "unlinkedFromGym": "Tablero desvinculado del gimnasio",
+      "linkFailed": "Error al vincular el tablero al gimnasio"
+    },
+    "comments": {
+      "title": "Discusión del tablero"
+    },
+    "follow": {
+      "entityLabel": "tablero"
+    }
+  },
+  "boardForm": {
+    "create": {
+      "submit": "Crear tablero",
+      "authRequired": "Debes iniciar sesión para crear un tablero",
+      "errorMessage": "Error al crear el tablero. Puede que ya exista para esta configuración.",
+      "nameRequired": "Se requiere el nombre del tablero",
+      "createdNamed": "¡Tablero \"{{name}}\" creado!",
+      "namePlaceholder": "p. ej., Tablero de casa, Nombre del gimnasio",
+      "locationPlaceholder": "p. ej., Ciudad, Nombre del gimnasio"
+    }
+  },
+  "selectorDrawer": {
+    "customTitle": "Tablero personalizado",
+    "createTitle": "Crear tablero",
+    "createButton": "Crear tablero",
+    "quickSession": "Sesión rápida",
+    "configSection": {
+      "label": "Configuración del tablero",
+      "title": "Configuración del tablero",
+      "defaultSummary": "Selecciona un tablero"
+    }
+  },
+  "gymEntity": {
+    "notFound": "Gimnasio no encontrado",
+    "tabs": {
+      "members": "Miembros",
+      "comments": "Comentarios"
+    },
+    "actions": {
+      "edit": "Editar",
+      "delete": "Eliminar"
+    },
+    "stats": {
+      "boards": "tableros",
+      "members": "miembros",
+      "followers": "seguidores",
+      "comments": "comentarios"
+    },
+    "delete": {
+      "title": "Eliminar gimnasio",
+      "confirm": "¿Eliminar \"{{name}}\"? Esta acción se puede deshacer más tarde.",
+      "cancel": "Cancelar",
+      "delete": "Eliminar"
+    },
+    "snackbar": {
+      "deleted": "Gimnasio eliminado",
+      "deleteFailed": "Error al eliminar el gimnasio"
+    },
+    "comments": {
+      "title": "Discusión del gimnasio"
+    },
+    "follow": {
+      "entityLabel": "gimnasio"
+    }
+  },
+  "gymForm": {
+    "fields": {
+      "name": "Nombre del gimnasio",
+      "slug": "URL personalizada",
+      "description": "Descripción",
+      "address": "Dirección",
+      "contactEmail": "Correo de contacto",
+      "contactPhone": "Teléfono de contacto",
+      "isPublic": "Gimnasio público"
+    },
+    "placeholders": {
+      "name": "p. ej., Boulder World, The Climbing Factory",
+      "description": "Descripción opcional",
+      "address": "p. ej., Calle Mayor 123, Ciudad",
+      "contactEmail": "Correo de contacto opcional",
+      "contactPhone": "Teléfono de contacto opcional"
+    },
+    "actions": {
+      "cancel": "Cancelar"
+    },
+    "create": {
+      "title": "Crear gimnasio",
+      "submit": "Crear gimnasio",
+      "authRequired": "Debes iniciar sesión para crear un gimnasio",
+      "errorMessage": "Error al crear el gimnasio",
+      "nameRequired": "Se requiere el nombre del gimnasio",
+      "createdNamed": "¡Gimnasio \"{{name}}\" creado!"
+    }
+  }
+}

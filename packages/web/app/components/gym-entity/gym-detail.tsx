@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import Box from '@mui/material/Box';
 import Avatar from '@mui/material/Avatar';
 import MuiTypography from '@mui/material/Typography';
@@ -52,6 +53,7 @@ type GymDetailProps = {
 };
 
 export default function GymDetail({ gymUuid, open, onClose, onDeleted, anchor = 'bottom' }: GymDetailProps) {
+  const { t } = useTranslation('boards');
   const [gym, setGym] = useState<Gym | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState(0);
@@ -100,12 +102,12 @@ export default function GymDetail({ gymUuid, open, onClose, onDeleted, anchor = 
       await client.request<DeleteGymMutationResponse, DeleteGymMutationVariables>(DELETE_GYM, {
         gymUuid: gym.uuid,
       });
-      showMessage('Gym deleted', 'success');
+      showMessage(t('gymEntity.snackbar.deleted'), 'success');
       onDeleted?.();
       onClose();
     } catch (error) {
       console.error('Failed to delete gym:', error);
-      showMessage('Failed to delete gym', 'error');
+      showMessage(t('gymEntity.snackbar.deleteFailed'), 'error');
     } finally {
       setIsDeleting(false);
     }
@@ -126,7 +128,7 @@ export default function GymDetail({ gymUuid, open, onClose, onDeleted, anchor = 
   } else if (!gym) {
     drawerContent = (
       <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', flex: 1 }}>
-        <MuiTypography color="text.secondary">Gym not found</MuiTypography>
+        <MuiTypography color="text.secondary">{t('gymEntity.notFound')}</MuiTypography>
       </Box>
     );
   } else if (isEditing) {
@@ -181,10 +183,26 @@ export default function GymDetail({ gymUuid, open, onClose, onDeleted, anchor = 
 
           {/* Stats */}
           <Box sx={{ display: 'flex', gap: 2.5, mt: 2, flexWrap: 'wrap' }}>
-            <StatChip icon={<FitnessCenterOutlined sx={{ fontSize: 16 }} />} value={gym.boardCount} label="boards" />
-            <StatChip icon={<PersonOutlined sx={{ fontSize: 16 }} />} value={gym.memberCount} label="members" />
-            <StatChip icon={<PeopleOutlined sx={{ fontSize: 16 }} />} value={gym.followerCount} label="followers" />
-            <StatChip icon={<ChatBubbleOutlined sx={{ fontSize: 16 }} />} value={gym.commentCount} label="comments" />
+            <StatChip
+              icon={<FitnessCenterOutlined sx={{ fontSize: 16 }} />}
+              value={gym.boardCount}
+              label={t('gymEntity.stats.boards')}
+            />
+            <StatChip
+              icon={<PersonOutlined sx={{ fontSize: 16 }} />}
+              value={gym.memberCount}
+              label={t('gymEntity.stats.members')}
+            />
+            <StatChip
+              icon={<PeopleOutlined sx={{ fontSize: 16 }} />}
+              value={gym.followerCount}
+              label={t('gymEntity.stats.followers')}
+            />
+            <StatChip
+              icon={<ChatBubbleOutlined sx={{ fontSize: 16 }} />}
+              value={gym.commentCount}
+              label={t('gymEntity.stats.comments')}
+            />
           </Box>
 
           {/* Actions */}
@@ -195,7 +213,7 @@ export default function GymDetail({ gymUuid, open, onClose, onDeleted, anchor = 
                 initialIsFollowing={gym.isFollowedByMe}
                 followMutation={FOLLOW_GYM}
                 unfollowMutation={UNFOLLOW_GYM}
-                entityLabel="gym"
+                entityLabel={t('gymEntity.follow.entityLabel')}
                 getFollowVariables={(id) => ({ input: { gymUuid: id } })}
                 onFollowChange={() => fetchGym()}
               />
@@ -209,7 +227,7 @@ export default function GymDetail({ gymUuid, open, onClose, onDeleted, anchor = 
                   onClick={() => setIsEditing(true)}
                   sx={{ textTransform: 'none' }}
                 >
-                  Edit
+                  {t('gymEntity.actions.edit')}
                 </MuiButton>
                 <MuiButton
                   variant="outlined"
@@ -220,7 +238,7 @@ export default function GymDetail({ gymUuid, open, onClose, onDeleted, anchor = 
                   disabled={isDeleting}
                   sx={{ textTransform: 'none' }}
                 >
-                  {isDeleting ? <CircularProgress size={16} /> : 'Delete'}
+                  {isDeleting ? <CircularProgress size={16} /> : t('gymEntity.actions.delete')}
                 </MuiButton>
               </>
             )}
@@ -231,14 +249,16 @@ export default function GymDetail({ gymUuid, open, onClose, onDeleted, anchor = 
 
         {/* Tabs */}
         <Tabs value={activeTab} onChange={(_, v) => setActiveTab(v)} sx={{ px: 2 }}>
-          <Tab label="Members" sx={{ textTransform: 'none' }} />
-          <Tab label="Comments" sx={{ textTransform: 'none' }} />
+          <Tab label={t('gymEntity.tabs.members')} sx={{ textTransform: 'none' }} />
+          <Tab label={t('gymEntity.tabs.comments')} sx={{ textTransform: 'none' }} />
         </Tabs>
 
         {/* Tab content */}
         <Box sx={{ flex: 1, overflow: 'auto', px: 2, py: 2 }}>
           {activeTab === 0 && <GymMemberManagement gymUuid={gym.uuid} isOwnerOrAdmin={isOwnerOrAdmin} />}
-          {activeTab === 1 && <CommentSection entityType="gym" entityId={gym.uuid} title="Gym Discussion" />}
+          {activeTab === 1 && (
+            <CommentSection entityType="gym" entityId={gym.uuid} title={t('gymEntity.comments.title')} />
+          )}
         </Box>
       </>
     );
@@ -258,14 +278,14 @@ export default function GymDetail({ gymUuid, open, onClose, onDeleted, anchor = 
 
       {/* Delete confirmation dialog */}
       <Dialog open={showDeleteDialog} onClose={() => setShowDeleteDialog(false)}>
-        <DialogTitle>Delete Gym</DialogTitle>
+        <DialogTitle>{t('gymEntity.delete.title')}</DialogTitle>
         <DialogContent>
-          <DialogContentText>Delete &quot;{gym?.name}&quot;? This action can be undone later.</DialogContentText>
+          <DialogContentText>{t('gymEntity.delete.confirm', { name: gym?.name ?? '' })}</DialogContentText>
         </DialogContent>
         <DialogActions>
-          <MuiButton onClick={() => setShowDeleteDialog(false)}>Cancel</MuiButton>
+          <MuiButton onClick={() => setShowDeleteDialog(false)}>{t('gymEntity.delete.cancel')}</MuiButton>
           <MuiButton onClick={handleDeleteConfirm} color="error" autoFocus>
-            Delete
+            {t('gymEntity.delete.delete')}
           </MuiButton>
         </DialogActions>
       </Dialog>

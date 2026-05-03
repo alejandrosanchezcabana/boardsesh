@@ -6,6 +6,7 @@ import LocationOffOutlined from '@mui/icons-material/LocationOffOutlined';
 import SearchOffOutlined from '@mui/icons-material/SearchOffOutlined';
 import ErrorOutlineOutlined from '@mui/icons-material/ErrorOutlineOutlined';
 import CircularProgress from '@mui/material/CircularProgress';
+import { useTranslation } from 'react-i18next';
 import { getBoardDetails } from '@/app/lib/board-constants';
 import BoardRenderer from '../board-renderer/board-renderer';
 import styles from './board-scroll.module.css';
@@ -19,6 +20,7 @@ type FindNearbyCardProps = {
 };
 
 export default function FindNearbyCard({ onClick, status = 'idle', size = 'default' }: FindNearbyCardProps) {
+  const { t } = useTranslation('boards');
   const isSmall = size === 'small';
   const iconSize = isSmall ? 28 : 36;
 
@@ -40,23 +42,23 @@ export default function FindNearbyCard({ onClick, status = 'idle', size = 'defau
   switch (status) {
     case 'loading':
       icon = <CircularProgress size={iconSize} className={styles.findNearbyIconPrimary} />;
-      label = 'Finding boards…';
+      label = t('discovery.findNearby.loading');
       break;
     case 'geo-denied':
       icon = <LocationOffOutlined className={styles.findNearbyIconError} />;
-      label = 'Location unavailable';
+      label = t('discovery.findNearby.geoDenied');
       break;
     case 'error':
       icon = <ErrorOutlineOutlined className={styles.findNearbyIconError} />;
-      label = 'Failed to load nearby boards';
+      label = t('discovery.findNearby.error');
       break;
     case 'no-results':
       icon = <SearchOffOutlined className={styles.findNearbyIconMuted} />;
-      label = 'No nearby boards found';
+      label = t('discovery.findNearby.noResults');
       break;
     default:
       icon = <LocationOnOutlined className={styles.findNearbyIconPrimary} />;
-      label = 'Find nearby';
+      label = t('discovery.findNearby.idle');
       break;
   }
 

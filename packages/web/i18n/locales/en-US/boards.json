@@ -1,0 +1,154 @@
+{
+  "discovery": {
+    "section": {
+      "nearby": "Boards near you"
+    },
+    "findNearby": {
+      "loading": "Finding boards…",
+      "geoDenied": "Location unavailable",
+      "error": "Failed to load nearby boards",
+      "noResults": "No nearby boards found",
+      "idle": "Find nearby"
+    },
+    "search": {
+      "ariaLabel": "Search for a board",
+      "label": "Search"
+    },
+    "custom": {
+      "ariaLabel": "Build a custom board",
+      "label": "Custom board"
+    },
+    "create": {
+      "defaultLabel": "New Board"
+    },
+    "bluetooth": {
+      "scanning": "Scanning…",
+      "boardsFound": "Boards found",
+      "noBoardsFound": "No boards found",
+      "unavailable": "Bluetooth unavailable",
+      "idle": "Quick start"
+    }
+  },
+  "boardEntity": {
+    "notFound": "Board not found",
+    "chips": {
+      "unlisted": "Unlisted",
+      "locationHidden": "Location hidden"
+    },
+    "tabs": {
+      "leaderboard": "Leaderboard",
+      "comments": "Comments"
+    },
+    "actions": {
+      "addToGym": "Add to Gym",
+      "edit": "Edit",
+      "delete": "Delete"
+    },
+    "stats": {
+      "ascents": "ascents",
+      "climbers": "climbers",
+      "followers": "followers",
+      "comments": "comments"
+    },
+    "delete": {
+      "confirm": "Delete \"{{name}}\"? This action can be undone later."
+    },
+    "snackbar": {
+      "deleted": "Board deleted",
+      "deleteFailed": "Failed to delete board",
+      "linkedToGym": "Board linked to gym",
+      "unlinkedFromGym": "Board unlinked from gym",
+      "linkFailed": "Failed to link board to gym"
+    },
+    "comments": {
+      "title": "Board Discussion"
+    },
+    "follow": {
+      "entityLabel": "board"
+    }
+  },
+  "boardForm": {
+    "create": {
+      "submit": "Create Board",
+      "authRequired": "You must be signed in to create a board",
+      "errorMessage": "Failed to create board. It may already exist for this configuration.",
+      "nameRequired": "Board name is required",
+      "createdNamed": "Board \"{{name}}\" created!",
+      "namePlaceholder": "e.g., Home Board, Gym Name",
+      "locationPlaceholder": "e.g., City, Gym Name"
+    }
+  },
+  "selectorDrawer": {
+    "customTitle": "Custom Board",
+    "createTitle": "Create Board",
+    "createButton": "Create board",
+    "quickSession": "Quick session",
+    "configSection": {
+      "label": "Board config",
+      "title": "Board config",
+      "defaultSummary": "Select a board"
+    }
+  },
+  "gymEntity": {
+    "notFound": "Gym not found",
+    "tabs": {
+      "members": "Members",
+      "comments": "Comments"
+    },
+    "actions": {
+      "edit": "Edit",
+      "delete": "Delete"
+    },
+    "stats": {
+      "boards": "boards",
+      "members": "members",
+      "followers": "followers",
+      "comments": "comments"
+    },
+    "delete": {
+      "title": "Delete Gym",
+      "confirm": "Delete \"{{name}}\"? This action can be undone later.",
+      "cancel": "Cancel",
+      "delete": "Delete"
+    },
+    "snackbar": {
+      "deleted": "Gym deleted",
+      "deleteFailed": "Failed to delete gym"
+    },
+    "comments": {
+      "title": "Gym Discussion"
+    },
+    "follow": {
+      "entityLabel": "gym"
+    }
+  },
+  "gymForm": {
+    "fields": {
+      "name": "Gym Name",
+      "slug": "URL Slug",
+      "description": "Description",
+      "address": "Address",
+      "contactEmail": "Contact Email",
+      "contactPhone": "Contact Phone",
+      "isPublic": "Public gym"
+    },
+    "placeholders": {
+      "name": "e.g., Boulder World, The Climbing Factory",
+      "description": "Optional description",
+      "address": "e.g., 123 Main St, City",
+      "contactEmail": "Optional contact email",
+      "contactPhone": "Optional contact phone"
+    },
+    "actions": {
+      "cancel": "Cancel"
+    },
+    "create": {
+      "title": "Create Gym",
+      "submit": "Create Gym",
+      "authRequired": "You must be signed in to create a gym",
+      "errorMessage": "Failed to create gym",
+      "nameRequired": "Gym name is required",
+      "createdNamed": "Gym \"{{name}}\" created!"
+    }
+  }
+}

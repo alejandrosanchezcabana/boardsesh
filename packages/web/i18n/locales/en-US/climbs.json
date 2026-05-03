@@ -246,5 +246,18 @@
         "saveFailed": "Failed to save favorite. Please try again."
       }
     }
+  },
+  "liked": {
+    "heroTitle": "Liked Climbs",
+    "heroSubtitle": "Your favorite climbs",
+    "signInRequired": "Sign In Required",
+    "signInBody": "Please sign in to view your liked climbs.",
+    "actionsAriaLabel": "Actions",
+    "queueAll": "Queue All",
+    "adding": "Adding...",
+    "noClimbsToAdd": "No climbs to add",
+    "addedToQueue_one": "Added {{count}} climb to queue",
+    "addedToQueue_other": "Added {{count}} climbs to queue",
+    "addToQueueFailed": "Failed to add climbs to queue"
   }
 }

@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useSnackbar } from '@/app/components/providers/snackbar-provider';
 import { useEntityMutation } from '@/app/hooks/use-entity-mutation';
 import {
@@ -18,17 +19,18 @@ type CreateGymFormProps = {
 };
 
 export default function CreateGymForm({ boardUuid, onSuccess, onCancel }: CreateGymFormProps) {
+  const { t } = useTranslation('boards');
   const { showMessage } = useSnackbar();
 
   const { execute } = useEntityMutation<CreateGymMutationResponse, CreateGymMutationVariables>(CREATE_GYM, {
-    errorMessage: 'Failed to create gym',
-    authRequiredMessage: 'You must be signed in to create a gym',
+    errorMessage: t('gymForm.create.errorMessage'),
+    authRequiredMessage: t('gymForm.create.authRequired'),
   });
 
   const handleSubmit = useCallback(
     async (values: GymFormFieldValues) => {
       if (!values.name) {
-        showMessage('Gym name is required', 'error');
+        showMessage(t('gymForm.create.nameRequired'), 'error');
         return;
       }
 
@@ -45,17 +47,17 @@ export default function CreateGymForm({ boardUuid, onSuccess, onCancel }: Create
       });
 
       if (data) {
-        showMessage(`Gym "${data.createGym.name}" created!`, 'success');
+        showMessage(t('gymForm.create.createdNamed', { name: data.createGym.name }), 'success');
         onSuccess?.(data.createGym);
       }
     },
-    [execute, boardUuid, showMessage, onSuccess],
+    [execute, boardUuid, showMessage, onSuccess, t],
   );
 
   return (
     <GymForm
-      title="Create Gym"
-      submitLabel="Create Gym"
+      title={t('gymForm.create.title')}
+      submitLabel={t('gymForm.create.submit')}
       initialValues={{
         name: '',
         description: '',

@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useCallback, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import Typography from '@mui/material/Typography';
 import IconButton from '@mui/material/IconButton';
 import Menu from '@mui/material/Menu';
@@ -30,6 +31,7 @@ type LikedClimbsViewContentProps = {
 };
 
 export default function LikedClimbsViewContent({ boardDetails, angle }: LikedClimbsViewContentProps) {
+  const { t } = useTranslation('climbs');
   const { showMessage } = useSnackbar();
   const [isAddingToQueue, setIsAddingToQueue] = useState(false);
   const [menuAnchor, setMenuAnchor] = useState<null | HTMLElement>(null);
@@ -89,7 +91,7 @@ export default function LikedClimbsViewContent({ boardDetails, angle }: LikedCli
       }
 
       if (allClimbs.length === 0) {
-        showMessage('No climbs to add', 'info');
+        showMessage(t('liked.noClimbsToAdd'), 'info');
         return;
       }
 
@@ -101,16 +103,16 @@ export default function LikedClimbsViewContent({ boardDetails, angle }: LikedCli
         climbCount: allClimbs.length,
       });
 
-      showMessage(`Added ${allClimbs.length} ${allClimbs.length === 1 ? 'climb' : 'climbs'} to queue`, 'success');
+      showMessage(t('liked.addedToQueue', { count: allClimbs.length }), 'success');
     } catch (err) {
       if (abortController.signal.aborted) return;
       console.error('Error adding climbs to queue:', err);
-      showMessage('Failed to add climbs to queue', 'error');
+      showMessage(t('liked.addToQueueFailed'), 'error');
     } finally {
       addingToQueueRef.current = false;
       setIsAddingToQueue(false);
     }
-  }, [token, boardDetails, angle, addToQueue, showMessage]);
+  }, [token, boardDetails, angle, addToQueue, showMessage, t]);
 
   if (tokenLoading) {
     return (
@@ -124,8 +126,8 @@ export default function LikedClimbsViewContent({ boardDetails, angle }: LikedCli
     return (
       <div className={styles.errorContainer}>
         <SentimentDissatisfiedOutlined className={styles.errorIcon} />
-        <div className={styles.errorTitle}>Sign In Required</div>
-        <div className={styles.errorMessage}>Please sign in to view your liked climbs.</div>
+        <div className={styles.errorTitle}>{t('liked.signInRequired')}</div>
+        <div className={styles.errorMessage}>{t('liked.signInBody')}</div>
       </div>
     );
   }
@@ -150,10 +152,10 @@ export default function LikedClimbsViewContent({ boardDetails, angle }: LikedCli
             </div>
             <div className={styles.heroInfo}>
               <Typography variant="h5" component="h2" className={styles.heroName}>
-                Liked Climbs
+                {t('liked.heroTitle')}
               </Typography>
               <div className={styles.heroMeta}>
-                <span className={styles.heroMetaItem}>Your favorite climbs</span>
+                <span className={styles.heroMetaItem}>{t('liked.heroSubtitle')}</span>
               </div>
             </div>
           </div>
@@ -162,7 +164,7 @@ export default function LikedClimbsViewContent({ boardDetails, angle }: LikedCli
           <IconButton
             className={styles.heroMenuButton}
             onClick={(e) => setMenuAnchor(e.currentTarget)}
-            aria-label="Actions"
+            aria-label={t('liked.actionsAriaLabel')}
           >
             <MoreVertOutlined />
           </IconButton>
@@ -172,7 +174,7 @@ export default function LikedClimbsViewContent({ boardDetails, angle }: LikedCli
               <ListItemIcon>
                 <AddOutlined />
               </ListItemIcon>
-              <ListItemText>{isAddingToQueue ? 'Adding...' : 'Queue All'}</ListItemText>
+              <ListItemText>{isAddingToQueue ? t('liked.adding') : t('liked.queueAll')}</ListItemText>
             </MenuItem>
           </Menu>
         </div>

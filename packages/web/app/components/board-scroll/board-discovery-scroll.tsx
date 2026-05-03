@@ -2,6 +2,7 @@
 
 import React, { useState, useCallback, useEffect, useMemo } from 'react';
 import { useSession } from 'next-auth/react';
+import { useTranslation } from 'react-i18next';
 import { useLocaleRouter } from '@/app/lib/i18n/use-locale-router';
 import BoardScrollSection from './board-scroll-section';
 import BoardScrollCard from './board-scroll-card';
@@ -55,6 +56,7 @@ export default function BoardDiscoveryScroll({
   initialPopularConfigs,
   myBoards: externalMyBoards,
 }: BoardDiscoveryScrollProps) {
+  const { t } = useTranslation('boards');
   const { status } = useSession();
   const isAuthenticated = status === 'authenticated';
   const router = useLocaleRouter();
@@ -175,7 +177,7 @@ export default function BoardDiscoveryScroll({
   return (
     <>
       <BoardScrollSection
-        title="Boards near you"
+        title={t('discovery.section.nearby')}
         loading={isBoardsLoading && popularConfigs.length === 0 && myBoards.length === 0}
         onLoadMore={loadMore}
         hasMore={hasMore}
