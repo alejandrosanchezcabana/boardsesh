@@ -5,13 +5,17 @@ import { getBoardDetailsForBoard } from '@/app/lib/board-utils';
 import { parseBoardRouteParamsWithSlugs } from '@/app/lib/url-utils.server';
 import type { Metadata } from 'next';
 import LikedClimbsViewContent from './liked-climbs-view-content';
+import { createNoIndexMetadata } from '@/app/lib/seo/metadata';
+import { getServerTranslation } from '@/app/lib/i18n/server';
 import styles from '@/app/components/library/playlist-view.module.css';
 
 export async function generateMetadata(): Promise<Metadata> {
-  return {
-    title: 'Liked Climbs | Boardsesh',
-    description: 'View your liked climbs',
-  };
+  const { t, locale } = await getServerTranslation('climbs');
+  return createNoIndexMetadata({
+    title: t('metadata.liked.title'),
+    description: t('metadata.liked.description'),
+    locale,
+  });
 }
 
 export default async function LikedClimbsPage(props: { params: Promise<BoardRouteParameters> }) {

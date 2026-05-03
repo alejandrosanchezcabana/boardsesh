@@ -1,11 +1,14 @@
 'use client';
 
 import { useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import Box from '@mui/material/Box';
 import CircularProgress from '@mui/material/CircularProgress';
 import Typography from '@mui/material/Typography';
 
 export default function JoinRedirect({ sessionId }: { sessionId: string }) {
+  const { t } = useTranslation('session');
+
   useEffect(() => {
     window.location.href = `/api/internal/join/${encodeURIComponent(sessionId)}`;
   }, [sessionId]);
@@ -23,7 +26,7 @@ export default function JoinRedirect({ sessionId }: { sessionId: string }) {
     >
       <CircularProgress size={48} />
       <Typography variant="body1" color="text.secondary">
-        Joining session...
+        {t('join.joining')}
       </Typography>
     </Box>
   );

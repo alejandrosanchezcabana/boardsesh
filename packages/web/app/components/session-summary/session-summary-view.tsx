@@ -18,6 +18,7 @@ import EmojiEventsOutlined from '@mui/icons-material/EmojiEventsOutlined';
 import TimerOutlined from '@mui/icons-material/TimerOutlined';
 import FlagOutlined from '@mui/icons-material/FlagOutlined';
 import PersonOutlined from '@mui/icons-material/PersonOutlined';
+import { useTranslation } from 'react-i18next';
 import type { SessionSummary } from '@boardsesh/shared-schema';
 import { getGradeColor as getVividGradeColor } from '@/app/lib/grade-colors';
 import { useGradeFormat } from '@/app/hooks/use-grade-format';
@@ -27,15 +28,16 @@ type SessionSummaryViewProps = {
 };
 
 export default function SessionSummaryView({ summary }: SessionSummaryViewProps) {
+  const { t } = useTranslation('session');
   const { formatGrade, loaded: gradeFormatLoaded } = useGradeFormat();
   const maxGradeCount = Math.max(...summary.gradeDistribution.map((g) => g.count), 1);
 
   const formatDuration = (minutes: number | null | undefined) => {
     if (!minutes) return null;
-    if (minutes < 60) return `${minutes}min`;
+    if (minutes < 60) return t('summary.minutes', { count: minutes });
     const hours = Math.floor(minutes / 60);
     const mins = minutes % 60;
-    return mins > 0 ? `${hours}h ${mins}min` : `${hours}h`;
+    return mins > 0 ? t('summary.hoursAndMinutes', { hours, mins }) : t('summary.hours', { count: hours });
   };
 
   return (

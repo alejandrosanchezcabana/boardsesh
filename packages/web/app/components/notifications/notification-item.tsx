@@ -13,6 +13,8 @@ import ChatBubbleOutline from '@mui/icons-material/ChatBubbleOutline';
 import ThumbUpOutlined from '@mui/icons-material/ThumbUpOutlined';
 import LightbulbOutlined from '@mui/icons-material/LightbulbOutlined';
 import AddCircleOutline from '@mui/icons-material/AddCircleOutline';
+import { useTranslation } from 'react-i18next';
+import type { TFunction } from 'i18next';
 import type { GroupedNotification, NotificationType } from '@boardsesh/shared-schema';
 import { themeTokens } from '@/app/theme/theme-config';
 
@@ -21,7 +23,7 @@ type NotificationItemProps = {
   onClick: (notification: GroupedNotification) => void;
 };
 
-function formatTimeAgo(dateStr: string): string {
+function formatTimeAgo(dateStr: string, t: TFunction): string {
   const date = new Date(dateStr);
   const now = new Date();
   const diffMs = now.getTime() - date.getTime();
@@ -29,68 +31,71 @@ function formatTimeAgo(dateStr: string): string {
   const diffHours = Math.floor(diffMs / 3600000);
   const diffDays = Math.floor(diffMs / 86400000);
 
-  if (diffMinutes < 1) return 'just now';
-  if (diffMinutes < 60) return `${diffMinutes}m`;
-  if (diffHours < 24) return `${diffHours}h`;
-  if (diffDays < 7) return `${diffDays}d`;
+  if (diffMinutes < 1) return t('time.justNow');
+  if (diffMinutes < 60) return t('time.minutes', { count: diffMinutes });
+  if (diffHours < 24) return t('time.hours', { count: diffHours });
+  if (diffDays < 7) return t('time.days', { count: diffDays });
   return date.toLocaleDateString();
 }
 
-function getActorSummary(notification: GroupedNotification): string {
+function getActorSummary(notification: GroupedNotification, t: TFunction): string {
   const { actors, actorCount } = notification;
-  if (actors.length === 0) return 'Someone';
+  if (actors.length === 0) return t('actorSummary.fallback');
 
-  const firstActor = actors[0].displayName || 'Someone';
+  const firstActor = actors[0].displayName || t('actorSummary.fallback');
 
   if (actorCount === 1) return firstActor;
 
   if (actorCount === 2 && actors.length >= 2) {
-    const secondActor = actors[1].displayName || 'someone';
-    return `${firstActor} and ${secondActor}`;
+    const secondActor = actors[1].displayName || t('actorSummary.secondaryFallback');
+    return t('actorSummary.two', { first: firstActor, second: secondActor });
   }
 
   const othersCount = actorCount - 1;
-  return `${firstActor} and ${othersCount} other${othersCount > 1 ? 's' : ''}`;
+  if (othersCount === 1) {
+    return t('actorSummary.manyOne', { first: firstActor });
+  }
+  return t('actorSummary.many', { first: firstActor, count: othersCount });
 }
 
-function getNotificationText(notification: GroupedNotification): string {
-  const actorSummary = getActorSummary(notification);
+function getNotificationText(notification: GroupedNotification, t: TFunction): string {
+  const actor = getActorSummary(notification, t);
   switch (notification.type) {
     case 'new_follower':
-      return `${actorSummary} started following you`;
+      return t('items.newFollower', { actor });
     case 'comment_reply':
       return notification.commentBody
-        ? `${actorSummary} replied: "${notification.commentBody}"`
-        : `${actorSummary} replied to your comment`;
+        ? t('items.commentReplyWithBody', { actor, body: notification.commentBody })
+        : t('items.commentReply', { actor });
     case 'comment_on_tick':
       return notification.commentBody
-        ? `${actorSummary} commented: "${notification.commentBody}"`
-        : `${actorSummary} commented on your ascent`;
+        ? t('items.commentOnTickWithBody', { actor, body: notification.commentBody })
+        : t('items.commentOnTick', { actor });
     case 'comment_on_climb':
       return notification.commentBody
-        ? `${actorSummary} commented: "${notification.commentBody}"`
-        : `${actorSummary} commented on a climb`;
+        ? t('items.commentOnClimbWithBody', { actor, body: notification.commentBody })
+        : t('items.commentOnClimb', { actor });
     case 'vote_on_tick':
-      return `${actorSummary} liked your ascent`;
+      return t('items.voteOnTick', { actor });
     case 'vote_on_comment':
-      return `${actorSummary} liked your comment`;
+      return t('items.voteOnComment', { actor });
     case 'proposal_created':
-      return `${actorSummary} created a new proposal`;
+      return t('items.proposalCreated', { actor });
     case 'proposal_approved':
-      return `${actorSummary}'s proposal was approved`;
+      return t('items.proposalApproved', { actor });
     case 'proposal_rejected':
-      return `${actorSummary}'s proposal was rejected`;
+      return t('items.proposalRejected', { actor });
     case 'proposal_vote':
-      return `${actorSummary} voted on your proposal`;
+      return t('items.proposalVote', { actor });
     case 'new_climb':
     case 'new_climb_global':
-      return `${actorSummary} created a new climb`;
+      return t('items.newClimb', { actor });
     case 'new_climbs_synced':
       return notification.setterUsername
-        ? `${notification.setterUsername} set new climbs`
-        : `${actorSummary} set new climbs`;
+        ? t('items.newClimbsSyncedSetter', { setter: notification.setterUsername })
+        : t('items.newClimbsSynced', { actor });
     default:
-      return 'You have a new notification';
+      return t('items.default');
   }
 }
 
@@ -120,6 +125,7 @@ function getNotificationIcon(type: NotificationType) {
 }
 
 export default function NotificationItem({ notification, onClick }: NotificationItemProps) {
+  const { t } = useTranslation('notifications');
   const { actors, actorCount } = notification;
   const showAvatarGroup = actorCount > 1 && actors.length > 1;
 
@@ -163,13 +169,13 @@ export default function NotificationItem({ notification, onClick }: Notification
               overflow: 'hidden',
             }}
           >
-            {getNotificationText(notification)}
+            {getNotificationText(notification, t)}
           </MuiTypography>
         }
         secondary={
           <Box component="span" sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mt: 0.25 }}>
             <MuiTypography variant="caption" color="text.secondary">
-              {formatTimeAgo(notification.createdAt)}
+              {formatTimeAgo(notification.createdAt, t)}
             </MuiTypography>
             {!notification.isRead && (
               <Box

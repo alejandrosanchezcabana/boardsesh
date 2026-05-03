@@ -8,11 +8,17 @@ import { type MoonBoardLayoutKey, MOONBOARD_LAYOUTS, MOONBOARD_SETS } from '@/ap
 import type { Metadata } from 'next';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/app/lib/auth/auth-options';
+import { createNoIndexMetadata } from '@/app/lib/seo/metadata';
+import { getServerTranslation } from '@/app/lib/i18n/server';
 
-export const metadata: Metadata = {
-  title: 'Create Climb | Boardsesh',
-  description: 'Create a new climb on your climbing board',
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const { t, locale } = await getServerTranslation('climbs');
+  return createNoIndexMetadata({
+    title: t('metadata.create.title'),
+    description: t('metadata.create.description'),
+    locale,
+  });
+}
 
 type CreateClimbPageProps = {
   params: Promise<BoardRouteParameters>;

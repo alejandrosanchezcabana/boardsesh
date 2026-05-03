@@ -4,9 +4,27 @@ import MuiTypography from '@mui/material/Typography';
 import { NotificationList } from '@/app/components/notifications';
 import { serverGroupedNotifications } from '@/app/lib/graphql/server-cached-client';
 import { getServerAuthToken } from '@/app/lib/auth/server-auth';
+import { createNoIndexMetadata } from '@/app/lib/seo/metadata';
+import { getServerTranslation } from '@/app/lib/i18n/server';
+import { getLocale } from '@/app/lib/i18n/get-locale';
+import I18nProvider from '@/app/components/providers/i18n-provider';
+
+export async function generateMetadata() {
+  const { t, locale } = await getServerTranslation('notifications');
+  return createNoIndexMetadata({
+    title: t('metadata.notifications.title'),
+    description: t('metadata.notifications.description'),
+    path: '/notifications',
+    locale,
+  });
+}
 
 export default async function NotificationsPage() {
-  const authToken = await getServerAuthToken();
+  const [authToken, locale, { t }] = await Promise.all([
+    getServerAuthToken(),
+    getLocale(),
+    getServerTranslation('notifications'),
+  ]);
 
   let initialData = null;
   if (authToken) {
@@ -18,13 +36,15 @@ export default async function NotificationsPage() {
   }
 
   return (
-    <Box sx={{ pb: 10 }}>
-      <Box sx={{ px: 2, pt: 2, pb: 1 }}>
-        <MuiTypography variant="h6" fontWeight={600}>
-          Notifications
-        </MuiTypography>
+    <I18nProvider locale={locale} namespaces={['notifications']}>
+      <Box sx={{ pb: 10 }}>
+        <Box sx={{ px: 2, pt: 2, pb: 1 }}>
+          <MuiTypography variant="h6" fontWeight={600}>
+            {t('title')}
+          </MuiTypography>
+        </Box>
+        <NotificationList initialData={initialData} />
       </Box>
-      <NotificationList initialData={initialData} />
-    </Box>
+    </I18nProvider>
   );
 }

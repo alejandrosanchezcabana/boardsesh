@@ -3,6 +3,7 @@
 import React, { useMemo } from 'react';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
+import { useTranslation } from 'react-i18next';
 import { TENSION_KILTER_GRADES } from '@/app/lib/board-data';
 import { themeTokens } from '@/app/theme/theme-config';
 import { CssBarChart, type CssBarChartBar } from '@/app/components/charts/css-bar-chart';
@@ -20,6 +21,7 @@ function getGradeName(difficultyId: number): string {
 }
 
 const GradeProgressionChart: React.FC<GradeProgressionChartProps> = ({ plannedSlots, height = 120 }) => {
+  const { t } = useTranslation('playlists');
   const bars: CssBarChartBar[] = useMemo(() => {
     if (plannedSlots.length === 0) return [];
 
@@ -58,14 +60,20 @@ const GradeProgressionChart: React.FC<GradeProgressionChartProps> = ({ plannedSl
         }}
       >
         <Typography variant="body2" color="text.secondary">
-          Configure options to preview
+          {t('generator.chart.configurePrompt')}
         </Typography>
       </Box>
     );
   }
 
   return (
-    <CssBarChart bars={bars} height={height} mobileHeight={height} showLegend ariaLabel="Grade distribution preview" />
+    <CssBarChart
+      bars={bars}
+      height={height}
+      mobileHeight={height}
+      showLegend
+      ariaLabel={t('generator.chart.ariaLabel')}
+    />
   );
 };
 

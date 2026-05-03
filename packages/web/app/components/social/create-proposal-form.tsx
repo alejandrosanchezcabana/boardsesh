@@ -14,6 +14,7 @@ import Typography from '@mui/material/Typography';
 import Snackbar from '@mui/material/Snackbar';
 import Alert from '@mui/material/Alert';
 import AddIcon from '@mui/icons-material/Add';
+import { useTranslation } from 'react-i18next';
 import { themeTokens } from '@/app/theme/theme-config';
 import { useWsAuthToken } from '@/app/hooks/use-ws-auth-token';
 import { ClientError } from 'graphql-request';
@@ -46,6 +47,7 @@ export default function CreateProposalForm({
   boardName,
   onCreated,
 }: CreateProposalFormProps) {
+  const { t } = useTranslation('common');
   const { token } = useWsAuthToken();
   const [open, setOpen] = useState(false);
   const [type, setType] = useState<ProposalType>('grade');
@@ -82,15 +84,15 @@ export default function CreateProposalForm({
 
   const handleSubmit = useCallback(async () => {
     if (!token) {
-      setSnackbar('Sign in to create proposals');
+      setSnackbar(t('proposal.validation.signIn'));
       return;
     }
     if (!proposedValue) {
-      setSnackbar('Please enter a proposed value');
+      setSnackbar(t('proposal.validation.missingValue'));
       return;
     }
     if (type === 'grade' && proposedValue === currentClimbDifficulty) {
-      setSnackbar('Proposed grade is the same as the current grade');
+      setSnackbar(t('proposal.validation.sameGrade'));
       return;
     }
 
@@ -115,7 +117,7 @@ export default function CreateProposalForm({
       });
 
       if (!result.createProposal) {
-        setSnackbar('Failed to create proposal: no data returned');
+        setSnackbar(t('proposal.validation.noData'));
         return;
       }
 
@@ -123,13 +125,13 @@ export default function CreateProposalForm({
       handleClose();
       setProposedValue(type === 'grade' ? currentClimbDifficulty || '' : '');
       setReason('');
-      setSnackbar('Proposal created');
+      setSnackbar(t('proposal.created'));
     } catch (err) {
       if (err instanceof ClientError) {
         const msg = err.response?.errors?.[0]?.message;
-        setSnackbar(msg || 'Failed to create proposal');
+        setSnackbar(msg || t('proposal.validation.failed'));
       } else {
-        setSnackbar(err instanceof Error ? err.message : 'Failed to create proposal');
+        setSnackbar(err instanceof Error ? err.message : t('proposal.validation.failed'));
       }
     } finally {
       setLoading(false);
@@ -145,6 +147,7 @@ export default function CreateProposalForm({
     onCreated,
     handleClose,
     currentClimbDifficulty,
+    t,
   ]);
 
   if (isFrozen) return null;
@@ -159,7 +162,7 @@ export default function CreateProposalForm({
         startIcon={<AddIcon />}
         onClick={() => {
           if (!token) {
-            setSnackbar('Sign in to create proposals');
+            setSnackbar(t('proposal.validation.signIn'));
             return;
           }
           setOpen(true);
@@ -171,18 +174,18 @@ export default function CreateProposalForm({
           fontSize: 13,
         }}
       >
-        Propose Change
+        {t('proposal.trigger')}
       </Button>
 
       <SwipeableDrawer
         placement="bottom"
-        title="Create Proposal"
+        title={t('proposal.drawerTitle')}
         open={open}
         onClose={handleClose}
         footer={
           <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
             <Button onClick={handleClose} sx={{ textTransform: 'none' }}>
-              Cancel
+              {t('proposal.cancel')}
             </Button>
             <Button
               onClick={handleSubmit}
@@ -194,7 +197,7 @@ export default function CreateProposalForm({
                 '&:hover': { bgcolor: themeTokens.colors.primaryHover },
               }}
             >
-              {loading ? 'Creating...' : 'Create Proposal'}
+              {loading ? t('proposal.submitting') : t('proposal.submit')}
             </Button>
           </Box>
         }
@@ -202,18 +205,18 @@ export default function CreateProposalForm({
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
           {/* Type selector */}
           <ToggleButtonGroup value={type} exclusive onChange={handleTypeChange} size="small" fullWidth>
-            <ToggleButton value="grade">Grade</ToggleButton>
-            <ToggleButton value="classic">Classic</ToggleButton>
-            <ToggleButton value="benchmark">Benchmark</ToggleButton>
+            <ToggleButton value="grade">{t('proposal.types.grade')}</ToggleButton>
+            <ToggleButton value="classic">{t('proposal.types.classic')}</ToggleButton>
+            <ToggleButton value="benchmark">{t('proposal.types.benchmark')}</ToggleButton>
           </ToggleButtonGroup>
 
           {/* Angle selector */}
           {boardAngles.length > 0 && type !== 'classic' && (
             <FormControl size="small" fullWidth>
-              <InputLabel>Angle</InputLabel>
+              <InputLabel>{t('proposal.fields.angle')}</InputLabel>
               <Select
                 value={selectedAngle}
-                label="Angle"
+                label={t('proposal.fields.angle')}
                 onChange={(e) => setSelectedAngle(e.target.value)}
                 MenuProps={{ PaperProps: { sx: { maxHeight: 300 } } }}
               >
@@ -229,10 +232,10 @@ export default function CreateProposalForm({
           {/* Grade dropdown */}
           {type === 'grade' && (
             <FormControl size="small" fullWidth>
-              <InputLabel>Proposed Grade</InputLabel>
+              <InputLabel>{t('proposal.fields.proposedGrade')}</InputLabel>
               <Select
                 value={proposedValue}
-                label="Proposed Grade"
+                label={t('proposal.fields.proposedGrade')}
                 onChange={(e) => setProposedValue(e.target.value)}
                 sx={gradeBackground ? { bgcolor: gradeBackground } : undefined}
                 MenuProps={{ PaperProps: { sx: { maxHeight: 300 } } }}
@@ -250,17 +253,17 @@ export default function CreateProposalForm({
           {(type === 'classic' || type === 'benchmark') && (
             <>
               <Typography variant="caption" sx={{ color: themeTokens.neutral[500] }}>
-                {type === 'classic' ? 'Classic proposals apply to all angles.' : 'Benchmark proposals are per-angle.'}
+                {type === 'classic' ? t('proposal.hints.classic') : t('proposal.hints.benchmark')}
               </Typography>
               <FormControl size="small" fullWidth>
-                <InputLabel>Proposed Status</InputLabel>
+                <InputLabel>{t('proposal.fields.proposedStatus')}</InputLabel>
                 <Select
                   value={proposedValue}
-                  label="Proposed Status"
+                  label={t('proposal.fields.proposedStatus')}
                   onChange={(e) => setProposedValue(e.target.value)}
                 >
-                  <MenuItem value="true">Yes</MenuItem>
-                  <MenuItem value="false">No</MenuItem>
+                  <MenuItem value="true">{t('proposal.fields.yes')}</MenuItem>
+                  <MenuItem value="false">{t('proposal.fields.no')}</MenuItem>
                 </Select>
               </FormControl>
             </>
@@ -268,21 +271,20 @@ export default function CreateProposalForm({
 
           {/* Reason */}
           <TextField
-            label="Reason (optional)"
+            label={t('proposal.fields.reasonLabel')}
             value={reason}
             onChange={(e) => setReason(e.target.value)}
             multiline
             rows={2}
             size="small"
             fullWidth
-            placeholder="Why do you think this change is needed?"
+            placeholder={t('proposal.fields.reasonPlaceholder')}
           />
 
           {/* Outlier warning */}
           {outlierWarning && type === 'grade' && (
             <Alert severity="info" sx={{ fontSize: 13 }}>
-              The grade at this angle appears to be an outlier compared to adjacent angles. This proposal may be
-              auto-approved if it aligns with neighboring data.
+              {t('proposal.outlierWarning')}
             </Alert>
           )}
         </Box>

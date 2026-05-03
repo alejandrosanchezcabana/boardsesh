@@ -22,6 +22,7 @@ import { useAuthModal } from '@/app/components/providers/auth-modal-provider';
 import type { Playlist } from '../playlists-batch-context';
 import { themeTokens } from '@/app/theme/theme-config';
 import { useSnackbar } from '../../providers/snackbar-provider';
+import { useTranslation } from 'react-i18next';
 
 // Validate hex color format to prevent CSS injection
 const isValidHexColor = (color: string): boolean => {
@@ -43,6 +44,7 @@ export function PlaylistAction({
   // Playlists not supported for moonboard yet
   const isMoonboard = boardDetails.board_name === 'moonboard';
 
+  const { t } = useTranslation('climbs');
   const { openAuthModal } = useAuthModal();
   const [popoverOpen, setPopoverOpen] = useState(false);
   const [showCreateForm, setShowCreateForm] = useState(false);
@@ -97,7 +99,7 @@ export function PlaylistAction({
       try {
         if (isInPlaylist) {
           await removeFromPlaylist(playlistId);
-          showMessage('Removed from playlist', 'success');
+          showMessage(t('actions.playlist.toast.removed'), 'success');
           track('Remove from Playlist', {
             boardName: boardDetails.board_name,
             climbUuid: climb.uuid,
@@ -105,7 +107,7 @@ export function PlaylistAction({
           });
         } else {
           await addToPlaylist(playlistId);
-          showMessage('Added to playlist', 'success');
+          showMessage(t('actions.playlist.toast.added'), 'success');
           track('Add to Playlist', {
             boardName: boardDetails.board_name,
             climbUuid: climb.uuid,
@@ -115,25 +117,28 @@ export function PlaylistAction({
         onComplete?.();
         // Note: No need to call refreshPlaylists() - optimistic updates handle state
       } catch {
-        showMessage(isInPlaylist ? 'Failed to remove from playlist' : 'Failed to add to playlist', 'error');
+        showMessage(
+          isInPlaylist ? t('actions.playlist.toast.removeFailed') : t('actions.playlist.toast.addFailed'),
+          'error',
+        );
       }
     },
-    [addToPlaylist, removeFromPlaylist, boardDetails.board_name, climb.uuid, onComplete, showMessage],
+    [addToPlaylist, removeFromPlaylist, boardDetails.board_name, climb.uuid, onComplete, showMessage, t],
   );
 
   const handleCreatePlaylist = useCallback(async () => {
     try {
       // Inline validation
       if (!createFormValues.name.trim()) {
-        showMessage('Please enter a playlist name', 'error');
+        showMessage(t('actions.playlist.validation.nameRequired'), 'error');
         return;
       }
       if (createFormValues.name.length > 100) {
-        showMessage('Name too long', 'error');
+        showMessage(t('actions.playlist.validation.nameTooLong'), 'error');
         return;
       }
       if (createFormValues.description.length > 500) {
-        showMessage('Description too long', 'error');
+        showMessage(t('actions.playlist.validation.descriptionTooLong'), 'error');
         return;
       }
 
@@ -153,7 +158,7 @@ export function PlaylistAction({
       // Automatically add current climb to new playlist
       await addToPlaylist(newPlaylist.uuid);
 
-      showMessage(`Created playlist "${createFormValues.name}"`, 'success');
+      showMessage(t('actions.playlist.toast.createdNamed', { name: createFormValues.name }), 'success');
       track('Create Playlist', {
         boardName: boardDetails.board_name,
         playlistName: createFormValues.name,
@@ -164,11 +169,11 @@ export function PlaylistAction({
       onComplete?.();
       // Note: No need to call refreshPlaylists() - optimistic updates handle state
     } catch {
-      showMessage('Failed to create playlist', 'error');
+      showMessage(t('actions.playlist.toast.createFailed'), 'error');
     } finally {
       setCreatingPlaylist(false);
     }
-  }, [createFormValues, createPlaylist, addToPlaylist, boardDetails.board_name, onComplete, showMessage]);
+  }, [createFormValues, createPlaylist, addToPlaylist, boardDetails.board_name, onComplete, showMessage, t]);
 
   const inlineContent = (
     <div

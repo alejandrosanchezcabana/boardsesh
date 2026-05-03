@@ -258,7 +258,7 @@ describe('useClimbActions', () => {
     });
 
     expect(mockWriteText).toHaveBeenCalled();
-    expect(mockShowMessage).toHaveBeenCalledWith('Link copied to clipboard!', 'success');
+    expect(mockShowMessage).toHaveBeenCalledWith('share.linkCopied', 'success');
     expect(mockTrack).toHaveBeenCalledWith(
       'Climb Shared',
       expect.objectContaining({

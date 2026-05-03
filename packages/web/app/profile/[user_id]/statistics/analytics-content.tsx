@@ -2,6 +2,7 @@
 
 import React, { useState, useCallback } from 'react';
 import Box from '@mui/material/Box';
+import { useTranslation } from 'react-i18next';
 import type {
   GetUserClimbPercentileQueryResponse,
   GetUserProfileStatsQueryResponse,
@@ -31,6 +32,7 @@ export default function AnalyticsContent({
   initialLogbook,
   initialIsOwnProfile,
 }: AnalyticsContentProps) {
+  const { t } = useTranslation('profile');
   const {
     isOwnProfile,
     selectedBoard,
@@ -82,7 +84,7 @@ export default function AnalyticsContent({
     <Box className={styles.layout}>
       <StatsFilterBridgeInjector
         openDrawer={openDrawer}
-        pageTitle="Statistics"
+        pageTitle={t('filter.pageTitle')}
         backUrl={`/profile/${userId}`}
         hasActiveFilters={hasActiveFilters}
         isActive

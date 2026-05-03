@@ -12,6 +12,9 @@ const playlistsPage = await import('../playlists/page');
 const settingsPage = await import('../settings/page');
 
 const aboutMetadata = await aboutPage.generateMetadata();
+const feedMetadata = await feedPage.generateMetadata();
+const playlistsMetadata = await playlistsPage.generateMetadata();
+const settingsMetadata = await settingsPage.generateMetadata();
 
 function getOpenGraphImageUrl(image: string | URL | { url: string | URL } | undefined) {
   if (!image) {
@@ -57,23 +60,26 @@ describe('page metadata exports', () => {
   });
 
   it('keeps utility pages out of search by default', () => {
-    expect(feedPage.metadata.robots).toEqual({ index: false, follow: true });
-    expect(settingsPage.metadata.robots).toEqual({ index: false, follow: true });
+    expect(settingsMetadata.robots).toEqual({ index: false, follow: true });
     expect(loginPage.metadata.robots).toEqual({ index: false, follow: true });
   });
 
+  it('keeps the activity feed indexable so it surfaces public climbing activity', () => {
+    expect(feedMetadata.robots).toBeUndefined();
+    expect(feedMetadata.alternates?.canonical).toBe('/feed');
+  });
+
   it('keeps the public playlists directory indexable because it exposes discoverable content', () => {
-    expect(playlistsPage.metadata.title).toBe('Discover Climbing Playlists | Boardsesh');
-    expect(playlistsPage.metadata.description).toBe(
+    expect(playlistsMetadata.title).toBe('Discover Climbing Playlists | Boardsesh');
+    expect(playlistsMetadata.description).toBe(
       'Discover public climbing playlists and manage your own after signing in.',
     );
-    expect(playlistsPage.metadata.robots).toBeUndefined();
-    expect(playlistsPage.metadata.alternates?.canonical).toBe('/playlists');
+    expect(playlistsMetadata.robots).toBeUndefined();
+    expect(playlistsMetadata.alternates?.canonical).toBe('/playlists');
   });
 
   it('sets canonical URLs on noindex pages so the route intent stays explicit', () => {
-    expect(feedPage.metadata.alternates?.canonical).toBe('/feed');
-    expect(settingsPage.metadata.alternates?.canonical).toBe('/settings');
+    expect(settingsMetadata.alternates?.canonical).toBe('/settings');
     expect(loginPage.metadata.alternates?.canonical).toBe('/auth/login');
   });
 });

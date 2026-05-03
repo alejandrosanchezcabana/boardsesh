@@ -7,6 +7,7 @@ import type { ClimbActionProps, ClimbActionResult } from '../types';
 import { getContextAwareClimbViewUrl } from '@/app/lib/url-utils';
 import { buildActionResult, computeActionDisplay } from '../action-view-renderer';
 import { shareWithFallback } from '@/app/lib/share-utils';
+import { useTranslation } from 'react-i18next';
 
 export function ShareAction({
   climb,
@@ -20,6 +21,7 @@ export function ShareAction({
   className,
   onComplete,
 }: ClimbActionProps): ClimbActionResult {
+  const { t } = useTranslation('climbs');
   const { showMessage } = useSnackbar();
   const { iconSize } = computeActionDisplay(viewMode, size, showLabel);
 
@@ -35,24 +37,24 @@ export function ShareAction({
       const shared = await shareWithFallback({
         url: shareUrl,
         title: climb.name,
-        text: `Check out "${climb.name}" (${climb.difficulty}) on Boardsesh`,
+        text: t('share.actionText', { climbName: climb.name, difficulty: climb.difficulty }),
         trackingEvent: 'Climb Shared',
         trackingProps: { boardName: boardDetails.board_name, climbUuid: climb.uuid },
-        onClipboardSuccess: () => showMessage('Link copied to clipboard!', 'success'),
-        onError: () => showMessage('Failed to share', 'error'),
+        onClipboardSuccess: () => showMessage(t('share.linkCopied'), 'success'),
+        onError: () => showMessage(t('share.shareFailed'), 'error'),
       });
       if (shared) {
         onComplete?.();
       }
     },
-    [climb, viewUrl, boardDetails.board_name, onComplete, showMessage],
+    [climb, viewUrl, boardDetails.board_name, onComplete, showMessage, t],
   );
 
   const icon = <IosShare sx={{ fontSize: iconSize }} />;
 
   return buildActionResult({
     key: 'share',
-    label: 'Share',
+    label: t('share.actionLabel'),
     icon,
     onClick: handleClick,
     viewMode,

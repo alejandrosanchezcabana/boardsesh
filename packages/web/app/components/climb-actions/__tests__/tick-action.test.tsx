@@ -368,7 +368,7 @@ describe('TickAction', () => {
       });
 
       const drawer = screen.getByTestId('swipeable-drawer');
-      expect(drawer.getAttribute('data-title')).toBe('Sign In Required');
+      expect(drawer.getAttribute('data-title')).toBe('actions.tick.drawer.signInRequired');
       expect(screen.getByText('Sign in to record ticks')).toBeTruthy();
     });
 
@@ -401,7 +401,7 @@ describe('TickAction', () => {
       });
 
       const drawer = screen.getByTestId('swipeable-drawer');
-      expect(drawer.getAttribute('data-title')).toBe('Select Board');
+      expect(drawer.getAttribute('data-title')).toBe('actions.tick.drawer.selectBoard');
       expect(screen.getByText('Which board did you climb on?')).toBeTruthy();
       expect(screen.getByTestId('board-card-board-1')).toBeTruthy();
       expect(screen.getByTestId('board-card-board-2')).toBeTruthy();
@@ -439,7 +439,7 @@ describe('TickAction', () => {
 
       // Drawer title should change to "Log Ascent"
       const drawer = screen.getByTestId('swipeable-drawer');
-      expect(drawer.getAttribute('data-title')).toBe('Log Ascent');
+      expect(drawer.getAttribute('data-title')).toBe('actions.tick.drawer.logAscent');
     });
 
     it('passes selected board type to BoardProvider', async () => {
@@ -522,7 +522,7 @@ describe('TickAction', () => {
 
       // Should show the board selector (in loading state), NOT skip to form
       const drawer = screen.getByTestId('swipeable-drawer');
-      expect(drawer.getAttribute('data-title')).toBe('Select Board');
+      expect(drawer.getAttribute('data-title')).toBe('actions.tick.drawer.selectBoard');
       expect(screen.getByTestId('board-scroll-loading')).toBeTruthy();
     });
 
@@ -636,7 +636,7 @@ describe('TickAction', () => {
       });
 
       const drawer = screen.getByTestId('swipeable-drawer');
-      expect(drawer.getAttribute('data-title')).toBe('Sign In Required');
+      expect(drawer.getAttribute('data-title')).toBe('actions.tick.drawer.signInRequired');
       expect(screen.getByText('Sign in to record ticks')).toBeTruthy();
     });
 

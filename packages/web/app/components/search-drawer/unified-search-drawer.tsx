@@ -13,6 +13,7 @@ import PlaylistSearchResults from '../social/playlist-search-results';
 import GymSearchResults from '../social/gym-search-results';
 import { useWsAuthToken } from '@/app/hooks/use-ws-auth-token';
 import type { BoardDetails } from '@/app/lib/types';
+import { useTranslation } from 'react-i18next';
 
 export type SearchCategory = 'climbs' | 'users' | 'playlists' | 'boards' | 'gyms';
 
@@ -46,6 +47,7 @@ export default function UnifiedSearchDrawer({
   showCloseButtonOnMobile = false,
   showCloseButton = false,
 }: UnifiedSearchDrawerProps) {
+  const { t } = useTranslation('climbs');
   const [query, setQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<SearchCategory>(defaultCategory);
   const { token } = useWsAuthToken();
@@ -64,17 +66,17 @@ export default function UnifiedSearchDrawer({
   const allowedCategoriesKey = allowedCategories ? allowedCategories.join('|') : '';
   const visibleCategories = useMemo<{ key: SearchCategory; label: string }[]>(() => {
     const all: { key: SearchCategory; label: string; visible: boolean }[] = [
-      { key: 'climbs', label: 'Climbs', visible: hasBoardDetails },
-      { key: 'boards', label: 'Boards', visible: true },
-      { key: 'gyms', label: 'Gyms', visible: true },
-      { key: 'users', label: 'Users', visible: true },
-      { key: 'playlists', label: 'Playlists', visible: true },
+      { key: 'climbs', label: t('search.categories.climbs'), visible: hasBoardDetails },
+      { key: 'boards', label: t('search.categories.boards'), visible: true },
+      { key: 'gyms', label: t('search.categories.gyms'), visible: true },
+      { key: 'users', label: t('search.categories.users'), visible: true },
+      { key: 'playlists', label: t('search.categories.playlists'), visible: true },
     ];
     const allowedSet = allowedCategoriesKey ? new Set(allowedCategoriesKey.split('|') as SearchCategory[]) : null;
     return all
       .filter((c) => c.visible && (allowedSet ? allowedSet.has(c.key) : true))
       .map(({ key, label }) => ({ key, label }));
-  }, [hasBoardDetails, allowedCategoriesKey]);
+  }, [hasBoardDetails, allowedCategoriesKey, t]);
 
   // Derive the effective category during render instead of correcting it in
   // a post-render effect. This avoids a one-frame flash of the wrong results
@@ -95,11 +97,11 @@ export default function UnifiedSearchDrawer({
   const showCategoryChips = visibleCategories.length > 1;
 
   const searchPlaceholderByCategory: Record<string, string> = {
-    boards: 'Search boards...',
-    gyms: 'Search gyms...',
-    users: 'Search climbers...',
+    boards: t('search.placeholders.boards'),
+    gyms: t('search.placeholders.gyms'),
+    users: t('search.placeholders.users'),
   };
-  const searchPlaceholder = searchPlaceholderByCategory[category] ?? 'Search playlists...';
+  const searchPlaceholder = searchPlaceholderByCategory[category] ?? t('search.placeholders.playlists');
 
   return (
     <SwipeableDrawer

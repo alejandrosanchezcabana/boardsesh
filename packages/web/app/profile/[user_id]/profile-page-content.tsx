@@ -9,6 +9,7 @@ import CardContent from '@mui/material/CardContent';
 import TimelineOutlined from '@mui/icons-material/TimelineOutlined';
 import FitnessCenterOutlined from '@mui/icons-material/FitnessCenterOutlined';
 import ShowChartOutlined from '@mui/icons-material/ShowChartOutlined';
+import { useTranslation } from 'react-i18next';
 import { EmptyState } from '@/app/components/ui/empty-state';
 import { ProfileHeaderShareInjector } from '@/app/components/profile-header-bridge/profile-header-bridge-context';
 import { CssBarChart } from '@/app/components/charts/css-bar-chart';
@@ -46,6 +47,7 @@ export default function ProfilePageContent({
   initialNotFound,
 }: ProfilePageContentProps) {
   const { gradeFormat } = useGradeFormat();
+  const { t } = useTranslation('profile');
 
   const { loading, notFound, profile, setProfile, isOwnProfile, statisticsSummary } = useProfileData(userId, {
     initialProfile: initialProfile ?? undefined,
@@ -87,7 +89,7 @@ export default function ProfilePageContent({
       <Box className={styles.layout}>
         <ProfileHeaderShareInjector displayName={null} isActive={false} />
         <Box component="main" className={styles.content}>
-          <EmptyState description="User not found" />
+          <EmptyState description={t('empty.userNotFound')} />
         </Box>
       </Box>
     );
@@ -106,14 +108,14 @@ export default function ProfilePageContent({
           <MuiCard className={styles.statsCard}>
             <CardContent>
               <Typography variant="body2" component="span" fontWeight={600} sx={{ mb: 1, display: 'block' }}>
-                Last 3 months
+                {t('page.lastThreeMonths')}
               </Typography>
               <CssBarChart
                 bars={overviewBars}
                 height={100}
                 mobileHeight={80}
                 showLegend={false}
-                ariaLabel="Activity over the last 3 months"
+                ariaLabel={t('page.activityChartLabel')}
               />
             </CardContent>
           </MuiCard>
@@ -122,24 +124,24 @@ export default function ProfilePageContent({
         {/* Navigation cards */}
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
           <ProfileNavCard
-            title="Statistics"
+            title={t('nav.statistics.title')}
             subtitle={
               statisticsSummary.totalAscents > 0
-                ? `${statisticsSummary.totalAscents} problems sent`
-                : 'Grades, progression, and more'
+                ? t('nav.statistics.subtitleSent', { count: statisticsSummary.totalAscents })
+                : t('nav.statistics.subtitleEmpty')
             }
             href={`/profile/${userId}/statistics`}
             icon={<ShowChartOutlined />}
           />
           <ProfileNavCard
-            title="Sessions"
-            subtitle="Climbing sessions and activity"
+            title={t('nav.sessions.title')}
+            subtitle={t('nav.sessions.subtitle')}
             href={`/profile/${userId}/sessions`}
             icon={<TimelineOutlined />}
           />
           <ProfileNavCard
-            title="Created Climbs"
-            subtitle={isOwnProfile ? 'Climbs you created' : 'Climbs they created'}
+            title={t('nav.createdClimbs.title')}
+            subtitle={isOwnProfile ? t('nav.createdClimbs.subtitleOwn') : t('nav.createdClimbs.subtitleOther')}
             href={`/profile/${userId}/climbs`}
             icon={<FitnessCenterOutlined />}
           />

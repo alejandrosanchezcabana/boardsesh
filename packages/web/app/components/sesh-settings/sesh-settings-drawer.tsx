@@ -19,6 +19,7 @@ import { usePersistentSession } from '@/app/components/persistent-session/persis
 import { useQueueBridgeBoardInfo } from '@/app/components/queue-control/queue-bridge-context';
 import { usePathname } from 'next/navigation';
 import { useLocaleRouter } from '@/app/lib/i18n/use-locale-router';
+import { useTranslation } from 'react-i18next';
 import { themeTokens } from '@/app/theme/theme-config';
 import { useSessionTimer } from '@/app/hooks/use-session-timer';
 import { useSessionDetail } from '@/app/hooks/use-session-detail';
@@ -67,6 +68,7 @@ export default function SeshSettingsDrawer({
   tourMockSession,
   tourActiveSection,
 }: SeshSettingsDrawerProps) {
+  const { t } = useTranslation('session');
   const { activeSession, session, users, deactivateSession } = usePersistentSession();
   const { boardDetails, angle } = useQueueBridgeBoardInfo();
   const router = useLocaleRouter();
@@ -88,14 +90,14 @@ export default function SeshSettingsDrawer({
   const handleShareSession = useCallback(async () => {
     await shareWithFallback({
       url: shareUrl,
-      title: 'Join my climbing session',
-      text: 'Jump in and climb with me on Boardsesh',
+      title: t('settings.share.shareTitle'),
+      text: t('settings.share.shareText'),
       trackingEvent: 'Session Shared',
       trackingProps: { sessionId: sessionId ?? '' },
-      onClipboardSuccess: () => showMessage('Link copied!', 'success'),
-      onError: () => showMessage('Failed to share', 'error'),
+      onClipboardSuccess: () => showMessage(t('settings.share.linkCopied'), 'success'),
+      onError: () => showMessage(t('settings.share.shareError'), 'error'),
     });
-  }, [shareUrl, sessionId, showMessage]);
+  }, [shareUrl, sessionId, showMessage, t]);
 
   const handleAngleChange = useCallback(
     (newAngle: number) => {
@@ -210,7 +212,7 @@ export default function SeshSettingsDrawer({
 
   const drawerTitle = displaySession
     ? displaySession.sessionName || generateSessionName(displaySession.firstTickAt, displaySession.boardTypes)
-    : 'Session';
+    : t('settings.fallbackTitle');
 
   let inviteContent: React.ReactNode;
   if (tourMockSession) {
@@ -218,12 +220,12 @@ export default function SeshSettingsDrawer({
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           <Typography variant="body2" color="text.secondary" sx={{ flex: 1 }}>
-            Share this link or QR code with your crew and they&apos;ll show up live.
+            {t('settings.share.inviteCopyPreview')}
           </Typography>
-          <IconButton disabled aria-label="Share session link (preview)">
+          <IconButton disabled aria-label={t('settings.share.shareLinkPreview')}>
             <IosShare />
           </IconButton>
-          <IconButton disabled aria-label="Show QR code (preview)">
+          <IconButton disabled aria-label={t('settings.share.showQrPreview')}>
             <QrCode2Outlined />
           </IconButton>
         </Box>
@@ -237,12 +239,15 @@ export default function SeshSettingsDrawer({
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           <Typography variant="body2" color="text.secondary" sx={{ flex: 1 }}>
-            Get your crew in by sharing this link or scanning the QR code
+            {t('settings.share.inviteCopy')}
           </Typography>
-          <IconButton onClick={handleShareSession} aria-label="Share session link">
+          <IconButton onClick={handleShareSession} aria-label={t('settings.share.shareLink')}>
             <IosShare />
           </IconButton>
-          <IconButton onClick={() => setShowQr((v) => !v)} aria-label={showQr ? 'Hide QR code' : 'Show QR code'}>
+          <IconButton
+            onClick={() => setShowQr((v) => !v)}
+            aria-label={showQr ? t('settings.share.hideQr') : t('settings.share.showQr')}
+          >
             <QrCode2Outlined color={showQr ? 'primary' : 'inherit'} />
           </IconButton>
         </Box>
@@ -309,7 +314,7 @@ export default function SeshSettingsDrawer({
               <IconButton
                 size="small"
                 onClick={handleStopSession}
-                aria-label="Stop session"
+                aria-label={t('settings.stopSession')}
                 sx={{
                   color: themeTokens.colors.error,
                   flexShrink: 0,
@@ -318,7 +323,7 @@ export default function SeshSettingsDrawer({
                 <StopCircleOutlined />
               </IconButton>
             ) : (
-              <IconButton size="small" onClick={handleClose} aria-label="Dismiss" sx={{ flexShrink: 0 }}>
+              <IconButton size="small" onClick={handleClose} aria-label={t('settings.dismiss')} sx={{ flexShrink: 0 }}>
                 <CloseOutlined />
               </IconButton>
             )}
@@ -354,7 +359,7 @@ export default function SeshSettingsDrawer({
 
         {isError && (
           <Alert severity="warning" sx={{ mx: 1 }}>
-            Couldn&apos;t load full session details. Live stats will continue when available.
+            {t('settings.loadFailed')}
           </Alert>
         )}
 

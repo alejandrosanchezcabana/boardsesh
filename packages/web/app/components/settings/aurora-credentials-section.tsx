@@ -34,6 +34,8 @@ import EmailOutlined from '@mui/icons-material/EmailOutlined';
 import FileUploadOutlined from '@mui/icons-material/FileUploadOutlined';
 import RadioButtonUncheckedOutlined from '@mui/icons-material/RadioButtonUncheckedOutlined';
 import { useSession } from 'next-auth/react';
+import { Trans, useTranslation } from 'react-i18next';
+import type { TFunction } from 'i18next';
 import type { AuroraCredentialStatus } from '@/app/api/internal/aurora-credentials/route';
 import type { UnsyncedCounts } from '@/app/api/internal/aurora-credentials/unsynced/route';
 import type { ImportResult } from '@/app/lib/data-sync/aurora/json-import';
@@ -74,19 +76,27 @@ export const STEP_LABELS: Record<ImportStep, string> = {
   sessions: 'Building sessions',
 };
 
-function buildKilterDataRequestMailto(userName?: string | null, userEmail?: string | null): string {
-  const name = userName || '[YOUR NAME]';
-  const email = userEmail || '[YOUR EMAIL]';
-  const subject = 'Kilterboard data';
-  const body = `Hey there!
+function getStepLabels(t: TFunction<'settings'>): Record<ImportStep, string> {
+  return {
+    climbs: t('aurora.import.steps.climbs'),
+    resolving: t('aurora.import.steps.resolving'),
+    dedup: t('aurora.import.steps.dedup'),
+    ascents: t('aurora.import.steps.ascents'),
+    attempts: t('aurora.import.steps.attempts'),
+    circuits: t('aurora.import.steps.circuits'),
+    sessions: t('aurora.import.steps.sessions'),
+  };
+}
 
-Ex-app user here. I was wondering if I could get a copy of my data so I can save my logbooks and other data for personal tracking records.
-
-My username is ${name}, and this should be under this email (${email}).
-
-Thanks!
-
-${name}`;
+function buildKilterDataRequestMailto(
+  t: TFunction<'settings'>,
+  userName?: string | null,
+  userEmail?: string | null,
+): string {
+  const name = userName || t('aurora.kilterEmail.namePlaceholder');
+  const email = userEmail || t('aurora.kilterEmail.emailPlaceholder');
+  const subject = t('aurora.kilterEmail.subject');
+  const body = t('aurora.kilterEmail.body', { name, email });
 
   return `mailto:peter@auroraclimbing.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
 }
@@ -116,6 +126,7 @@ export function BoardCredentialCard({
   userName,
   userEmail,
 }: BoardCredentialCardProps) {
+  const { t } = useTranslation('settings');
   const boardName = boardType.charAt(0).toUpperCase() + boardType.slice(1);
   const totalUnsynced = unsyncedCounts.ascents + unsyncedCounts.climbs;
   const isKilter = boardType === 'kilter';
@@ -125,18 +136,20 @@ export function BoardCredentialCard({
 
     switch (credential.syncStatus) {
       case 'active':
-        return <Chip icon={<CheckCircleOutlined />} label="Connected" size="small" color="success" />;
+        return (
+          <Chip icon={<CheckCircleOutlined />} label={t('aurora.status.connected')} size="small" color="success" />
+        );
       case 'error':
-        return <Chip icon={<WarningAmberOutlined />} label="Error" size="small" color="error" />;
+        return <Chip icon={<WarningAmberOutlined />} label={t('aurora.status.error')} size="small" color="error" />;
       case 'expired':
-        return <Chip icon={<AccessTimeOutlined />} label="Expired" size="small" color="warning" />;
+        return <Chip icon={<AccessTimeOutlined />} label={t('aurora.status.expired')} size="small" color="warning" />;
       default:
-        return <Chip icon={<SyncOutlined />} label="Syncing" size="small" color="primary" />;
+        return <Chip icon={<SyncOutlined />} label={t('aurora.status.syncing')} size="small" color="primary" />;
     }
   };
 
   const formatLastSync = (dateString: string | null) => {
-    if (!dateString) return 'Never';
+    if (!dateString) return t('aurora.card.never');
     const date = new Date(dateString);
     return date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
   };
@@ -147,24 +160,22 @@ export function BoardCredentialCard({
         <CardContent>
           <div className={styles.cardHeader}>
             <Typography variant="h5" sx={{ margin: 0 }}>
-              {boardName} Board
+              {boardName} {t('aurora.card.boardSuffix')}
             </Typography>
           </div>
           {isKilter ? (
             <Typography variant="body2" component="span" color="text.secondary" className={styles.notConnectedText}>
-              The Kilter backend has been shut down. You can import your data using an Aurora JSON export file, or email
-              Aurora Climbing to request a data export.
+              {t('aurora.card.kilterShutdown')}
             </Typography>
           ) : (
             <Typography variant="body2" component="span" color="text.secondary" className={styles.notConnectedText}>
-              Not connected. Link your {boardName} account to import your Aurora data, or import from a JSON export
-              file.
+              {t('aurora.card.notConnected', { boardName })}
             </Typography>
           )}
           <div className={isKilter ? styles.buttonRowStacked : styles.buttonRow}>
             {!isKilter && (
               <Button variant="contained" startIcon={<LinkOutlined />} onClick={onAdd}>
-                Link
+                {t('aurora.card.link')}
               </Button>
             )}
             <Button
@@ -173,15 +184,15 @@ export function BoardCredentialCard({
               onClick={onImportJson}
               disabled={isImporting}
             >
-              Import
+              {t('aurora.card.import')}
             </Button>
             {isKilter && (
               <Button
                 variant="outlined"
                 startIcon={<EmailOutlined />}
-                href={buildKilterDataRequestMailto(userName, userEmail)}
+                href={buildKilterDataRequestMailto(t, userName, userEmail)}
               >
-                Request your data
+                {t('aurora.card.requestData')}
               </Button>
             )}
           </div>
@@ -195,14 +206,14 @@ export function BoardCredentialCard({
       <CardContent>
         <div className={styles.cardHeader}>
           <Typography variant="h5" sx={{ margin: 0 }}>
-            {boardName} Board
+            {boardName} {t('aurora.card.boardSuffix')}
           </Typography>
           {getSyncStatusTag()}
         </div>
         <div className={styles.credentialInfo}>
           <div className={styles.infoRow}>
             <Typography variant="body2" component="span" color="text.secondary">
-              Username:
+              {t('aurora.card.username')}
             </Typography>
             <Typography variant="body2" component="span" fontWeight={600}>
               {credential.auroraUsername}
@@ -210,7 +221,7 @@ export function BoardCredentialCard({
           </div>
           <div className={styles.infoRow}>
             <Typography variant="body2" component="span" color="text.secondary">
-              Last synced:
+              {t('aurora.card.lastSynced')}
             </Typography>
             <Typography variant="body2" component="span">
               {formatLastSync(credential.lastSyncAt)}
@@ -225,22 +236,21 @@ export function BoardCredentialCard({
           )}
           {totalUnsynced > 0 && (
             <MuiAlert severity="warning" icon={<WarningOutlined />} className={styles.unsyncedAlert}>
-              <AlertTitle>{`${totalUnsynced} item${totalUnsynced > 1 ? 's' : ''} pending sync`}</AlertTitle>
+              <AlertTitle>{t('aurora.unsynced.title', { count: totalUnsynced })}</AlertTitle>
               <Typography variant="body2" component="span" color="text.secondary">
-                {unsyncedCounts.ascents > 0 &&
-                  `${unsyncedCounts.ascents} ascent${unsyncedCounts.ascents > 1 ? 's' : ''}`}
+                {unsyncedCounts.ascents > 0 && t('aurora.unsynced.ascents', { count: unsyncedCounts.ascents })}
                 {unsyncedCounts.ascents > 0 && unsyncedCounts.climbs > 0 && ', '}
-                {unsyncedCounts.climbs > 0 && `${unsyncedCounts.climbs} climb${unsyncedCounts.climbs > 1 ? 's' : ''}`}
+                {unsyncedCounts.climbs > 0 && t('aurora.unsynced.climbs', { count: unsyncedCounts.climbs })}
               </Typography>
             </MuiAlert>
           )}
         </div>
         <div className={styles.buttonRow}>
           <ConfirmPopover
-            title="Remove account link"
-            description={`Are you sure you want to unlink your ${boardName} account?`}
+            title={t('aurora.card.unlinkConfirm.title')}
+            description={t('aurora.card.unlinkConfirm.description', { boardName })}
             onConfirm={onRemove}
-            okText="Yes, unlink"
+            okText={t('aurora.card.unlinkConfirm.ok')}
             okButtonProps={{ color: 'error' }}
           >
             <Button
@@ -249,7 +259,7 @@ export function BoardCredentialCard({
               startIcon={isRemoving ? <CircularProgress size={16} /> : <DeleteOutlined />}
               disabled={isRemoving}
             >
-              Unlink
+              {t('aurora.card.unlink')}
             </Button>
           </ConfirmPopover>
           <Button
@@ -258,7 +268,7 @@ export function BoardCredentialCard({
             onClick={onImportJson}
             disabled={isImporting}
           >
-            Import
+            {t('aurora.card.import')}
           </Button>
         </div>
       </CardContent>
@@ -267,6 +277,8 @@ export function BoardCredentialCard({
 }
 
 export function ImportProgressSteps({ progress }: { progress: ImportProgress | null }) {
+  const { t } = useTranslation('settings');
+  const stepLabels = getStepLabels(t);
   const currentStepIndex = progress ? STEP_ORDER.indexOf(progress.step) : -1;
 
   return (
@@ -289,7 +301,7 @@ export function ImportProgressSteps({ progress }: { progress: ImportProgress | n
                 color={isPending ? 'text.disabled' : 'text.primary'}
                 fontWeight={isActive ? 600 : 400}
               >
-                {STEP_LABELS[step]}
+                {stepLabels[step]}
                 {hasCounts && ` (${progress.current} / ${progress.total})`}
               </Typography>
             </div>
@@ -305,6 +317,7 @@ export function ImportProgressSteps({ progress }: { progress: ImportProgress | n
 }
 
 export default function AuroraCredentialsSection() {
+  const { t } = useTranslation('settings');
   const { data: session } = useSession();
   const { showMessage } = useSnackbar();
   const [credentials, setCredentials] = useState<AuroraCredentialStatus[]>([]);
@@ -369,6 +382,8 @@ export default function AuroraCredentialsSection() {
     setFormValues({ username: '', password: '' });
   };
 
+  const selectedBoardName = selectedBoard.charAt(0).toUpperCase() + selectedBoard.slice(1);
+
   const handleSaveCredentials = async (values: { username: string; password: string }) => {
     setIsSaving(true);
     try {
@@ -384,18 +399,15 @@ export default function AuroraCredentialsSection() {
 
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.error || 'Failed to save credentials');
+        throw new Error(error.error || t('aurora.linkDialog.linkError'));
       }
 
-      showMessage(
-        `${selectedBoard.charAt(0).toUpperCase() + selectedBoard.slice(1)} account linked. Your data will show up within 12 hours.`,
-        'success',
-      );
+      showMessage(t('aurora.linkDialog.linkSuccess', { boardName: selectedBoardName }), 'success');
       setIsModalOpen(false);
       setFormValues({ username: '', password: '' });
       await fetchCredentials();
     } catch (error) {
-      showMessage(error instanceof Error ? error.message : 'Failed to link account', 'error');
+      showMessage(error instanceof Error ? error.message : t('aurora.linkDialog.linkError'), 'error');
     } finally {
       setIsSaving(false);
     }
@@ -412,13 +424,13 @@ export default function AuroraCredentialsSection() {
 
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.error || 'Failed to remove credentials');
+        throw new Error(error.error || t('aurora.unlinkError'));
       }
 
-      showMessage('Account unlinked successfully', 'success');
+      showMessage(t('aurora.unlinkSuccess'), 'success');
       await fetchCredentials();
     } catch (error) {
-      showMessage(error instanceof Error ? error.message : 'Failed to unlink account', 'error');
+      showMessage(error instanceof Error ? error.message : t('aurora.unlinkError'), 'error');
     } finally {
       setRemovingBoard(null);
     }
@@ -448,7 +460,7 @@ export default function AuroraCredentialsSection() {
     // Guard against very large files (200MB limit - exports can be large due to climb data)
     const maxSizeBytes = 200 * 1024 * 1024;
     if (file.size > maxSizeBytes) {
-      showMessage('File is too large (max 200MB). Please check you selected the correct file.', 'error');
+      showMessage(t('aurora.import.tooLarge'), 'error');
       setImportingBoard(null);
       event.target.value = '';
       return;
@@ -468,15 +480,12 @@ export default function AuroraCredentialsSection() {
         setAuroraExportPreview(parsed.preview);
         setImportPhase('preview');
       } catch (err) {
-        showMessage(
-          err instanceof Error ? err.message : 'Failed to parse JSON file. Please check the file format.',
-          'error',
-        );
+        showMessage(err instanceof Error ? err.message : t('aurora.import.parseError'), 'error');
         setImportingBoard(null);
       }
     };
     reader.onerror = () => {
-      showMessage('Failed to read file. Please try again.', 'error');
+      showMessage(t('aurora.import.readError'), 'error');
       setImportingBoard(null);
     };
     reader.readAsText(file);
@@ -514,7 +523,7 @@ export default function AuroraCredentialsSection() {
                 event.results.ascents.imported +
                 event.results.attempts.imported +
                 event.results.circuits.imported;
-              showMessage(`Successfully imported ${totalImported} items`, 'success');
+              showMessage(t('aurora.import.successCount', { count: totalImported }), 'success');
             }
             break;
           case 'error':
@@ -528,17 +537,15 @@ export default function AuroraCredentialsSection() {
 
       // If stream ended without a complete/error event (e.g. server timeout)
       if (!receivedCompleteRef.current) {
-        setImportError(
-          'Import was interrupted. The server may have timed out. Your data may have been partially imported.',
-        );
+        setImportError(t('aurora.import.interrupted'));
         setImportPhase('error');
-        showMessage('Import was interrupted', 'error');
+        showMessage(t('aurora.import.interruptedShort'), 'error');
       }
     } catch (error) {
-      const msg = error instanceof Error ? error.message : 'Import failed';
-      setImportError(msg);
+      const message = error instanceof Error ? error.message : t('aurora.import.failed');
+      setImportError(message);
       setImportPhase('error');
-      showMessage(msg, 'error');
+      showMessage(message, 'error');
     } finally {
       setImportRawData(null);
     }
@@ -550,7 +557,7 @@ export default function AuroraCredentialsSection() {
   };
 
   const getCredentialForBoard = (boardType: AuroraBoardName) => {
-    return credentials.find((c) => c.boardType === boardType) || null;
+    return credentials.find((credential) => credential.boardType === boardType) || null;
   };
 
   const isImporting = importPhase === 'importing';
@@ -560,17 +567,21 @@ export default function AuroraCredentialsSection() {
   const getImportDialogTitle = () => {
     switch (importPhase) {
       case 'preview':
-        return 'Import Aurora Data';
+        return t('aurora.import.dialog.previewTitle');
       case 'importing':
-        return 'Importing Aurora Data...';
+        return t('aurora.import.dialog.importingTitle');
       case 'complete':
-        return 'Import Complete';
+        return t('aurora.import.dialog.completeTitle');
       case 'error':
-        return 'Import Failed';
+        return t('aurora.import.dialog.errorTitle');
       default:
         return '';
     }
   };
+
+  const importingBoardName = importingBoard
+    ? importingBoard.charAt(0).toUpperCase() + importingBoard.slice(1)
+    : '';
 
   if (loading) {
     return (
@@ -588,11 +599,9 @@ export default function AuroraCredentialsSection() {
     <>
       <Card>
         <CardContent>
-          <Typography variant="h5">Board Accounts</Typography>
+          <Typography variant="h5">{t('aurora.title')}</Typography>
           <Typography variant="body2" component="span" color="text.secondary" className={styles.sectionDescription}>
-            Link your board accounts to import your Aurora data to Boardsesh, or import from a JSON export file.
-            We&apos;ll automatically sync your logbook, ascents, and climbs FROM Aurora every 12 hours. Data created in
-            Boardsesh stays local and does not sync back to Aurora.
+            {t('aurora.subtitle')}
           </Typography>
 
           <Stack spacing={2} className={styles.cardsContainer}>
@@ -621,17 +630,16 @@ export default function AuroraCredentialsSection() {
         type="file"
         accept=".json"
         onChange={handleFileSelected}
-        aria-label="Upload Aurora JSON export file"
+        aria-label={t('aurora.import.fileLabel')}
         hidden
       />
 
       {/* Link Account Dialog */}
       <Dialog open={isModalOpen} onClose={handleModalCancel} maxWidth="sm" fullWidth>
-        <DialogTitle>{`Link ${selectedBoard.charAt(0).toUpperCase() + selectedBoard.slice(1)} Account`}</DialogTitle>
+        <DialogTitle>{t('aurora.linkDialog.title', { boardName: selectedBoardName })}</DialogTitle>
         <DialogContent>
           <Typography variant="body2" component="span" color="text.secondary" className={styles.modalDescription}>
-            Enter your {selectedBoard.charAt(0).toUpperCase() + selectedBoard.slice(1)} Board username and password to
-            import your Aurora data. Your credentials are encrypted and securely stored. Data syncs every 12 hours.
+            {t('aurora.linkDialog.description', { boardName: selectedBoardName })}
           </Typography>
           <Box
             component="form"
@@ -644,8 +652,8 @@ export default function AuroraCredentialsSection() {
             sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 2 }}
           >
             <TextField
-              label="Username"
-              placeholder="Enter your username"
+              label={t('aurora.linkDialog.usernameLabel')}
+              placeholder={t('aurora.linkDialog.usernamePlaceholder')}
               variant="outlined"
               size="small"
               fullWidth
@@ -655,9 +663,9 @@ export default function AuroraCredentialsSection() {
             />
 
             <TextField
-              label="Password"
+              label={t('aurora.linkDialog.passwordLabel')}
               type="password"
-              placeholder="Enter your password"
+              placeholder={t('aurora.linkDialog.passwordPlaceholder')}
               variant="outlined"
               size="small"
               fullWidth
@@ -673,7 +681,7 @@ export default function AuroraCredentialsSection() {
               startIcon={isSaving ? <CircularProgress size={16} /> : undefined}
               fullWidth
             >
-              {isSaving ? 'Linking...' : 'Link Account'}
+              {isSaving ? t('aurora.linkDialog.submitting') : t('aurora.linkDialog.submit')}
             </Button>
           </Box>
         </DialogContent>
@@ -693,32 +701,31 @@ export default function AuroraCredentialsSection() {
           {importPhase === 'preview' && importPreview && (
             <>
               <Typography variant="body2" color="text.secondary" className={styles.modalDescription}>
-                Import data from <strong>{importPreview.username}</strong> to{' '}
-                <strong>
-                  {importingBoard?.charAt(0).toUpperCase()}
-                  {importingBoard?.slice(1)}
-                </strong>
-                :
+                <Trans
+                  i18nKey="aurora.import.dialog.previewIntro"
+                  t={t}
+                  values={{ username: importPreview.username, boardName: importingBoardName }}
+                  components={{ strong: <strong /> }}
+                />
               </Typography>
               <List dense>
                 {importPreview.climbs > 0 && (
                   <ListItem>
-                    <ListItemText primary={`${importPreview.climbs} draft climbs`} />
+                    <ListItemText primary={t('aurora.import.dialog.draftClimbs', { count: importPreview.climbs })} />
                   </ListItem>
                 )}
                 <ListItem>
-                  <ListItemText primary={`${importPreview.ascents} ascents`} />
+                  <ListItemText primary={t('aurora.import.dialog.ascents', { count: importPreview.ascents })} />
                 </ListItem>
                 <ListItem>
-                  <ListItemText primary={`${importPreview.attempts} attempts`} />
+                  <ListItemText primary={t('aurora.import.dialog.attempts', { count: importPreview.attempts })} />
                 </ListItem>
                 <ListItem>
-                  <ListItemText primary={`${importPreview.circuits} circuits`} />
+                  <ListItemText primary={t('aurora.import.dialog.circuits', { count: importPreview.circuits })} />
                 </ListItem>
               </List>
               <Typography variant="body2" color="text.secondary">
-                Climbs will be matched by name. Any that can&apos;t be matched will be reported after import.
-                Re-importing the same file will not create duplicates.
+                {t('aurora.import.dialog.previewNote')}
               </Typography>
             </>
           )}
@@ -733,35 +740,50 @@ export default function AuroraCredentialsSection() {
                 {(importResult.climbs.imported > 0 || importResult.climbs.failed > 0) && (
                   <ListItem>
                     <ListItemText
-                      primary="Draft Climbs"
-                      secondary={`${importResult.climbs.imported} imported, ${importResult.climbs.skipped} skipped, ${importResult.climbs.failed} failed`}
+                      primary={t('aurora.import.results.draftClimbs')}
+                      secondary={t('aurora.import.results.draftClimbsSummary', {
+                        imported: importResult.climbs.imported,
+                        skipped: importResult.climbs.skipped,
+                        failed: importResult.climbs.failed,
+                      })}
                     />
                   </ListItem>
                 )}
                 <ListItem>
                   <ListItemText
-                    primary="Ascents"
-                    secondary={`${importResult.ascents.imported} imported, ${importResult.ascents.skipped} skipped (already exist), ${importResult.ascents.failed} unmatched`}
+                    primary={t('aurora.import.results.ascents')}
+                    secondary={t('aurora.import.results.ascentsSummary', {
+                      imported: importResult.ascents.imported,
+                      skipped: importResult.ascents.skipped,
+                      failed: importResult.ascents.failed,
+                    })}
                   />
                 </ListItem>
                 <ListItem>
                   <ListItemText
-                    primary="Attempts"
-                    secondary={`${importResult.attempts.imported} imported, ${importResult.attempts.skipped} skipped (already exist), ${importResult.attempts.failed} unmatched`}
+                    primary={t('aurora.import.results.attempts')}
+                    secondary={t('aurora.import.results.attemptsSummary', {
+                      imported: importResult.attempts.imported,
+                      skipped: importResult.attempts.skipped,
+                      failed: importResult.attempts.failed,
+                    })}
                   />
                 </ListItem>
                 <ListItem>
                   <ListItemText
-                    primary="Circuits"
-                    secondary={`${importResult.circuits.imported} imported, ${importResult.circuits.skipped} skipped, ${importResult.circuits.failed} failed`}
+                    primary={t('aurora.import.results.circuits')}
+                    secondary={t('aurora.import.results.circuitsSummary', {
+                      imported: importResult.circuits.imported,
+                      skipped: importResult.circuits.skipped,
+                      failed: importResult.circuits.failed,
+                    })}
                   />
                 </ListItem>
               </List>
               {importResult.unresolvedClimbs.length > 0 && (
                 <MuiAlert severity="warning" className={styles.unsyncedAlert}>
                   <AlertTitle>
-                    {importResult.unresolvedClimbs.length} climb
-                    {importResult.unresolvedClimbs.length > 1 ? 's' : ''} could not be matched
+                    {t('aurora.import.results.unresolvedTitle', { count: importResult.unresolvedClimbs.length })}
                   </AlertTitle>
                   <div className={styles.unresolvedList}>
                     {importResult.unresolvedClimbs.slice(0, 20).map((name) => (
@@ -771,7 +793,9 @@ export default function AuroraCredentialsSection() {
                     ))}
                     {importResult.unresolvedClimbs.length > 20 && (
                       <Typography variant="body2" color="text.secondary">
-                        ...and {importResult.unresolvedClimbs.length - 20} more
+                        {t('aurora.import.results.unresolvedMore', {
+                          count: importResult.unresolvedClimbs.length - 20,
+                        })}
                       </Typography>
                     )}
                   </div>
@@ -783,7 +807,7 @@ export default function AuroraCredentialsSection() {
           {/* Error phase */}
           {importPhase === 'error' && importError && (
             <MuiAlert severity="error">
-              <AlertTitle>Import failed</AlertTitle>
+              <AlertTitle>{t('aurora.import.dialog.errorTitleShort')}</AlertTitle>
               {importError}
             </MuiAlert>
           )}
@@ -792,16 +816,16 @@ export default function AuroraCredentialsSection() {
         {/* Actions vary by phase */}
         {importPhase === 'preview' && (
           <DialogActions>
-            <Button onClick={handleImportDialogClose}>Cancel</Button>
+            <Button onClick={handleImportDialogClose}>{t('aurora.import.dialog.cancel')}</Button>
             <Button variant="contained" onClick={handleImportConfirm}>
-              Import
+              {t('aurora.import.dialog.confirm')}
             </Button>
           </DialogActions>
         )}
         {(importPhase === 'complete' || importPhase === 'error') && (
           <DialogActions>
             <Button variant="contained" onClick={handleImportDialogClose}>
-              Close
+              {t('aurora.import.dialog.close')}
             </Button>
           </DialogActions>
         )}

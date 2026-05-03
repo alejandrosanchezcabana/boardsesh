@@ -19,8 +19,10 @@ import { themeTokens } from '@/app/theme/theme-config';
 import { isCapacitor } from '@/app/lib/ble/capacitor-utils';
 import { useLongPress } from '@/app/lib/hooks/use-long-press';
 import { LightControlDrawer } from './light-control-drawer';
+import { useTranslation } from 'react-i18next';
 
 export const ShareBoardButton = () => {
+  const { t } = useTranslation('climbs');
   const { showMessage } = useSnackbar();
   const { hasConnected, isSessionActive, sessionId } = useSessionData();
   const {
@@ -72,7 +74,7 @@ export const ShareBoardButton = () => {
       success = await btConnect();
     }
     if (!success) {
-      showMessage('Could not connect to board. Make sure Bluetooth is on and the board is nearby.', 'error');
+      showMessage(t('board.connectError'), 'error');
     }
   };
 
@@ -100,7 +102,7 @@ export const ShareBoardButton = () => {
     <>
       <IconButton
         ref={longPressRef}
-        aria-label={isBoardConnected ? 'Disconnect from board' : 'Connect to board'}
+        aria-label={isBoardConnected ? t('board.disconnect') : t('board.connect')}
         onClick={handleLightbulbClick}
         color={isSessionActive ? 'primary' : 'default'}
       >
@@ -110,20 +112,16 @@ export const ShareBoardButton = () => {
       {hasOpenedDrawer && <LightControlDrawer open={lightDrawerOpen} onClose={() => setLightDrawerOpen(false)} />}
 
       <Dialog open={unsupportedOpen} onClose={() => setUnsupportedOpen(false)}>
-        <DialogTitle>Board lighting unavailable</DialogTitle>
+        <DialogTitle>{t('board.lightingUnavailable')}</DialogTitle>
         <DialogContent>
           {isIOS ? (
-            <Typography variant="body2">
-              Safari doesn&apos;t support Bluetooth. Use the Boardsesh app to light up holds on your board.
-            </Typography>
+            <Typography variant="body2">{t('board.lightingUnavailableIos')}</Typography>
           ) : (
-            <Typography variant="body2">
-              This browser doesn&apos;t support Bluetooth. Switch to Chrome to light up holds on your board.
-            </Typography>
+            <Typography variant="body2">{t('board.lightingUnavailableBrowser')}</Typography>
           )}
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setUnsupportedOpen(false)}>Dismiss</Button>
+          <Button onClick={() => setUnsupportedOpen(false)}>{t('board.dismiss')}</Button>
           {isIOS && (
             <Button
               variant="contained"
@@ -132,7 +130,7 @@ export const ShareBoardButton = () => {
               target="_blank"
               onClick={() => setUnsupportedOpen(false)}
             >
-              Get the app
+              {t('board.getApp')}
             </Button>
           )}
         </DialogActions>

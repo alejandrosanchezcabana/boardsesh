@@ -18,6 +18,7 @@ import { BoardDetailContent } from '../board-entity/board-detail';
 import BoardSearchResults from '../social/board-search-results';
 import { useMyBoards } from '@/app/hooks/use-my-boards';
 import { useWsAuthToken } from '@/app/hooks/use-ws-auth-token';
+import { useTranslation } from 'react-i18next';
 import type { UserBoard } from '@boardsesh/shared-schema';
 import styles from './my-boards-drawer.module.css';
 
@@ -34,6 +35,7 @@ type MyBoardsDrawerProps = {
 };
 
 export default function MyBoardsDrawer({ open, onClose, onCreateBoard, onTransitionEnd }: MyBoardsDrawerProps) {
+  const { t } = useTranslation('common');
   const { boards, isLoading, error } = useMyBoards(open);
   const { token } = useWsAuthToken();
   const [view, setView] = useState<DrawerView>({ type: 'list' });
@@ -86,24 +88,24 @@ export default function MyBoardsDrawer({ open, onClose, onCreateBoard, onTransit
 
   const drawerTitle =
     view.type === 'list' ? (
-      'My Boards'
+      t('myBoards.title')
     ) : (
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-        <IconButton size="small" onClick={handleBack} edge="start" aria-label="Back">
+        <IconButton size="small" onClick={handleBack} edge="start" aria-label={t('ariaLabels.back')}>
           <ArrowBackOutlined fontSize="small" />
         </IconButton>
-        {view.type === 'search' ? 'Find a Board' : 'Board'}
+        {view.type === 'search' ? t('myBoards.findBoard') : t('myBoards.boardDetail')}
       </Box>
     );
 
   const headerExtra =
     view.type === 'list' ? (
       <>
-        <IconButton size="small" onClick={() => setView({ type: 'search' })} aria-label="Find a board">
+        <IconButton size="small" onClick={() => setView({ type: 'search' })} aria-label={t('myBoards.ariaFindBoard')}>
           <SearchOutlined fontSize="small" />
         </IconButton>
         {onCreateBoard && (
-          <IconButton size="small" onClick={onCreateBoard} aria-label="Create a board">
+          <IconButton size="small" onClick={onCreateBoard} aria-label={t('myBoards.ariaCreateBoard')}>
             <AddOutlined fontSize="small" />
           </IconButton>
         )}
@@ -132,7 +134,7 @@ export default function MyBoardsDrawer({ open, onClose, onCreateBoard, onTransit
         <div className={styles.emptyState} data-testid="my-boards-empty">
           <DashboardOutlined sx={{ fontSize: 48, color: 'var(--neutral-300)' }} />
           <Typography variant="body2" color="text.secondary">
-            No boards yet. Create one from the board selector to get started.
+            {t('myBoards.empty')}
           </Typography>
         </div>
       );
@@ -181,7 +183,7 @@ export default function MyBoardsDrawer({ open, onClose, onCreateBoard, onTransit
             size="small"
             fullWidth
             autoFocus
-            placeholder="Search by name or location..."
+            placeholder={t('myBoards.searchPlaceholder')}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             sx={{ px: 2, pt: 1 }}

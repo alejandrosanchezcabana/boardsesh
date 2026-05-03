@@ -433,7 +433,7 @@ describe('List mode uses neutral colors (no per-action colored icons)', () => {
       });
 
       const button = screen.getByRole('button');
-      expect(screen.getByText('Mirrored')).toBeTruthy();
+      expect(screen.getByText('actions.mirror.label.mirrored')).toBeTruthy();
 
       // The list icon is created as:
       //   const listIcon = <SwapHorizOutlined sx={{ fontSize: iconSize }} />;
@@ -457,7 +457,7 @@ describe('List mode uses neutral colors (no per-action colored icons)', () => {
       });
 
       const button = screen.getByRole('button');
-      expect(screen.getByText('Mirror')).toBeTruthy();
+      expect(screen.getByText('actions.mirror.label.mirror')).toBeTruthy();
 
       const svg = button.querySelector('svg');
       expect(svg).toBeTruthy();

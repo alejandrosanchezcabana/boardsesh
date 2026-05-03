@@ -30,6 +30,7 @@ import ChevronLeftOutlined from '@mui/icons-material/ChevronLeftOutlined';
 import AngleSelector from './angle-selector';
 import styles from './header.module.css';
 import LocaleLink from '@/app/components/i18n/locale-link';
+import { useTranslation } from 'react-i18next';
 
 type BoardSeshHeaderProps = {
   boardDetails: BoardDetails;
@@ -38,6 +39,7 @@ type BoardSeshHeaderProps = {
 };
 
 export default function BoardSeshHeader({ boardDetails, angle, isAngleAdjustable }: BoardSeshHeaderProps) {
+  const { t } = useTranslation('climbs');
   const pathname = usePathname();
   const { currentClimb } = useCurrentClimb();
   const { totalSearchResultCount, isFetchingClimbs } = useSearchData();
@@ -135,7 +137,7 @@ export default function BoardSeshHeader({ boardDetails, angle, isAngleAdjustable
           <Box sx={{ display: 'flex', alignItems: 'center', gap: '4px', flexShrink: 0 }}>
             {hasBackButton && (
               <div className={styles.mobileOnly}>
-                <IconButton aria-label="Back to climb list" onClick={() => router.push(getBackToListUrl())}>
+                <IconButton aria-label={t('header.backToList')} onClick={() => router.push(getBackToListUrl())}>
                   <ChevronLeftOutlined />
                 </IconButton>
               </div>
@@ -160,7 +162,7 @@ export default function BoardSeshHeader({ boardDetails, angle, isAngleAdjustable
             {hasCreateButton && (
               <div className={styles.desktopOnly}>
                 <LocaleLink href={createClimbUrl}>
-                  <IconButton title="Create new climb">
+                  <IconButton title={t('header.createNewClimb')}>
                     <AddOutlined />
                   </IconButton>
                 </LocaleLink>
@@ -213,7 +215,7 @@ export default function BoardSeshHeader({ boardDetails, angle, isAngleAdjustable
                   minWidth: 'auto',
                 }}
               >
-                Clear all
+                {t('search.actions.clearAll')}
               </MuiButton>
               <MuiButton
                 variant="contained"
@@ -228,7 +230,8 @@ export default function BoardSeshHeader({ boardDetails, angle, isAngleAdjustable
                 size="large"
                 sx={{ borderRadius: 3, height: 48, px: 3, fontSize: 16, fontWeight: 600 }}
               >
-                Search{showResultCount ? ` \u00B7 ${resultCount.toLocaleString()}` : ''}
+                {t('search.actions.search')}
+                {showResultCount ? ` \u00B7 ${resultCount.toLocaleString()}` : ''}
               </MuiButton>
             </Box>
           );

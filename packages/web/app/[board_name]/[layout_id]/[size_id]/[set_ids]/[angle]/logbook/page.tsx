@@ -6,13 +6,17 @@ import type { Metadata } from 'next';
 import { getServerAuthToken } from '@/app/lib/auth/server-auth';
 import { serverMyBoards, serverUserPlaylists, cachedDiscoverPlaylists } from '@/app/lib/graphql/server-cached-client';
 import LibraryPageContent from '@/app/playlists/library-page-content';
+import { createNoIndexMetadata } from '@/app/lib/seo/metadata';
+import { getServerTranslation } from '@/app/lib/i18n/server';
 import styles from '@/app/components/library/library.module.css';
 
 export async function generateMetadata(): Promise<Metadata> {
-  return {
-    title: 'Logbook | Boardsesh',
-    description: 'Track your climbing history for this board setup',
-  };
+  const { t, locale } = await getServerTranslation('climbs');
+  return createNoIndexMetadata({
+    title: t('metadata.logbook.title'),
+    description: t('metadata.logbook.description'),
+    locale,
+  });
 }
 
 export default async function BoardLogbookPage(props: { params: Promise<BoardRouteParameters> }) {

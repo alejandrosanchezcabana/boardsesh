@@ -1,15 +1,21 @@
 import React, { Suspense } from 'react';
-import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import LogbookFeed from '@/app/components/library/logbook-feed';
 import LogbookLoading from './loading';
 import { cachedUserProfileStats } from '@/app/lib/graphql/server-cached-client';
 import { getYouSession } from '../you-auth';
+import { createNoIndexMetadata } from '@/app/lib/seo/metadata';
+import { getServerTranslation } from '@/app/lib/i18n/server';
 
-export const metadata: Metadata = {
-  title: 'Logbook | Boardsesh',
-  robots: { index: false, follow: true },
-};
+export async function generateMetadata() {
+  const { t, locale } = await getServerTranslation('you');
+  return createNoIndexMetadata({
+    title: t('metadata.logbook.title'),
+    description: t('metadata.logbook.description'),
+    path: '/you/logbook',
+    locale,
+  });
+}
 
 export default async function YouLogbookPage() {
   const session = await getYouSession();

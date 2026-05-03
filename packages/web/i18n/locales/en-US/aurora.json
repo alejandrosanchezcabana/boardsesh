@@ -1,0 +1,54 @@
+{
+  "metadata": {
+    "migration": {
+      "title": "Migrate from Old Kilter App",
+      "description": "Migrate your Kilter board data to Boardsesh after the Aurora backend shutdown."
+    }
+  },
+  "migration": {
+    "whatHappened": {
+      "title": "What Happened",
+      "lead": "The Aurora Kilter backend is gone. Your playlists, logbook, and draft climbs go with it unless you export them.",
+      "body": "On March 25, the Kilter board app suddenly disappeared, as Aurora randomly shut down its Kilter backend. In response Kilter rushed out their own app which was still in beta, but the outcome of these two entities fighting is that the customer gets left holding the bag. For more info read:",
+      "articleTitle": "The Kilter Board App Just Disappeared Without Warning. Here's What Really Happened.",
+      "articleDescription": "For years, climbing's most successful training board has been at war with its app developer. Now, climbers are paying the price.",
+      "articleSource": "climbing.com",
+      "articleAlt": "The Kilter Board App Just Disappeared Without Warning",
+      "ledRisk": "This single-vendor risk first became obvious 2 years ago, when you couldn't buy an LED kit for your Kilter holds due to an ongoing legal dispute between Kilter and Aurora.",
+      "boardseshIntroPrefix": "To remove this risk, ",
+      "boardseshLink": "Boardsesh",
+      "boardseshIntroSuffix": " was created as an open-source alternative to all board climbing apps. Boardsesh has its own copy of the climb databases and will eventually support all boards. It can easily be self-hosted, and will provide data checkout functionality."
+    },
+    "howToMigrate": {
+      "title": "How to Migrate",
+      "step1": {
+        "title": "Request your data export",
+        "body": "Email Aurora to request an export of your data. This will give you a JSON file containing your ascents, attempts, and circuits.",
+        "cta": "Email peter@auroraclimbing.com"
+      },
+      "step2": {
+        "title": "Create a Boardsesh account",
+        "signedInAs": "Signed in as {{email}}",
+        "body": "Create an account or sign in so we have somewhere to put your data.",
+        "cta": "Sign in or Create Account",
+        "modalTitle": "Sign in to migrate your data",
+        "modalDescription": "Create an account or sign in to import your Aurora data."
+      },
+      "step3": {
+        "title": "Import your data",
+        "signInFirst": "Sign in first to import your data.",
+        "body": "The Kilter backend is down so only JSON import is available for Kilter. For Tension, linking your account will automatically sync your data every 12 hours so you always have a backup."
+      },
+      "step4": {
+        "title": "Your Boardsesh profile",
+        "signInFirst": "Sign in first to see your profile."
+      }
+    },
+    "getHelp": {
+      "title": "Get Help",
+      "body": "Boardsesh is open source. File bugs, request features, or just ask for help.",
+      "discord": "Discord — Join for help and discussion",
+      "github": "GitHub — github.com/boardsesh/boardsesh"
+    }
+  }
+}

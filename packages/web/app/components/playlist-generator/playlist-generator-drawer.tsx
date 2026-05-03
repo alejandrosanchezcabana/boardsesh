@@ -2,6 +2,7 @@
 
 import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import CircularProgress from '@mui/material/CircularProgress';
+import { useTranslation } from 'react-i18next';
 import { useSnackbar } from '@/app/components/providers/snackbar-provider';
 import MuiButton from '@mui/material/Button';
 import Typography from '@mui/material/Typography';
@@ -48,6 +49,7 @@ const PlaylistGeneratorDrawer: React.FC<PlaylistGeneratorDrawerProps> = ({
 }) => {
   const { token, isAuthenticated } = useWsAuthToken();
   const { showMessage } = useSnackbar();
+  const { t } = useTranslation('playlists');
 
   // Default target grade (middle of range)
   const defaultTargetGrade = 18; // 6b/V4
@@ -149,7 +151,7 @@ const PlaylistGeneratorDrawer: React.FC<PlaylistGeneratorDrawerProps> = ({
   // Generate the playlist
   const handleGenerate = useCallback(async () => {
     if (!options || plannedSlots.length === 0) {
-      showMessage('No climbs to generate', 'error');
+      showMessage(t('generator.messages.noClimbs'), 'error');
       return;
     }
 
@@ -229,32 +231,35 @@ const PlaylistGeneratorDrawer: React.FC<PlaylistGeneratorDrawerProps> = ({
     setGenerating(false);
 
     if (failedSlots.length === 0) {
-      showMessage(`Added ${plannedSlots.length} climbs to playlist`, 'success');
+      showMessage(t('generator.messages.addedAll', { count: plannedSlots.length }), 'success');
     } else if (failedSlots.length < plannedSlots.length) {
       showMessage(
-        `Added ${plannedSlots.length - failedSlots.length} climbs. ${failedSlots.length} slots couldn't be filled.`,
+        t('generator.messages.addedPartial', {
+          added: plannedSlots.length - failedSlots.length,
+          failed: failedSlots.length,
+        }),
         'warning',
       );
     } else {
-      showMessage('Failed to generate playlist. No suitable climbs found.', 'error');
+      showMessage(t('generator.messages.failed'), 'error');
     }
 
     onSuccess?.();
     onClose();
-  }, [options, plannedSlots, playlistUuid, angle, token, onSuccess, onClose, showMessage, searchClimbsForGrade]);
+  }, [options, plannedSlots, playlistUuid, angle, token, onSuccess, onClose, showMessage, searchClimbsForGrade, t]);
 
   // Get workout type info
-  const workoutTypeInfo = selectedType ? WORKOUT_TYPES.find((t) => t.type === selectedType) : null;
+  const workoutTypeInfo = selectedType ? WORKOUT_TYPES.find((wt) => wt.type === selectedType) : null;
 
   // Render title based on state
   const renderTitle = () => {
     if (drawerState === 'select') {
-      return 'Generate Playlist';
+      return t('generator.drawerTitle');
     }
     if (drawerState === 'generating') {
-      return 'Generating...';
+      return t('generator.generatingTitle');
     }
-    return workoutTypeInfo?.name || 'Options';
+    return workoutTypeInfo ? t(`generator.workoutTypes.${workoutTypeInfo.type}.name`) : t('generator.optionsTitle');
   };
 
   // Render content based on state
@@ -268,7 +273,7 @@ const PlaylistGeneratorDrawer: React.FC<PlaylistGeneratorDrawerProps> = ({
         <div className={styles.generatingContainer}>
           <CircularProgress size={48} />
           <Typography variant="body2" component="span" className={styles.generatingText}>
-            Adding climbs... {progress.current} / {progress.total}
+            {t('generator.generatingProgress', { current: progress.current, total: progress.total })}
           </Typography>
         </div>
       );
@@ -286,25 +291,27 @@ const PlaylistGeneratorDrawer: React.FC<PlaylistGeneratorDrawerProps> = ({
 
           {/* Summary */}
           <div className={styles.summarySection}>
-            {groupedSlots.map((group) => (
-              <div key={group.section} className={styles.summaryRow}>
-                <Typography variant="body2" component="span" color="text.secondary">
-                  {group.label}
-                </Typography>
-                <Typography variant="body2" component="span">
-                  {group.slots.length} climb{group.slots.length !== 1 ? 's' : ''} ({getGradeName(group.slots[0].grade)}
-                  {group.slots[0].grade !== group.slots[group.slots.length - 1].grade &&
-                    ` - ${getGradeName(group.slots[group.slots.length - 1].grade)}`}
-                  )
-                </Typography>
-              </div>
-            ))}
+            {groupedSlots.map((group) => {
+              const firstGrade = group.slots[0].grade;
+              const lastGrade = group.slots[group.slots.length - 1].grade;
+              const range = firstGrade === lastGrade ? getGradeName(firstGrade) : `${getGradeName(firstGrade)} - ${getGradeName(lastGrade)}`;
+              return (
+                <div key={group.section} className={styles.summaryRow}>
+                  <Typography variant="body2" component="span" color="text.secondary">
+                    {t(`generator.sections.${group.section}`)}
+                  </Typography>
+                  <Typography variant="body2" component="span">
+                    {t('generator.summaryRow', { count: group.slots.length, range })}
+                  </Typography>
+                </div>
+              );
+            })}
             <div className={styles.totalRow}>
               <Typography variant="body2" component="span" fontWeight={600}>
-                Total
+                {t('generator.totals.total')}
               </Typography>
               <Typography variant="body2" component="span" fontWeight={600}>
-                {plannedSlots.length} climbs
+                {t('generator.totals.climbs', { count: plannedSlots.length })}
               </Typography>
             </div>
           </div>

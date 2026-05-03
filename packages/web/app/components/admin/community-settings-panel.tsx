@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import Table from '@mui/material/Table';
@@ -18,46 +18,23 @@ import FormControl from '@mui/material/FormControl';
 import InputLabel from '@mui/material/InputLabel';
 import Snackbar from '@mui/material/Snackbar';
 import SaveIcon from '@mui/icons-material/Save';
+import { useTranslation } from 'react-i18next';
 import { themeTokens } from '@/app/theme/theme-config';
 import { useWsAuthToken } from '@/app/hooks/use-ws-auth-token';
 import { createGraphQLHttpClient } from '@/app/lib/graphql/client';
 import { GET_COMMUNITY_SETTINGS, SET_COMMUNITY_SETTING } from '@/app/lib/graphql/operations/proposals';
 import type { CommunitySettingType } from '@boardsesh/shared-schema';
 
-const DEFAULT_SETTINGS = [
-  {
-    key: 'approval_threshold',
-    label: 'Approval Threshold',
-    description: 'Weighted votes needed for auto-approval',
-    defaultValue: '5',
-  },
-  {
-    key: 'outlier_min_ascents',
-    label: 'Outlier Min Ascents',
-    description: 'Min ascents for outlier detection',
-    defaultValue: '10',
-  },
-  {
-    key: 'outlier_grade_diff',
-    label: 'Outlier Grade Diff',
-    description: 'Grade difference threshold for outlier',
-    defaultValue: '2',
-  },
-  {
-    key: 'admin_vote_weight',
-    label: 'Admin Vote Weight',
-    description: 'Vote weight multiplier for admins',
-    defaultValue: '3',
-  },
-  {
-    key: 'leader_vote_weight',
-    label: 'Leader Vote Weight',
-    description: 'Vote weight multiplier for leaders',
-    defaultValue: '2',
-  },
-];
+const SETTING_DEFINITIONS = [
+  { key: 'approval_threshold', i18nKey: 'approvalThreshold', defaultValue: '5' },
+  { key: 'outlier_min_ascents', i18nKey: 'outlierMinAscents', defaultValue: '10' },
+  { key: 'outlier_grade_diff', i18nKey: 'outlierGradeDiff', defaultValue: '2' },
+  { key: 'admin_vote_weight', i18nKey: 'adminVoteWeight', defaultValue: '3' },
+  { key: 'leader_vote_weight', i18nKey: 'leaderVoteWeight', defaultValue: '2' },
+] as const;
 
 export default function CommunitySettingsPanel() {
+  const { t } = useTranslation('admin');
   const { token } = useWsAuthToken();
   const [scope, setScope] = useState('global');
   const [scopeKey, setScopeKey] = useState('');
@@ -65,6 +42,17 @@ export default function CommunitySettingsPanel() {
   const [editValues, setEditValues] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
   const [snackbar, setSnackbar] = useState('');
+
+  const definitions = useMemo(
+    () =>
+      SETTING_DEFINITIONS.map((def) => ({
+        key: def.key,
+        label: t(`settings.rows.${def.i18nKey}.label`),
+        description: t(`settings.rows.${def.i18nKey}.description`),
+        defaultValue: def.defaultValue,
+      })),
+    [t],
+  );
 
   const fetchSettings = useCallback(async () => {
     if (!token) return;
@@ -91,7 +79,7 @@ export default function CommunitySettingsPanel() {
     }
   }, [fetchSettings, scope, scopeKey]);
 
-  const hasChanges = DEFAULT_SETTINGS.some((def) => {
+  const hasChanges = definitions.some((def) => {
     const savedValue = settings.find((s) => s.key === def.key)?.value;
     const editValue = editValues[def.key];
     // Changed if there's an edit value that differs from the saved value (or from empty if no saved value)
@@ -103,61 +91,65 @@ export default function CommunitySettingsPanel() {
     setSaving(true);
     try {
       const client = createGraphQLHttpClient(token);
-      const promises = DEFAULT_SETTINGS.filter((def) => {
-        const savedValue = settings.find((s) => s.key === def.key)?.value;
-        const editValue = editValues[def.key];
-        return editValue !== undefined && editValue !== '' && editValue !== (savedValue ?? '');
-      }).map((def) =>
-        client.request(SET_COMMUNITY_SETTING, {
-          input: {
-            scope,
-            scopeKey: scope === 'global' ? '' : scopeKey,
-            key: def.key,
-            value: editValues[def.key],
-          },
-        }),
-      );
+      const promises = definitions
+        .filter((def) => {
+          const savedValue = settings.find((s) => s.key === def.key)?.value;
+          const editValue = editValues[def.key];
+          return editValue !== undefined && editValue !== '' && editValue !== (savedValue ?? '');
+        })
+        .map((def) =>
+          client.request(SET_COMMUNITY_SETTING, {
+            input: {
+              scope,
+              scopeKey: scope === 'global' ? '' : scopeKey,
+              key: def.key,
+              value: editValues[def.key],
+            },
+          }),
+        );
       await Promise.all(promises);
-      setSnackbar(`Saved ${promises.length} setting${promises.length !== 1 ? 's' : ''}`);
+      setSnackbar(t('settings.snackbar.saved', { count: promises.length }));
       void fetchSettings();
     } catch {
-      setSnackbar('Failed to save settings');
+      setSnackbar(t('settings.snackbar.saveFailed'));
     } finally {
       setSaving(false);
     }
-  }, [token, scope, scopeKey, editValues, settings, fetchSettings]);
+  }, [token, scope, scopeKey, editValues, settings, fetchSettings, definitions, t]);
 
   return (
     <Box>
       <Typography variant="h6" sx={{ fontWeight: 600, mb: 2 }}>
-        Community Settings
+        {t('settings.heading')}
       </Typography>
 
       {/* Scope selector */}
       <Box sx={{ display: 'flex', gap: 2, mb: 3 }}>
         <FormControl size="small" sx={{ minWidth: 120 }}>
-          <InputLabel>Scope</InputLabel>
+          <InputLabel>{t('settings.scope.label')}</InputLabel>
           <Select
             value={scope}
-            label="Scope"
+            label={t('settings.scope.label')}
             onChange={(e) => {
               setScope(e.target.value);
               setScopeKey('');
             }}
           >
-            <MenuItem value="global">Global</MenuItem>
-            <MenuItem value="board">Board</MenuItem>
-            <MenuItem value="climb">Climb</MenuItem>
+            <MenuItem value="global">{t('settings.scope.options.global')}</MenuItem>
+            <MenuItem value="board">{t('settings.scope.options.board')}</MenuItem>
+            <MenuItem value="climb">{t('settings.scope.options.climb')}</MenuItem>
           </Select>
         </FormControl>
         {scope !== 'global' && (
           <TextField
-            label={scope === 'board' ? 'Board Type' : 'Climb UUID'}
+            label={scope === 'board' ? t('settings.scope.boardTypeLabel') : t('settings.scope.climbUuidLabel')}
             value={scopeKey}
             onChange={(e) => setScopeKey(e.target.value)}
             size="small"
             sx={{ flex: 1 }}
-            placeholder={scope === 'board' ? 'kilter, tension' : 'Climb UUID'}
+            placeholder={
+              scope === 'board' ? t('settings.scope.boardTypePlaceholder') : t('settings.scope.climbUuidPlaceholder')
+            }
           />
         )}
       </Box>
@@ -166,13 +158,13 @@ export default function CommunitySettingsPanel() {
         <Table size="small">
           <TableHead>
             <TableRow>
-              <TableCell>Setting</TableCell>
-              <TableCell>Description</TableCell>
-              <TableCell>Value</TableCell>
+              <TableCell>{t('settings.table.setting')}</TableCell>
+              <TableCell>{t('settings.table.description')}</TableCell>
+              <TableCell>{t('settings.table.value')}</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
-            {DEFAULT_SETTINGS.map((def) => (
+            {definitions.map((def) => (
               <TableRow key={def.key}>
                 <TableCell>
                   <Typography variant="body2" sx={{ fontWeight: 600 }}>
@@ -211,7 +203,7 @@ export default function CommunitySettingsPanel() {
             '&:hover': { bgcolor: themeTokens.colors.primaryHover },
           }}
         >
-          {saving ? 'Saving...' : 'Save All'}
+          {saving ? t('settings.saving') : t('settings.save')}
         </Button>
       </Box>
 

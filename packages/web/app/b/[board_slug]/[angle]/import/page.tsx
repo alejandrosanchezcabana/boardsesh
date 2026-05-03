@@ -5,11 +5,17 @@ import { constructBoardSlugListUrl } from '@/app/lib/url-utils';
 import MoonBoardBulkImport from '@/app/components/moonboard-import/moonboard-bulk-import';
 import { type MoonBoardLayoutKey, MOONBOARD_LAYOUTS, MOONBOARD_SETS } from '@/app/lib/moonboard-config';
 import type { Metadata } from 'next';
+import { createNoIndexMetadata } from '@/app/lib/seo/metadata';
+import { getServerTranslation } from '@/app/lib/i18n/server';
 
-export const metadata: Metadata = {
-  title: 'Import Climbs | Boardsesh',
-  description: 'Import MoonBoard climbs from screenshots',
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const { t, locale } = await getServerTranslation('climbs');
+  return createNoIndexMetadata({
+    title: t('metadata.import.title'),
+    description: t('metadata.import.description'),
+    locale,
+  });
+}
 
 function getMoonBoardLayoutInfo(layoutId: number) {
   const entry = Object.entries(MOONBOARD_LAYOUTS).find(([, layout]) => layout.id === layoutId);

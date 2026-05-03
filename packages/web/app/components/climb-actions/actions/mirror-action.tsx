@@ -9,6 +9,7 @@ import type { ClimbActionProps, ClimbActionResult } from '../types';
 import { useOptionalQueueActions, useOptionalQueueData } from '../../graphql-queue';
 import { themeTokens } from '@/app/theme/theme-config';
 import { buildActionResult, computeActionDisplay, ActionListElement } from '../action-view-renderer';
+import { useTranslation } from 'react-i18next';
 
 export function MirrorAction({
   climb,
@@ -20,6 +21,7 @@ export function MirrorAction({
   className,
   onComplete,
 }: ClimbActionProps): ClimbActionResult {
+  const { t } = useTranslation('climbs');
   const queueActions = useOptionalQueueActions();
   const queueData = useOptionalQueueData();
   const { iconSize, shouldShowLabel } = computeActionDisplay(viewMode, size, showLabel);
@@ -47,7 +49,7 @@ export function MirrorAction({
     [canMirror, queueActions, boardDetails.board_name, climb.uuid, isMirrored, onComplete],
   );
 
-  const label = isMirrored ? 'Mirrored' : 'Mirror';
+  const label = isMirrored ? t('actions.mirror.label.mirrored') : t('actions.mirror.label.mirror');
   const iconStyle = isMirrored ? { color: themeTokens.colors.purple, fontSize: iconSize } : { fontSize: iconSize };
   const icon = <SwapHorizOutlined sx={iconStyle} />;
   const listIcon = <SwapHorizOutlined sx={{ fontSize: iconSize }} />;
@@ -65,7 +67,7 @@ export function MirrorAction({
     className,
     available: canMirror,
     iconElementOverride: canMirror ? (
-      <ActionTooltip title={isMirrored ? 'Mirrored (click to reset)' : 'Mirror climb'}>
+      <ActionTooltip title={isMirrored ? t('actions.mirror.tooltip.mirrored') : t('actions.mirror.tooltip.mirror')}>
         <span onClick={handleClick} style={{ cursor: 'pointer' }} className={className}>
           {icon}
         </span>

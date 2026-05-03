@@ -9,6 +9,9 @@ import { getProfileData } from './server-profile-data';
 import { fetchProfileStatsData } from './server-profile-stats';
 import { buildVersionedOgImagePath, OG_IMAGE_HEIGHT, OG_IMAGE_WIDTH } from '@/app/lib/seo/og';
 import { getProfileOgSummary } from '@/app/lib/seo/dynamic-og-data';
+import { getServerTranslation } from '@/app/lib/i18n/server';
+import { getLocale } from '@/app/lib/i18n/get-locale';
+import I18nProvider from '@/app/components/providers/i18n-provider';
 
 type PageProps = {
   params: Promise<{ user_id: string }>;
@@ -16,20 +19,21 @@ type PageProps = {
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { user_id } = await params;
+  const { t } = await getServerTranslation('profile');
 
   try {
     const summary = await getProfileOgSummary(user_id);
 
     if (!summary) {
       return {
-        title: 'Profile Not Found | Boardsesh',
-        description: 'This climbing profile could not be found.',
+        title: `${t('metadata.profile.notFoundTitle')} | Boardsesh`,
+        description: t('metadata.profile.notFoundDescription'),
         robots: { index: false, follow: false },
       };
     }
 
     const displayName = summary.displayName;
-    const description = `${displayName}'s climbing profile on Boardsesh`;
+    const description = t('metadata.profile.description', { name: displayName });
     const ogImagePath = buildVersionedOgImagePath('/api/og/profile', { user_id }, summary.version);
 
     return {
@@ -46,7 +50,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
             url: ogImagePath,
             width: OG_IMAGE_WIDTH,
             height: OG_IMAGE_HEIGHT,
-            alt: `${displayName}'s climbing profile`,
+            alt: t('metadata.profile.ogAlt', { name: displayName }),
           },
         ],
       },
@@ -59,8 +63,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     };
   } catch {
     return {
-      title: 'Profile | Boardsesh',
-      description: 'View climbing profile and stats',
+      title: `${t('metadata.profile.fallbackTitle')} | Boardsesh`,
+      description: t('metadata.profile.fallbackDescription'),
       alternates: { canonical: `/profile/${user_id}` },
     };
   }
@@ -84,16 +88,19 @@ export default async function ProfilePage({ params }: PageProps) {
   }
 
   const statsData = await fetchProfileStatsData(user_id);
+  const locale = await getLocale();
 
   return (
-    <ProfilePageContent
-      userId={user_id}
-      initialProfile={initialProfile}
-      initialProfileStats={statsData.initialProfileStats}
-      initialPercentile={statsData.initialPercentile}
-      initialAllBoardsTicks={statsData.initialAllBoardsTicks}
-      initialLogbook={statsData.initialLogbook}
-      initialIsOwnProfile={viewerUserId === user_id}
-    />
+    <I18nProvider locale={locale} namespaces={['profile']}>
+      <ProfilePageContent
+        userId={user_id}
+        initialProfile={initialProfile}
+        initialProfileStats={statsData.initialProfileStats}
+        initialPercentile={statsData.initialPercentile}
+        initialAllBoardsTicks={statsData.initialAllBoardsTicks}
+        initialLogbook={statsData.initialLogbook}
+        initialIsOwnProfile={viewerUserId === user_id}
+      />
+    </I18nProvider>
   );
 }

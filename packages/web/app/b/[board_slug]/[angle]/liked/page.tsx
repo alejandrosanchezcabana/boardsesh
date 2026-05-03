@@ -4,12 +4,18 @@ import { resolveBoardBySlug, boardToRouteParams } from '@/app/lib/board-slug-uti
 import { getBoardDetailsForBoard } from '@/app/lib/board-utils';
 import LikedClimbsViewContent from '@/app/[board_name]/[layout_id]/[size_id]/[set_ids]/[angle]/liked/liked-climbs-view-content';
 import { createNoIndexMetadata } from '@/app/lib/seo/metadata';
+import { getServerTranslation } from '@/app/lib/i18n/server';
+import type { Metadata } from 'next';
 import styles from '@/app/components/library/playlist-view.module.css';
 
-export const metadata = createNoIndexMetadata({
-  title: 'Liked Climbs',
-  description: 'Your liked climbs',
-});
+export async function generateMetadata(): Promise<Metadata> {
+  const { t, locale } = await getServerTranslation('climbs');
+  return createNoIndexMetadata({
+    title: t('metadata.liked.title'),
+    description: t('metadata.liked.description'),
+    locale,
+  });
+}
 
 type LikedPageProps = {
   params: Promise<{ board_slug: string; angle: string }>;

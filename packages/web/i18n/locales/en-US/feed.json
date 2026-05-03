@@ -1,0 +1,15 @@
+{
+  "metadata": {
+    "feed": {
+      "title": "Activity Feed",
+      "description": "View climbing activity from people you follow."
+    }
+  },
+  "title": "Activity Feed",
+  "tabs": {
+    "label": "Feed tabs",
+    "sessions": "Sessions",
+    "proposals": "Proposals",
+    "comments": "Comments"
+  }
+}

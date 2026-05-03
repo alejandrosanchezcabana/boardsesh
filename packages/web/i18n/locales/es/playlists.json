@@ -1,0 +1,149 @@
+{
+  "metadata": {
+    "library": {
+      "title": "Descubre playlists de escalada",
+      "description": "Descubre playlists públicas de escalada y gestiona las tuyas al iniciar sesión."
+    },
+    "detail": {
+      "fallbackTitle": "Playlist",
+      "fallbackDescription": "Playlist de escalada en Boardsesh"
+    }
+  },
+  "library": {
+    "signInBanner": {
+      "title": "Inicia sesión para usar tu biblioteca",
+      "description": "Registra tus encadenes y gestiona tus playlists.",
+      "cta": "Iniciar sesión",
+      "modalTitle": "Inicia sesión en Boardsesh",
+      "modalDescription": "Inicia sesión para registrar tus bloques y gestionar tus playlists."
+    },
+    "sections": {
+      "jumpBackIn": "Continúa donde lo dejaste",
+      "discover": "Descubre"
+    },
+    "empty": {
+      "title": "Aún no tienes playlists",
+      "description": "Crea tu primera playlist añadiendo bloques desde la lista."
+    },
+    "errors": {
+      "loadTitle": "No se pudo cargar la biblioteca",
+      "loadDescription": "Hubo un error al cargar tu biblioteca. Inténtalo de nuevo.",
+      "loadFailed": "No se pudo cargar tu biblioteca",
+      "tryAgain": "Reintentar"
+    }
+  },
+  "detail": {
+    "share": "Compartir playlist",
+    "actions": "Acciones de la playlist",
+    "menu": {
+      "generate": "Generar",
+      "edit": "Editar",
+      "delete": "Eliminar"
+    },
+    "visibility": {
+      "public": "Pública",
+      "private": "Privada"
+    },
+    "shareText": "Mira esta playlist de escalada en Boardsesh",
+    "shareFallbackTitle": "Playlist",
+    "shareSuccess": "¡Enlace copiado al portapapeles!",
+    "shareError": "No se pudo compartir",
+    "deleted": "Playlist eliminada",
+    "deleteFailed": "No se pudo eliminar la playlist",
+    "discussion": "Discusión",
+    "empty": "Aún no hay bloques en esta playlist",
+    "climbCount_one": "{{count}} bloque",
+    "climbCount_other": "{{count}} bloques",
+    "followerCount_one": "{{count}} seguidor",
+    "followerCount_other": "{{count}} seguidores",
+    "errors": {
+      "notFoundTitle": "Playlist no encontrada",
+      "notFoundDescription": "Esta playlist puede haber sido eliminada o no tienes permiso para verla.",
+      "loadTitle": "No se pudo cargar la playlist",
+      "loadDescription": "Hubo un error al cargar esta playlist. Inténtalo de nuevo.",
+      "loadFailed": "No se pudo cargar la playlist",
+      "notFound": "Playlist no encontrada",
+      "tryAgain": "Reintentar"
+    }
+  },
+  "generator": {
+    "drawerTitle": "Generar playlist",
+    "generatingTitle": "Generando...",
+    "optionsTitle": "Opciones",
+    "generatingProgress": "Añadiendo bloques... {{current}} / {{total}}",
+    "generate": "Generar",
+    "reset": "Restablecer",
+    "totals": {
+      "total": "Total",
+      "climbs_one": "{{count}} bloque",
+      "climbs_other": "{{count}} bloques"
+    },
+    "summaryRow_one": "{{count}} bloque ({{range}})",
+    "summaryRow_other": "{{count}} bloques ({{range}})",
+    "options": {
+      "warmUp": "Calentamiento",
+      "targetGrade": "Grado objetivo",
+      "minAscents": "Encadenes mínimos",
+      "minRating": "Valoración mínima",
+      "climbBias": "Sesgo de bloques",
+      "tallClimbsLabel": "Solo bloques altos",
+      "tallClimbsTooltip": "Muestra solo bloques que usan presas en las 8 filas inferiores (solo disponible en tableros 10x12)",
+      "mainSetClimbs": "Bloques de la serie principal",
+      "mainSetVariability": "Variabilidad de la serie principal",
+      "numberOfSteps": "Número de pasos",
+      "climbsPerStep": "Bloques por paso",
+      "numberOfClimbs": "Número de bloques"
+    },
+    "warmUpOptions": {
+      "standard": "Estándar",
+      "extended": "Extendido",
+      "none": "Ninguno"
+    },
+    "climbBiasOptions": {
+      "unfamiliar": "Sin probar",
+      "attempted": "Intentados",
+      "any": "Cualquiera"
+    },
+    "effortLevels": {
+      "moderate": "Moderado",
+      "challenging": "Exigente",
+      "veryDifficult": "Muy difícil",
+      "maxEffort": "Esfuerzo máximo"
+    },
+    "workoutTypes": {
+      "volume": {
+        "name": "Volumen",
+        "description": "Genera un entreno de alto volumen."
+      },
+      "pyramid": {
+        "name": "Pirámide",
+        "description": "Sube hasta un grado pico y luego baja."
+      },
+      "ladder": {
+        "name": "Escalera",
+        "description": "Sube por los grados en pasos."
+      },
+      "gradeFocus": {
+        "name": "Foco de grado",
+        "description": "¡Elige un grado y a por ello!"
+      }
+    },
+    "sections": {
+      "warmUp": "Calentamiento",
+      "increasing": "Subida",
+      "peak": "Pico",
+      "decreasing": "Bajada",
+      "main": "Serie principal"
+    },
+    "chart": {
+      "ariaLabel": "Vista previa de la distribución de grados",
+      "configurePrompt": "Configura las opciones para previsualizar"
+    },
+    "messages": {
+      "noClimbs": "No hay bloques para generar",
+      "addedAll": "Se añadieron {{count}} bloques a la playlist",
+      "addedPartial": "Se añadieron {{added}} bloques. No se pudieron rellenar {{failed}} huecos.",
+      "failed": "No se pudo generar la playlist. No se encontraron bloques adecuados."
+    }
+  }
+}

@@ -19,6 +19,7 @@ import type { BoardDetails } from '@/app/lib/types';
 import { themeTokens } from '@/app/theme/theme-config';
 import { useSnackbar } from '../providers/snackbar-provider';
 import { isValidHexColor } from '@/app/lib/color-utils';
+import { useTranslation } from 'react-i18next';
 
 type PlaylistSelectionContentProps = {
   climbUuid: string;
@@ -33,6 +34,7 @@ export default function PlaylistSelectionContent({
   angle,
   onDone,
 }: PlaylistSelectionContentProps) {
+  const { t } = useTranslation('climbs');
   const { openAuthModal } = useAuthModal();
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [createFormValues, setCreateFormValues] = useState({
@@ -62,7 +64,7 @@ export default function PlaylistSelectionContent({
       try {
         if (isInPlaylist) {
           await removeFromPlaylist(playlistId);
-          showMessage('Removed from playlist', 'success');
+          showMessage(t('actions.playlist.toast.removed'), 'success');
           track('Remove from Playlist', {
             boardName: boardDetails.board_name,
             climbUuid,
@@ -70,7 +72,7 @@ export default function PlaylistSelectionContent({
           });
         } else {
           await addToPlaylist(playlistId);
-          showMessage('Added to playlist', 'success');
+          showMessage(t('actions.playlist.toast.added'), 'success');
           track('Add to Playlist', {
             boardName: boardDetails.board_name,
             climbUuid,
@@ -78,24 +80,27 @@ export default function PlaylistSelectionContent({
           });
         }
       } catch {
-        showMessage(isInPlaylist ? 'Failed to remove from playlist' : 'Failed to add to playlist', 'error');
+        showMessage(
+          isInPlaylist ? t('actions.playlist.toast.removeFailed') : t('actions.playlist.toast.addFailed'),
+          'error',
+        );
       }
     },
-    [addToPlaylist, removeFromPlaylist, boardDetails.board_name, climbUuid, showMessage],
+    [addToPlaylist, removeFromPlaylist, boardDetails.board_name, climbUuid, showMessage, t],
   );
 
   const handleCreatePlaylist = useCallback(async () => {
     try {
       if (!createFormValues.name.trim()) {
-        showMessage('Please enter a playlist name', 'error');
+        showMessage(t('actions.playlist.validation.nameRequired'), 'error');
         return;
       }
       if (createFormValues.name.length > 100) {
-        showMessage('Name too long', 'error');
+        showMessage(t('actions.playlist.validation.nameTooLong'), 'error');
         return;
       }
       if (createFormValues.description.length > 500) {
-        showMessage('Description too long', 'error');
+        showMessage(t('actions.playlist.validation.descriptionTooLong'), 'error');
         return;
       }
 
@@ -112,7 +117,7 @@ export default function PlaylistSelectionContent({
 
       await addToPlaylist(newPlaylist.uuid);
 
-      showMessage(`Created playlist "${createFormValues.name}"`, 'success');
+      showMessage(t('actions.playlist.toast.createdNamed', { name: createFormValues.name }), 'success');
       track('Create Playlist', {
         boardName: boardDetails.board_name,
         playlistName: createFormValues.name,
@@ -122,11 +127,11 @@ export default function PlaylistSelectionContent({
       setShowCreateForm(false);
       onDone?.();
     } catch {
-      showMessage('Failed to create playlist', 'error');
+      showMessage(t('actions.playlist.toast.createFailed'), 'error');
     } finally {
       setCreatingPlaylist(false);
     }
-  }, [createFormValues, createPlaylist, addToPlaylist, boardDetails.board_name, onDone, showMessage]);
+  }, [createFormValues, createPlaylist, addToPlaylist, boardDetails.board_name, onDone, showMessage, t]);
 
   const handlePlaylistItemKeyDown = useCallback(
     (event: React.KeyboardEvent<HTMLLIElement>, playlistId: string, isInPlaylist: boolean) => {

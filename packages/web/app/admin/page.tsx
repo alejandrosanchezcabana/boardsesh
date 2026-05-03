@@ -7,6 +7,7 @@ import Typography from '@mui/material/Typography';
 import Tab from '@mui/material/Tab';
 import Tabs from '@mui/material/Tabs';
 import Alert from '@mui/material/Alert';
+import { useTranslation } from 'react-i18next';
 import { themeTokens } from '@/app/theme/theme-config';
 import { useWsAuthToken } from '@/app/hooks/use-ws-auth-token';
 import { createGraphQLHttpClient } from '@/app/lib/graphql/client';
@@ -16,6 +17,7 @@ import RoleManagement from '@/app/components/admin/role-management';
 import CommunitySettingsPanel from '@/app/components/admin/community-settings-panel';
 
 export default function AdminPage() {
+  const { t } = useTranslation('admin');
   const { token } = useWsAuthToken();
   const [tab, setTab] = useState(0);
   const [isAdmin, setIsAdmin] = useState(false);
@@ -46,7 +48,7 @@ export default function AdminPage() {
   if (!token) {
     return (
       <Container maxWidth="md" sx={{ py: 4, pt: 'calc(var(--global-header-height) + 32px)' }}>
-        <Alert severity="warning">Please sign in to access the admin panel.</Alert>
+        <Alert severity="warning">{t('auth.signInRequired')}</Alert>
       </Container>
     );
   }
@@ -54,7 +56,7 @@ export default function AdminPage() {
   if (!isAdmin) {
     return (
       <Container maxWidth="md" sx={{ py: 4, pt: 'calc(var(--global-header-height) + 32px)' }}>
-        <Alert severity="error">You do not have admin access.</Alert>
+        <Alert severity="error">{t('auth.noAccess')}</Alert>
       </Container>
     );
   }
@@ -62,13 +64,13 @@ export default function AdminPage() {
   return (
     <Container maxWidth="md" sx={{ py: 4, pt: 'calc(var(--global-header-height) + 32px)' }}>
       <Typography variant="h5" sx={{ fontWeight: 700, mb: 3, color: themeTokens.neutral[800] }}>
-        Admin Panel
+        {t('title')}
       </Typography>
 
       <Box sx={{ borderBottom: 1, borderColor: themeTokens.neutral[200], mb: 3 }}>
         <Tabs value={tab} onChange={(_, v) => setTab(v)}>
-          <Tab label="Roles" sx={{ textTransform: 'none' }} />
-          <Tab label="Settings" sx={{ textTransform: 'none' }} />
+          <Tab label={t('tabs.roles')} sx={{ textTransform: 'none' }} />
+          <Tab label={t('tabs.settings')} sx={{ textTransform: 'none' }} />
         </Tabs>
       </Box>
 

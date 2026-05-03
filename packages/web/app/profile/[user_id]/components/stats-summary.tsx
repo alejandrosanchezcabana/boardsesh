@@ -7,6 +7,7 @@ import CardContent from '@mui/material/CardContent';
 import Typography from '@mui/material/Typography';
 import CircularProgress from '@mui/material/CircularProgress';
 import Box from '@mui/material/Box';
+import { useTranslation } from 'react-i18next';
 import {
   CssBarChart,
   GroupedBarChart,
@@ -55,6 +56,7 @@ export default function StatsSummary({
   vPointsTimeline,
   percentile,
 }: StatsSummaryProps) {
+  const { t } = useTranslation('profile');
   if (loadingProfileStats || statisticsSummary.totalAscents === 0) {
     return null;
   }
@@ -117,11 +119,11 @@ export default function StatsSummary({
         height={160}
         mobileHeight={120}
         showLegend={false}
-        ariaLabel="Grade distribution across boards"
+        ariaLabel={t('stats.gradeDistributionAria')}
       />
     );
   } else {
-    gradeDistributionContent = <EmptyState description="No ascent data for this period" />;
+    gradeDistributionContent = <EmptyState description={t('empty.noAscentData')} />;
   }
 
   return (
@@ -146,21 +148,23 @@ export default function StatsSummary({
               {statisticsSummary.totalAscents}
             </Typography>
             <Typography variant="caption" color="text.secondary" sx={{ display: 'block', lineHeight: 1, opacity: 0.8 }}>
-              problems
+              {t('stats.problems')}
             </Typography>
           </Box>
-          {hardestSend && renderHighlightCard('hardest-send-status', 'send', hardestSend)}
-          {hardestFlash && renderHighlightCard('hardest-flash-status', 'flash', hardestFlash)}
+          {hardestSend && renderHighlightCard('hardest-send-status', t('stats.send'), hardestSend)}
+          {hardestFlash && renderHighlightCard('hardest-flash-status', t('stats.flash'), hardestFlash)}
         </Box>
 
         {percentile && percentile.percentile > 0 && (
           <Box sx={{ mb: 2 }}>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
               <Typography variant="caption" color="text.secondary">
-                Percentile
+                {t('stats.percentile')}
               </Typography>
               <Typography variant="caption" fontWeight={600}>
-                Top {Math.max(0.1, 100 - percentile.percentile).toFixed(percentile.percentile >= 99 ? 1 : 0)}%
+                {t('stats.topPercent', {
+                  value: Math.max(0.1, 100 - percentile.percentile).toFixed(percentile.percentile >= 99 ? 1 : 0),
+                })}
               </Typography>
             </Box>
             <Box
@@ -182,7 +186,7 @@ export default function StatsSummary({
               />
             </Box>
             <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: 'block' }}>
-              More problems sent than {percentile.percentile.toFixed(0)}% of climbers
+              {t('stats.moreSentThan', { value: percentile.percentile.toFixed(0) })}
             </Typography>
           </Box>
         )}
@@ -193,7 +197,11 @@ export default function StatsSummary({
               {statisticsSummary.layoutPercentages.map((layout) => (
                 <MuiTooltip
                   key={layout.layoutKey}
-                  title={`${layout.displayName}: ${layout.count} problems (${layout.percentage}%)`}
+                  title={t('stats.layoutTooltip', {
+                    name: layout.displayName,
+                    count: layout.count,
+                    percentage: layout.percentage,
+                  })}
                 >
                   <div
                     className={styles.percentageSegment}
@@ -214,14 +222,14 @@ export default function StatsSummary({
         {weeklyBars && (
           <div className={styles.gradeDistributionSection}>
             <Typography variant="body2" component="span" fontWeight={600} className={styles.gradeDistributionTitle}>
-              Activity
+              {t('stats.activity')}
             </Typography>
             <CssBarChart
               bars={weeklyBars}
               height={180}
               mobileHeight={120}
               gap={3}
-              ariaLabel="Weekly attempts by difficulty"
+              ariaLabel={t('stats.weeklyAttemptsAria')}
               angledLabels
               maxLabels={12}
             />
@@ -230,7 +238,7 @@ export default function StatsSummary({
 
         <div className={weeklyBars ? styles.flashRedpointSection : styles.gradeDistributionSection}>
           <Typography variant="body2" component="span" fontWeight={600} className={styles.gradeDistributionTitle}>
-            Grade Distribution
+            {t('stats.gradeDistribution')}
           </Typography>
 
           {gradeDistributionContent}
@@ -239,7 +247,7 @@ export default function StatsSummary({
         {aggregatedFlashRedpointBars && !loadingAggregated && (
           <div className={styles.flashRedpointSection}>
             <Typography variant="body2" component="span" fontWeight={600} className={styles.gradeDistributionTitle}>
-              Flash vs Redpoint
+              {t('stats.flashVsRedpoint')}
             </Typography>
             <GroupedBarChart
               bars={aggregatedFlashRedpointBars}
@@ -247,7 +255,7 @@ export default function StatsSummary({
               mobileHeight={100}
               gap={2}
               showLegend={false}
-              ariaLabel="Flash vs redpoint by grade"
+              ariaLabel={t('stats.flashRedpointAria')}
             />
           </div>
         )}

@@ -2,6 +2,7 @@
 
 import React from 'react';
 import CircularProgress from '@mui/material/CircularProgress';
+import { useTranslation } from 'react-i18next';
 import { EmptyState } from '@/app/components/ui/empty-state';
 import BoardImportPrompt from '@/app/components/settings/board-import-prompt';
 import { AURORA_BOARDS, type AuroraBoardName } from '@boardsesh/shared-schema';
@@ -21,6 +22,7 @@ export default function BoardStatsSection({
   filteredLogbook,
   isOwnProfile,
 }: BoardStatsSectionProps) {
+  const { t } = useTranslation('profile');
   if (loading) {
     return (
       <div className={styles.loadingStats}>
@@ -37,5 +39,5 @@ export default function BoardStatsSection({
     return <BoardImportPrompt boardType={selectedBoard as AuroraBoardName} />;
   }
 
-  return <EmptyState description="No climbing data for this period" />;
+  return <EmptyState description={t('empty.noClimbingData')} />;
 }

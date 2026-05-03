@@ -15,6 +15,8 @@ import { BluetoothProvider } from '@/app/components/board-bluetooth-control/blue
 import { UISearchParamsProvider } from '@/app/components/queue-control/ui-searchparams-provider';
 import { QueueBridgeInjector } from '@/app/components/queue-control/queue-bridge-context';
 import LastUsedBoardTracker from '@/app/components/board-page/last-used-board-tracker';
+import I18nProvider from '@/app/components/providers/i18n-provider';
+import { getLocale } from '@/app/lib/i18n/get-locale';
 import { themeTokens } from '@/app/theme/theme-config';
 
 export async function generateMetadata(props: { params: Promise<BoardRouteParameters> }): Promise<Metadata> {
@@ -84,16 +86,19 @@ export default async function BoardLayout(props: PropsWithChildren<BoardLayoutPr
         )
       : `/${boardDetails.board_name}`;
 
+  const locale = await getLocale();
+
   return (
-    <div
-      style={{
-        minHeight: '100dvh',
-        display: 'flex',
-        flexDirection: 'column',
-        padding: 0,
-        background: 'var(--semantic-surface)',
-      }}
-    >
+    <I18nProvider locale={locale} namespaces={['common', 'climbs']}>
+      <div
+        style={{
+          minHeight: '100dvh',
+          display: 'flex',
+          flexDirection: 'column',
+          padding: 0,
+          background: 'var(--semantic-surface)',
+        }}
+      >
       <LastUsedBoardTracker
         url={listUrl}
         boardName={boardDetails.board_name}
@@ -132,6 +137,7 @@ export default async function BoardLayout(props: PropsWithChildren<BoardLayoutPr
           </WebSocketConnectionProvider>
         </ConnectionSettingsProvider>
       </BoardSessionBridge>
-    </div>
+      </div>
+    </I18nProvider>
   );
 }

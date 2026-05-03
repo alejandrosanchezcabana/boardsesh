@@ -9,6 +9,7 @@ import ProposalFeed from '@/app/components/activity-feed/proposal-feed';
 import CommentFeed from '@/app/components/activity-feed/comment-feed';
 import { useSession } from 'next-auth/react';
 import { useSearchParams } from 'next/navigation';
+import { useTranslation } from 'react-i18next';
 import { useLocaleRouter } from '@/app/lib/i18n/use-locale-router';
 
 import BoardFilterStrip from '@/app/components/board-scroll/board-filter-strip';
@@ -34,6 +35,7 @@ export default function FeedPageContent({
   isAuthenticatedSSR,
   initialMyBoards,
 }: FeedPageContentProps) {
+  const { t } = useTranslation('feed');
   const { status } = useSession();
   const router = useLocaleRouter();
   const searchParams = useSearchParams();
@@ -108,10 +110,16 @@ export default function FeedPageContent({
             onBoardSelect={handleBoardSelect}
           />
         )}
-        <Tabs value={activeTab} onChange={handleTabChange} variant="fullWidth" sx={{ mb: 2 }} aria-label="Feed tabs">
-          <Tab label="Sessions" value="sessions" />
-          <Tab label="Proposals" value="proposals" />
-          <Tab label="Comments" value="comments" />
+        <Tabs
+          value={activeTab}
+          onChange={handleTabChange}
+          variant="fullWidth"
+          sx={{ mb: 2 }}
+          aria-label={t('tabs.label')}
+        >
+          <Tab label={t('tabs.sessions')} value="sessions" />
+          <Tab label={t('tabs.proposals')} value="proposals" />
+          <Tab label={t('tabs.comments')} value="comments" />
         </Tabs>
 
         {activeTab === 'sessions' && (

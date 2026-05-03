@@ -19,28 +19,34 @@ import { useGradeFormat } from '@/app/hooks/use-grade-format';
 import type { BoardDetails } from '@/app/lib/types';
 import BoardRenderer from '@/app/components/board-renderer/board-renderer';
 import AngleSelector from '@/app/components/board-page/angle-selector';
+import { useTranslation } from 'react-i18next';
+
+type TFunc = (key: string, options?: Record<string, unknown>) => string;
 
 /**
  * Build summary parts for collapsed activity pill display.
  */
-export function buildSessionSummaryParts(stats: {
-  totalFlashes: number;
-  totalSends: number;
-  totalAttempts: number;
-  tickCount: number;
-  hardestGrade?: string | null;
-  formatGrade?: (g: string) => string | null;
-}): string[] {
+export function buildSessionSummaryParts(
+  stats: {
+    totalFlashes: number;
+    totalSends: number;
+    totalAttempts: number;
+    tickCount: number;
+    hardestGrade?: string | null;
+    formatGrade?: (g: string) => string | null;
+  },
+  t: TFunc,
+): string[] {
   const parts: string[] = [];
-  if (stats.totalFlashes > 0) parts.push(`${stats.totalFlashes} flash${stats.totalFlashes !== 1 ? 'es' : ''}`);
+  if (stats.totalFlashes > 0) parts.push(t('detail.flashesCount', { count: stats.totalFlashes }));
   // totalSends includes flashes, so subtract to avoid double-counting
   const nonFlashSends = stats.totalSends - stats.totalFlashes;
-  if (nonFlashSends > 0) parts.push(`${nonFlashSends} send${nonFlashSends !== 1 ? 's' : ''}`);
-  if (stats.totalAttempts > 0) parts.push(`${stats.totalAttempts} attempt${stats.totalAttempts !== 1 ? 's' : ''}`);
-  parts.push(`${stats.tickCount} climb${stats.tickCount !== 1 ? 's' : ''}`);
+  if (nonFlashSends > 0) parts.push(t('detail.sendsCount', { count: nonFlashSends }));
+  if (stats.totalAttempts > 0) parts.push(t('detail.attemptsCount', { count: stats.totalAttempts }));
+  parts.push(t('detail.climbCount', { count: stats.tickCount }));
   if (stats.hardestGrade) {
     const formatted = stats.formatGrade ? stats.formatGrade(stats.hardestGrade) : stats.hardestGrade;
-    parts.push(`Hardest: ${formatted ?? stats.hardestGrade}`);
+    parts.push(t('detail.hardestLabel', { grade: formatted ?? stats.hardestGrade }));
   }
   return parts;
 }
@@ -68,11 +74,11 @@ type SessionOverviewPanelProps = {
   namedBoardName?: string;
 };
 
-function formatDuration(minutes: number): string {
-  if (minutes < 60) return `${minutes}min`;
+export function formatDuration(minutes: number, t: TFunc): string {
+  if (minutes < 60) return t('summary.minutes', { count: minutes });
   const hours = Math.floor(minutes / 60);
   const mins = minutes % 60;
-  return mins > 0 ? `${hours}h ${mins}min` : `${hours}h`;
+  return mins > 0 ? t('summary.hoursAndMinutes', { hours, mins }) : t('summary.hours', { count: hours });
 }
 
 export default function SessionOverviewPanel({
@@ -92,6 +98,7 @@ export default function SessionOverviewPanel({
   onAngleChange,
   namedBoardName,
 }: SessionOverviewPanelProps) {
+  const { t } = useTranslation('session');
   const { formatGrade, loaded: gradeFormatLoaded } = useGradeFormat();
 
   const gradeBars = React.useMemo(
@@ -139,7 +146,7 @@ export default function SessionOverviewPanel({
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
           <FlagOutlined sx={{ fontSize: 16 }} color="action" />
           <Typography variant="body2" color="text.secondary">
-            Goal: {goal}
+            {t('overview.goal', { goal })}
           </Typography>
         </Box>
       ) : null}
@@ -150,7 +157,7 @@ export default function SessionOverviewPanel({
             {totalFlashes > 0 && (
               <Chip
                 icon={<FlashOnOutlined />}
-                label={`${totalFlashes} flash${totalFlashes !== 1 ? 'es' : ''}`}
+                label={t('detail.flashesCount', { count: totalFlashes })}
                 sx={{
                   bgcolor: 'success.main',
                   color: 'success.contrastText',
@@ -162,24 +169,27 @@ export default function SessionOverviewPanel({
             {totalSends - totalFlashes > 0 && (
               <Chip
                 icon={<CheckCircleOutlineOutlined />}
-                label={`${totalSends - totalFlashes} send${totalSends - totalFlashes !== 1 ? 's' : ''}`}
+                label={t('detail.sendsCount', { count: totalSends - totalFlashes })}
                 color="primary"
               />
             )}
             {totalAttempts > 0 && (
               <Chip
                 icon={<ErrorOutlineOutlined />}
-                label={`${totalAttempts} attempt${totalAttempts !== 1 ? 's' : ''}`}
+                label={t('detail.attemptsCount', { count: totalAttempts })}
                 variant="outlined"
               />
             )}
             {durationMinutes != null && durationMinutes > 0 && (
-              <Chip icon={<TimerOutlined />} label={formatDuration(durationMinutes)} variant="outlined" />
+              <Chip icon={<TimerOutlined />} label={formatDuration(durationMinutes, t)} variant="outlined" />
             )}
-            <Chip label={`${tickCount} climb${tickCount !== 1 ? 's' : ''}`} variant="outlined" />
+            <Chip label={t('detail.climbCount', { count: tickCount })} variant="outlined" />
             {hardestGrade &&
               (gradeFormatLoaded ? (
-                <Chip label={`Hardest: ${formatGrade(hardestGrade) ?? hardestGrade}`} variant="outlined" />
+                <Chip
+                  label={t('detail.hardestLabel', { grade: formatGrade(hardestGrade) ?? hardestGrade })}
+                  variant="outlined"
+                />
               ) : (
                 <Skeleton variant="rounded" width={80} height={32} />
               ))}
@@ -202,14 +212,14 @@ export default function SessionOverviewPanel({
             <Card>
               <CardContent>
                 <Typography variant="subtitle2" sx={{ mb: 1 }}>
-                  Grade Distribution
+                  {t('detail.gradeDistribution')}
                 </Typography>
                 <CssBarChart
                   bars={gradeBars}
                   height={160}
                   mobileHeight={120}
                   gap={3}
-                  ariaLabel="Session grade distribution"
+                  ariaLabel={t('detail.sessionGradeDistribution')}
                 />
                 <Box sx={{ display: 'flex', gap: 1.5, justifyContent: 'center', mt: 1 }}>
                   {SESSION_GRADE_LEGEND.map((entry) => (

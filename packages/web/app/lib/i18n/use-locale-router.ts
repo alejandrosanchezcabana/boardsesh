@@ -1,10 +1,21 @@
 'use client';
 
 import { useCallback, useMemo } from 'react';
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { useTranslation } from 'react-i18next';
-import { applyLocale } from './locale-href';
+import { applyLocale, stripLocalePrefix } from './locale-href';
 import { DEFAULT_LOCALE, isSupportedLocale, type Locale } from './config';
+
+function useActiveLocale(): Locale {
+  const { i18n } = useTranslation();
+  return isSupportedLocale(i18n.language) ? i18n.language : DEFAULT_LOCALE;
+}
+
+export function usePathnameWithoutLocale(): string {
+  const pathname = usePathname() ?? '/';
+  const activeLocale = useActiveLocale();
+  return stripLocalePrefix(pathname, activeLocale);
+}
 
 type RouterPushOptions = Parameters<ReturnType<typeof useRouter>['push']>[1];
 type RouterReplaceOptions = Parameters<ReturnType<typeof useRouter>['replace']>[1];
@@ -12,8 +23,7 @@ type RouterPrefetchOptions = Parameters<ReturnType<typeof useRouter>['prefetch']
 
 export function useLocaleRouter() {
   const router = useRouter();
-  const { i18n } = useTranslation();
-  const activeLocale: Locale = isSupportedLocale(i18n.language) ? i18n.language : DEFAULT_LOCALE;
+  const activeLocale = useActiveLocale();
 
   const push = useCallback(
     (href: string, options?: RouterPushOptions) => {

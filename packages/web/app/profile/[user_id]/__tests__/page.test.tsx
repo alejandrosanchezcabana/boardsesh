@@ -11,6 +11,10 @@ const profilePageTestState = vi.hoisted(() => ({
 
 vi.mock('server-only', () => ({}));
 
+vi.mock('next/headers', () => ({
+  headers: async () => new Headers(),
+}));
+
 vi.mock('next/navigation', () => ({
   notFound: profilePageTestState.notFoundMock,
 }));
@@ -41,6 +45,10 @@ vi.mock('@/app/lib/seo/dynamic-og-data', () => ({
 
 vi.mock('../profile-page-content', () => ({
   default: (props: { userId: string }) => ({ type: 'ProfilePageContent', props }),
+}));
+
+vi.mock('@/app/components/providers/i18n-provider', () => ({
+  default: ({ children }: { children: unknown }) => children,
 }));
 
 const pageModule = await import('../page');

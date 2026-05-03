@@ -1,6 +1,15 @@
 import { describe, it, expect, vi, beforeEach } from 'vite-plus/test';
 import { render, screen, fireEvent } from '@testing-library/react';
+import { tFromCatalog } from '@/app/__test-helpers__/i18n-mock';
 import AuroraMigrationContent from '../aurora-migration-content';
+
+vi.mock('react-i18next', () => ({
+  useTranslation: (ns?: string) => ({
+    t: (key: string, options?: Record<string, unknown>) => tFromCatalog(ns, key, options),
+    i18n: { language: 'en-US' },
+  }),
+  Trans: ({ children }: { children?: React.ReactNode }) => children ?? null,
+}));
 
 let mockSessionStatus = 'unauthenticated';
 let mockSessionData: { user?: { email?: string } } | null = null;

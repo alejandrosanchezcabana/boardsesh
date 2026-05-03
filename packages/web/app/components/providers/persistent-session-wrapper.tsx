@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useLayoutEffect, useCallback, useMemo, useRef } from 'react';
-import { usePathname } from 'next/navigation';
+import { usePathnameWithoutLocale } from '@/app/lib/i18n/use-locale-router';
 import { PartyProfileProvider } from '../party-manager/party-profile-context';
 import { PersistentSessionProvider, usePersistentSession } from '../persistent-session';
 import { QueueBridgeProvider, useQueueBridgeBoardInfo } from '../queue-control/queue-bridge-context';
@@ -129,7 +129,7 @@ const HIDE_TAB_BAR_PAGES = ['/aurora-migration'];
 
 export function RootBottomBar({ boardConfigs }: { boardConfigs: BoardConfigData }) {
   const { boardDetails, angle, hasActiveQueue } = useQueueBridgeBoardInfo();
-  const pathname = usePathname();
+  const pathname = usePathnameWithoutLocale();
   const isNative = isNativeApp();
 
   const hideTabBar = HIDE_TAB_BAR_PAGES.some((prefix) => pathname.startsWith(prefix)) && !hasActiveQueue;

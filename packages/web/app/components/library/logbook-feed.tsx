@@ -17,8 +17,8 @@ import {
 import { readFiltersFromQuery, readSortFromQuery, filtersToQueryParams } from '@/app/lib/logbook-url-utils';
 import { getPreference, setPreference } from '@/app/lib/user-preferences-db';
 import { useSession } from 'next-auth/react';
-import { usePathname, useSearchParams } from 'next/navigation';
-import { useLocaleRouter } from '@/app/lib/i18n/use-locale-router';
+import { useSearchParams } from 'next/navigation';
+import { useLocaleRouter, usePathnameWithoutLocale } from '@/app/lib/i18n/use-locale-router';
 import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query';
 import { createGraphQLHttpClient } from '@/app/lib/graphql/client';
 import { useWsAuthToken } from '@/app/hooks/use-ws-auth-token';
@@ -63,7 +63,7 @@ type LogbookFeedProps = {
 
 export default function LogbookFeed({ layoutStats, loadingLayoutStats }: LogbookFeedProps) {
   const { data: session } = useSession();
-  const pathname = usePathname();
+  const pathname = usePathnameWithoutLocale();
   const searchParams = useSearchParams();
   const router = useLocaleRouter();
   const { token, isLoading: authLoading, error: authError } = useWsAuthToken();

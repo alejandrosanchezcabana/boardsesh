@@ -12,6 +12,7 @@ import CircularProgress from '@mui/material/CircularProgress';
 import Alert from '@mui/material/Alert';
 import LockOutlined from '@mui/icons-material/LockOutlined';
 import CheckCircleOutlined from '@mui/icons-material/CheckCircleOutlined';
+import { useTranslation } from 'react-i18next';
 import { useSnackbar } from '@/app/components/providers/snackbar-provider';
 
 type SetPasswordSectionProps = {
@@ -36,6 +37,7 @@ export default function SetPasswordSection({
   linkedProviders,
   onPasswordSet,
 }: SetPasswordSectionProps) {
+  const { t } = useTranslation('settings');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [passwordError, setPasswordError] = useState('');
@@ -50,23 +52,23 @@ export default function SetPasswordSection({
     let hasError = false;
 
     if (!password) {
-      setPasswordError('Please enter a password');
+      setPasswordError(t('password.validation.enterPassword'));
       hasError = true;
     } else if (password.length < 8) {
-      setPasswordError('Password must be at least 8 characters');
+      setPasswordError(t('password.validation.tooShort'));
       hasError = true;
     } else if (password.length > 128) {
-      setPasswordError('Password must be less than 128 characters');
+      setPasswordError(t('password.validation.tooLong'));
       hasError = true;
     } else {
       setPasswordError('');
     }
 
     if (!confirmPassword) {
-      setConfirmError('Please confirm your password');
+      setConfirmError(t('password.validation.confirmRequired'));
       hasError = true;
     } else if (confirmPassword !== password) {
-      setConfirmError('Passwords do not match');
+      setConfirmError(t('password.validation.mismatch'));
       hasError = true;
     } else {
       setConfirmError('');
@@ -85,17 +87,17 @@ export default function SetPasswordSection({
       const data = await response.json();
 
       if (!response.ok) {
-        showMessage(data.error || 'Failed to set password', 'error');
+        showMessage(data.error || t('password.validation.saveError'), 'error');
         return;
       }
 
-      showMessage('Password set! You can now log in with your email and password.', 'success');
+      showMessage(t('password.success'), 'success');
       setPassword('');
       setConfirmPassword('');
       onPasswordSet();
     } catch (error) {
       console.error('Set password error:', error);
-      showMessage('Failed to set password. Please try again.', 'error');
+      showMessage(t('password.validation.retryError'), 'error');
     } finally {
       setSaving(false);
     }
@@ -107,10 +109,10 @@ export default function SetPasswordSection({
         <CardContent>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <CheckCircleOutlined color="success" />
-            <Typography variant="h5">Email & Password Login</Typography>
+            <Typography variant="h5">{t('password.enabledTitle')}</Typography>
           </Box>
           <Typography variant="body2" component="span" color="text.secondary" sx={{ display: 'block', mt: 1 }}>
-            Password login is enabled for {userEmail}
+            {t('password.enabledDescription', { email: userEmail })}
           </Typography>
         </CardContent>
       </Card>
@@ -118,29 +120,31 @@ export default function SetPasswordSection({
   }
 
   const providerNames = linkedProviders.map(formatProviderName);
+  const providersJoined = providerNames.join(', ');
 
   return (
     <Card>
       <CardContent>
-        <Typography variant="h5">Email & Password Login</Typography>
+        <Typography variant="h5">{t('password.title')}</Typography>
         <Typography variant="body2" component="span" color="text.secondary" sx={{ display: 'block', mb: 2 }}>
-          Set a password to log in with your email address. This is useful for browsers that don&apos;t support Google
-          sign-in (e.g., the Boardsesh iOS app).
+          {t('password.description')}
         </Typography>
 
         {providerNames.length > 0 && (
           <Alert severity="info" sx={{ mb: 2 }}>
-            You&apos;re currently signed in with {providerNames.join(', ')}. Setting a password will not affect your{' '}
-            {providerNames.length === 1 ? providerNames[0] : 'social'} login.
+            {t('password.linkedProviderInfo', {
+              count: providerNames.length,
+              providers: providersJoined,
+            })}
           </Alert>
         )}
 
         <Box component="form" onSubmit={handleSubmit} sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
           <TextField
-            label="Password"
+            label={t('password.passwordLabel')}
             type="password"
             autoComplete="new-password"
-            placeholder="Password (min 8 characters)"
+            placeholder={t('password.passwordPlaceholder')}
             variant="outlined"
             size="small"
             fullWidth
@@ -163,10 +167,10 @@ export default function SetPasswordSection({
           />
 
           <TextField
-            label="Confirm Password"
+            label={t('password.confirmLabel')}
             type="password"
             autoComplete="new-password"
-            placeholder="Confirm password"
+            placeholder={t('password.confirmPlaceholder')}
             variant="outlined"
             size="small"
             fullWidth
@@ -195,7 +199,7 @@ export default function SetPasswordSection({
             startIcon={saving ? <CircularProgress size={16} /> : <LockOutlined />}
             fullWidth
           >
-            Set Password
+            {t('password.submit')}
           </Button>
         </Box>
       </CardContent>

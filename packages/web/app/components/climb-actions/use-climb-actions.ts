@@ -12,6 +12,7 @@ import type { Climb, BoardDetails } from '@/app/lib/types';
 import type { UseClimbActionsReturn } from './types';
 import { openExternalUrl } from '@/app/lib/open-external-url';
 import { useAuthModal } from '@/app/components/providers/auth-modal-provider';
+import { useTranslation } from 'react-i18next';
 
 type UseClimbActionsOptions = {
   climb: Climb;
@@ -28,6 +29,7 @@ export function useClimbActions({
   auroraAppUrl,
   onActionComplete,
 }: UseClimbActionsOptions): UseClimbActionsReturn {
+  const { t } = useTranslation('climbs');
   const router = useLocaleRouter();
   const pathname = usePathname();
   const { addToQueue, mirrorClimb } = useQueueActions();
@@ -184,7 +186,7 @@ export function useClimbActions({
 
     const shareData = {
       title: climb.name,
-      text: `Check out "${climb.name}" (${climb.difficulty}) on Boardsesh`,
+      text: t('share.actionText', { climbName: climb.name, difficulty: climb.difficulty }),
       url: shareUrl,
     };
 
@@ -198,7 +200,7 @@ export function useClimbActions({
         });
       } else {
         await navigator.clipboard.writeText(shareUrl);
-        showMessage('Link copied to clipboard!', 'success');
+        showMessage(t('share.linkCopied'), 'success');
         track('Climb Shared', {
           boardName: boardDetails.board_name,
           climbUuid: climb.uuid,
@@ -212,13 +214,13 @@ export function useClimbActions({
         // Fallback to clipboard
         try {
           await navigator.clipboard.writeText(shareUrl);
-          showMessage('Link copied to clipboard!', 'success');
+          showMessage(t('share.linkCopied'), 'success');
         } catch {
-          showMessage('Failed to share', 'error');
+          showMessage(t('share.shareFailed'), 'error');
         }
       }
     }
-  }, [climb, viewDetailsUrl, boardDetails.board_name, onActionComplete, showMessage]);
+  }, [climb, viewDetailsUrl, boardDetails.board_name, onActionComplete, showMessage, t]);
 
   return {
     // Action handlers

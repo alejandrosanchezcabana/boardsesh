@@ -119,7 +119,7 @@ type UserProfile = {
 export default function SettingsPageContent() {
   const { data: session, status } = useSession();
   const router = useLocaleRouter();
-  const { i18n } = useTranslation();
+  const { t, i18n } = useTranslation('settings');
   const activeLocale: Locale = isSupportedLocale(i18n.language) ? i18n.language : DEFAULT_LOCALE;
   const [formValues, setFormValues] = useState({ displayName: '', instagramUrl: '' });
   const [loading, setLoading] = useState(true);
@@ -141,8 +141,8 @@ export default function SettingsPageContent() {
   const [healthKitAvailable, setHealthKitAvailable] = useState(false);
   useEffect(() => {
     let cancelled = false;
-    void isHealthKitAvailable().then((v) => {
-      if (!cancelled) setHealthKitAvailable(v);
+    void isHealthKitAvailable().then((available) => {
+      if (!cancelled) setHealthKitAvailable(available);
     });
     return () => {
       cancelled = true;
@@ -155,7 +155,7 @@ export default function SettingsPageContent() {
       const callback = encodeURIComponent(localeHref('/settings', activeLocale));
       router.push(`/auth/login?callbackUrl=${callback}`);
     }
-  }, [status, router]);
+  }, [status, router, activeLocale]);
 
   const fetchProfile = useCallback(async () => {
     try {
@@ -172,11 +172,11 @@ export default function SettingsPageContent() {
       setPreviewUrl(data.profile?.avatarUrl || data.image || undefined);
     } catch (error) {
       console.error('Failed to fetch profile:', error);
-      showMessage('Failed to load profile', 'error');
+      showMessage(t('loading.profileError'), 'error');
     } finally {
       setLoading(false);
     }
-  }, [showMessage]);
+  }, [showMessage, t]);
 
   // Fetch profile on mount
   useEffect(() => {
@@ -196,12 +196,12 @@ export default function SettingsPageContent() {
 
   const handleFileSelect = async (file: File): Promise<void> => {
     if (!ALLOWED_TYPES.includes(file.type)) {
-      showMessage('Only JPG, PNG, GIF, and WebP images are allowed', 'error');
+      showMessage(t('profile.validation.invalidImageType'), 'error');
       return;
     }
 
     if (file.size > MAX_INPUT_SIZE) {
-      showMessage('Image must be smaller than 10MB', 'error');
+      showMessage(t('profile.validation.imageTooLarge'), 'error');
       return;
     }
 
@@ -217,7 +217,7 @@ export default function SettingsPageContent() {
       console.error('Image compression failed:', err);
       if (previewUrl?.startsWith('blob:')) URL.revokeObjectURL(previewUrl);
       setPreviewUrl(undefined);
-      showMessage('Could not compress — please try a smaller image', 'error');
+      showMessage(t('profile.validation.compressionFailed'), 'error');
     }
   };
 
@@ -234,14 +234,14 @@ export default function SettingsPageContent() {
       // Inline validation
       const values = { ...formValues };
       if (values.displayName && values.displayName.length > 100) {
-        showMessage('Display name must be less than 100 characters', 'error');
+        showMessage(t('profile.validation.displayNameTooLong'), 'error');
         return;
       }
       if (
         values.instagramUrl &&
         !/^(https?:\/\/)?(www\.)?instagram\.com\/[a-zA-Z0-9._]+\/?$/.test(values.instagramUrl)
       ) {
-        showMessage('Please enter a valid Instagram profile URL', 'error');
+        showMessage(t('profile.validation.invalidInstagramUrl'), 'error');
         return;
       }
 
@@ -286,11 +286,11 @@ export default function SettingsPageContent() {
               : uploadData.avatarUrl;
           } else {
             const errorData = await uploadResponse.json().catch(() => ({}));
-            showMessage(errorData.error || 'Avatar upload failed', 'warning');
+            showMessage(errorData.error || t('profile.avatarUploadFailed'), 'warning');
           }
         } catch (error) {
           console.error('Avatar upload failed:', error);
-          showMessage(error instanceof Error ? error.message : 'Avatar upload failed', 'warning');
+          showMessage(error instanceof Error ? error.message : t('profile.avatarUploadFailed'), 'warning');
         } finally {
           setUploading(false);
         }
@@ -311,17 +311,17 @@ export default function SettingsPageContent() {
 
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.error || 'Failed to update profile');
+        throw new Error(error.error || t('profile.saveError'));
       }
 
-      showMessage('Settings saved successfully', 'success');
+      showMessage(t('profile.saved'), 'success');
       setSelectedFile(null);
       // Refresh profile locally and in context (so queue items show updated avatar)
       await fetchProfile();
       await refreshPartyProfile();
     } catch (error) {
       console.error('Failed to save settings:', error);
-      showMessage(error instanceof Error ? error.message : 'Failed to save settings', 'error');
+      showMessage(error instanceof Error ? error.message : t('profile.saveError'), 'error');
     } finally {
       setSaving(false);
     }
@@ -380,7 +380,7 @@ export default function SettingsPageContent() {
         <BackButton />
         <Logo size="sm" showText={false} />
         <Typography variant="h4" sx={{ margin: 0, flex: 1 }}>
-          Settings
+          {t('title')}
         </Typography>
       </Box>
 
@@ -396,20 +396,20 @@ export default function SettingsPageContent() {
       >
         <Card>
           <CardContent>
-            <Typography variant="h5">Profile</Typography>
+            <Typography variant="h5">{t('profile.title')}</Typography>
             <Typography
               variant="body2"
               component="span"
               color="text.secondary"
               sx={{ display: 'block', marginBottom: 3 }}
             >
-              Customize how you appear on Boardsesh
+              {t('profile.subtitle')}
             </Typography>
 
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
               <Box>
                 <Typography variant="body2" fontWeight={600} sx={{ mb: 0.5 }}>
-                  Avatar
+                  {t('profile.avatar.label')}
                 </Typography>
                 <Stack spacing={1} alignItems="center" sx={{ width: '100%' }}>
                   <MuiAvatar sx={{ width: 96, height: 96 }} src={previewUrl ?? undefined}>
@@ -433,26 +433,26 @@ export default function SettingsPageContent() {
                       disabled={isSaving}
                       onClick={() => fileInputRef.current?.click()}
                     >
-                      {previewUrl ? 'Change' : 'Upload'}
+                      {previewUrl ? t('profile.avatar.change') : t('profile.avatar.upload')}
                     </Button>
                     {previewUrl && (
                       <Button variant="outlined" onClick={handleRemoveAvatar} disabled={isSaving}>
-                        Remove
+                        {t('profile.avatar.remove')}
                       </Button>
                     )}
                   </Stack>
                   <Typography variant="body2" component="span" color="text.secondary" sx={{ fontSize: 12 }}>
-                    JPG, PNG, GIF, or WebP. Up to 10MB — auto-compressed.
+                    {t('profile.avatar.hint')}
                   </Typography>
                 </Stack>
               </Box>
 
               <Box>
                 <Typography variant="body2" fontWeight={600} sx={{ mb: 0.5 }}>
-                  Display Name
+                  {t('profile.displayName.label')}
                 </Typography>
                 <TextField
-                  placeholder="Enter your display name"
+                  placeholder={t('profile.displayName.placeholder')}
                   variant="outlined"
                   size="small"
                   fullWidth
@@ -473,10 +473,10 @@ export default function SettingsPageContent() {
 
               <Box>
                 <Typography variant="body2" fontWeight={600} sx={{ mb: 0.5 }}>
-                  Instagram Profile
+                  {t('profile.instagram.label')}
                 </Typography>
                 <TextField
-                  placeholder="https://instagram.com/username"
+                  placeholder={t('profile.instagram.placeholder')}
                   variant="outlined"
                   size="small"
                   fullWidth
@@ -498,7 +498,7 @@ export default function SettingsPageContent() {
 
               <Box>
                 <Typography variant="body2" fontWeight={600} sx={{ mb: 0.5 }}>
-                  Email
+                  {t('profile.email.label')}
                 </Typography>
                 <TextField
                   value={profile?.email || session?.user?.email || ''}
@@ -522,7 +522,7 @@ export default function SettingsPageContent() {
                   color="text.secondary"
                   sx={{ fontSize: 12, marginTop: 0.5, display: 'block' }}
                 >
-                  Email cannot be changed
+                  {t('profile.email.help')}
                 </Typography>
               </Box>
 
@@ -534,7 +534,7 @@ export default function SettingsPageContent() {
                   startIcon={isSaving ? <CircularProgress size={16} /> : undefined}
                   fullWidth
                 >
-                  Save Changes
+                  {t('profile.save')}
                 </Button>
               </Box>
             </Box>
@@ -545,19 +545,19 @@ export default function SettingsPageContent() {
 
         <Card>
           <CardContent>
-            <Typography variant="h5">Display Preferences</Typography>
+            <Typography variant="h5">{t('preferences.title')}</Typography>
             <Typography
               variant="body2"
               component="span"
               color="text.secondary"
               sx={{ display: 'block', marginBottom: 3 }}
             >
-              Customize how grades and other data are displayed
+              {t('preferences.subtitle')}
             </Typography>
 
             <Box>
               <Typography variant="body2" fontWeight={600} sx={{ mb: 1 }}>
-                Grade Display Format
+                {t('preferences.gradeFormat.label')}
               </Typography>
               <ToggleButtonGroup
                 value={gradeFormat}
@@ -571,15 +571,15 @@ export default function SettingsPageContent() {
                 size="small"
                 fullWidth
               >
-                <ToggleButton value="v-grade">V-Grade (V3, V6, ...)</ToggleButton>
-                <ToggleButton value="font">Font (6A, 7C+, ...)</ToggleButton>
+                <ToggleButton value="v-grade">{t('preferences.gradeFormat.vGrade')}</ToggleButton>
+                <ToggleButton value="font">{t('preferences.gradeFormat.font')}</ToggleButton>
               </ToggleButtonGroup>
             </Box>
 
             {healthKitAvailable && (
               <Box sx={{ mt: 3 }}>
                 <Typography variant="body2" fontWeight={600} sx={{ mb: 1 }}>
-                  Apple Health
+                  {t('preferences.appleHealth.label')}
                 </Typography>
                 <FormControlLabel
                   control={
@@ -589,10 +589,10 @@ export default function SettingsPageContent() {
                       disabled={!healthKitAutoSyncLoaded}
                     />
                   }
-                  label="Save sessions to Apple Health automatically"
+                  label={t('preferences.appleHealth.switchLabel')}
                 />
                 <Typography variant="body2" color="text.secondary" sx={{ fontSize: 12 }}>
-                  Turn this off to save sessions only when you tap the Save to Apple Health button.
+                  {t('preferences.appleHealth.subtitle')}
                 </Typography>
               </Box>
             )}
@@ -626,9 +626,9 @@ export default function SettingsPageContent() {
           >
             <HistoryOutlined color="action" />
             <Box sx={{ flex: 1 }}>
-              <Typography variant="subtitle2">Your Logbook</Typography>
+              <Typography variant="subtitle2">{t('logbook.title')}</Typography>
               <Typography variant="body2" color="text.secondary">
-                View and filter your logged climbs
+                {t('logbook.subtitle')}
               </Typography>
             </Box>
             <ChevronRightOutlined color="action" />

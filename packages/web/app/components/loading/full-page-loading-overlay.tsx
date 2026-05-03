@@ -1,28 +1,26 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import CircularProgress from '@mui/material/CircularProgress';
 import Typography from '@mui/material/Typography';
-
-const loadingMessages = [
-  'Setting up your board...',
-  'Configuring climb routes...',
-  'Preparing the wall...',
-  'Loading hold sets...',
-  'Almost ready to climb...',
-  'Warming up the LEDs...',
-  'Syncing board configuration...',
-  'Calibrating difficulty grades...',
-  'Getting your climbing groove on...',
-  'Checking route conditions...',
-];
+import { useTranslation } from 'react-i18next';
 
 type FullPageLoadingOverlayProps = {
   isVisible: boolean;
 };
 
 const FullPageLoadingOverlay: React.FC<FullPageLoadingOverlayProps> = ({ isVisible }) => {
+  const { t } = useTranslation('common');
+  const loadingMessages = useMemo(() => {
+    const messages = t('loading.messages', { returnObjects: true }) as unknown;
+    return Array.isArray(messages) && messages.length > 0 ? (messages as string[]) : ['Loading...'];
+  }, [t]);
+
   const [currentMessage, setCurrentMessage] = useState(loadingMessages[0]);
+
+  useEffect(() => {
+    setCurrentMessage(loadingMessages[0]);
+  }, [loadingMessages]);
 
   useEffect(() => {
     if (!isVisible) return;
@@ -34,7 +32,7 @@ const FullPageLoadingOverlay: React.FC<FullPageLoadingOverlayProps> = ({ isVisib
     }, 2500);
 
     return () => clearInterval(interval);
-  }, [isVisible]);
+  }, [isVisible, loadingMessages]);
 
   if (!isVisible) return null;
 

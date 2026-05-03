@@ -3,14 +3,15 @@
 import React, { useCallback } from 'react';
 import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
-import { usePathname } from 'next/navigation';
-import { useLocaleRouter } from '@/app/lib/i18n/use-locale-router';
+import { useTranslation } from 'react-i18next';
+import { useLocaleRouter, usePathnameWithoutLocale } from '@/app/lib/i18n/use-locale-router';
 
 type YouTab = 'progress' | 'sessions' | 'logbook';
 
 export default function YouTabBar() {
+  const { t } = useTranslation('you');
   const router = useLocaleRouter();
-  const pathname = usePathname();
+  const pathname = usePathnameWithoutLocale();
 
   let activeTab: YouTab;
   if (pathname === '/you/sessions') {
@@ -31,9 +32,9 @@ export default function YouTabBar() {
 
   return (
     <Tabs value={activeTab} onChange={handleTabChange} variant="fullWidth" sx={{ mb: 2 }}>
-      <Tab label="Progress" value="progress" />
-      <Tab label="Sessions" value="sessions" />
-      <Tab label="Logbook" value="logbook" />
+      <Tab label={t('tabs.progress')} value="progress" />
+      <Tab label={t('tabs.sessions')} value="sessions" />
+      <Tab label={t('tabs.logbook')} value="logbook" />
     </Tabs>
   );
 }

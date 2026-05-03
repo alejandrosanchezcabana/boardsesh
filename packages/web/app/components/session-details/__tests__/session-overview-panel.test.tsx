@@ -1,7 +1,48 @@
 import { describe, it, expect, vi } from 'vite-plus/test';
 import { render, screen } from '@testing-library/react';
 import React from 'react';
-import SessionOverviewPanel, { buildSessionSummaryParts } from '../session-overview-panel';
+import SessionOverviewPanel, { buildSessionSummaryParts, formatDuration } from '../session-overview-panel';
+
+// Translate the keys the component renders into the English strings the assertions expect.
+// Keeps these component-level tests from depending on a real i18n provider.
+vi.mock('react-i18next', () => ({
+  useTranslation: () => ({
+    t: (key: string, options?: Record<string, unknown>) => {
+      const count = options?.count as number | undefined;
+      const grade = options?.grade as string | undefined;
+      const goal = options?.goal as string | undefined;
+      const hours = options?.hours as number | undefined;
+      const mins = options?.mins as number | undefined;
+      switch (key) {
+        case 'detail.flashesCount':
+          return `${count} ${count === 1 ? 'flash' : 'flashes'}`;
+        case 'detail.sendsCount':
+          return `${count} ${count === 1 ? 'send' : 'sends'}`;
+        case 'detail.attemptsCount':
+          return `${count} ${count === 1 ? 'attempt' : 'attempts'}`;
+        case 'detail.climbCount':
+          return `${count} ${count === 1 ? 'climb' : 'climbs'}`;
+        case 'detail.hardestLabel':
+          return `Hardest: ${grade}`;
+        case 'detail.gradeDistribution':
+          return 'Grade Distribution';
+        case 'detail.sessionGradeDistribution':
+          return 'Session grade distribution';
+        case 'overview.goal':
+          return `Goal: ${goal}`;
+        case 'summary.minutes':
+          return `${count}min`;
+        case 'summary.hours':
+          return `${count}h`;
+        case 'summary.hoursAndMinutes':
+          return `${hours}h ${mins}min`;
+        default:
+          return key;
+      }
+    },
+    i18n: { language: 'en-US' },
+  }),
+}));
 
 // Mock dependencies
 vi.mock('@/app/components/charts/css-bar-chart', () => ({
@@ -158,54 +199,106 @@ describe('SessionOverviewPanel', () => {
   });
 });
 
+describe('formatDuration', () => {
+  const t = (key: string, options?: Record<string, unknown>) => {
+    const count = options?.count as number | undefined;
+    const hours = options?.hours as number | undefined;
+    const mins = options?.mins as number | undefined;
+    if (key === 'summary.minutes') return `${count}min`;
+    if (key === 'summary.hours') return `${count}h`;
+    if (key === 'summary.hoursAndMinutes') return `${hours}h ${mins}min`;
+    return key;
+  };
+
+  it('uses minutes branch for durations under 60', () => {
+    expect(formatDuration(0, t)).toBe('0min');
+    expect(formatDuration(45, t)).toBe('45min');
+    expect(formatDuration(59, t)).toBe('59min');
+  });
+
+  it('uses exact-hours branch when minutes divides evenly into hours', () => {
+    expect(formatDuration(60, t)).toBe('1h');
+    expect(formatDuration(120, t)).toBe('2h');
+    expect(formatDuration(180, t)).toBe('3h');
+  });
+
+  it('uses hours-and-minutes branch when there is a minute remainder', () => {
+    expect(formatDuration(61, t)).toBe('1h 1min');
+    expect(formatDuration(90, t)).toBe('1h 30min');
+    expect(formatDuration(125, t)).toBe('2h 5min');
+  });
+});
+
 describe('buildSessionSummaryParts', () => {
+  const t = (key: string, options?: Record<string, unknown>) => {
+    const count = (options?.count as number | undefined) ?? 0;
+    const grade = options?.grade as string | undefined;
+    if (key === 'detail.flashesCount') return `${count} ${count === 1 ? 'flash' : 'flashes'}`;
+    if (key === 'detail.sendsCount') return `${count} ${count === 1 ? 'send' : 'sends'}`;
+    if (key === 'detail.attemptsCount') return `${count} ${count === 1 ? 'attempt' : 'attempts'}`;
+    if (key === 'detail.climbCount') return `${count} ${count === 1 ? 'climb' : 'climbs'}`;
+    if (key === 'detail.hardestLabel') return `Hardest: ${grade}`;
+    return key;
+  };
   const base = { totalFlashes: 0, totalSends: 0, totalAttempts: 0, tickCount: 0 };
 
   it('subtracts flashes from sends', () => {
-    const parts = buildSessionSummaryParts({
-      ...base,
-      totalSends: 5,
-      totalFlashes: 2,
-      tickCount: 5,
-    });
+    const parts = buildSessionSummaryParts(
+      {
+        ...base,
+        totalSends: 5,
+        totalFlashes: 2,
+        tickCount: 5,
+      },
+      t,
+    );
     expect(parts).toContain('2 flashes');
     expect(parts).toContain('3 sends');
   });
 
   it('omits sends when all sends are flashes', () => {
-    const parts = buildSessionSummaryParts({
-      ...base,
-      totalSends: 3,
-      totalFlashes: 3,
-      tickCount: 3,
-    });
+    const parts = buildSessionSummaryParts(
+      {
+        ...base,
+        totalSends: 3,
+        totalFlashes: 3,
+        tickCount: 3,
+      },
+      t,
+    );
     expect(parts).toContain('3 flashes');
     expect(parts.find((p) => p.includes('send'))).toBeUndefined();
   });
 
   it('handles totalFlashes > totalSends gracefully', () => {
-    const parts = buildSessionSummaryParts({
-      ...base,
-      totalSends: 1,
-      totalFlashes: 3,
-      tickCount: 3,
-    });
+    const parts = buildSessionSummaryParts(
+      {
+        ...base,
+        totalSends: 1,
+        totalFlashes: 3,
+        tickCount: 3,
+      },
+      t,
+    );
     expect(parts).toContain('3 flashes');
     expect(parts.find((p) => p.includes('send'))).toBeUndefined();
   });
 
   it('includes hardest grade when provided', () => {
-    const parts = buildSessionSummaryParts({ ...base, tickCount: 1, hardestGrade: 'V5' });
+    const parts = buildSessionSummaryParts({ ...base, tickCount: 1, hardestGrade: 'V5' }, t);
     expect(parts).toContain('Hardest: V5');
   });
 
   it('applies formatGrade to hardest grade', () => {
-    const parts = buildSessionSummaryParts({
-      ...base,
-      tickCount: 1,
-      hardestGrade: 'V5',
-      formatGrade: () => '5c',
-    });
+    const parts = buildSessionSummaryParts(
+      {
+        ...base,
+        tickCount: 1,
+        hardestGrade: 'V5',
+        formatGrade: () => '5c',
+      },
+      t,
+    );
     expect(parts).toContain('Hardest: 5c');
   });
 });

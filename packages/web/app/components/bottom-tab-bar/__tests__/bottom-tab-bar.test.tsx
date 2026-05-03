@@ -10,6 +10,7 @@ const mockShowMessage = vi.fn();
 const mockCreatePlaylist = vi.fn();
 
 let mockPathname = '/kilter/original/12x12-square/screw_bolt/40/list';
+let mockLanguage = 'en-US';
 let mockActiveSession: {
   sessionId: string;
   boardPath: string;
@@ -30,6 +31,13 @@ const mockBoardConfig = {
 vi.mock('next/navigation', () => ({
   usePathname: () => mockPathname,
   useRouter: () => ({ push: mockPush }),
+}));
+
+vi.mock('react-i18next', () => ({
+  useTranslation: () => ({
+    i18n: { language: mockLanguage },
+    t: (key: string) => key,
+  }),
 }));
 
 vi.mock('@vercel/analytics', () => ({
@@ -214,6 +222,7 @@ describe('BottomTabBar session preservation', () => {
     mockActiveSession = null;
     mockSessionData = null;
     mockSessionStatus = 'unauthenticated';
+    mockLanguage = 'en-US';
   });
 
   it('includes session param when navigating to climbs with active session on /b/ board', async () => {
@@ -269,6 +278,7 @@ describe('BottomTabBar create flow', () => {
     mockActiveSession = null;
     mockSessionData = null;
     mockSessionStatus = 'unauthenticated';
+    mockLanguage = 'en-US';
   });
 
   it('navigates directly to create climb URL when board details are available', () => {
@@ -384,5 +394,47 @@ describe('BottomTabBar You tab', () => {
       }),
     );
     expect(mockPush).not.toHaveBeenCalled();
+  });
+});
+
+describe('BottomTabBar locale-aware pathname matching', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockActiveSession = null;
+    mockSessionData = { user: { id: 'user-1' } };
+    mockSessionStatus = 'authenticated';
+    mockLanguage = 'es';
+  });
+
+  it('Feed tab is selected when on /es/feed', () => {
+    mockPathname = '/es/feed';
+    render(<BottomTabBar boardConfigs={boardConfigs} />);
+
+    const feedTab = screen.getByRole('button', { name: 'Feed' });
+    expect(feedTab.classList.contains('Mui-selected')).toBe(true);
+  });
+
+  it('You tab is selected when on /es/you', () => {
+    mockPathname = '/es/you';
+    render(<BottomTabBar boardConfigs={boardConfigs} />);
+
+    const youTab = screen.getByRole('button', { name: 'You' });
+    expect(youTab.classList.contains('Mui-selected')).toBe(true);
+  });
+
+  it('Home tab is selected when on /es', () => {
+    mockPathname = '/es';
+    render(<BottomTabBar boardConfigs={boardConfigs} />);
+
+    const homeTab = screen.getByRole('button', { name: 'Home' });
+    expect(homeTab.classList.contains('Mui-selected')).toBe(true);
+  });
+
+  it('Discover tab is selected when on /es/playlists', () => {
+    mockPathname = '/es/playlists';
+    render(<BottomTabBar boardConfigs={boardConfigs} />);
+
+    const libraryTab = screen.getByRole('button', { name: 'Discover' });
+    expect(libraryTab.classList.contains('Mui-selected')).toBe(true);
   });
 });

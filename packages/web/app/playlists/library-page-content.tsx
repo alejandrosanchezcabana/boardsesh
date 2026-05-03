@@ -5,6 +5,7 @@ import MuiButton from '@mui/material/Button';
 import Typography from '@mui/material/Typography';
 import { LabelOutlined, LoginOutlined, SentimentDissatisfiedOutlined } from '@mui/icons-material';
 import { useSession } from 'next-auth/react';
+import { useTranslation } from 'react-i18next';
 import { useLocaleRouter } from '@/app/lib/i18n/use-locale-router';
 import { executeGraphQL } from '@/app/lib/graphql/client';
 import {
@@ -57,6 +58,7 @@ export default function LibraryPageContent({
   const { data: session, status: sessionStatus } = useSession();
   const { token, isLoading: tokenLoading } = useWsAuthToken();
   const router = useLocaleRouter();
+  const { t } = useTranslation('playlists');
 
   const hasInitialBoardData = initialMyBoards != null && initialMyBoards.length > 0;
   const hasInitialPlaylistData = initialPlaylists != null;
@@ -157,11 +159,11 @@ export default function LibraryPageContent({
       hasPlaylistDataRef.current = true;
     } catch (err) {
       console.error('Error fetching user data:', err);
-      setError('Failed to load your library');
+      setError(t('library.errors.loadFailed'));
     } finally {
       setPlaylistsLoading(false);
     }
-  }, [selectedBoard, token, tokenLoading, isAuthenticated]);
+  }, [selectedBoard, token, tokenLoading, isAuthenticated, t]);
 
   // Fetch discover playlists (works for both "All" and specific board)
   const fetchDiscoverData = useCallback(async () => {
@@ -256,13 +258,13 @@ export default function LibraryPageContent({
       <div className={styles.errorContainer}>
         <SentimentDissatisfiedOutlined className={styles.errorIcon} />
         <Typography variant="h6" component="h4" sx={{ mb: 1 }}>
-          Unable to Load Library
+          {t('library.errors.loadTitle')}
         </Typography>
         <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-          There was an error loading your library. Please try again.
+          {t('library.errors.loadDescription')}
         </Typography>
         <MuiButton variant="outlined" onClick={fetchUserData}>
-          Try Again
+          {t('library.errors.tryAgain')}
         </MuiButton>
       </div>
     );
@@ -295,10 +297,10 @@ export default function LibraryPageContent({
           <LoginOutlined sx={{ color: 'text.secondary', fontSize: 28 }} />
           <div className={styles.signInBannerText}>
             <Typography variant="body2" fontWeight={600}>
-              Sign in to use your library
+              {t('library.signInBanner.title')}
             </Typography>
             <Typography variant="caption" color="text.secondary">
-              Track your sends and manage playlists.
+              {t('library.signInBanner.description')}
             </Typography>
           </div>
           <MuiButton
@@ -306,12 +308,12 @@ export default function LibraryPageContent({
             size="small"
             onClick={() =>
               openAuthModal({
-                title: 'Sign in to Boardsesh',
-                description: 'Sign in to track your climbs and manage playlists.',
+                title: t('library.signInBanner.modalTitle'),
+                description: t('library.signInBanner.modalDescription'),
               })
             }
           >
-            Sign In
+            {t('library.signInBanner.cta')}
           </MuiButton>
         </div>
       )}
@@ -326,17 +328,17 @@ export default function LibraryPageContent({
         <div className={styles.emptyContainer}>
           <LabelOutlined className={styles.emptyIcon} />
           <Typography variant="h6" component="h4" sx={{ mb: 1 }}>
-            No playlists yet
+            {t('library.empty.title')}
           </Typography>
           <Typography variant="body2" color="text.secondary" sx={{ maxWidth: 300, mb: 2 }}>
-            Create your first playlist by adding climbs from the climb list.
+            {t('library.empty.description')}
           </Typography>
         </div>
       )}
 
       {/* Jump Back In (authenticated only) */}
       {isAuthenticated && (isLoading || filteredPlaylists.length > 0) && (
-        <PlaylistScrollSection title="Jump Back In" loading={isLoading}>
+        <PlaylistScrollSection title={t('library.sections.jumpBackIn')} loading={isLoading}>
           {filteredPlaylists.slice(0, 10).map((p, i) => (
             <PlaylistCard
               key={p.uuid}
@@ -356,7 +358,7 @@ export default function LibraryPageContent({
 
       {/* Discover */}
       {(discoverLoading || discoverItems.length > 0) && (
-        <PlaylistScrollSection title="Discover" loading={discoverLoading}>
+        <PlaylistScrollSection title={t('library.sections.discover')} loading={discoverLoading}>
           {discoverItems.map((p, i) => (
             <PlaylistCard
               key={p.uuid}

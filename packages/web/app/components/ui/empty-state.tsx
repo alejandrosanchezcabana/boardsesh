@@ -5,6 +5,7 @@ import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import InboxOutlined from '@mui/icons-material/InboxOutlined';
 import type { SxProps, Theme } from '@mui/material/styles';
+import { useTranslation } from 'react-i18next';
 import { toSxArray } from './sx-utils';
 
 type EmptyStateProps = {
@@ -14,7 +15,9 @@ type EmptyStateProps = {
   sx?: SxProps<Theme>;
 };
 
-export function EmptyState({ icon, description = 'No data', children, sx }: EmptyStateProps) {
+export function EmptyState({ icon, description, children, sx }: EmptyStateProps) {
+  const { t } = useTranslation('common');
+  const resolvedDescription = description ?? t('emptyState.default');
   return (
     <Box
       sx={[
@@ -30,12 +33,12 @@ export function EmptyState({ icon, description = 'No data', children, sx }: Empt
       ]}
     >
       <Box sx={{ fontSize: 48, mb: 1, opacity: 0.4 }}>{icon || <InboxOutlined fontSize="inherit" />}</Box>
-      {typeof description === 'string' ? (
+      {typeof resolvedDescription === 'string' ? (
         <Typography variant="body2" color="text.secondary">
-          {description}
+          {resolvedDescription}
         </Typography>
       ) : (
-        description
+        resolvedDescription
       )}
       {children && <Box sx={{ mt: 2 }}>{children}</Box>}
     </Box>

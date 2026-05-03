@@ -15,5 +15,159 @@
     "stopParty": "Stop party",
     "partyUnsupported": "Party mode isn't available on this board",
     "clearFailed": "Couldn't clear the board"
+  },
+  "actions": {
+    "yes": "Yes",
+    "no": "No",
+    "ok": "OK",
+    "cancel": "Cancel",
+    "save": "Save",
+    "delete": "Delete",
+    "edit": "Edit",
+    "close": "Close",
+    "back": "Back",
+    "next": "Next",
+    "done": "Done",
+    "retry": "Try again",
+    "loadMore": "Load more",
+    "loading": "Loading...",
+    "share": "Share",
+    "copy": "Copy",
+    "submit": "Submit"
+  },
+  "ariaLabels": {
+    "close": "Close",
+    "back": "Back",
+    "menu": "Menu",
+    "search": "Search",
+    "clearSearch": "Clear search",
+    "openFilters": "Open filters",
+    "openStatsFilters": "Open stats filters",
+    "shareProfile": "Share profile",
+    "settings": "Settings",
+    "notifications": "Notifications",
+    "searchClimbsByName": "Search climbs by name"
+  },
+  "header": {
+    "you": "You",
+    "profile": "Profile",
+    "statistics": "Statistics",
+    "sessions": "Sessions",
+    "createdClimbs": "Created Climbs",
+    "auroraMigration": "Aurora Migration",
+    "searchPlaceholder": "What do you want to climb?",
+    "searchClimbsPlaceholder": "Search climbs..."
+  },
+  "share": {
+    "profileTitle": "{{name}}'s climbing profile",
+    "profileText": "Check out {{name}}'s climbing profile on Boardsesh",
+    "fallbackName": "My",
+    "viewedFallbackName": "Climber",
+    "linkCopied": "Link copied to clipboard!",
+    "shareFailed": "Failed to share"
+  },
+  "myBoards": {
+    "title": "My Boards",
+    "findBoard": "Find a Board",
+    "boardDetail": "Board",
+    "searchPlaceholder": "Search by name or location...",
+    "ariaFindBoard": "Find a board",
+    "ariaCreateBoard": "Create a board",
+    "empty": "No boards yet. Create one from the board selector to get started."
+  },
+  "loading": {
+    "messages": [
+      "Setting up your board...",
+      "Configuring climb routes...",
+      "Preparing the wall...",
+      "Loading hold sets...",
+      "Almost ready to climb...",
+      "Warming up the LEDs...",
+      "Syncing board configuration...",
+      "Calibrating difficulty grades...",
+      "Getting your climbing groove on...",
+      "Checking route conditions..."
+    ]
+  },
+  "emptyState": {
+    "default": "No data"
+  },
+  "comment": {
+    "placeholder": "Add a comment...",
+    "replyPlaceholder": "Write a reply...",
+    "thoughtsPlaceholder": "Share your thoughts...",
+    "submit": "Post",
+    "save": "Save",
+    "cancel": "Cancel",
+    "signInPrompt": "Sign in to leave a comment.",
+    "discussionTitle": "Discussion",
+    "empty": "No comments yet. Say something.",
+    "deleted": "[deleted]",
+    "edited": "(edited)",
+    "userFallback": "User",
+    "reply": "Reply",
+    "showRepliesOne": "Show 1 reply",
+    "showRepliesMany": "Show {{count}} replies",
+    "countOne": "{{count}} comment",
+    "countMany": "{{count}} comments",
+    "sort": {
+      "new": "New",
+      "top": "Top",
+      "controversial": "Controversial",
+      "hot": "Hot"
+    },
+    "delete": {
+      "title": "Delete comment",
+      "description": "Are you sure you want to delete this comment? This cannot be undone.",
+      "confirm": "Delete",
+      "editAria": "Edit comment",
+      "deleteAria": "Delete comment"
+    },
+    "errors": {
+      "post": "Failed to post comment",
+      "update": "Failed to update comment",
+      "delete": "Failed to delete comment",
+      "reply": "Failed to post reply",
+      "loadReplies": "Failed to load replies"
+    }
+  },
+  "proposal": {
+    "trigger": "Propose Change",
+    "drawerTitle": "Create Proposal",
+    "submit": "Create Proposal",
+    "submitting": "Creating...",
+    "cancel": "Cancel",
+    "types": {
+      "grade": "Grade",
+      "classic": "Classic",
+      "benchmark": "Benchmark"
+    },
+    "fields": {
+      "angle": "Angle",
+      "proposedGrade": "Proposed Grade",
+      "proposedStatus": "Proposed Status",
+      "reasonLabel": "Reason (optional)",
+      "reasonPlaceholder": "Why do you think this change is needed?",
+      "yes": "Yes",
+      "no": "No"
+    },
+    "hints": {
+      "classic": "Classic proposals apply to all angles.",
+      "benchmark": "Benchmark proposals are per-angle."
+    },
+    "outlierWarning": "The grade at this angle appears to be an outlier compared to adjacent angles. This proposal may be auto-approved if it aligns with neighboring data.",
+    "validation": {
+      "signIn": "Sign in to create proposals",
+      "missingValue": "Please enter a proposed value",
+      "sameGrade": "Proposed grade is the same as the current grade",
+      "noData": "Failed to create proposal: no data returned",
+      "failed": "Failed to create proposal"
+    },
+    "created": "Proposal created"
+  },
+  "follow": {
+    "follow": "Follow",
+    "following": "Following",
+    "unfollow": "Unfollow"
   }
 }

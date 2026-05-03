@@ -4,6 +4,7 @@ import React from 'react';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import { LineChart } from '@mui/x-charts/LineChart';
+import { useTranslation } from 'react-i18next';
 import type { VPointsTimelineData } from '../utils/chart-data-builders';
 
 type VPointsChartProps = {
@@ -11,6 +12,7 @@ type VPointsChartProps = {
 };
 
 export default function VPointsChart({ data }: VPointsChartProps) {
+  const { t } = useTranslation('profile');
   const { weekLabels, series, totalPoints } = data;
 
   // Downsample labels for readability — show at most ~12 labels
@@ -32,10 +34,10 @@ export default function VPointsChart({ data }: VPointsChartProps) {
           fontWeight={600}
           sx={{ fontSize: 13, color: 'var(--neutral-600)' }}
         >
-          V-Points
+          {t('stats.vPoints')}
         </Typography>
         <Typography variant="body2" component="span" color="text.secondary" sx={{ fontSize: 12 }}>
-          {totalPoints.toLocaleString()} total
+          {t('stats.vPointsTotal', { value: totalPoints.toLocaleString() })}
         </Typography>
       </Box>
       <LineChart

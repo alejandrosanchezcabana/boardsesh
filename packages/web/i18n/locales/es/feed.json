@@ -1,0 +1,15 @@
+{
+  "metadata": {
+    "feed": {
+      "title": "Actividad",
+      "description": "Mira lo que están escalando los que sigues."
+    }
+  },
+  "title": "Actividad",
+  "tabs": {
+    "label": "Pestañas de actividad",
+    "sessions": "Sesiones",
+    "proposals": "Propuestas",
+    "comments": "Comentarios"
+  }
+}

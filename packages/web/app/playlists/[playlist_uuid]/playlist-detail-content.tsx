@@ -21,6 +21,7 @@ import {
   IosShare,
 } from '@mui/icons-material';
 import { useInfiniteQuery } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import type { Climb } from '@/app/lib/types';
 import { executeGraphQL, createGraphQLHttpClient } from '@/app/lib/graphql/client';
 import {
@@ -98,6 +99,7 @@ export default function PlaylistDetailContent({
 }: PlaylistDetailContentProps) {
   const router = useLocaleRouter();
   const { showMessage } = useSnackbar();
+  const { t } = useTranslation('playlists');
   const [playlist, setPlaylist] = useState<Playlist | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -149,14 +151,14 @@ export default function PlaylistDetailContent({
       );
 
       if (!response.playlist) {
-        setError('Playlist not found');
+        setError('not-found');
         return;
       }
 
       setPlaylist(response.playlist);
     } catch (err) {
       console.error('Error fetching playlist:', err);
-      setError('Failed to load playlist');
+      setError('load-failed');
     } finally {
       setLoading(false);
     }
@@ -264,13 +266,13 @@ export default function PlaylistDetailContent({
         token,
       );
 
-      showMessage('Playlist deleted', 'success');
+      showMessage(t('detail.deleted'), 'success');
       router.push(playlistsBasePath);
     } catch (err) {
       console.error('Error deleting playlist:', err);
-      showMessage('Failed to delete playlist', 'error');
+      showMessage(t('detail.deleteFailed'), 'error');
     }
-  }, [token, playlist, playlistUuid, router, showMessage, playlistsBasePath]);
+  }, [token, playlist, playlistUuid, router, showMessage, playlistsBasePath, t]);
 
   const handleBoardSelect = useCallback((board: UserBoard | null) => {
     setSelectedBoard(board);
@@ -280,14 +282,14 @@ export default function PlaylistDetailContent({
     const shareUrl = `${window.location.origin}/playlists/${playlistUuid}`;
     await shareWithFallback({
       url: shareUrl,
-      title: playlist?.name || 'Playlist',
-      text: 'Check out this climbing playlist on Boardsesh',
+      title: playlist?.name || t('detail.shareFallbackTitle'),
+      text: t('detail.shareText'),
       trackingEvent: 'Playlist Shared',
       trackingProps: { playlistUuid },
-      onClipboardSuccess: () => showMessage('Link copied to clipboard!', 'success'),
-      onError: () => showMessage('Failed to share', 'error'),
+      onClipboardSuccess: () => showMessage(t('detail.shareSuccess'), 'success'),
+      onError: () => showMessage(t('detail.shareError'), 'error'),
     });
-  }, [playlistUuid, playlist, showMessage]);
+  }, [playlistUuid, playlist, showMessage, t]);
 
   const isOwner = playlist?.userRole === 'owner';
 
@@ -315,19 +317,18 @@ export default function PlaylistDetailContent({
   }
 
   if (error || !playlist) {
+    const isNotFound = error === 'not-found';
     return (
       <div className={styles.errorContainer}>
         <SentimentDissatisfiedOutlined className={styles.errorIcon} />
         <div className={styles.errorTitle}>
-          {error === 'Playlist not found' ? 'Playlist Not Found' : 'Unable to Load Playlist'}
+          {isNotFound ? t('detail.errors.notFoundTitle') : t('detail.errors.loadTitle')}
         </div>
         <div className={styles.errorMessage}>
-          {error === 'Playlist not found'
-            ? 'This playlist may have been deleted or you may not have permission to view it.'
-            : 'There was an error loading this playlist. Please try again.'}
+          {isNotFound ? t('detail.errors.notFoundDescription') : t('detail.errors.loadDescription')}
         </div>
         <MuiButton variant="outlined" onClick={fetchPlaylist}>
-          Try Again
+          {t('detail.errors.tryAgain')}
         </MuiButton>
       </div>
     );
@@ -362,12 +363,10 @@ export default function PlaylistDetailContent({
                 {playlist.name}
               </Typography>
               <div className={styles.heroMeta}>
-                <span className={styles.heroMetaItem}>
-                  {playlist.climbCount} {playlist.climbCount === 1 ? 'climb' : 'climbs'}
-                </span>
+                <span className={styles.heroMetaItem}>{t('detail.climbCount', { count: playlist.climbCount })}</span>
                 <span className={styles.heroMetaItem}>
                   <PeopleOutlined sx={{ fontSize: 14, verticalAlign: 'middle', mr: 0.5 }} />
-                  {playlist.followerCount} {playlist.followerCount === 1 ? 'follower' : 'followers'}
+                  {t('detail.followerCount', { count: playlist.followerCount })}
                 </span>
                 <span
                   className={`${styles.visibilityBadge} ${
@@ -376,11 +375,11 @@ export default function PlaylistDetailContent({
                 >
                   {playlist.isPublic ? (
                     <>
-                      <PublicOutlined sx={{ fontSize: 14 }} /> Public
+                      <PublicOutlined sx={{ fontSize: 14 }} /> {t('detail.visibility.public')}
                     </>
                   ) : (
                     <>
-                      <LockOutlined sx={{ fontSize: 14 }} /> Private
+                      <LockOutlined sx={{ fontSize: 14 }} /> {t('detail.visibility.private')}
                     </>
                   )}
                 </span>
@@ -425,13 +424,13 @@ export default function PlaylistDetailContent({
             }}
           >
             {playlist.isPublic && (
-              <IconButton onClick={handleShare} aria-label="Share playlist">
+              <IconButton onClick={handleShare} aria-label={t('detail.share')}>
                 <IosShare />
               </IconButton>
             )}
             <IconButton
               onClick={(e: React.MouseEvent<HTMLButtonElement>) => setMenuAnchor(e.currentTarget)}
-              aria-label="Playlist actions"
+              aria-label={t('detail.actions')}
             >
               <MoreVertOutlined />
             </IconButton>
@@ -448,7 +447,7 @@ export default function PlaylistDetailContent({
                 <ListItemIcon>
                   <ElectricBoltOutlined />
                 </ListItemIcon>
-                <ListItemText>Generate</ListItemText>
+                <ListItemText>{t('detail.menu.generate')}</ListItemText>
               </MenuItem>
             )}
             {isOwner && (
@@ -461,7 +460,7 @@ export default function PlaylistDetailContent({
                 <ListItemIcon>
                   <EditOutlined />
                 </ListItemIcon>
-                <ListItemText>Edit</ListItemText>
+                <ListItemText>{t('detail.menu.edit')}</ListItemText>
               </MenuItem>
             )}
             {isOwner && (
@@ -469,7 +468,7 @@ export default function PlaylistDetailContent({
                 <ListItemIcon>
                   <DeleteOutlined sx={{ color: themeTokens.colors.error }} />
                 </ListItemIcon>
-                <ListItemText>Delete</ListItemText>
+                <ListItemText>{t('detail.menu.delete')}</ListItemText>
               </MenuItem>
             )}
           </Menu>
@@ -478,7 +477,7 @@ export default function PlaylistDetailContent({
         {/* Climbs List with multi-board support */}
         <div className={styles.climbsSection}>
           {allClimbs.length === 0 && !isFetchingClimbs && !isClimbsLoading ? (
-            <EmptyState description="No climbs in this playlist yet" />
+            <EmptyState description={t('detail.empty')} />
           ) : (
             <MultiboardClimbList
               climbs={allClimbs}
@@ -500,7 +499,11 @@ export default function PlaylistDetailContent({
         {/* Discussion */}
         {playlist.isPublic && (
           <div className={styles.discussionSection}>
-            <CommentSection entityType="playlist_climb" entityId={`${playlistUuid}:_all`} title="Discussion" />
+            <CommentSection
+              entityType="playlist_climb"
+              entityId={`${playlistUuid}:_all`}
+              title={t('detail.discussion')}
+            />
           </div>
         )}
       </div>

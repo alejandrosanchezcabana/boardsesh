@@ -1,0 +1,88 @@
+{
+  "metadata": {
+    "profile": {
+      "title": "{{name}}",
+      "description": "{{name}}'s climbing profile on Boardsesh",
+      "fallbackTitle": "Profile",
+      "fallbackDescription": "View climbing profile and stats",
+      "notFoundTitle": "Profile Not Found",
+      "notFoundDescription": "This climbing profile could not be found.",
+      "ogAlt": "{{name}}'s climbing profile"
+    },
+    "statistics": {
+      "title": "Statistics"
+    },
+    "sessions": {
+      "title": "Sessions"
+    },
+    "climbs": {
+      "title": "Created Climbs"
+    },
+    "setter": {
+      "title": "{{name}} - Setter",
+      "description": "Climbs created by {{name}} on Boardsesh",
+      "fallbackTitle": "Setter Profile",
+      "fallbackDescription": "View setter profile and climbs on Boardsesh",
+      "ogAlt": "{{name}}'s setter profile"
+    }
+  },
+  "page": {
+    "lastThreeMonths": "Last 3 months",
+    "activityChartLabel": "Activity over the last 3 months",
+    "displayNameFallback": "Climber"
+  },
+  "nav": {
+    "statistics": {
+      "title": "Statistics",
+      "subtitleSent": "{{count}} problems sent",
+      "subtitleEmpty": "Grades, progression, and more"
+    },
+    "sessions": {
+      "title": "Sessions",
+      "subtitle": "Climbing sessions and activity"
+    },
+    "createdClimbs": {
+      "title": "Created Climbs",
+      "subtitleOwn": "Climbs you created",
+      "subtitleOther": "Climbs they created"
+    }
+  },
+  "stats": {
+    "problems": "problems",
+    "send": "send",
+    "flash": "flash",
+    "percentile": "Percentile",
+    "topPercent": "Top {{value}}%",
+    "moreSentThan": "More problems sent than {{value}}% of climbers",
+    "activity": "Activity",
+    "gradeDistribution": "Grade Distribution",
+    "flashVsRedpoint": "Flash vs Redpoint",
+    "vPoints": "V-Points",
+    "vPointsTotal": "{{value}} total",
+    "gradeDistributionAria": "Grade distribution across boards",
+    "weeklyAttemptsAria": "Weekly attempts by difficulty",
+    "flashRedpointAria": "Flash vs redpoint by grade",
+    "layoutTooltip": "{{name}}: {{count}} problems ({{percentage}}%)"
+  },
+  "empty": {
+    "userNotFound": "User not found",
+    "noAscentData": "No ascent data for this period",
+    "noClimbingData": "No climbing data for this period"
+  },
+  "filter": {
+    "pageTitle": "Statistics"
+  },
+  "setter": {
+    "notFoundTitle": "Setter Not Found",
+    "notFoundMessage": "This setter profile may not exist or may have been removed.",
+    "shareAriaLabel": "Share setter profile",
+    "shareTitle": "{{name}} - Setter",
+    "shareText": "Check out {{name}}'s climbs on Boardsesh",
+    "linkCopied": "Link copied to clipboard!",
+    "shareFailed": "Failed to share",
+    "follower_one": "follower",
+    "follower_other": "followers",
+    "climb_one": "climb",
+    "climb_other": "climbs"
+  }
+}

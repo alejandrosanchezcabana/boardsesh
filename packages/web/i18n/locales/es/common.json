@@ -7,5 +7,159 @@
   "languages": {
     "en-US": "English",
     "es": "Español"
+  },
+  "actions": {
+    "yes": "Sí",
+    "no": "No",
+    "ok": "OK",
+    "cancel": "Cancelar",
+    "save": "Guardar",
+    "delete": "Eliminar",
+    "edit": "Editar",
+    "close": "Cerrar",
+    "back": "Atrás",
+    "next": "Siguiente",
+    "done": "Listo",
+    "retry": "Reintentar",
+    "loadMore": "Ver más",
+    "loading": "Cargando...",
+    "share": "Compartir",
+    "copy": "Copiar",
+    "submit": "Enviar"
+  },
+  "ariaLabels": {
+    "close": "Cerrar",
+    "back": "Atrás",
+    "menu": "Menú",
+    "search": "Buscar",
+    "clearSearch": "Limpiar búsqueda",
+    "openFilters": "Abrir filtros",
+    "openStatsFilters": "Abrir filtros de estadísticas",
+    "shareProfile": "Compartir perfil",
+    "settings": "Ajustes",
+    "notifications": "Notificaciones",
+    "searchClimbsByName": "Buscar bloques por nombre"
+  },
+  "header": {
+    "you": "Tú",
+    "profile": "Perfil",
+    "statistics": "Estadísticas",
+    "sessions": "Sesiones",
+    "createdClimbs": "Bloques creados",
+    "auroraMigration": "Migración de Aurora",
+    "searchPlaceholder": "¿Qué quieres escalar?",
+    "searchClimbsPlaceholder": "Busca bloques..."
+  },
+  "share": {
+    "profileTitle": "Perfil de escalada de {{name}}",
+    "profileText": "Mira el perfil de escalada de {{name}} en Boardsesh",
+    "fallbackName": "Mi",
+    "viewedFallbackName": "Escalador",
+    "linkCopied": "¡Enlace copiado!",
+    "shareFailed": "No se pudo compartir"
+  },
+  "myBoards": {
+    "title": "Mis tablas",
+    "findBoard": "Buscar tabla",
+    "boardDetail": "Tabla",
+    "searchPlaceholder": "Busca por nombre o ubicación...",
+    "ariaFindBoard": "Buscar tabla",
+    "ariaCreateBoard": "Crear tabla",
+    "empty": "Aún no tienes tablas. Crea una desde el selector de tablas."
+  },
+  "loading": {
+    "messages": [
+      "Preparando tu tabla...",
+      "Configurando rutas...",
+      "Calentando la pared...",
+      "Cargando presas...",
+      "Casi listos para escalar...",
+      "Encendiendo los LEDs...",
+      "Sincronizando la tabla...",
+      "Calibrando los grados...",
+      "Entrando en flow...",
+      "Revisando condiciones..."
+    ]
+  },
+  "emptyState": {
+    "default": "Sin datos"
+  },
+  "comment": {
+    "placeholder": "Escribe un comentario...",
+    "replyPlaceholder": "Escribe una respuesta...",
+    "thoughtsPlaceholder": "Comparte tus pensamientos...",
+    "submit": "Publicar",
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "signInPrompt": "Inicia sesión para comentar.",
+    "discussionTitle": "Discusión",
+    "empty": "Sin comentarios todavía. Di algo.",
+    "deleted": "[eliminado]",
+    "edited": "(editado)",
+    "userFallback": "Usuario",
+    "reply": "Responder",
+    "showRepliesOne": "Mostrar 1 respuesta",
+    "showRepliesMany": "Mostrar {{count}} respuestas",
+    "countOne": "{{count}} comentario",
+    "countMany": "{{count}} comentarios",
+    "sort": {
+      "new": "Nuevos",
+      "top": "Top",
+      "controversial": "Polémicos",
+      "hot": "Populares"
+    },
+    "delete": {
+      "title": "Eliminar comentario",
+      "description": "¿Seguro que quieres eliminar este comentario? No se puede deshacer.",
+      "confirm": "Eliminar",
+      "editAria": "Editar comentario",
+      "deleteAria": "Eliminar comentario"
+    },
+    "errors": {
+      "post": "No se pudo publicar el comentario",
+      "update": "No se pudo actualizar el comentario",
+      "delete": "No se pudo eliminar el comentario",
+      "reply": "No se pudo publicar la respuesta",
+      "loadReplies": "No se pudieron cargar las respuestas"
+    }
+  },
+  "proposal": {
+    "trigger": "Proponer cambio",
+    "drawerTitle": "Crear propuesta",
+    "submit": "Crear propuesta",
+    "submitting": "Creando...",
+    "cancel": "Cancelar",
+    "types": {
+      "grade": "Grado",
+      "classic": "Clásico",
+      "benchmark": "Referencia"
+    },
+    "fields": {
+      "angle": "Ángulo",
+      "proposedGrade": "Grado propuesto",
+      "proposedStatus": "Estado propuesto",
+      "reasonLabel": "Motivo (opcional)",
+      "reasonPlaceholder": "¿Por qué crees que se necesita este cambio?",
+      "yes": "Sí",
+      "no": "No"
+    },
+    "hints": {
+      "classic": "Las propuestas de clásico aplican a todos los ángulos.",
+      "benchmark": "Las propuestas de referencia son por ángulo."
+    },
+    "outlierWarning": "El grado en este ángulo parece atípico comparado con los ángulos adyacentes. Esta propuesta puede aprobarse automáticamente si concuerda con los datos vecinos.",
+    "validation": {
+      "signIn": "Inicia sesión para proponer cambios",
+      "missingValue": "Introduce un valor propuesto",
+      "sameGrade": "El grado propuesto es el mismo que el actual",
+      "noData": "No se pudo crear la propuesta: sin datos",
+      "failed": "No se pudo crear la propuesta"
+    },
+    "created": "Propuesta creada"
+  },
+  "follow": {
+    "follow": "Seguir",
+    "following": "Siguiendo",
+    "unfollow": "Dejar de seguir"
   }
 }

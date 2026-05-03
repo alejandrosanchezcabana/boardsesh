@@ -1,0 +1,114 @@
+{
+  "metadata": {
+    "admin": {
+      "title": "Admin Panel",
+      "description": "Boardsesh admin panel"
+    }
+  },
+  "title": "Admin Panel",
+  "auth": {
+    "signInRequired": "Please sign in to access the admin panel.",
+    "noAccess": "You do not have admin access."
+  },
+  "tabs": {
+    "roles": "Roles",
+    "settings": "Settings"
+  },
+  "roles": {
+    "heading": "Community Roles",
+    "grant": "Grant Role",
+    "table": {
+      "user": "User",
+      "role": "Role",
+      "board": "Board",
+      "grantedBy": "Granted By",
+      "date": "Date",
+      "actions": "Actions"
+    },
+    "labels": {
+      "admin": "Admin",
+      "leader": "Leader",
+      "global": "Global",
+      "fallbackUserInitial": "U",
+      "fallbackEmpty": "-"
+    },
+    "empty": "No roles assigned yet",
+    "dialog": {
+      "title": "Grant Role",
+      "search": {
+        "label": "Search user",
+        "placeholder": "Type a name to search..."
+      },
+      "fallbackUserInitial": "U",
+      "change": "Change",
+      "roleLabel": "Role",
+      "boardTypeLabel": "Board Type (optional)",
+      "boardTypeOptions": {
+        "global": "Global (all boards)",
+        "kilter": "Kilter",
+        "tension": "Tension"
+      },
+      "roleOptions": {
+        "communityLeader": "Community Leader",
+        "admin": "Admin"
+      },
+      "cancel": "Cancel",
+      "submit": "Grant"
+    },
+    "snackbar": {
+      "granted": "Role granted",
+      "grantFailed": "Failed to grant role",
+      "revoked": "Role revoked",
+      "revokeFailed": "Failed to revoke role"
+    }
+  },
+  "settings": {
+    "heading": "Community Settings",
+    "scope": {
+      "label": "Scope",
+      "options": {
+        "global": "Global",
+        "board": "Board",
+        "climb": "Climb"
+      },
+      "boardTypeLabel": "Board Type",
+      "boardTypePlaceholder": "kilter, tension",
+      "climbUuidLabel": "Climb UUID",
+      "climbUuidPlaceholder": "Climb UUID"
+    },
+    "table": {
+      "setting": "Setting",
+      "description": "Description",
+      "value": "Value"
+    },
+    "rows": {
+      "approvalThreshold": {
+        "label": "Approval Threshold",
+        "description": "Weighted votes needed for auto-approval"
+      },
+      "outlierMinAscents": {
+        "label": "Outlier Min Ascents",
+        "description": "Min ascents for outlier detection"
+      },
+      "outlierGradeDiff": {
+        "label": "Outlier Grade Diff",
+        "description": "Grade difference threshold for outlier"
+      },
+      "adminVoteWeight": {
+        "label": "Admin Vote Weight",
+        "description": "Vote weight multiplier for admins"
+      },
+      "leaderVoteWeight": {
+        "label": "Leader Vote Weight",
+        "description": "Vote weight multiplier for leaders"
+      }
+    },
+    "save": "Save All",
+    "saving": "Saving...",
+    "snackbar": {
+      "saved_one": "Saved {{count}} setting",
+      "saved_other": "Saved {{count}} settings",
+      "saveFailed": "Failed to save settings"
+    }
+  }
+}
