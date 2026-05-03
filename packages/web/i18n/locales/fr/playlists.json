@@ -1,0 +1,204 @@
+{
+  "metadata": {
+    "library": {
+      "title": "Découvrir des playlists d'escalade",
+      "description": "Découvrez des playlists d'escalade publiques et gérez les vôtres après vous être connecté."
+    },
+    "detail": {
+      "fallbackTitle": "Playlist",
+      "fallbackDescription": "Playlist d'escalade sur Boardsesh"
+    }
+  },
+  "library": {
+    "signInBanner": {
+      "title": "Connectez-vous pour utiliser votre bibliothèque",
+      "description": "Suivez vos ascensions et gérez vos playlists.",
+      "cta": "Se connecter",
+      "modalTitle": "Se connecter à Boardsesh",
+      "modalDescription": "Connectez-vous pour suivre vos voies et gérer vos playlists."
+    },
+    "sections": {
+      "jumpBackIn": "Reprendre",
+      "discover": "Découvrir"
+    },
+    "empty": {
+      "title": "Aucune playlist pour le moment",
+      "description": "Créez votre première playlist en ajoutant des voies depuis la liste."
+    },
+    "errors": {
+      "loadTitle": "Impossible de charger la bibliothèque",
+      "loadDescription": "Une erreur est survenue lors du chargement de votre bibliothèque. Veuillez réessayer.",
+      "loadFailed": "Échec du chargement de votre bibliothèque",
+      "tryAgain": "Réessayer"
+    }
+  },
+  "detail": {
+    "share": "Partager la playlist",
+    "actions": "Actions de la playlist",
+    "menu": {
+      "generate": "Générer",
+      "edit": "Modifier",
+      "delete": "Supprimer"
+    },
+    "visibility": {
+      "public": "Public",
+      "private": "Privé"
+    },
+    "shareText": "Découvrez cette playlist d'escalade sur Boardsesh",
+    "shareFallbackTitle": "Playlist",
+    "shareSuccess": "Lien copié dans le presse-papiers !",
+    "shareError": "Échec du partage",
+    "deleted": "Playlist supprimée",
+    "deleteFailed": "Échec de la suppression de la playlist",
+    "discussion": "Discussion",
+    "empty": "Aucune voie dans cette playlist pour le moment",
+    "climbCount_one": "{{count}} voie",
+    "climbCount_other": "{{count}} voies",
+    "followerCount_one": "{{count}} abonné",
+    "followerCount_other": "{{count}} abonnés",
+    "errors": {
+      "notFoundTitle": "Playlist introuvable",
+      "notFoundDescription": "Cette playlist a peut-être été supprimée ou vous n'avez pas la permission de la consulter.",
+      "loadTitle": "Impossible de charger la playlist",
+      "loadDescription": "Une erreur est survenue lors du chargement de cette playlist. Veuillez réessayer.",
+      "loadFailed": "Échec du chargement de la playlist",
+      "notFound": "Playlist introuvable",
+      "tryAgain": "Réessayer"
+    }
+  },
+  "edit": {
+    "title": "Modifier la playlist",
+    "fields": {
+      "name": "Nom de la playlist",
+      "namePlaceholder": "ex. : Réglettes dures",
+      "description": "Description",
+      "descriptionPlaceholder": "Description facultative pour votre playlist...",
+      "color": "Couleur",
+      "icon": "Icône",
+      "removeIcon": "Supprimer",
+      "visibility": "Visibilité",
+      "publicHint": "Les playlists publiques sont visibles par toute personne disposant du lien",
+      "privateHint": "Les playlists privées ne sont visibles que par vous"
+    },
+    "actions": {
+      "cancel": "Annuler",
+      "save": "Enregistrer",
+      "saving": "Enregistrement..."
+    },
+    "validation": {
+      "nameRequired": "Veuillez saisir un nom de playlist",
+      "nameTooLong": "Le nom ne doit pas dépasser 100 caractères",
+      "descriptionTooLong": "La description ne doit pas dépasser 500 caractères"
+    },
+    "messages": {
+      "updated": "Playlist mise à jour avec succès",
+      "updateFailed": "Échec de la mise à jour de la playlist"
+    }
+  },
+  "create": {
+    "drawerTitle": "Créer une playlist",
+    "submit": "Créer",
+    "submitting": "Création...",
+    "fields": {
+      "name": "Nom",
+      "namePlaceholder": "ex. : Réglettes dures",
+      "description": "Description (facultative)",
+      "descriptionPlaceholder": "Description facultative...",
+      "color": "Couleur (facultative)"
+    }
+  },
+  "generator": {
+    "drawerTitle": "Générer une playlist",
+    "generatingTitle": "Génération...",
+    "optionsTitle": "Options",
+    "generatingProgress": "Ajout des voies... {{current}} / {{total}}",
+    "generate": "Générer",
+    "reset": "Réinitialiser",
+    "totals": {
+      "total": "Total",
+      "climbs_one": "{{count}} voie",
+      "climbs_other": "{{count}} voies"
+    },
+    "summaryRow_one": "{{count}} voie ({{range}})",
+    "summaryRow_other": "{{count}} voies ({{range}})",
+    "options": {
+      "warmUp": "Échauffement",
+      "targetGrade": "Cotation cible",
+      "minAscents": "Ascensions min.",
+      "minRating": "Note min.",
+      "climbBias": "Préférence de voie",
+      "tallClimbsLabel": "Voies hautes uniquement",
+      "tallClimbsTooltip": "Afficher uniquement les voies qui utilisent les prises des 8 rangées du bas (disponible uniquement sur les boards 10x12)",
+      "mainSetClimbs": "Voies de la série principale",
+      "mainSetVariability": "Variabilité de la série principale",
+      "numberOfSteps": "Nombre de paliers",
+      "climbsPerStep": "Voies par palier",
+      "numberOfClimbs": "Nombre de voies"
+    },
+    "warmUpOptions": {
+      "standard": "Standard",
+      "extended": "Prolongé",
+      "none": "Aucun"
+    },
+    "climbBiasOptions": {
+      "unfamiliar": "Inconnues",
+      "attempted": "Essayées",
+      "any": "Toutes"
+    },
+    "effortLevels": {
+      "moderate": "Modéré",
+      "challenging": "Difficile",
+      "veryDifficult": "Très difficile",
+      "maxEffort": "Effort maximal"
+    },
+    "workoutTypes": {
+      "volume": {
+        "name": "Volume",
+        "description": "Générer un entraînement à fort volume."
+      },
+      "pyramid": {
+        "name": "Pyramide",
+        "description": "Monter jusqu'à une cotation max puis redescendre."
+      },
+      "ladder": {
+        "name": "Échelle",
+        "description": "Progresser dans les cotations par paliers."
+      },
+      "gradeFocus": {
+        "name": "Cotation ciblée",
+        "description": "Choisissez une cotation et c'est parti !"
+      }
+    },
+    "sections": {
+      "warmUp": "Échauffement",
+      "increasing": "Montée",
+      "peak": "Pic",
+      "decreasing": "Descente",
+      "main": "Série principale"
+    },
+    "chart": {
+      "ariaLabel": "Aperçu de la distribution des cotations",
+      "configurePrompt": "Configurez les options pour prévisualiser"
+    },
+    "messages": {
+      "noClimbs": "Aucune voie à générer",
+      "addedAll": "{{count}} voies ajoutées à la playlist",
+      "addedPartial": "{{added}} voies ajoutées. {{failed}} emplacements n'ont pas pu être remplis.",
+      "failed": "Échec de la génération de la playlist. Aucune voie appropriée trouvée."
+    }
+  },
+  "bottomTabBar": {
+    "home": "Accueil",
+    "climb": "Grimper",
+    "discover": "Découvrir",
+    "feed": "Fil",
+    "create": "Créer",
+    "you": "Vous",
+    "youSignInTitle": "Connectez-vous pour voir votre progression",
+    "youSignInDescription": "Connectez-vous pour suivre vos statistiques d'escalade, vos sessions et votre carnet.",
+    "selectBoardForPlaylist": "Sélectionnez un board avant de créer une playlist",
+    "boardDetailsMissing": "Impossible de déterminer les détails du board pour créer la playlist",
+    "createdPlaylistToast": "Playlist « {{name}} » créée",
+    "createPlaylistFailed": "Échec de la création de la playlist"
+  }
+}

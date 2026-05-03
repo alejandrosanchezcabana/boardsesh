@@ -1,0 +1,114 @@
+{
+  "metadata": {
+    "admin": {
+      "title": "Panneau d'administration",
+      "description": "Panneau d'administration Boardsesh"
+    }
+  },
+  "title": "Panneau d'administration",
+  "auth": {
+    "signInRequired": "Veuillez vous connecter pour accéder au panneau d'administration.",
+    "noAccess": "Vous n'avez pas accès à l'administration."
+  },
+  "tabs": {
+    "roles": "Rôles",
+    "settings": "Paramètres"
+  },
+  "roles": {
+    "heading": "Rôles de la communauté",
+    "grant": "Attribuer un rôle",
+    "table": {
+      "user": "Utilisateur",
+      "role": "Rôle",
+      "board": "Mur",
+      "grantedBy": "Attribué par",
+      "date": "Date",
+      "actions": "Actions"
+    },
+    "labels": {
+      "admin": "Admin",
+      "leader": "Responsable",
+      "global": "Global",
+      "fallbackUserInitial": "U",
+      "fallbackEmpty": "-"
+    },
+    "empty": "Aucun rôle attribué pour le moment",
+    "dialog": {
+      "title": "Attribuer un rôle",
+      "search": {
+        "label": "Rechercher un utilisateur",
+        "placeholder": "Saisissez un nom pour rechercher..."
+      },
+      "fallbackUserInitial": "U",
+      "change": "Modifier",
+      "roleLabel": "Rôle",
+      "boardTypeLabel": "Type de mur (facultatif)",
+      "boardTypeOptions": {
+        "global": "Global (tous les murs)",
+        "kilter": "Kilter",
+        "tension": "Tension"
+      },
+      "roleOptions": {
+        "communityLeader": "Responsable de communauté",
+        "admin": "Admin"
+      },
+      "cancel": "Annuler",
+      "submit": "Attribuer"
+    },
+    "snackbar": {
+      "granted": "Rôle attribué",
+      "grantFailed": "Échec de l'attribution du rôle",
+      "revoked": "Rôle révoqué",
+      "revokeFailed": "Échec de la révocation du rôle"
+    }
+  },
+  "settings": {
+    "heading": "Paramètres de la communauté",
+    "scope": {
+      "label": "Portée",
+      "options": {
+        "global": "Global",
+        "board": "Mur",
+        "climb": "Voie"
+      },
+      "boardTypeLabel": "Type de mur",
+      "boardTypePlaceholder": "kilter, tension",
+      "climbUuidLabel": "UUID de la voie",
+      "climbUuidPlaceholder": "UUID de la voie"
+    },
+    "table": {
+      "setting": "Paramètre",
+      "description": "Description",
+      "value": "Valeur"
+    },
+    "rows": {
+      "approvalThreshold": {
+        "label": "Seuil d'approbation",
+        "description": "Votes pondérés requis pour l'approbation automatique"
+      },
+      "outlierMinAscents": {
+        "label": "Ascensions min. pour valeurs aberrantes",
+        "description": "Ascensions min. pour la détection des valeurs aberrantes"
+      },
+      "outlierGradeDiff": {
+        "label": "Écart de cotation aberrant",
+        "description": "Seuil d'écart de cotation pour valeur aberrante"
+      },
+      "adminVoteWeight": {
+        "label": "Poids du vote admin",
+        "description": "Multiplicateur de poids du vote pour les admins"
+      },
+      "leaderVoteWeight": {
+        "label": "Poids du vote responsable",
+        "description": "Multiplicateur de poids du vote pour les responsables"
+      }
+    },
+    "save": "Tout enregistrer",
+    "saving": "Enregistrement...",
+    "snackbar": {
+      "saved_one": "{{count}} paramètre enregistré",
+      "saved_other": "{{count}} paramètres enregistrés",
+      "saveFailed": "Échec de l'enregistrement des paramètres"
+    }
+  }
+}

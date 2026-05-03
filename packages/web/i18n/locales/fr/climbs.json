@@ -1,0 +1,508 @@
+{
+  "metadata": {
+    "boardHome": {
+      "title": "{{boardName}} sur Boardsesh",
+      "description": "Parcourez les voies et les sessions sur {{boardName}}",
+      "fallbackTitle": "Board introuvable"
+    },
+    "list": {
+      "title": "Voies {{boardName}} à {{angle}}°",
+      "description": "Parcourez les voies sur {{boardName}} à {{angle}}°",
+      "fallbackTitle": "Voies",
+      "fallbackDescription": "Parcourez les voies"
+    },
+    "view": {
+      "title": "{{climbName}} - {{grade}}",
+      "description": "{{climbName}} - {{grade}} par {{setter}}. Qualité : {{quality}}/5. Ascensions : {{ascents}}",
+      "imageAlt": "{{climbName}} - {{grade}} sur le board {{boardName}}",
+      "fallbackTitle": "Voie",
+      "fallbackDescription": "Voir les détails de la voie et les vidéos beta"
+    },
+    "play": {
+      "title": "{{climbName}} - {{grade}} | Mode Play",
+      "description": "{{climbName}} - {{grade}} par {{setter}}. Qualité : {{quality}}/5. Ascensions : {{ascents}}",
+      "fallbackTitle": "Play",
+      "fallbackDescription": "Grimpez une voie sur votre board"
+    },
+    "create": {
+      "title": "Créer une voie",
+      "description": "Ouvrez une nouvelle voie sur votre board"
+    },
+    "import": {
+      "title": "Importer des voies",
+      "description": "Importez des voies MoonBoard depuis des captures d'écran"
+    },
+    "liked": {
+      "title": "Voies aimées",
+      "description": "Voies que vous avez aimées"
+    },
+    "logbook": {
+      "title": "Carnet",
+      "description": "Votre historique de grimpe pour ce board"
+    }
+  },
+  "list": {
+    "empty": {
+      "title": "Aucune voie ne correspond à vos filtres",
+      "subtitle": "Assouplissez les filtres et réessayez"
+    },
+    "loading": "Chargement des voies...",
+    "loadMore": "Charger plus",
+    "noMore": "Plus de voies",
+    "viewMode": {
+      "list": "Vue liste",
+      "grid": "Vue grille"
+    },
+    "biggerBoard": {
+      "title": "Ne rentre pas sur votre board",
+      "description": "Celle-ci dépasse les bords de votre mur. Il vous faudra une plus grande taille pour l'enchaîner."
+    },
+    "sort": {
+      "label": "Trier",
+      "ascents": "Ascensions",
+      "popular": "Populaires",
+      "difficulty": "Difficulté",
+      "name": "Nom",
+      "quality": "Qualité",
+      "creation": "Création",
+      "ascending": "Asc",
+      "descending": "Desc"
+    }
+  },
+  "header": {
+    "backToList": "Retour à la liste des voies",
+    "createNewClimb": "Créer une nouvelle voie"
+  },
+  "share": {
+    "title": "{{climbName}} sur Boardsesh",
+    "text": "Découvrez {{climbName}} sur Boardsesh",
+    "actionLabel": "Partager",
+    "actionText": "Découvrez « {{climbName}} » ({{difficulty}}) sur Boardsesh",
+    "linkCopied": "Lien copié",
+    "shareFailed": "Échec du partage"
+  },
+  "board": {
+    "connect": "Se connecter au board",
+    "disconnect": "Se déconnecter du board",
+    "connectError": "Connexion au board impossible. Vérifiez que le Bluetooth est activé et que le board est à proximité.",
+    "lightingUnavailable": "Éclairage du board indisponible",
+    "lightingUnavailableIos": "Safari ne prend pas en charge le Bluetooth. Utilisez l'app Boardsesh pour allumer les prises sur votre board.",
+    "lightingUnavailableBrowser": "Ce navigateur ne prend pas en charge le Bluetooth. Passez à Chrome pour allumer les prises sur votre board.",
+    "dismiss": "Ignorer",
+    "getApp": "Obtenir l'app"
+  },
+  "angleSelector": {
+    "selectAngle": "Choisir l'inclinaison",
+    "loadingStats": "Chargement des stats...",
+    "noData": "Aucune donnée",
+    "sends_one": "{{count}} enchaînement",
+    "sends_other": "{{count}} enchaînements"
+  },
+  "search": {
+    "drawerTitle": "Recherche et filtres",
+    "categories": {
+      "climbs": "Voies",
+      "boards": "Boards",
+      "gyms": "Salles",
+      "users": "Utilisateurs",
+      "playlists": "Playlists"
+    },
+    "placeholders": {
+      "boards": "Rechercher des boards...",
+      "gyms": "Rechercher des salles...",
+      "users": "Rechercher des grimpeurs...",
+      "playlists": "Rechercher des playlists...",
+      "climbs": "Rechercher des voies...",
+      "setters": "Rechercher des ouvreurs..."
+    },
+    "fields": {
+      "climbName": "Nom de la voie",
+      "gradeRange": "Plage de cotation",
+      "minGrade": "Min",
+      "maxGrade": "Max",
+      "setter": "Ouvreur",
+      "minAscents": "Ascensions min",
+      "minRating": "Note min",
+      "any": "Toutes",
+      "tallClimbsOnly": "Voies hautes uniquement",
+      "tallClimbsTooltip": "Afficher uniquement les voies qui utilisent les prises des 8 rangées du bas (disponible uniquement sur les boards 10x12)",
+      "gradeAccuracy": "Précision de la cotation",
+      "somewhatAccurate": "Plutôt précise (<0.2)",
+      "veryAccurate": "Très précise (<0.1)",
+      "extremelyAccurate": "Extrêmement précise (<0.05)",
+      "classicsOnly": "Classiques uniquement"
+    },
+    "panels": {
+      "quality": "Qualité",
+      "status": "Statut d'ascension",
+      "progress": "Progression",
+      "holds": "Prises",
+      "holdsTitle": "Rechercher par prise",
+      "anyDefault": "Toutes",
+      "allClimbs": "Toutes les voies"
+    },
+    "status": {
+      "any": "Toutes",
+      "established": "Établies",
+      "establishedTooltip": "Voies avec 2 ascensions ou plus",
+      "projects": "Projets",
+      "projectsTooltip": "Voies sans aucune ascension enregistrée",
+      "myDrafts": "Mes brouillons",
+      "myDraftsSignedOut": "Mes brouillons (connexion)",
+      "signInToFilterDrafts": "Connectez-vous pour filtrer par vos brouillons.",
+      "signInModalTitle": "Connectez-vous à Boardsesh",
+      "signInModalDescription": "Connectez-vous pour parcourir vos voies en brouillon."
+    },
+    "progress": {
+      "signInTitle": "Connectez-vous pour filtrer par vos données",
+      "signInBody": "Connectez-vous pour filtrer les voies selon votre historique d'essais et de réussites.",
+      "signInModalTitle": "Connectez-vous à Boardsesh",
+      "signInModalDescription": "Créez un compte pour filtrer par votre progression et enregistrer vos favorites.",
+      "hideAttempted": "Masquer essayées",
+      "hideCompleted": "Masquer enchaînées",
+      "onlyAttempted": "Essayées uniquement",
+      "onlyCompleted": "Enchaînées uniquement"
+    },
+    "actions": {
+      "search": "Rechercher",
+      "clearAll": "Tout effacer",
+      "signIn": "Se connecter"
+    },
+    "results": {
+      "count": "résultats"
+    },
+    "setters": {
+      "loading": "Chargement...",
+      "openDropdown": "Ouvrez le menu pour voir les ouvreurs",
+      "noSetters": "Aucun ouvreur trouvé"
+    },
+    "holds": {
+      "tapTo": "Appuyez pour :",
+      "include": "Inclure",
+      "exclude": "Exclure",
+      "included": "{{count}} incluses",
+      "excluded": "{{count}} exclues"
+    },
+    "sortToggle": "Trier"
+  },
+  "statsFilter": {
+    "drawerTitle": "Filtres",
+    "fields": {
+      "board": "Board",
+      "timeRange": "Période",
+      "from": "Du",
+      "to": "Au"
+    }
+  },
+  "create": {
+    "auth": {
+      "signInTitle": "Connectez-vous pour enregistrer votre voie",
+      "signInDescription": "Créez un compte ou connectez-vous pour enregistrer votre voie sur le board.",
+      "signInAria": "Se connecter pour enregistrer",
+      "logInTitle": "Connectez-vous pour enregistrer votre voie",
+      "logInAria": "Se connecter pour enregistrer",
+      "editLockedTitle": "Les voies publiées ne peuvent être modifiées que pendant 24 heures après leur première publication.",
+      "editLockedAria": "Fenêtre de modification fermée",
+      "savedTitle": "Enregistrée",
+      "savedAria": "Enregistrée"
+    },
+    "clear": {
+      "title": "Effacer la voie",
+      "description": "Cela effacera toutes les prises et réinitialisera le formulaire. Êtes-vous sûr ?",
+      "tooltip": "Effacer toutes les prises"
+    }
+  },
+  "actions": {
+    "playlist": {
+      "toast": {
+        "added": "Ajoutée à la playlist",
+        "removed": "Retirée de la playlist",
+        "addFailed": "Échec de l'ajout à la playlist",
+        "removeFailed": "Échec du retrait de la playlist",
+        "createdNamed": "Playlist « {{name}} » créée",
+        "createFailed": "Échec de la création de la playlist"
+      },
+      "validation": {
+        "nameRequired": "Veuillez saisir un nom de playlist",
+        "nameTooLong": "Nom trop long",
+        "descriptionTooLong": "Description trop longue"
+      },
+      "auth": {
+        "title": "Connectez-vous pour créer des playlists",
+        "description": "Connectez-vous pour organiser vos voies en playlists personnalisées."
+      },
+      "popover": {
+        "title": "Ajouter à la playlist",
+        "empty": "Aucune playlist pour l'instant",
+        "createFirst": "Créer votre première playlist",
+        "createNew": "Créer une nouvelle playlist",
+        "signInBlurb": "Connectez-vous pour créer et gérer des playlists"
+      },
+      "create": {
+        "nameLabel": "Nom de la playlist",
+        "namePlaceholder": "ex. Réglettes dures",
+        "descriptionLabel": "Description (optionnelle)",
+        "descriptionPlaceholder": "Description optionnelle...",
+        "colorLabel": "Couleur (optionnelle)",
+        "submit": "Créer"
+      }
+    },
+    "tick": {
+      "drawer": {
+        "signInRequired": "Connexion requise",
+        "selectBoard": "Choisir le board",
+        "logAscent": "Enregistrer l'ascension",
+        "signInToRecord": "Connectez-vous pour enregistrer des ticks",
+        "createAccountBlurb": "Créez un compte Boardsesh pour enregistrer vos voies et suivre votre progression.",
+        "signIn": "Se connecter",
+        "orLogInOfficialApp": "Ou enregistrez votre tick dans l'app officielle :",
+        "openInApp": "Ouvrir dans l'app",
+        "alwaysOpenInApp": "Toujours ouvrir dans l'app",
+        "authModalTitle": "Connectez-vous pour enregistrer des ticks",
+        "authModalDescription": "Créez un compte pour enregistrer vos voies et suivre votre progression.",
+        "mirroredTooltip": "Cliquez sur l'étiquette pour indiquer si vous avez enchaîné cette voie en miroir",
+        "whichBoard": "Sur quel board avez-vous grimpé ?"
+      }
+    },
+    "navigation": {
+      "nextClimb": "Voie suivante",
+      "previousClimb": "Voie précédente"
+    },
+    "mirror": {
+      "label": {
+        "mirrored": "En miroir",
+        "mirror": "Miroir"
+      },
+      "tooltip": {
+        "mirrored": "En miroir (cliquez pour réinitialiser)",
+        "mirror": "Mettre la voie en miroir"
+      }
+    },
+    "favorite": {
+      "label": {
+        "favorited": "Favorite",
+        "favorite": "Favori"
+      },
+      "tooltip": {
+        "add": "Ajouter aux favoris",
+        "remove": "Retirer des favoris"
+      },
+      "auth": {
+        "title": "Connectez-vous pour enregistrer vos favoris",
+        "descriptionWithName": "Connectez-vous pour ajouter « {{climbName}} » à vos favoris.",
+        "description": "Connectez-vous pour ajouter des voies à vos favoris."
+      },
+      "toast": {
+        "updateFailed": "Échec de la mise à jour du favori. Veuillez réessayer.",
+        "saveFailed": "Échec de l'enregistrement du favori. Veuillez réessayer."
+      }
+    }
+  },
+  "card": {
+    "title": {
+      "noClimbSelected": "Aucune voie sélectionnée",
+      "project": "projet",
+      "projectAtAngle": "projet @ {{angle}}°",
+      "draftBy": "Brouillon de {{name}}",
+      "by": "Par {{name}}",
+      "byWithSends": "Par {{name}} - {{sends}}"
+    },
+    "list": {
+      "moreActions": "Plus d'actions",
+      "tickError": "Tick non enregistré — sauvegardé en brouillon"
+    },
+    "detailHeader": {
+      "project": "projet",
+      "unknownSetter": "Ouvreur inconnu"
+    }
+  },
+  "detail": {
+    "sections": {
+      "beta": "Beta",
+      "logbook": "Votre carnet",
+      "logbookEmpty": "Aucune ascension",
+      "crewLogbook": "Carnet du crew",
+      "crewLogbookSummary": "Voir les enchaînements de votre crew",
+      "community": "Communauté",
+      "communitySummary": "Votes, commentaires, propositions",
+      "analytics": "Statistiques",
+      "analyticsSummary": "Ascensions, tendances de qualité"
+    }
+  },
+  "multiboardList": {
+    "noClimbsFound": "Aucune voie trouvée",
+    "popular": "Populaires",
+    "new": "Nouvelles",
+    "count_one": "{{count}} voie",
+    "count_other": "{{count}} voies"
+  },
+  "tick": {
+    "controls": {
+      "selectGrade": "Choisir la cotation enregistrée",
+      "userByline": "utilisateur",
+      "starsLabel": "étoiles",
+      "triesLabel": "essais",
+      "starRating": "Note en étoiles",
+      "noRating": "Pas de note",
+      "gradeOverride": "Cotation personnalisée",
+      "clearGradeOverride": "Effacer la cotation personnalisée",
+      "attemptCount": "Nombre d'essais"
+    },
+    "bar": {
+      "logAscent": "Enregistrer l'ascension",
+      "logAttempt": "Enregistrer l'essai",
+      "cancel": "Annuler"
+    }
+  },
+  "liked": {
+    "heroTitle": "Voies aimées",
+    "heroSubtitle": "Vos voies favorites",
+    "signInRequired": "Connexion requise",
+    "signInBody": "Veuillez vous connecter pour voir vos voies aimées.",
+    "actionsAriaLabel": "Actions",
+    "queueAll": "Tout mettre en file",
+    "adding": "Ajout en cours...",
+    "noClimbsToAdd": "Aucune voie à ajouter",
+    "addedToQueue_one": "{{count}} voie ajoutée à la file",
+    "addedToQueue_other": "{{count}} voies ajoutées à la file",
+    "addToQueueFailed": "Échec de l'ajout des voies à la file",
+    "loadFailed": "Échec du chargement des voies aimées",
+    "emptyState": "Pas encore de voies aimées. Mettez un cœur sur des voies pour les voir ici !"
+  },
+  "moonboard": {
+    "invalidLayout": "Disposition MoonBoard invalide"
+  },
+  "createClimbForm": {
+    "draftBadge": "Brouillon",
+    "namePlaceholder": "Nom de la voie",
+    "descriptionPlaceholder": "Ajoutez du beta ou des notes sur votre voie...",
+    "openDrafts": "Ouvrir les brouillons",
+    "processing": "Traitement...",
+    "importFromScreenshot": "Importer depuis une capture d'écran",
+    "bulkImport": "Import en masse",
+    "dismiss": "Ignorer",
+    "alerts": {
+      "importFailed": "Échec de l'import : {{error}}",
+      "importWarnings": "Avertissements d'import :",
+      "checkingMoonBoardDuplicate": "Vérification que cette voie MoonBoard n'existe pas déjà..."
+    },
+    "clear": {
+      "title": "Effacer la voie",
+      "description": "Cela effacera toutes les prises et réinitialisera le formulaire. Êtes-vous sûr ?",
+      "confirm": "Effacer",
+      "tooltip": "Effacer toutes les prises"
+    },
+    "settings": {
+      "tooltip": "Paramètres de la voie",
+      "title": "Paramètres de la voie"
+    },
+    "fields": {
+      "name": "Nom",
+      "holds": "Prises",
+      "angle": "Inclinaison",
+      "grade": "Cotation",
+      "gradeNone": "Aucune",
+      "benchmark": "Référence",
+      "description": "Description (optionnelle)"
+    },
+    "holds": {
+      "starting": "Départ",
+      "start": "Départ",
+      "hand": "Main",
+      "finish": "Arrivée",
+      "total": "Total"
+    },
+    "validation": {
+      "needsStartFinish": "Une voie valide nécessite au moins 1 prise de départ et 1 prise d'arrivée"
+    }
+  },
+  "draftsDrawer": {
+    "title": "Brouillons",
+    "count_one": "{{count}} brouillon",
+    "count_other": "{{count}} brouillons",
+    "loadError": "Impossible de charger vos brouillons. Réessayez.",
+    "empty": {
+      "title": "Pas encore de brouillons",
+      "subtitle": "Enregistrez une voie en brouillon pour la reprendre plus tard."
+    }
+  },
+  "holdTypePicker": {
+    "toolbarAriaLabel": "Type de prise",
+    "clear": "Effacer",
+    "states": {
+      "starting": "Départ",
+      "hand": "Milieu",
+      "finish": "Arrivée",
+      "foot": "Pied"
+    }
+  },
+  "directionPicker": {
+    "down": "Bas"
+  },
+  "holdClassification": {
+    "drawerTitle": "Classification des prises",
+    "classifyHoldTitle": "Classifier la prise",
+    "loadingHolds": "Chargement des prises...",
+    "emptyState": "Aucune prise trouvée pour cette configuration de board.",
+    "progress": "Prise {{current}} sur {{total}} ({{classified}} classifiées)",
+    "complete": {
+      "title": "Classification terminée !",
+      "subtitle": "Vous avez classifié {{classified}} prises sur {{total}}. Vous pouvez relancer cet assistant à tout moment pour mettre à jour vos évaluations."
+    },
+    "fields": {
+      "holdType": "Type de prise",
+      "handRating": "Note main (1-5)",
+      "footRating": "Note pied (1-5)",
+      "pullDirection": "Direction de traction"
+    },
+    "hints": {
+      "handRating": "5 = Facile à saisir, 1 = Très difficile",
+      "footRating": "5 = Facile à poser le pied, 1 = Très difficile",
+      "pullDirection": "Cliquez ou glissez pour définir la meilleure direction de traction"
+    },
+    "actions": {
+      "previous": "Précédent",
+      "skip": "Passer",
+      "finish": "Terminer"
+    },
+    "toast": {
+      "saveFailed": "Échec de l'enregistrement de la classification"
+    }
+  },
+  "moonboardImport": {
+    "card": {
+      "skipping": "Ignorée",
+      "duplicate": "Ignorée : existe déjà",
+      "duplicateNamed": "Ignorée : existe déjà sous le nom « {{name}} »",
+      "removeAction": "Retirer",
+      "removeDescription": "Cette voie ne sera pas importée."
+    },
+    "bulk": {
+      "title": "Importer des voies MoonBoard - {{layoutName}} @ {{angle}}°",
+      "loginRequired": "Veuillez vous connecter pour enregistrer les voies",
+      "loginRequiredTitle": "Connexion requise",
+      "loginRequiredBody": "Veuillez vous connecter pour enregistrer les voies dans la base de données.",
+      "logIn": "Se connecter",
+      "uploadPrompt": "Cliquez ou glissez des fichiers de capture d'écran dans cette zone",
+      "uploadHelp": "Prise en charge des captures d'écran de l'app MoonBoard. Déposez plusieurs fichiers pour un import en masse.",
+      "processing": "Traitement des captures d'écran...",
+      "checkingDuplicates": "Vérification des voies importées par rapport aux problèmes MoonBoard existants...",
+      "reviewBeforeSaving": "Vérifiez les voies ci-dessous. Vous pouvez en modifier ou en retirer avant d'enregistrer.",
+      "saveAll": "Tout enregistrer ({{count}})",
+      "clearAndRestart": "Effacer et recommencer",
+      "contributeImages": "Contribuez des images pour améliorer la précision de l'OCR",
+      "tryAgain": "Réessayer",
+      "saveFailed": "Échec de l'enregistrement des voies. Veuillez réessayer."
+    }
+  },
+  "moonboardEditModal": {
+    "title": "Modifier la voie",
+    "nameLabel": "Nom de la voie",
+    "nameRequired": "Veuillez saisir un nom",
+    "save": "Enregistrer les modifications",
+    "setter": "Ouvreur : {{setter}}",
+    "grade": "Cotation : {{grade}}",
+    "angle": "Inclinaison : {{angle}}°",
+    "unknown": "Inconnu"
+  }
+}

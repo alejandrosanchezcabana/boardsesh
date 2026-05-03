@@ -1,0 +1,218 @@
+{
+  "languageSwitcher": {
+    "ariaLabel": "Langue",
+    "ariaLabelWithCurrent": "Langue : {{language}}"
+  },
+  "languages": {
+    "en-US": "English",
+    "es": "Español",
+    "fr": "Français"
+  },
+  "lightControl": {
+    "title": "Lumières",
+    "turnOffAll": "Éteindre toutes les lumières",
+    "partyMode": "Mode soirée",
+    "stopParty": "Arrêter la soirée",
+    "partyUnsupported": "Le mode soirée n'est pas disponible sur ce board",
+    "clearFailed": "Impossible d'éteindre le board"
+  },
+  "actions": {
+    "yes": "Oui",
+    "no": "Non",
+    "ok": "OK",
+    "cancel": "Annuler",
+    "save": "Enregistrer",
+    "delete": "Supprimer",
+    "edit": "Modifier",
+    "close": "Fermer",
+    "back": "Retour",
+    "next": "Suivant",
+    "done": "Terminé",
+    "retry": "Réessayer",
+    "loadMore": "Charger plus",
+    "loading": "Chargement...",
+    "share": "Partager",
+    "copy": "Copier",
+    "submit": "Envoyer",
+    "clear": "Effacer",
+    "remove": "Retirer"
+  },
+  "ariaLabels": {
+    "close": "Fermer",
+    "back": "Retour",
+    "menu": "Menu",
+    "search": "Rechercher",
+    "clearSearch": "Effacer la recherche",
+    "openFilters": "Ouvrir les filtres",
+    "openStatsFilters": "Ouvrir les filtres de statistiques",
+    "shareProfile": "Partager le profil",
+    "settings": "Paramètres",
+    "notifications": "Notifications",
+    "searchClimbsByName": "Rechercher des voies par nom",
+    "userMenu": "Menu utilisateur",
+    "toggleDarkMode": "Activer/désactiver le mode sombre"
+  },
+  "boardSelector": {
+    "title": "Choisir un board"
+  },
+  "header": {
+    "you": "Vous",
+    "profile": "Profil",
+    "statistics": "Statistiques",
+    "sessions": "Sessions",
+    "createdClimbs": "Voies créées",
+    "auroraMigration": "Migration Aurora",
+    "searchPlaceholder": "Que voulez-vous grimper ?",
+    "searchClimbsPlaceholder": "Rechercher des voies..."
+  },
+  "share": {
+    "profileTitle": "Profil de grimpeur de {{name}}",
+    "profileText": "Découvrez le profil de grimpeur de {{name}} sur Boardsesh",
+    "fallbackName": "Mon",
+    "viewedFallbackName": "Grimpeur",
+    "linkCopied": "Lien copié dans le presse-papiers !",
+    "shareFailed": "Échec du partage"
+  },
+  "myBoards": {
+    "title": "Mes boards",
+    "findBoard": "Trouver un board",
+    "boardDetail": "Board",
+    "searchPlaceholder": "Rechercher par nom ou emplacement...",
+    "ariaFindBoard": "Trouver un board",
+    "ariaCreateBoard": "Créer un board",
+    "empty": "Aucun board pour le moment. Créez-en un depuis le sélecteur de board pour commencer."
+  },
+  "loading": {
+    "messages": [
+      "Préparation de votre board...",
+      "Configuration des voies...",
+      "Préparation du mur...",
+      "Chargement des jeux de prises...",
+      "Presque prêt à grimper...",
+      "Allumage des LED...",
+      "Synchronisation de la configuration du board...",
+      "Calibrage des cotations...",
+      "Mise en jambes...",
+      "Vérification de l'état des voies..."
+    ]
+  },
+  "emptyState": {
+    "default": "Aucune donnée"
+  },
+  "comment": {
+    "placeholder": "Ajouter un commentaire...",
+    "replyPlaceholder": "Écrire une réponse...",
+    "thoughtsPlaceholder": "Partagez votre avis...",
+    "shortPlaceholder": "Commentaire...",
+    "submit": "Publier",
+    "save": "Enregistrer",
+    "cancel": "Annuler",
+    "signInPrompt": "Connectez-vous pour laisser un commentaire.",
+    "discussionTitle": "Discussion",
+    "empty": "Aucun commentaire pour le moment. Lancez la conversation.",
+    "deleted": "[supprimé]",
+    "edited": "(modifié)",
+    "userFallback": "Utilisateur",
+    "reply": "Répondre",
+    "showRepliesOne": "Afficher 1 réponse",
+    "showRepliesMany": "Afficher {{count}} réponses",
+    "countOne": "{{count}} commentaire",
+    "countMany": "{{count}} commentaires",
+    "sort": {
+      "new": "Récents",
+      "top": "Top",
+      "controversial": "Controversés",
+      "hot": "Populaires"
+    },
+    "delete": {
+      "title": "Supprimer le commentaire",
+      "description": "Voulez-vous vraiment supprimer ce commentaire ? Cette action est irréversible.",
+      "confirm": "Supprimer",
+      "editAria": "Modifier le commentaire",
+      "deleteAria": "Supprimer le commentaire"
+    },
+    "errors": {
+      "post": "Échec de la publication du commentaire",
+      "update": "Échec de la mise à jour du commentaire",
+      "delete": "Échec de la suppression du commentaire",
+      "reply": "Échec de la publication de la réponse",
+      "loadReplies": "Échec du chargement des réponses"
+    }
+  },
+  "vote": {
+    "upvote": "Voter pour",
+    "downvote": "Voter contre",
+    "like": "J'aime",
+    "unlike": "Je n'aime plus",
+    "signInPrompt": "Connectez-vous pour voter",
+    "failed": "Échec du vote"
+  },
+  "proposal": {
+    "trigger": "Proposer une modification",
+    "drawerTitle": "Créer une proposition",
+    "submit": "Créer la proposition",
+    "submitting": "Création...",
+    "cancel": "Annuler",
+    "types": {
+      "grade": "Cotation",
+      "classic": "Classique",
+      "benchmark": "Référence"
+    },
+    "fields": {
+      "angle": "Inclinaison",
+      "proposedGrade": "Cotation proposée",
+      "proposedStatus": "Statut proposé",
+      "reasonLabel": "Motif (facultatif)",
+      "reasonPlaceholder": "Pourquoi pensez-vous que cette modification est nécessaire ?",
+      "yes": "Oui",
+      "no": "Non"
+    },
+    "hints": {
+      "classic": "Les propositions classiques s'appliquent à toutes les inclinaisons.",
+      "benchmark": "Les propositions de référence sont par inclinaison."
+    },
+    "outlierWarning": "La cotation à cette inclinaison semble aberrante par rapport aux inclinaisons voisines. Cette proposition pourra être approuvée automatiquement si elle correspond aux données voisines.",
+    "validation": {
+      "signIn": "Connectez-vous pour créer des propositions",
+      "signInToVote": "Connectez-vous pour voter sur les propositions",
+      "missingValue": "Veuillez saisir une valeur proposée",
+      "sameGrade": "La cotation proposée est identique à la cotation actuelle",
+      "noData": "Échec de la création de la proposition : aucune donnée renvoyée",
+      "failed": "Échec de la création de la proposition",
+      "failedToVote": "Échec du vote",
+      "failedToResolve": "Échec de la résolution de la proposition",
+      "failedToDelete": "Échec de la suppression de la proposition"
+    },
+    "created": "Proposition créée"
+  },
+  "follow": {
+    "follow": "Suivre",
+    "following": "Suivi",
+    "unfollow": "Ne plus suivre"
+  },
+  "feedback": {
+    "title": "Vous aimez Boardsesh ?"
+  },
+  "betaVideos": {
+    "empty": "Aucune vidéo de beta pour le moment"
+  },
+  "moonboardImport": {
+    "removeConfirmTitle": "Retirer cette voie ?"
+  },
+  "ascents": {
+    "deleteTitle": "Supprimer l'ascension",
+    "deleteDescription": "Êtes-vous sûr ? Cette action est irréversible.",
+    "statusFlash": "flash",
+    "statusSend": "réussite",
+    "statusAttempt": "essai",
+    "flashed_one": "Flashée",
+    "flashed_other": "{{count}} flashs",
+    "sent_one": "Réussie",
+    "sent_other": "{{count}} réussites",
+    "attempts_one": "1 essai",
+    "attempts_other": "{{count}} essais"
+  },
+  "board": {
+    "resetZoom": "Réinitialiser le zoom"
+  }
+}

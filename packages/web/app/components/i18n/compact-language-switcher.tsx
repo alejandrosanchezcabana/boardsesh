@@ -1,11 +1,15 @@
 'use client';
 
-import React, { Suspense } from 'react';
-import { useRouter, usePathname, useSearchParams } from 'next/navigation';
+import React, { Suspense, useState } from 'react';
+import { usePathname, useSearchParams } from 'next/navigation';
 import { useTranslation } from 'react-i18next';
 import Box from '@mui/material/Box';
 import IconButton from '@mui/material/IconButton';
 import Tooltip from '@mui/material/Tooltip';
+import Menu from '@mui/material/Menu';
+import MenuItem from '@mui/material/MenuItem';
+import ListItemIcon from '@mui/material/ListItemIcon';
+import ListItemText from '@mui/material/ListItemText';
 import {
   DEFAULT_LOCALE,
   LOCALE_COOKIE,
@@ -19,51 +23,73 @@ import { localeHref, stripLocalePrefix } from '@/app/lib/i18n/locale-href';
 const FLAGS: Record<Locale, string> = {
   'en-US': '🇺🇸',
   es: '🇪🇸',
+  fr: '🇫🇷',
 };
 const ONE_YEAR_SECONDS = 60 * 60 * 24 * 365;
 const flagSx = { fontSize: 20, lineHeight: 1 };
-
-function nextLocaleAfter(current: Locale): Locale {
-  const idx = SUPPORTED_LOCALES.indexOf(current);
-  return SUPPORTED_LOCALES[(idx + 1) % SUPPORTED_LOCALES.length];
-}
+const menuFlagSx = { fontSize: 18, lineHeight: 1, minWidth: 24 };
 
 type LabelProps = {
   ariaLabel: string;
   flag: string;
 };
 
-function CompactLanguageSwitcherInner({
-  ariaLabelTemplate,
-  switchToTemplate,
-}: {
-  ariaLabelTemplate: (label: string) => string;
-  switchToTemplate: (label: string) => string;
-}) {
-  const router = useRouter();
+function CompactLanguageSwitcherInner({ ariaLabelTemplate }: { ariaLabelTemplate: (label: string) => string }) {
   const pathname = usePathname() ?? '/';
   const searchParams = useSearchParams();
   const { i18n } = useTranslation('common');
   const current: Locale = isSupportedLocale(i18n.language) ? i18n.language : DEFAULT_LOCALE;
-  const next = nextLocaleAfter(current);
+  const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
+  const open = anchorEl !== null;
 
-  const handleClick = () => {
+  const handleOpen = (event: React.MouseEvent<HTMLButtonElement>) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleClose = () => {
+    setAnchorEl(null);
+  };
+
+  const handleSelect = (next: Locale) => {
+    handleClose();
+    if (next === current) {
+      return;
+    }
     document.cookie = `${LOCALE_COOKIE}=${next}; path=/; max-age=${ONE_YEAR_SECONDS}; samesite=lax`;
-    void i18n.changeLanguage(next);
     const basePath = stripLocalePrefix(pathname, current);
     const target = localeHref(basePath, next);
     const query = searchParams?.toString();
-    router.push(query ? `${target}?${query}` : target);
+    window.location.assign(query ? `${target}?${query}` : target);
   };
 
   return (
-    <Tooltip title={switchToTemplate(LOCALE_LABELS[next])}>
-      <IconButton onClick={handleClick} aria-label={ariaLabelTemplate(LOCALE_LABELS[current])} size="small">
-        <Box component="span" sx={flagSx} aria-hidden>
-          {FLAGS[current]}
-        </Box>
-      </IconButton>
-    </Tooltip>
+    <>
+      <Tooltip title={LOCALE_LABELS[current]}>
+        <IconButton
+          onClick={handleOpen}
+          aria-label={ariaLabelTemplate(LOCALE_LABELS[current])}
+          aria-haspopup="menu"
+          aria-expanded={open ? true : undefined}
+          size="small"
+        >
+          <Box component="span" sx={flagSx} aria-hidden>
+            {FLAGS[current]}
+          </Box>
+        </IconButton>
+      </Tooltip>
+      <Menu anchorEl={anchorEl} open={open} onClose={handleClose}>
+        {SUPPORTED_LOCALES.map((locale) => (
+          <MenuItem key={locale} selected={locale === current} onClick={() => handleSelect(locale)}>
+            <ListItemIcon>
+              <Box component="span" sx={menuFlagSx} aria-hidden>
+                {FLAGS[locale]}
+              </Box>
+            </ListItemIcon>
+            <ListItemText>{LOCALE_LABELS[locale]}</ListItemText>
+          </MenuItem>
+        ))}
+      </Menu>
+    </>
   );
 }
 
@@ -78,15 +104,9 @@ function CompactLanguageSwitcherFallback({ ariaLabel, flag }: LabelProps) {
 }
 
 export default function CompactLanguageSwitcher() {
-  // Resolve translations at the parent so the Suspense fallback (which can't
-  // call hooks during the suspended render) still announces in the user's
-  // active language. The fallback shows for ~one tick while useSearchParams
-  // resolves; resolved labels prevent screen readers from reading English
-  // chrome on a Spanish page.
   const { i18n, t } = useTranslation('common');
   const fallbackLocale: Locale = isSupportedLocale(i18n.language) ? i18n.language : DEFAULT_LOCALE;
   const ariaLabelTemplate = (label: string) => t('languageSwitcher.ariaLabelWithCurrent', { language: label });
-  const switchToTemplate = (label: string) => t('languageSwitcher.switchTo', { language: label });
 
   return (
     <Suspense
@@ -97,7 +117,7 @@ export default function CompactLanguageSwitcher() {
         />
       }
     >
-      <CompactLanguageSwitcherInner ariaLabelTemplate={ariaLabelTemplate} switchToTemplate={switchToTemplate} />
+      <CompactLanguageSwitcherInner ariaLabelTemplate={ariaLabelTemplate} />
     </Suspense>
   );
 }

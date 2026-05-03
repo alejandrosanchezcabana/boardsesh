@@ -1,0 +1,54 @@
+{
+  "metadata": {
+    "migration": {
+      "title": "Migrer depuis l'ancienne app Kilter",
+      "description": "Migrez vos données du mur Kilter vers Boardsesh après l'arrêt du backend Aurora."
+    }
+  },
+  "migration": {
+    "whatHappened": {
+      "title": "Ce qui s'est passé",
+      "lead": "Le backend Aurora Kilter a disparu. Vos playlists, votre carnet et vos voies en brouillon partent avec lui, sauf si vous les exportez.",
+      "body": "Le 25 mars, l'app du mur Kilter a soudainement disparu, Aurora ayant arrêté son backend Kilter sans préavis. En réaction, Kilter a sorti précipitamment sa propre app, encore en bêta. Le résultat de cette bataille entre les deux entités : c'est le client qui en fait les frais. Pour en savoir plus, lisez :",
+      "articleTitle": "L'app du mur Kilter vient de disparaître sans avertissement. Voici ce qui s'est vraiment passé.",
+      "articleDescription": "Pendant des années, le mur d'entraînement le plus populaire de l'escalade a été en guerre avec son développeur d'app. Maintenant, ce sont les grimpeurs qui en paient le prix.",
+      "articleSource": "climbing.com",
+      "articleAlt": "L'app du mur Kilter vient de disparaître sans avertissement",
+      "ledRisk": "Ce risque lié à un fournisseur unique est devenu évident il y a 2 ans, quand il était impossible d'acheter un kit LED pour vos prises Kilter à cause d'un litige juridique en cours entre Kilter et Aurora.",
+      "boardseshIntroPrefix": "Pour supprimer ce risque, ",
+      "boardseshLink": "Boardsesh",
+      "boardseshIntroSuffix": " a été créé comme alternative open-source à toutes les apps de murs d'escalade. Boardsesh dispose de sa propre copie des bases de données de voies et prendra à terme en charge tous les murs. Il peut facilement être auto-hébergé et proposera une fonction d'export de vos données."
+    },
+    "howToMigrate": {
+      "title": "Comment migrer",
+      "step1": {
+        "title": "Demandez l'export de vos données",
+        "body": "Envoyez un e-mail à Aurora pour demander un export de vos données. Vous recevrez un fichier JSON contenant vos ascensions, tentatives et circuits.",
+        "cta": "Écrire à peter@auroraclimbing.com"
+      },
+      "step2": {
+        "title": "Créez un compte Boardsesh",
+        "signedInAs": "Connecté en tant que {{email}}",
+        "body": "Créez un compte ou connectez-vous afin que nous puissions accueillir vos données quelque part.",
+        "cta": "Se connecter ou créer un compte",
+        "modalTitle": "Connectez-vous pour migrer vos données",
+        "modalDescription": "Créez un compte ou connectez-vous pour importer vos données Aurora."
+      },
+      "step3": {
+        "title": "Importez vos données",
+        "signInFirst": "Connectez-vous d'abord pour importer vos données.",
+        "body": "Le backend Kilter étant hors service, seul l'import JSON est disponible pour Kilter. Pour Tension, lier votre compte synchronisera automatiquement vos données toutes les 12 heures pour que vous ayez toujours une sauvegarde."
+      },
+      "step4": {
+        "title": "Votre profil Boardsesh",
+        "signInFirst": "Connectez-vous d'abord pour voir votre profil."
+      }
+    },
+    "getHelp": {
+      "title": "Obtenir de l'aide",
+      "body": "Boardsesh est open source. Signalez des bugs, demandez des fonctionnalités, ou demandez simplement de l'aide.",
+      "discord": "Discord — Rejoignez-nous pour de l'aide et des discussions",
+      "github": "GitHub — github.com/boardsesh/boardsesh"
+    }
+  }
+}
