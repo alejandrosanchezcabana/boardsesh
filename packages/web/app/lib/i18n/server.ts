@@ -5,6 +5,7 @@ import resourcesToBackend from 'i18next-resources-to-backend';
 import { initReactI18next } from 'react-i18next/initReactI18next';
 import { DEFAULT_LOCALE, DEFAULT_NAMESPACE, SUPPORTED_LOCALES, type Locale, type SeedNamespace } from './config';
 import { getLocale } from './get-locale';
+import { reportMissingI18nKey } from './missing-key-reporter';
 
 const resourceLoader = resourcesToBackend(
   (locale: string, namespace: string) => import(`../../../i18n/locales/${locale}/${namespace}.json`),
@@ -28,6 +29,10 @@ const initI18nForRequest = cache(async (locale: Locale, namespacesKey: string): 
       ns: namespaces,
       interpolation: { escapeValue: false },
       returnNull: false,
+      saveMissing: true,
+      missingKeyHandler: (lngs, ns, key, fallbackValue) => {
+        reportMissingI18nKey({ lngs, ns, key, fallbackValue });
+      },
     });
   return instance;
 });
