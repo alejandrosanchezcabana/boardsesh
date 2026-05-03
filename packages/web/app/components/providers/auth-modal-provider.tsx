@@ -10,11 +10,11 @@ type AuthModalConfig = {
 };
 
 type AuthModalContextValue = {
-  openAuthModal: (config?: AuthModalConfig) => Promise<void>;
+  openAuthModal: (config?: AuthModalConfig) => void;
 };
 
 const AuthModalContext = createContext<AuthModalContextValue>({
-  openAuthModal: () => Promise.resolve(),
+  openAuthModal: () => {},
 });
 
 export const useAuthModal = () => useContext(AuthModalContext);
@@ -25,7 +25,7 @@ export function AuthModalProvider({ children }: { children: React.ReactNode }) {
   const [config, setConfig] = useState<AuthModalConfig>({});
   const onSuccessRef = useRef<(() => void) | undefined>(undefined);
 
-  const openAuthModal = useCallback(async (cfg: AuthModalConfig = {}) => {
+  const openAuthModal = useCallback((cfg: AuthModalConfig = {}) => {
     onSuccessRef.current = cfg.onSuccess;
     setConfig({ title: cfg.title, description: cfg.description });
     setHasOpenedOnce(true);
