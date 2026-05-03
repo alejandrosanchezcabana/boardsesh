@@ -405,7 +405,7 @@ export default function HomePageContent({ boardConfigs, initialPopularConfigs }:
             py: 1,
           }}
         >
-          {/* i18n-ignore-next-line */}
+          {/* i18n-ignore-next-line -- brand name, not translated */}
           <Image src="/brand/icon-transparent.svg" width={130} height={130} alt="Boardsesh" priority />
           <Typography
             variant="h5"

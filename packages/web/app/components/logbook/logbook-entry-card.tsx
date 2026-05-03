@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import LocaleLink from '@/app/components/i18n/locale-link';
 import Avatar from '@mui/material/Avatar';
 import Box from '@mui/material/Box';
@@ -61,6 +62,7 @@ export const LogbookEntryCard: React.FC<LogbookEntryCardProps> = ({
   showMirrorTag,
   user,
 }) => {
+  const { t } = useTranslation('profile');
   const ascentStatus = normalizeAscentStatus({
     // normalizeAscentStatus does a runtime check for the three known values
     // and falls back to 'attempt' for anything else — safe for raw strings.
@@ -103,8 +105,9 @@ export const LogbookEntryCard: React.FC<LogbookEntryCardProps> = ({
                 <AscentStatusIcon status={ascentStatus} variant="icon" />
               </>
             )}
-            {/* i18n-ignore-next-line */}
-            {showMirrorTag && entry.isMirror && <Chip label="Mirrored" size="small" color="secondary" />}
+            {showMirrorTag && entry.isMirror && (
+              <Chip label={t('logbook.entry.mirroredTag')} size="small" color="secondary" />
+            )}
           </Stack>
           {hasSuccess && entry.quality != null && entry.quality > 0 && (
             <Stack direction="row" spacing={1}>
@@ -113,8 +116,7 @@ export const LogbookEntryCard: React.FC<LogbookEntryCardProps> = ({
           )}
           <Stack direction="row" spacing={1}>
             <Typography variant="body2" component="span">
-              {/* i18n-ignore-next-line */}
-              Attempts: {entry.attemptCount}
+              {t('logbook.entry.attemptsLabel', { count: entry.attemptCount })}
             </Typography>
           </Stack>
           {entry.comment && (

@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import MuiCard from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
 import Box from '@mui/material/Box';
@@ -13,7 +14,9 @@ type QueueControlBarShellProps = {
   message?: string;
 };
 
-export default function QueueControlBarShell({ message = 'No climb selected' }: QueueControlBarShellProps) {
+export default function QueueControlBarShell({ message }: QueueControlBarShellProps) {
+  const { t } = useTranslation('session');
+  const displayMessage = message ?? t('queueBar.shellMessage');
   return (
     <div
       id="onboarding-queue-bar"
@@ -32,8 +35,7 @@ export default function QueueControlBarShell({ message = 'No climb selected' }: 
                 style={{ backgroundColor: 'var(--semantic-surface)', justifyContent: 'flex-end' }}
               >
                 <PlayCircleOutlineOutlined sx={{ fontSize: 16, opacity: 0.7 }} />
-                {/* i18n-ignore-next-line */}
-                <span className={styles.sessionName}>Start sesh</span>
+                <span className={styles.sessionName}>{t('queueBar.startSesh')}</span>
               </div>
             </div>
           </div>
@@ -57,7 +59,7 @@ export default function QueueControlBarShell({ message = 'No climb selected' }: 
                 <Box sx={{ flex: 1 }} className={styles.climbInfoCol}>
                   <div className={styles.climbInfoInner} style={{ gap: themeTokens.spacing[2] }}>
                     <div aria-hidden="true" className={`${styles.boardPreviewContainer} ${styles.shellThumbnail}`} />
-                    <span className={styles.shellTitle}>{message}</span>
+                    <span className={styles.shellTitle}>{displayMessage}</span>
                   </div>
                 </Box>
 

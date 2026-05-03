@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import Box from '@mui/material/Box';
 import MuiButton from '@mui/material/Button';
 import CircularProgress from '@mui/material/CircularProgress';
@@ -24,6 +25,7 @@ type FollowingAscentsFeedProps = {
 };
 
 export default function FollowingAscentsFeed({ onFindClimbers }: FollowingAscentsFeedProps) {
+  const { t } = useTranslation('feed');
   const { token, isAuthenticated, isLoading: authLoading } = useWsAuthToken();
 
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } = useInfiniteQuery({
@@ -65,12 +67,10 @@ export default function FollowingAscentsFeed({ onFindClimbers }: FollowingAscent
 
   if (items.length === 0) {
     return (
-      // i18n-ignore-next-line
-      <EmptyState icon={<PersonSearchOutlined fontSize="inherit" />} description="Follow some climbers to fill this up">
+      <EmptyState icon={<PersonSearchOutlined fontSize="inherit" />} description={t('emptyStates.followClimbers')}>
         {onFindClimbers && (
           <MuiButton variant="contained" onClick={onFindClimbers}>
-            {/* i18n-ignore-next-line */}
-            Find Climbers
+            {t('emptyStates.findClimbers')}
           </MuiButton>
         )}
       </EmptyState>

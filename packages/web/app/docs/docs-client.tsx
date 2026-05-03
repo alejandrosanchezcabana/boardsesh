@@ -144,7 +144,7 @@ function WebSocketGuideTab() {
       <Typography variant="body1" component="p" sx={{ mb: 2 }}>
         {t('docs.ws.introStart')}{' '}
         <MuiLink href="https://github.com/enisdenjo/graphql-ws" target="_blank">
-          {/* i18n-ignore-next-line */}
+          {/* i18n-ignore-next-line -- technical reference, English only */}
           graphql-ws
         </MuiLink>{' '}
         {t('docs.ws.introEnd')}

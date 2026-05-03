@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useCallback, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { themeTokens } from '@/app/theme/theme-config';
 import styles from './direction-picker.module.css';
 
@@ -17,6 +18,7 @@ type DirectionPickerProps = {
  * 0 = up, 90 = right, 180 = down, 270 = left
  */
 const DirectionPicker: React.FC<DirectionPickerProps> = ({ value, onChange, disabled = false, size = 120 }) => {
+  const { t } = useTranslation('climbs');
   const circleRef = useRef<SVGSVGElement>(null);
 
   const calculateAngleFromEvent = useCallback((clientX: number, clientY: number) => {
@@ -121,8 +123,7 @@ const DirectionPicker: React.FC<DirectionPickerProps> = ({ value, onChange, disa
           R
         </text>
         <text x={center} y={size - 4} textAnchor="middle" className={styles.label}>
-          {/* i18n-ignore-next-line */}
-          Down
+          {t('directionPicker.down')}
         </text>
         <text x={8} y={center + 4} textAnchor="start" className={styles.label}>
           L

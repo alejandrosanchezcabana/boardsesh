@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useSearchParams } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import VideocamOutlined from '@mui/icons-material/VideocamOutlined';
@@ -18,22 +19,6 @@ import { GET_BETA_LINKS } from '@/app/lib/graphql/operations/beta-links';
 import { dedupeBetaLinks, mapBetaLinksResponse } from '@/app/lib/beta-video-url';
 import type { BetaLink } from '@/app/lib/api-wrappers/sync-api-types';
 import type { Climb } from '@/app/lib/types';
-
-const betaLabel = (
-  <Box component="span" sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.75 }}>
-    <VideocamOutlined sx={{ fontSize: 16 }} />
-    {/* i18n-ignore-next-line */}
-    Beta
-  </Box>
-);
-
-const betaTitle = (
-  <Box component="span" sx={{ display: 'inline-flex', alignItems: 'center', gap: 1 }}>
-    <VideocamOutlined sx={{ fontSize: 22 }} />
-    {/* i18n-ignore-next-line */}
-    Beta
-  </Box>
-);
 
 type BuildClimbDetailSectionsProps = {
   climb: Climb;
@@ -56,6 +41,19 @@ export function useBuildClimbDetailSections({
   boardName,
   enabled: enabledProp = true,
 }: BuildClimbDetailSectionsProps): CollapsibleSectionConfig[] {
+  const { t } = useTranslation('climbs');
+  const betaLabel = (
+    <Box component="span" sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.75 }}>
+      <VideocamOutlined sx={{ fontSize: 16 }} />
+      {t('detail.sections.beta')}
+    </Box>
+  );
+  const betaTitle = (
+    <Box component="span" sx={{ display: 'inline-flex', alignItems: 'center', gap: 1 }}>
+      <VideocamOutlined sx={{ fontSize: 22 }} />
+      {t('detail.sections.beta')}
+    </Box>
+  );
   const searchParams = useSearchParams();
   const highlightProposalUuid = searchParams.get('proposalUuid') ?? undefined;
   const logbookSummary = useLogbookSummary(climb.uuid);

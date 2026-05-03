@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useMemo, useCallback, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import CircularProgress from '@mui/material/CircularProgress';
@@ -83,6 +84,7 @@ export default function MultiboardClimbList({
   boards: externalBoards,
   boardsLoading: externalBoardsLoading,
 }: MultiboardClimbListProps) {
+  const { t } = useTranslation('climbs');
   // Only fetch boards internally when the caller hasn't supplied them.
   // Passing `enabled={false}` short-circuits useMyBoards so we don't fire a
   // duplicate GraphQL request against the same endpoint.
@@ -191,14 +193,12 @@ export default function MultiboardClimbList({
       }}
     >
       <ToggleButtonGroup exclusive size="small" value={sortBy} onChange={handleSortChange}>
-        {/* i18n-ignore-next-line */}
-        <ToggleButton value="popular">Popular</ToggleButton>
-        <ToggleButton value="new">New</ToggleButton>
+        <ToggleButton value="popular">{t('multiboardList.popular')}</ToggleButton>
+        <ToggleButton value="new">{t('multiboardList.new')}</ToggleButton>
       </ToggleButtonGroup>
       {totalCount != null && totalCount > 0 && (
         <Typography variant="body2" color="text.secondary">
-          {/* i18n-ignore-next-line */}
-          {totalCount} climb{totalCount !== 1 ? 's' : ''}
+          {t('multiboardList.count', { count: totalCount })}
         </Typography>
       )}
     </Box>
@@ -215,8 +215,7 @@ export default function MultiboardClimbList({
     climbListContent = (
       <Box sx={{ py: 4, textAlign: 'center' }}>
         <Typography variant="body2" color="text.secondary">
-          {/* i18n-ignore-next-line */}
-          No climbs found
+          {t('multiboardList.noClimbsFound')}
         </Typography>
       </Box>
     );

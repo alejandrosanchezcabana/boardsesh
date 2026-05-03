@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useCallback, useEffect, useMemo, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import CircularProgress from '@mui/material/CircularProgress';
@@ -45,6 +46,7 @@ export type DraftsDrawerProps = {
 };
 
 const DraftsDrawer: React.FC<DraftsDrawerProps> = ({ open, onClose, boardDetails, angle, onLoadDraft }) => {
+  const { t } = useTranslation('climbs');
   const router = useLocaleRouter();
   const { mode } = useColorMode();
   const isDark = mode === 'dark';
@@ -192,8 +194,7 @@ const DraftsDrawer: React.FC<DraftsDrawerProps> = ({ open, onClose, boardDetails
     draftsListContent = (
       <Box sx={{ padding: themeTokens.spacing[6], textAlign: 'center' }}>
         <Typography variant="body2" color="text.secondary">
-          {/* i18n-ignore-next-line */}
-          Couldn&apos;t load your drafts. Try again.
+          {t('draftsDrawer.loadError')}
         </Typography>
       </Box>
     );
@@ -201,12 +202,10 @@ const DraftsDrawer: React.FC<DraftsDrawerProps> = ({ open, onClose, boardDetails
     draftsListContent = (
       <Box sx={{ padding: themeTokens.spacing[8], textAlign: 'center' }}>
         <Typography variant="body1" sx={{ fontWeight: themeTokens.typography.fontWeight.semibold }}>
-          {/* i18n-ignore-next-line */}
-          No drafts yet
+          {t('draftsDrawer.empty.title')}
         </Typography>
         <Typography variant="body2" color="text.secondary" sx={{ marginTop: 1 }}>
-          {/* i18n-ignore-next-line */}
-          Save a climb as a draft to pick it up later.
+          {t('draftsDrawer.empty.subtitle')}
         </Typography>
       </Box>
     );
@@ -264,13 +263,11 @@ const DraftsDrawer: React.FC<DraftsDrawerProps> = ({ open, onClose, boardDetails
               fontSize: themeTokens.typography.fontSize.base,
             }}
           >
-            {/* i18n-ignore-next-line */}
-            Drafts
+            {t('draftsDrawer.title')}
           </Typography>
           {drafts.length > 0 && (
             <Typography variant="body2" color="text.secondary">
-              {/* i18n-ignore-next-line */}
-              {drafts.length} draft{drafts.length === 1 ? '' : 's'}
+              {t('draftsDrawer.count', { count: drafts.length })}
             </Typography>
           )}
         </Box>

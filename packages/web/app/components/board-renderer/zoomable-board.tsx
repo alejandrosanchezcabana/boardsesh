@@ -50,8 +50,7 @@ const ZoomableBoard = memo(function ZoomableBoard({ children, onZoomChange, rese
         startIcon={<CropFreeOutlined sx={{ fontSize: '18px !important' }} />}
         tabIndex={isZoomed ? 0 : -1}
       >
-        {/* i18n-ignore-next-line */}
-        Reset
+        {t('boards:zoomableBoard.reset')}
       </Button>
     </div>
   );

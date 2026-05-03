@@ -3,6 +3,7 @@
 import { useEffect, useRef, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { getCsrfToken } from 'next-auth/react';
+import { useTranslation } from 'react-i18next';
 import Box from '@mui/material/Box';
 import CircularProgress from '@mui/material/CircularProgress';
 import Typography from '@mui/material/Typography';
@@ -10,6 +11,7 @@ import Typography from '@mui/material/Typography';
 const ALLOWED_PROVIDERS = new Set(['google', 'apple', 'facebook']);
 
 function NativeStartInner() {
+  const { t } = useTranslation('auth');
   const params = useSearchParams();
   const formRef = useRef<HTMLFormElement>(null);
   const submitted = useRef(false);
@@ -40,8 +42,7 @@ function NativeStartInner() {
           minHeight: '100vh',
         }}
       >
-        {/* i18n-ignore-next-line */}
-        <Typography>Invalid sign-in provider</Typography>
+        <Typography>{t('nativeStart.invalidProvider')}</Typography>
       </Box>
     );
   }
@@ -58,8 +59,7 @@ function NativeStartInner() {
       }}
     >
       <CircularProgress />
-      {/* i18n-ignore-next-line */}
-      <Typography>Signing in...</Typography>
+      <Typography>{t('nativeStart.signingIn')}</Typography>
       <form
         ref={formRef}
         method="POST"

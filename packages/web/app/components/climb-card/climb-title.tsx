@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import Typography from '@mui/material/Typography';
 import Box from '@mui/material/Box';
 import Skeleton from '@mui/material/Skeleton';
@@ -184,6 +185,7 @@ const ClimbTitle: React.FC<ClimbTitleProps> = React.memo(
     isNoMatch = false,
     subtitleOverride,
   }) => {
+    const { t } = useTranslation('climbs');
     const isDark = useIsDarkMode();
     const { formatGrade, getGradeColor, loaded: gradeFormatLoaded } = useGradeFormat();
 
@@ -235,8 +237,7 @@ const ClimbTitle: React.FC<ClimbTitleProps> = React.memo(
     if (!climb) {
       return (
         <Typography variant="body2" component="span" sx={noClimbSx}>
-          {/* i18n-ignore-next-line */}
-          No climb selected
+          {t('card.title.noClimbSelected')}
         </Typography>
       );
     }
@@ -249,7 +250,7 @@ const ClimbTitle: React.FC<ClimbTitleProps> = React.memo(
         const baseText = `${displayDifficulty} ${formatQuality(climb.quality_average!)}★`;
         return showAngle ? `${baseText} @ ${climb.angle}°` : baseText;
       }
-      const projectText = showAngle ? `project @ ${climb.angle}°` : 'project';
+      const projectText = showAngle ? t('card.title.projectAtAngle', { angle: climb.angle }) : t('card.title.project');
       return (
         <Box component="span" sx={italicSx}>
           {projectText}
@@ -319,8 +320,7 @@ const ClimbTitle: React.FC<ClimbTitleProps> = React.memo(
           subtitleParts.join(' \u00b7 ')
         ) : (
           <Box component="span" sx={italicSx}>
-            {/* i18n-ignore-next-line */}
-            project
+            {t('card.title.project')}
           </Box>
         ));
 
@@ -384,8 +384,7 @@ const ClimbTitle: React.FC<ClimbTitleProps> = React.memo(
                 secondLineContent.join(' · ')
               ) : (
                 <Box component="span" sx={italicSx}>
-                  {/* i18n-ignore-next-line */}
-                  project
+                  {t('card.title.project')}
                 </Box>
               )}
             </Typography>

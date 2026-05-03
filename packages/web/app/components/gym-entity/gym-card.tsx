@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import Card from '@mui/material/Card';
 import CardActionArea from '@mui/material/CardActionArea';
 import CardContent from '@mui/material/CardContent';
@@ -20,6 +21,7 @@ type GymCardProps = {
 };
 
 export default function GymCard({ gym, onClick }: GymCardProps) {
+  const { t } = useTranslation('boards');
   return (
     <Card
       variant="outlined"
@@ -69,12 +71,21 @@ export default function GymCard({ gym, onClick }: GymCardProps) {
           </Box>
 
           <Box sx={{ display: 'flex', gap: 2, mt: 1.5, flexWrap: 'wrap' }}>
-            {/* i18n-ignore-next-line */}
-            <StatItem icon={<FitnessCenterOutlined sx={{ fontSize: 14 }} />} value={gym.boardCount} label="boards" />
-            {/* i18n-ignore-next-line */}
-            <StatItem icon={<PersonOutlined sx={{ fontSize: 14 }} />} value={gym.memberCount} label="members" />
-            {/* i18n-ignore-next-line */}
-            <StatItem icon={<PeopleOutlined sx={{ fontSize: 14 }} />} value={gym.followerCount} label="followers" />
+            <StatItem
+              icon={<FitnessCenterOutlined sx={{ fontSize: 14 }} />}
+              value={gym.boardCount}
+              label={t('gymEntity.stats.boards')}
+            />
+            <StatItem
+              icon={<PersonOutlined sx={{ fontSize: 14 }} />}
+              value={gym.memberCount}
+              label={t('gymEntity.stats.members')}
+            />
+            <StatItem
+              icon={<PeopleOutlined sx={{ fontSize: 14 }} />}
+              value={gym.followerCount}
+              label={t('gymEntity.stats.followers')}
+            />
           </Box>
         </CardContent>
       </CardActionArea>

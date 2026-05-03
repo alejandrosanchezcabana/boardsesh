@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import Box from '@mui/material/Box';
 import MuiCard from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
@@ -64,6 +65,7 @@ type SocialFeedItemProps = {
 };
 
 const SocialFeedItem: React.FC<SocialFeedItemProps> = ({ item, showUserHeader = false }) => {
+  const { t } = useTranslation('feed');
   const [commentsOpen, setCommentsOpen] = useState(false);
   const timeAgo = formatTickRelativeTime(item.climbedAt);
   const statusDisplay = getStatusDisplay(item.status);
@@ -95,8 +97,7 @@ const SocialFeedItem: React.FC<SocialFeedItemProps> = ({ item, showUserHeader = 
               </MuiTypography>
               <MuiTypography variant="body2" component="span" color="text.secondary">
                 {' '}
-                {/* i18n-ignore-next-line */}
-                climbed{' '}
+                {t('socialFeedItem.climbed')}{' '}
               </MuiTypography>
               <MuiTypography variant="body2" component="span" fontWeight={600}>
                 {item.climbName}
@@ -166,10 +167,8 @@ const SocialFeedItem: React.FC<SocialFeedItemProps> = ({ item, showUserHeader = 
               <MuiTypography variant="body2" component="span" color="text.secondary" className={styles.boardType}>
                 {boardDisplay}
               </MuiTypography>
-              {/* i18n-ignore-next-line */}
-              {item.isMirror && <Chip label="Mirrored" size="small" color="secondary" />}
-              {/* i18n-ignore-next-line */}
-              {item.isBenchmark && <Chip label="Benchmark" size="small" />}
+              {item.isMirror && <Chip label={t('ascentsFeed.mirrored')} size="small" color="secondary" />}
+              {item.isBenchmark && <Chip label={t('ascentsFeed.benchmark')} size="small" />}
             </Box>
 
             {/* Comment */}
@@ -196,8 +195,7 @@ const SocialFeedItem: React.FC<SocialFeedItemProps> = ({ item, showUserHeader = 
         {/* Comments */}
         <Collapse in={commentsOpen} unmountOnExit>
           <Box sx={{ mt: 1 }}>
-            {/* i18n-ignore-next-line */}
-            <CommentSection entityType="tick" entityId={item.uuid} title="Comments" />
+            <CommentSection entityType="tick" entityId={item.uuid} title={t('feedCommentButton.commentsTitle')} />
           </Box>
         </Collapse>
       </CardContent>

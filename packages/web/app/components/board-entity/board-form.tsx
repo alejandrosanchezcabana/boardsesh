@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import Box from '@mui/material/Box';
 import TextField from '@mui/material/TextField';
 import Switch from '@mui/material/Switch';
@@ -80,13 +81,15 @@ export default function BoardForm({
   showSlugField = false,
   slugHelperPrefix = 'boardsesh.com/b/',
   namePlaceholder,
-  descriptionPlaceholder = 'Optional description',
+  descriptionPlaceholder,
   locationPlaceholder,
   availableAngles,
   configEditable,
   onSubmit,
   onCancel,
 }: BoardFormProps) {
+  const { t } = useTranslation('boards');
+  const resolvedDescriptionPlaceholder = descriptionPlaceholder ?? t('boardForm.placeholders.description');
   const [name, setName] = useState(initialValues.name);
   const [slug, setSlug] = useState(initialValues.slug ?? '');
   const [description, setDescription] = useState(initialValues.description);
@@ -155,17 +158,14 @@ export default function BoardForm({
       {configEditable && (
         <>
           <Alert severity="info" sx={{ fontSize: '0.8rem' }}>
-            {/* i18n-ignore-next-line */}
-            You can change the board layout because no climbs have been logged yet.
+            {t('boardForm.alerts.configEditable')}
           </Alert>
 
           <FormControl size="small" fullWidth>
-            {/* i18n-ignore-next-line */}
-            <InputLabel>Layout</InputLabel>
+            <InputLabel>{t('boardForm.fields.layout')}</InputLabel>
             <MuiSelect
               value={layoutId ?? ''}
-              // i18n-ignore-next-line
-              label="Layout"
+              label={t('boardForm.fields.layout')}
               onChange={(e: SelectChangeEvent<number | string>) => {
                 const newLayout = e.target.value as number;
                 setLayoutId(newLayout);
@@ -185,12 +185,10 @@ export default function BoardForm({
 
           {availableSizes.length > 0 && (
             <FormControl size="small" fullWidth>
-              {/* i18n-ignore-next-line */}
-              <InputLabel>Size</InputLabel>
+              <InputLabel>{t('boardForm.fields.size')}</InputLabel>
               <MuiSelect
                 value={sizeId ?? ''}
-                // i18n-ignore-next-line
-                label="Size"
+                label={t('boardForm.fields.size')}
                 onChange={(e: SelectChangeEvent<number | string>) => {
                   setSizeId(e.target.value as number);
                   setSelectedSets([]);
@@ -205,13 +203,11 @@ export default function BoardForm({
 
           {availableSets.length > 0 && (
             <FormControl size="small" fullWidth>
-              {/* i18n-ignore-next-line */}
-              <InputLabel>Hold Sets</InputLabel>
+              <InputLabel>{t('boardForm.fields.holdSets')}</InputLabel>
               <MuiSelect
                 multiple
                 value={selectedSets}
-                // i18n-ignore-next-line
-                label="Hold Sets"
+                label={t('boardForm.fields.holdSets')}
                 onChange={(e) => {
                   const val = e.target.value as unknown as number[];
                   setSelectedSets(val);
@@ -243,8 +239,7 @@ export default function BoardForm({
       )}
 
       <TextField
-        // i18n-ignore-next-line
-        label="Board Name"
+        label={t('boardForm.fields.name')}
         value={name}
         onChange={(e) => setName(e.target.value)}
         required
@@ -256,8 +251,7 @@ export default function BoardForm({
 
       {showSlugField && (
         <TextField
-          // i18n-ignore-next-line
-          label="URL Slug"
+          label={t('boardForm.fields.slug')}
           value={slug}
           onChange={(e) => setSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
           fullWidth
@@ -267,8 +261,7 @@ export default function BoardForm({
       )}
 
       <TextField
-        // i18n-ignore-next-line
-        label="Description"
+        label={t('boardForm.fields.description')}
         value={description}
         onChange={(e) => setDescription(e.target.value)}
         fullWidth
@@ -276,12 +269,11 @@ export default function BoardForm({
         multiline
         minRows={2}
         maxRows={4}
-        placeholder={descriptionPlaceholder}
+        placeholder={resolvedDescriptionPlaceholder}
       />
 
       <TextField
-        // i18n-ignore-next-line
-        label="Location"
+        label={t('boardForm.fields.location')}
         value={locationName}
         onChange={(e) => setLocationName(e.target.value)}
         fullWidth
@@ -299,21 +291,18 @@ export default function BoardForm({
       />
 
       <TextField
-        // i18n-ignore-next-line
-        label="Controller Serial Number"
+        label={t('boardForm.fields.serialNumber')}
         value={serialNumber}
         onChange={(e) => setSerialNumber(e.target.value)}
         fullWidth
         size="small"
-        // i18n-ignore-next-line
-        placeholder="e.g. ABC-12345"
+        placeholder={t('boardForm.placeholders.serialNumber')}
         inputProps={{ maxLength: 100 }}
       />
 
       {availableAngles && availableAngles.length > 0 && (
         <TextField
-          // i18n-ignore-next-line
-          label="Default Angle"
+          label={t('boardForm.fields.defaultAngle')}
           value={angle}
           onChange={(e) => setAngle(Number(e.target.value))}
           select
@@ -330,51 +319,39 @@ export default function BoardForm({
 
       <FormControlLabel
         control={<Switch checked={isAngleAdjustable} onChange={(e) => setIsAngleAdjustable(e.target.checked)} />}
-        // i18n-ignore-next-line
-        label="Angle is adjustable"
+        label={t('boardForm.fields.angleAdjustable')}
       />
 
       <FormControlLabel
         control={<Switch checked={isPublic} onChange={(e) => setIsPublic(e.target.checked)} />}
-        // i18n-ignore-next-line
-        label="Public board"
+        label={t('boardForm.fields.isPublic')}
       />
 
       <Box>
         <FormControlLabel
           control={<Switch checked={isUnlisted} onChange={(e) => setIsUnlisted(e.target.checked)} />}
-          // i18n-ignore-next-line
-          label="Unlisted"
+          label={t('boardForm.fields.unlisted')}
         />
-        <FormHelperText sx={{ mt: -0.5, ml: 7 }}>
-          {/* i18n-ignore-next-line */}
-          Hidden from search results but accessible via direct link
-        </FormHelperText>
+        <FormHelperText sx={{ mt: -0.5, ml: 7 }}>{t('boardForm.helperText.unlisted')}</FormHelperText>
       </Box>
 
       <Box>
         <FormControlLabel
           control={<Switch checked={hideLocation} onChange={(e) => setHideLocation(e.target.checked)} />}
-          // i18n-ignore-next-line
-          label="Hide from nearby boards"
+          label={t('boardForm.fields.hideLocation')}
         />
-        <FormHelperText sx={{ mt: -0.5, ml: 7 }}>
-          {/* i18n-ignore-next-line */}
-          Hidden from nearby board searches unless you follow the searcher
-        </FormHelperText>
+        <FormHelperText sx={{ mt: -0.5, ml: 7 }}>{t('boardForm.helperText.hideLocation')}</FormHelperText>
       </Box>
 
       <FormControlLabel
         control={<Switch checked={isOwned} onChange={(e) => setIsOwned(e.target.checked)} />}
-        // i18n-ignore-next-line
-        label="I own this board"
+        label={t('boardForm.fields.isOwned')}
       />
 
       <Box sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end', mt: 1 }}>
         {onCancel && (
           <MuiButton variant="text" onClick={onCancel} disabled={isSubmitting}>
-            {/* i18n-ignore-next-line */}
-            Cancel
+            {t('common:actions.cancel')}
           </MuiButton>
         )}
         <MuiButton type="submit" variant="contained" disabled={isSubmitting || !name.trim()}>

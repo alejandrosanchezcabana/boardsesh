@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useRef, useState, useLayoutEffect, useEffect, useCallback, forwardRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import ButtonBase from '@mui/material/ButtonBase';
 import Skeleton from '@mui/material/Skeleton';
 import StarIcon from '@mui/icons-material/Star';
@@ -148,6 +149,7 @@ export type TickGradeButtonProps = {
  */
 export const TickGradeButton = forwardRef<HTMLButtonElement, TickGradeButtonProps>(
   ({ difficulty, displayedGrades, expandedControl, onExpandedControlChange }, ref) => {
+    const { t } = useTranslation('climbs');
     const isDark = useIsDarkMode();
     const { formatGrade, getGradeColor, loaded: gradeFormatLoaded } = useGradeFormat();
 
@@ -162,8 +164,7 @@ export const TickGradeButton = forwardRef<HTMLButtonElement, TickGradeButtonProp
       <ButtonBase
         ref={ref}
         onClick={() => onExpandedControlChange(expandedControl === 'grade' ? null : 'grade')}
-        // i18n-ignore-next-line
-        aria-label="Select logged grade"
+        aria-label={t('tick.controls.selectGrade')}
         aria-haspopup="listbox"
         aria-expanded={expandedControl === 'grade'}
         data-testid="quick-tick-grade"
@@ -180,8 +181,7 @@ export const TickGradeButton = forwardRef<HTMLButtonElement, TickGradeButtonProp
             {gradeLabel}
           </span>
         )}
-        {/* i18n-ignore-next-line */}
-        <span className={styles.gradeByline}>user</span>
+        <span className={styles.gradeByline}>{t('tick.controls.userByline')}</span>
       </ButtonBase>
     );
   },
@@ -217,6 +217,7 @@ export const TickControls: React.FC<TickControlsProps> = ({
   onExpandedControlChange,
   triesButtonRef,
 }) => {
+  const { t } = useTranslation('climbs');
   const attemptDisplay = String(attemptCount);
 
   const toggle = (control: 'stars' | 'tries') => {
@@ -237,8 +238,7 @@ export const TickControls: React.FC<TickControlsProps> = ({
       >
         <StarIcon sx={{ fontSize: 14, color: quality ? themeTokens.colors.amber : 'inherit' }} />
         <span className={styles.starNumber}>{quality ?? '—'}</span>
-        {/* i18n-ignore-next-line */}
-        <span className={styles.starLabel}>stars</span>
+        <span className={styles.starLabel}>{t('tick.controls.starsLabel')}</span>
       </ButtonBase>
 
       {/* Tries counter */}
@@ -253,8 +253,7 @@ export const TickControls: React.FC<TickControlsProps> = ({
         disableRipple={false}
       >
         <span className={styles.attemptNumber}>{attemptDisplay}</span>
-        {/* i18n-ignore-next-line */}
-        <span className={styles.attemptLabel}>tries</span>
+        <span className={styles.attemptLabel}>{t('tick.controls.triesLabel')}</span>
       </ButtonBase>
     </>
   );
@@ -268,39 +267,44 @@ export const TickControls: React.FC<TickControlsProps> = ({
 export const InlineStarPicker: React.FC<{
   quality: number | null;
   onSelect: (value: number | null) => void;
-}> = ({ quality, onSelect }) => (
-  // i18n-ignore-next-line
-  <div className={`${styles.pickerRow} ${styles.pickerRowEnd}`} role="listbox" aria-label="Star rating">
-    <ButtonBase
-      onClick={() => onSelect(null)}
-      className={`${styles.pickerItem} ${quality === null ? styles.pickerItemSelected : ''}`}
-      // i18n-ignore-next-line
-      aria-label="No rating"
-      aria-selected={quality === null}
-      role="option"
+}> = ({ quality, onSelect }) => {
+  const { t } = useTranslation('climbs');
+  return (
+    <div
+      className={`${styles.pickerRow} ${styles.pickerRowEnd}`}
+      role="listbox"
+      aria-label={t('tick.controls.starRating')}
     >
-      <span className={styles.pickerClear}>—</span>
-    </ButtonBase>
-    {[1, 2, 3, 4, 5].map((n) => (
       <ButtonBase
-        key={n}
-        onClick={() => onSelect(n)}
-        className={`${styles.pickerItem} ${n === quality ? styles.pickerItemSelected : ''}`}
-        aria-label={`${n} star${n > 1 ? 's' : ''}`}
-        aria-selected={n === quality}
+        onClick={() => onSelect(null)}
+        className={`${styles.pickerItem} ${quality === null ? styles.pickerItemSelected : ''}`}
+        aria-label={t('tick.controls.noRating')}
+        aria-selected={quality === null}
         role="option"
       >
-        <StarIcon
-          sx={{
-            fontSize: 22,
-            color: n <= (quality ?? 0) ? themeTokens.colors.amber : 'inherit',
-            opacity: n <= (quality ?? 0) ? 1 : 0.3,
-          }}
-        />
+        <span className={styles.pickerClear}>—</span>
       </ButtonBase>
-    ))}
-  </div>
-);
+      {[1, 2, 3, 4, 5].map((n) => (
+        <ButtonBase
+          key={n}
+          onClick={() => onSelect(n)}
+          className={`${styles.pickerItem} ${n === quality ? styles.pickerItemSelected : ''}`}
+          aria-label={`${n} star${n > 1 ? 's' : ''}`}
+          aria-selected={n === quality}
+          role="option"
+        >
+          <StarIcon
+            sx={{
+              fontSize: 22,
+              color: n <= (quality ?? 0) ? themeTokens.colors.amber : 'inherit',
+              opacity: n <= (quality ?? 0) ? 1 : 0.3,
+            }}
+          />
+        </ButtonBase>
+      ))}
+    </div>
+  );
+};
 
 export const InlineGradePicker: React.FC<{
   grades: readonly { difficulty_id: number; difficulty_name: string; v_grade: string }[];
@@ -311,6 +315,7 @@ export const InlineGradePicker: React.FC<{
   /** Ref to the grade button for scroll alignment positioning. */
   gradeButtonRef?: React.RefObject<HTMLButtonElement | null>;
 }> = ({ grades, currentGradeId, focusGradeId, onSelect, gradeButtonRef }) => {
+  const { t } = useTranslation('climbs');
   const { formatGrade, getGradeColor } = useGradeFormat();
   const isDark = useIsDarkMode();
   const containerRef = useRef<HTMLDivElement>(null);
@@ -348,15 +353,13 @@ export const InlineGradePicker: React.FC<{
         ref={containerRef}
         className={styles.pickerRowScrollable}
         role="listbox"
-        // i18n-ignore-next-line
-        aria-label="Grade override"
+        aria-label={t('tick.controls.gradeOverride')}
         data-scrollable-picker
       >
         <ButtonBase
           onClick={() => onSelect(undefined)}
           className={`${styles.pickerItem} ${currentGradeId === undefined ? styles.pickerItemSelected : ''}`}
-          // i18n-ignore-next-line
-          aria-label="Clear grade override"
+          aria-label={t('tick.controls.clearGradeOverride')}
           aria-selected={currentGradeId === undefined}
           role="option"
         >
@@ -400,6 +403,7 @@ export const InlineTriesPicker: React.FC<{
   /** Ref to the tries button for scroll alignment when attemptCount > 10. */
   triesButtonRef?: React.RefObject<HTMLButtonElement | null>;
 }> = ({ attemptCount, onSelect, triesButtonRef }) => {
+  const { t } = useTranslation('climbs');
   const containerRef = useRef<HTMLDivElement>(null);
 
   useStopHorizontalTouchPropagation(containerRef);
@@ -431,8 +435,7 @@ export const InlineTriesPicker: React.FC<{
         ref={containerRef}
         className={styles.pickerRowScrollable}
         role="listbox"
-        // i18n-ignore-next-line
-        aria-label="Attempt count"
+        aria-label={t('tick.controls.attemptCount')}
         data-scrollable-picker
       >
         {ATTEMPT_OPTIONS.map((n) => (

@@ -12,6 +12,7 @@ import CheckCircleOutlined from '@mui/icons-material/CheckCircleOutlined';
 import CancelOutlined from '@mui/icons-material/CancelOutlined';
 import BoardHeatmap from '../board-renderer/board-heatmap';
 import { track } from '@vercel/analytics';
+import { useTranslation } from 'react-i18next';
 import { themeTokens } from '@/app/theme/theme-config';
 import styles from './search-form.module.css';
 
@@ -20,6 +21,7 @@ type ClimbHoldSearchFormProps = {
 };
 
 const ClimbHoldSearchForm: React.FC<ClimbHoldSearchFormProps> = ({ boardDetails }) => {
+  const { t } = useTranslation('climbs');
   const { uiSearchParams, updateFilters } = useUISearchParams();
   const [selectedState, setSelectedState] = React.useState<HoldState>('ANY');
 
@@ -47,12 +49,12 @@ const ClimbHoldSearchForm: React.FC<ClimbHoldSearchFormProps> = ({ boardDetails 
   const stateItems = [
     {
       value: 'ANY',
-      label: 'Include',
+      label: t('search.holds.include'),
       icon: <CheckCircleOutlined style={{ color: themeTokens.colors.primary }} />,
     },
     {
       value: 'NOT',
-      label: 'Exclude',
+      label: t('search.holds.exclude'),
       icon: <CancelOutlined style={{ color: themeTokens.colors.error }} />,
     },
   ];
@@ -65,8 +67,7 @@ const ClimbHoldSearchForm: React.FC<ClimbHoldSearchFormProps> = ({ boardDetails 
       <div className={styles.holdSearchHeaderCompact}>
         <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', alignItems: 'center' }}>
           <MuiTypography variant="body2" component="span" color="text.secondary">
-            {/* i18n-ignore-next-line */}
-            Tap to:
+            {t('search.holds.tapTo')}
           </MuiTypography>
           <MuiSelect
             value={selectedState}
@@ -93,14 +94,14 @@ const ClimbHoldSearchForm: React.FC<ClimbHoldSearchFormProps> = ({ boardDetails 
           </MuiSelect>
           {anyHoldsCount > 0 && (
             <Chip
-              label={`${anyHoldsCount} included`}
+              label={t('search.holds.included', { count: anyHoldsCount })}
               size="small"
               sx={{ bgcolor: themeTokens.colors.primary, color: 'common.white' }}
             />
           )}
           {notHoldsCount > 0 && (
             <Chip
-              label={`${notHoldsCount} excluded`}
+              label={t('search.holds.excluded', { count: notHoldsCount })}
               size="small"
               sx={{ bgcolor: themeTokens.colors.error, color: 'common.white' }}
             />

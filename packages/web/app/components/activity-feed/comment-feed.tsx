@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
@@ -46,6 +47,7 @@ type CommentFeedProps = {
 };
 
 export default function CommentFeed({ isAuthenticated, boardUuid }: CommentFeedProps) {
+  const { t } = useTranslation('feed');
   const { token, isLoading: authLoading } = useWsAuthToken();
 
   const queryKey = ['globalCommentFeed', boardUuid] as const;
@@ -96,18 +98,15 @@ export default function CommentFeed({ isAuthenticated, boardUuid }: CommentFeedP
   return (
     <Box data-testid="comment-feed" sx={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
       {error && (
-        // i18n-ignore-next-line
-        <EmptyState icon={<ErrorOutline fontSize="inherit" />} description="Failed to load comments. Please try again.">
+        <EmptyState icon={<ErrorOutline fontSize="inherit" />} description={t('errors.loadComments')}>
           <MuiButton variant="contained" onClick={() => refetch()}>
-            {/* i18n-ignore-next-line */}
-            Retry
+            {t('common:actions.retry')}
           </MuiButton>
         </EmptyState>
       )}
 
       {!error && comments.length === 0 ? (
-        // i18n-ignore-next-line
-        <EmptyState icon={<ChatBubbleOutlineOutlined fontSize="inherit" />} description="No comments yet" />
+        <EmptyState icon={<ChatBubbleOutlineOutlined fontSize="inherit" />} description={t('commentFeed.empty')} />
       ) : (
         <>
           {comments.map((comment) => (
@@ -132,6 +131,7 @@ export default function CommentFeed({ isAuthenticated, boardUuid }: CommentFeedP
 }
 
 function CommentFeedCard({ comment }: { comment: CommentType }) {
+  const { t } = useTranslation('feed');
   const timeAgo = dayjs(comment.createdAt).fromNow();
   const entityLabel = ENTITY_TYPE_LABELS[comment.entityType] || comment.entityType;
 
@@ -160,8 +160,7 @@ function CommentFeedCard({ comment }: { comment: CommentType }) {
             </Typography>
             <Typography variant="body2" component="span" color="text.secondary">
               {' '}
-              {/* i18n-ignore-next-line */}
-              commented on {entityLabel}
+              {t('commentFeed.commentedOn', { entity: entityLabel })}
             </Typography>
           </Box>
           <Typography variant="caption" color="text.secondary" sx={{ flexShrink: 0 }}>

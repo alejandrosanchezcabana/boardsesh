@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import Box from '@mui/material/Box';
 import List from '@mui/material/List';
 import ListItem from '@mui/material/ListItem';
@@ -32,6 +33,7 @@ type GymMemberManagementProps = {
 };
 
 export default function GymMemberManagement({ gymUuid, isOwnerOrAdmin }: GymMemberManagementProps) {
+  const { t } = useTranslation('boards');
   const [members, setMembers] = useState<GymMember[]>([]);
   const [loading, setLoading] = useState(true);
   const [hasMore, setHasMore] = useState(false);
@@ -71,7 +73,7 @@ export default function GymMemberManagement({ gymUuid, isOwnerOrAdmin }: GymMemb
 
   const handleRemove = async (userId: string) => {
     if (!token) return;
-    if (!window.confirm('Remove this member from the gym?')) return;
+    if (!window.confirm(t('gymMemberManagement.removeConfirm'))) return;
 
     try {
       const client = createGraphQLHttpClient(token);
@@ -80,12 +82,10 @@ export default function GymMemberManagement({ gymUuid, isOwnerOrAdmin }: GymMemb
       });
       setMembers((prev) => prev.filter((m) => m.userId !== userId));
       setTotalCount((prev) => prev - 1);
-      // i18n-ignore-next-line
-      showMessage('Member removed', 'success');
+      showMessage(t('gymMemberManagement.snackbar.removed'), 'success');
     } catch (error) {
       console.error('Failed to remove member:', error);
-      // i18n-ignore-next-line
-      showMessage('Failed to remove member', 'error');
+      showMessage(t('gymMemberManagement.snackbar.removeFailed'), 'error');
     }
   };
 
@@ -101,8 +101,7 @@ export default function GymMemberManagement({ gymUuid, isOwnerOrAdmin }: GymMemb
     return (
       <Box sx={{ py: 4, textAlign: 'center' }}>
         <MuiTypography variant="body2" color="text.secondary">
-          {/* i18n-ignore-next-line */}
-          No members yet
+          {t('gymMemberManagement.empty')}
         </MuiTypography>
       </Box>
     );
@@ -128,7 +127,7 @@ export default function GymMemberManagement({ gymUuid, isOwnerOrAdmin }: GymMemb
               </Avatar>
             </ListItemAvatar>
             <ListItemText
-              primary={member.displayName ?? 'Unknown User'}
+              primary={member.displayName ?? t('gymMemberManagement.unknownUser')}
               secondary={
                 <Chip label={member.role} size="small" variant="outlined" sx={{ fontSize: 11, height: 20, mt: 0.5 }} />
               }
@@ -145,7 +144,9 @@ export default function GymMemberManagement({ gymUuid, isOwnerOrAdmin }: GymMemb
             fullWidth
             size="small"
           >
-            {loading ? 'Loading...' : `Load more (${members.length} of ${totalCount})`}
+            {loading
+              ? t('common:actions.loading')
+              : t('gymMemberManagement.loadMore', { count: members.length, total: totalCount })}
           </MuiButton>
         </Box>
       )}

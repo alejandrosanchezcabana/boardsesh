@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import IconButton from '@mui/material/IconButton';
@@ -42,6 +43,7 @@ export default function ProposalSection({
   boardName,
   highlightProposalUuid,
 }: ProposalSectionProps) {
+  const { t } = useTranslation('feed');
   const { token } = useWsAuthToken();
   const [communityStatus, setCommunityStatus] = useState<ClimbCommunityStatusType | null>(null);
   const [proposals, setProposals] = useState<Proposal[]>([]);
@@ -187,8 +189,7 @@ export default function ProposalSection({
             ))
           ) : (
             <Typography variant="body2" sx={{ color: themeTokens.neutral[400], textAlign: 'center', py: 2 }}>
-              {/* i18n-ignore-next-line */}
-              No open proposals
+              {t('proposalSection.noOpen')}
             </Typography>
           )}
         </Box>
@@ -237,8 +238,7 @@ export default function ProposalSection({
 
       {/* Section header */}
       <Typography variant="subtitle2" sx={{ fontWeight: 600, color: themeTokens.neutral[700], mb: 1.5 }}>
-        {/* i18n-ignore-next-line */}
-        Community Proposals
+        {t('proposalSection.title')}
         {proposals.length > 0 && (
           <Typography component="span" variant="caption" sx={{ ml: 0.5, color: themeTokens.neutral[400] }}>
             ({proposals.length})

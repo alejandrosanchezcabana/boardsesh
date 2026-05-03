@@ -460,9 +460,9 @@ export default function ControllersSection() {
                 label={t('controllers.register.boardLabel')}
                 onChange={(e) => handleBoardChange(e.target.value)}
               >
-                {/* i18n-ignore-next-line */}
+                {/* i18n-ignore-next-line -- brand name, not translated */}
                 <MenuItem value="kilter">Kilter</MenuItem>
-                {/* i18n-ignore-next-line */}
+                {/* i18n-ignore-next-line -- brand name, not translated */}
                 <MenuItem value="tension">Tension</MenuItem>
               </MuiSelect>
             </FormControl>

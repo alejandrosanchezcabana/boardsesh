@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import Card from '@mui/material/Card';
 import CardActionArea from '@mui/material/CardActionArea';
 import CardContent from '@mui/material/CardContent';
@@ -33,6 +34,7 @@ const BOARD_TYPE_LABELS: Record<string, string> = {
 };
 
 export default function BoardCard({ board, onClick, trailingAction }: BoardCardProps) {
+  const { t } = useTranslation('boards');
   return (
     <Card
       variant="outlined"
@@ -92,12 +94,21 @@ export default function BoardCard({ board, onClick, trailingAction }: BoardCardP
           </Box>
 
           <Box sx={{ display: 'flex', gap: 2, mt: 1.5, flexWrap: 'wrap' }}>
-            {/* i18n-ignore-next-line */}
-            <StatItem icon={<TrendingUpOutlined sx={{ fontSize: 14 }} />} value={board.totalAscents} label="ascents" />
-            {/* i18n-ignore-next-line */}
-            <StatItem icon={<PersonOutlined sx={{ fontSize: 14 }} />} value={board.uniqueClimbers} label="climbers" />
-            {/* i18n-ignore-next-line */}
-            <StatItem icon={<PeopleOutlined sx={{ fontSize: 14 }} />} value={board.followerCount} label="followers" />
+            <StatItem
+              icon={<TrendingUpOutlined sx={{ fontSize: 14 }} />}
+              value={board.totalAscents}
+              label={t('boardEntity.stats.ascents')}
+            />
+            <StatItem
+              icon={<PersonOutlined sx={{ fontSize: 14 }} />}
+              value={board.uniqueClimbers}
+              label={t('boardEntity.stats.climbers')}
+            />
+            <StatItem
+              icon={<PeopleOutlined sx={{ fontSize: 14 }} />}
+              value={board.followerCount}
+              label={t('boardEntity.stats.followers')}
+            />
           </Box>
         </CardContent>
       </CardActionArea>

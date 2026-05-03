@@ -252,12 +252,10 @@ const QueueControlBar: React.FC<QueueControlBarProps> = ({ boardDetails, angle }
       text: 'Jump in and climb with me on Boardsesh',
       trackingEvent: 'Session Shared',
       trackingProps: { sessionId: activeSession?.sessionId ?? '' },
-      // i18n-ignore-next-line
-      onClipboardSuccess: () => showMessage('Link copied!', 'success'),
-      // i18n-ignore-next-line
-      onError: () => showMessage('Failed to share', 'error'),
+      onClipboardSuccess: () => showMessage(t('queueBar.linkCopied'), 'success'),
+      onError: () => showMessage(t('queueBar.shareFailed'), 'error'),
     });
-  }, [sessionShareUrl, activeSession?.sessionId, showMessage]);
+  }, [sessionShareUrl, activeSession?.sessionId, showMessage, t]);
 
   // Local tracking of which climbs the current user ticked this session,
   // since the backend doesn't populate tickedBy on queue items.
@@ -735,7 +733,8 @@ const QueueControlBar: React.FC<QueueControlBarProps> = ({ boardDetails, angle }
       : `translateX(min(0px, calc(-100% + ${swipeOffset}px)))`;
   };
 
-  const reconnectMessage = connectionState === 'error' ? 'Connection error – retrying…' : 'Reconnecting…';
+  const reconnectMessage =
+    connectionState === 'error' ? t('queueBar.reconnect.connectionError') : t('queueBar.reconnect.reconnecting');
 
   const handleLeaveSession = useCallback(() => {
     if (endSession) {
@@ -745,10 +744,9 @@ const QueueControlBar: React.FC<QueueControlBarProps> = ({ boardDetails, angle }
     if (disconnect) {
       disconnect();
     } else {
-      // i18n-ignore-next-line
-      showMessage('Unable to leave session. Please try again.', 'warning');
+      showMessage(t('queueBar.leaveFailed'), 'warning');
     }
-  }, [endSession, disconnect, showMessage]);
+  }, [endSession, disconnect, showMessage, t]);
 
   // Reconnect-only view helpers
   const renderReconnectingRow = () => (
@@ -756,8 +754,7 @@ const QueueControlBar: React.FC<QueueControlBarProps> = ({ boardDetails, angle }
       <CircularProgress size={16} thickness={5} />
       <span>{reconnectMessage}</span>
       <MuiButton variant="text" size="small" onClick={() => setShowCancelConfirm(true)}>
-        {/* i18n-ignore-next-line */}
-        Cancel
+        {t('queueBar.cancelReconnect')}
       </MuiButton>
     </div>
   );
@@ -969,8 +966,7 @@ const QueueControlBar: React.FC<QueueControlBarProps> = ({ boardDetails, angle }
                   }}
                 >
                   <PlayCircleOutlineOutlined sx={{ fontSize: 16, opacity: 0.7 }} />
-                  {/* i18n-ignore-next-line */}
-                  <span className={styles.sessionName}>Start sesh</span>
+                  <span className={styles.sessionName}>{t('queueBar.startSesh')}</span>
                 </div>
               )}
               {/* Expandable participant bar — only for active sessions with participants */}
@@ -1096,8 +1092,7 @@ const QueueControlBar: React.FC<QueueControlBarProps> = ({ boardDetails, angle }
                       }
                       setActiveDrawer('none');
                     }}
-                    // i18n-ignore-next-line
-                    onError={() => showMessage('Couldn\u2019t save your tick. Give it another go.', 'error')}
+                    onError={() => showMessage(t('queueBar.tickError'), 'error')}
                     onDraftRestored={(draftComment) => setTickComment(draftComment)}
                     onIsFlashChange={setIsFlash}
                     onAscentTypeChange={setAscentType}
@@ -1108,8 +1103,7 @@ const QueueControlBar: React.FC<QueueControlBarProps> = ({ boardDetails, angle }
                           fullWidth
                           size="small"
                           variant="outlined"
-                          // i18n-ignore-next-line
-                          placeholder="Comment..."
+                          placeholder={t('queueBar.tickCommentPlaceholder')}
                           multiline
                           minRows={1}
                           maxRows={tickCommentFocused ? 4 : 1}
@@ -1144,8 +1138,7 @@ const QueueControlBar: React.FC<QueueControlBarProps> = ({ boardDetails, angle }
                         fullWidth
                         size="small"
                         variant="outlined"
-                        // i18n-ignore-next-line
-                        placeholder="Comment..."
+                        placeholder={t('queueBar.tickCommentPlaceholder')}
                         multiline
                         minRows={2}
                         maxRows={4}
@@ -1293,8 +1286,7 @@ const QueueControlBar: React.FC<QueueControlBarProps> = ({ boardDetails, angle }
                     </span>
                     {/* Attempt button — visible whenever tick mode is active */}
                     {tickBarActive && (
-                      // i18n-ignore-next-line
-                      <TickButtonWithLabel label="attempt">
+                      <TickButtonWithLabel label={t('queueBar.tickAttemptLabel')}>
                         <IconButton
                           onClick={(e) => quickTickBarRef.current?.saveAttempt(e.currentTarget)}
                           sx={{

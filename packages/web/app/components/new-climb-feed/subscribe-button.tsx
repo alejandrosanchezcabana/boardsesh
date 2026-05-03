@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef, useCallback, type ReactNode } from 'react';
+import { useTranslation } from 'react-i18next';
 import ToggleButton from '@mui/material/ToggleButton';
 import NotificationsNoneOutlined from '@mui/icons-material/NotificationsNoneOutlined';
 import NotificationsActiveOutlined from '@mui/icons-material/NotificationsActiveOutlined';
@@ -33,6 +34,7 @@ export default function SubscribeButton({
   onSubscriptionChange,
   disabled,
 }: SubscribeButtonProps) {
+  const { t } = useTranslation('feed');
   const { token: wsAuthToken } = useWsAuthToken();
   const { showMessage } = useSnackbar();
   const clientRef = useRef<Client | null>(null);
@@ -51,8 +53,7 @@ export default function SubscribeButton({
   const handleToggle = async () => {
     if (loading || disabled) return;
     if (!wsAuthToken) {
-      // i18n-ignore-next-line
-      showMessage('Please sign in to manage subscriptions', 'warning');
+      showMessage(t('subscribeButton.signInPrompt'), 'warning');
       return;
     }
 
@@ -69,8 +70,7 @@ export default function SubscribeButton({
           variables,
         });
         onSubscriptionChange?.(false);
-        // i18n-ignore-next-line
-        showMessage('Unsubscribed from new climbs', 'success');
+        showMessage(t('subscribeButton.unsubscribed'), 'success');
       } else {
         const variables: SubscribeNewClimbsVariables = {
           input: { boardType, layoutId },
@@ -80,13 +80,11 @@ export default function SubscribeButton({
           variables,
         });
         onSubscriptionChange?.(true);
-        // i18n-ignore-next-line
-        showMessage('Subscribed to new climbs', 'success');
+        showMessage(t('subscribeButton.subscribed'), 'success');
       }
     } catch (err) {
       console.error('Subscription toggle failed', err);
-      // i18n-ignore-next-line
-      showMessage('Could not update subscription', 'error');
+      showMessage(t('subscribeButton.updateFailed'), 'error');
     } finally {
       setLoading(false);
     }

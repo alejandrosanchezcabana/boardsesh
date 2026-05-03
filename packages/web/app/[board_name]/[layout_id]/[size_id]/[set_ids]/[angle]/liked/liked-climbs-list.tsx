@@ -6,6 +6,7 @@ import IconButton from '@mui/material/IconButton';
 import { FormatListBulletedOutlined, AppsOutlined } from '@mui/icons-material';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { usePathname } from 'next/navigation';
+import { useTranslation } from 'react-i18next';
 import { useIsDarkMode } from '@/app/hooks/use-is-dark-mode';
 import { track } from '@vercel/analytics';
 import type { Climb, BoardDetails } from '@/app/lib/types';
@@ -167,6 +168,7 @@ const ClimbsListSkeleton = ({ aspectRatio }: { aspectRatio: number }) => {
 };
 
 export default function LikedClimbsList({ boardDetails, angle }: LikedClimbsListProps) {
+  const { t } = useTranslation('climbs');
   const pathname = usePathname();
   const isDark = useIsDarkMode();
   const { token, isLoading: tokenLoading } = useWsAuthToken();
@@ -223,8 +225,7 @@ export default function LikedClimbsList({ boardDetails, angle }: LikedClimbsList
   useEffect(() => {
     if (error) {
       console.error('Error loading liked climbs:', error);
-      // i18n-ignore-next-line
-      showMessage('Failed to load liked climbs', 'error');
+      showMessage(t('liked.loadFailed'), 'error');
     }
   }, [error, showMessage]);
 
@@ -338,8 +339,7 @@ export default function LikedClimbsList({ boardDetails, angle }: LikedClimbsList
   if (error && allClimbs.length === 0) {
     return (
       <div className={styles.climbsSection}>
-        {/* i18n-ignore-next-line */}
-        <EmptyState description="Failed to load liked climbs" />
+        <EmptyState description={t('liked.loadFailed')} />
       </div>
     );
   }
@@ -347,8 +347,7 @@ export default function LikedClimbsList({ boardDetails, angle }: LikedClimbsList
   if (visibleClimbs.length === 0 && !isFetching) {
     return (
       <div className={styles.climbsSection}>
-        {/* i18n-ignore-next-line */}
-        <EmptyState description="No liked climbs yet. Heart some climbs to see them here!" />
+        <EmptyState description={t('liked.emptyState')} />
       </div>
     );
   }
@@ -362,8 +361,7 @@ export default function LikedClimbsList({ boardDetails, angle }: LikedClimbsList
             size="small"
             color={viewMode === 'list' ? 'primary' : 'default'}
             onClick={() => handleViewModeChange('list')}
-            // i18n-ignore-next-line
-            aria-label="List view"
+            aria-label={t('list.viewMode.list')}
           >
             <FormatListBulletedOutlined />
           </IconButton>
@@ -371,8 +369,7 @@ export default function LikedClimbsList({ boardDetails, angle }: LikedClimbsList
             size="small"
             color={viewMode === 'grid' ? 'primary' : 'default'}
             onClick={() => handleViewModeChange('grid')}
-            // i18n-ignore-next-line
-            aria-label="Grid view"
+            aria-label={t('list.viewMode.grid')}
           >
             <AppsOutlined />
           </IconButton>

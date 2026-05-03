@@ -1,6 +1,7 @@
 'use client';
 
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useParams } from 'next/navigation';
 import { track } from '@vercel/analytics';
 import { useLocaleRouter } from '@/app/lib/i18n/use-locale-router';
@@ -139,6 +140,7 @@ export function BluetoothProvider({
   });
   const { token, isAuthenticated } = useWsAuthToken();
   const { showMessage } = useSnackbar();
+  const { t } = useTranslation('settings');
 
   const [partyActive, setPartyActive] = useState(false);
   const clearBoard = useCallback(() => sendFramesToBoard(''), [sendFramesToBoard]);
@@ -406,8 +408,7 @@ export function BluetoothProvider({
       // Provider mounted on a route that doesn't carry an [angle] segment.
       // Silently building a URL at angle 0 would yank the user to a fake
       // angle they never picked — surface the issue and let them choose.
-      // i18n-ignore-next-line
-      showMessage("Couldn't switch — open a climb at a specific angle first.", 'warning');
+      showMessage(t('bluetoothMismatch.switchNoAngleToast'), 'warning');
       return;
     }
     const target = buildSwitchUrl(mismatch.config, routeAngle);
@@ -415,8 +416,7 @@ export function BluetoothProvider({
       // Couldn't resolve a switch URL (unknown layout/size, missing slug data).
       // Don't silently close both dialogs and strand the user — surface the
       // failure so they can pick "Connect anyway" or cancel deliberately.
-      // i18n-ignore-next-line
-      showMessage("Couldn't switch to that board's config. Try Connect anyway.", 'warning');
+      showMessage(t('bluetoothMismatch.switchUrlFailedToast'), 'warning');
       return;
     }
     setMismatch(null);
@@ -424,7 +424,7 @@ export function BluetoothProvider({
     // BluetoothProvider that auto-connects via the ?autoConnect serial param.
     activePickerState?.handleCancel();
     router.push(`${target}?autoConnect=${encodeURIComponent(mismatch.serial)}`);
-  }, [mismatch, routeAngle, activePickerState, router, showMessage]);
+  }, [mismatch, routeAngle, activePickerState, router, showMessage, t]);
 
   return (
     <BluetoothContext.Provider value={value}>

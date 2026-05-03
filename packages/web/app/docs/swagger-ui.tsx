@@ -55,7 +55,7 @@ export default function SwaggerUIComponent() {
         <CircularProgress size={48} />
         <div className={styles.swaggerLoadingText}>
           <Typography variant="body2" component="span" color="text.secondary">
-            {/* i18n-ignore-next-line */}
+            {/* i18n-ignore-next-line -- technical reference, English only */}
             Loading API documentation...
           </Typography>
         </div>
@@ -66,20 +66,20 @@ export default function SwaggerUIComponent() {
   if (loadState === 'not-found') {
     return (
       <MuiAlert severity="warning" className={styles.swaggerAlert}>
-        {/* i18n-ignore-next-line */}
+        {/* i18n-ignore-next-line -- technical reference, English only */}
         <AlertTitle>OpenAPI Specification Not Generated</AlertTitle>
         <div>
           <Typography variant="body1" component="p" className={styles.swaggerInstructions}>
-            {/* i18n-ignore-next-line */}
+            {/* i18n-ignore-next-line -- technical reference, English only */}
             The OpenAPI specification file has not been generated yet. This is expected during local development.
           </Typography>
           <Typography variant="body1" component="p" className={styles.swaggerInstructionsFinal}>
-            {/* i18n-ignore-next-line */}
+            {/* i18n-ignore-next-line -- technical reference, English only */}
             Run the following command to generate it:
           </Typography>
           <pre className={styles.swaggerCommandBlock}>bun run generate:openapi</pre>
           <Typography variant="body1" component="p" color="text.secondary" className={styles.swaggerNote}>
-            {/* i18n-ignore-next-line */}
+            {/* i18n-ignore-next-line -- technical reference, English only */}
             In production, this runs automatically during the build process.
           </Typography>
         </div>
@@ -90,7 +90,7 @@ export default function SwaggerUIComponent() {
   if (loadState === 'error') {
     return (
       <MuiAlert severity="error" className={styles.swaggerAlert}>
-        {/* i18n-ignore-next-line */}
+        {/* i18n-ignore-next-line -- technical reference, English only */}
         <AlertTitle>Failed to Load API Documentation</AlertTitle>
         {`Error: ${errorMessage}`}
       </MuiAlert>

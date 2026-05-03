@@ -261,7 +261,7 @@ export async function GET(request: NextRequest) {
                 color: darkTokens.neutral[900],
               }}
             >
-              {/* i18n-ignore-next-line */}
+              {/* i18n-ignore-next-line -- OG image, English-only */}
               Grades climbed so far
             </div>
 
@@ -330,7 +330,7 @@ export async function GET(request: NextRequest) {
                   color: darkTokens.neutral[600],
                 }}
               >
-                {/* i18n-ignore-next-line */}
+                {/* i18n-ignore-next-line -- OG image, English-only */}
                 No sends yet.
               </div>
             )}
@@ -348,7 +348,7 @@ export async function GET(request: NextRequest) {
             letterSpacing: '0.04em',
           }}
         >
-          {/* i18n-ignore-next-line */}
+          {/* i18n-ignore-next-line -- OG image, brand-only text */}
           boardsesh.com
         </div>
       </div>
@@ -470,7 +470,7 @@ export async function GET(request: NextRequest) {
             fontWeight: 600,
           }}
         >
-          {/* i18n-ignore-next-line */}
+          {/* i18n-ignore-next-line -- OG image, brand-only text */}
           boardsesh.com
         </div>
       </div>

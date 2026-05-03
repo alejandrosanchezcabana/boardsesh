@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import Box from '@mui/material/Box';
 import { tickTimeMs } from '@/app/lib/format-tick-time';
 import { EmptyState } from '@/app/components/ui/empty-state';
@@ -27,6 +28,7 @@ const isPersistedUuid = (uuid: string | undefined): uuid is string => !!uuid && 
 const VOTE_SUMMARY_BATCH_LIMIT = 100;
 
 export const LogbookView: React.FC<LogbookViewProps> = ({ currentClimb }) => {
+  const { t } = useTranslation('profile');
   const { logbook, boardName } = useBoardProvider();
 
   const climbAscents = useMemo(
@@ -52,8 +54,7 @@ export const LogbookView: React.FC<LogbookViewProps> = ({ currentClimb }) => {
   const showMirrorTag = boardName === 'tension';
 
   if (climbAscents.length === 0) {
-    // i18n-ignore-next-line
-    return <EmptyState description="No ascents logged for this climb" />;
+    return <EmptyState description={t('logbook.section.noAscentsLogged')} />;
   }
 
   return (

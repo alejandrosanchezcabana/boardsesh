@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useRef, useState, useCallback, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import IconButton from '@mui/material/IconButton';
 import dynamic from 'next/dynamic';
 import MoreHorizOutlined from '@mui/icons-material/MoreHorizOutlined';
@@ -253,6 +254,7 @@ const ClimbListItem: React.FC<ClimbListItemProps> = React.memo(
     centerBottomSlot,
     contentPadding,
   }) => {
+    const { t } = useTranslation('climbs');
     // Subscribe to selection store — only re-renders when THIS item's selected state changes.
     // When `selectedOverride` or `disableSelection` is provided, ignore the store value.
     const storeSelected = useIsClimbSelected(climb.uuid);
@@ -432,9 +434,8 @@ const ClimbListItem: React.FC<ClimbListItemProps> = React.memo(
     }, []);
 
     const handleTickError = useCallback(() => {
-      // i18n-ignore-next-line
-      showMessage("Couldn't save your tick — it's saved as a draft", 'error');
-    }, [showMessage]);
+      showMessage(t('card.list.tickError'), 'error');
+    }, [showMessage, t]);
 
     // --- Actions drawer drag-to-resize (Spotify-style) ---
     const { paperRef: actionsPaperRef, dragHandlers: actionsDragHandlers } = useDrawerDragResize({
@@ -635,8 +636,7 @@ const ClimbListItem: React.FC<ClimbListItemProps> = React.memo(
             {menuSlot ?? (
               <IconButton
                 size="small"
-                // i18n-ignore-next-line
-                aria-label="More actions"
+                aria-label={t('card.list.moreActions')}
                 onClick={handleMenuClick}
                 style={iconButtonStyle}
                 disableRipple

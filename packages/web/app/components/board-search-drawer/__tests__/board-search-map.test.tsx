@@ -3,6 +3,15 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vite-plus/test'
 import { render, act, fireEvent } from '@testing-library/react';
 import React from 'react';
 import BoardSearchMap from '../board-search-map';
+import { tFromCatalog } from '@/app/__test-helpers__/i18n-mock';
+
+vi.mock('react-i18next', () => ({
+  useTranslation: (ns?: string) => ({
+    t: (key: string, options?: Record<string, unknown>) => tFromCatalog(ns, key, options),
+    i18n: { language: 'en-US' },
+  }),
+  Trans: ({ children }: { children?: React.ReactNode }) => children ?? null,
+}));
 
 // Shared mock state. `vi.hoisted` runs before the `vi.mock` factory below
 // (which is itself hoisted above imports), so the factory can reference it.

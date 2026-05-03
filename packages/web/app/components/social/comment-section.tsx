@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useCallback, useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import Box from '@mui/material/Box';
 import MuiTypography from '@mui/material/Typography';
 import type { SocialEntityType } from '@boardsesh/shared-schema';
@@ -27,13 +28,15 @@ type CommentSectionProps = {
   title?: string;
 };
 
-export default function CommentSection({ entityType, entityId, title = 'Discussion' }: CommentSectionProps) {
+export default function CommentSection({ entityType, entityId, title }: CommentSectionProps) {
+  const { t } = useTranslation('common');
   const [refreshKey, setRefreshKey] = useState(0);
   const { data: session } = useSession();
   const { token, isAuthenticated } = useWsAuthToken();
   const currentUserId = session?.user?.id ?? null;
   const { showMessage } = useSnackbar();
   const wsClientRef = useRef<ReturnType<typeof createGraphQLClient> | null>(null);
+  const resolvedTitle = title ?? t('comment.discussionTitle');
 
   // Set up live comment updates subscription
   useEffect(() => {
@@ -82,29 +85,26 @@ export default function CommentSection({ entityType, entityId, title = 'Discussi
         });
         setRefreshKey((prev) => prev + 1);
       } catch {
-        // i18n-ignore-next-line
-        showMessage('Failed to post comment', 'error');
+        showMessage(t('comment.errors.post'), 'error');
         throw new Error('Failed to post comment');
       }
     },
-    [token, entityType, entityId, showMessage],
+    [token, entityType, entityId, showMessage, t],
   );
 
   return (
     <Box>
       <MuiTypography variant="h6" sx={{ mb: 2 }}>
-        {title}
+        {resolvedTitle}
       </MuiTypography>
 
       {isAuthenticated ? (
         <Box sx={{ mb: 2 }}>
-          {/* i18n-ignore-next-line */}
-          <CommentForm onSubmit={handleAddComment} placeholder="Share your thoughts..." />
+          <CommentForm onSubmit={handleAddComment} placeholder={t('comment.thoughtsPlaceholder')} />
         </Box>
       ) : (
         <MuiTypography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-          {/* i18n-ignore-next-line */}
-          Sign in to leave a comment.
+          {t('comment.signInPrompt')}
         </MuiTypography>
       )}
 

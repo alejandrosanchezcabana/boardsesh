@@ -2,6 +2,15 @@ import { afterEach, describe, it, expect, vi } from 'vite-plus/test';
 import React, { useRef, useEffect } from 'react';
 import { render, screen, cleanup, fireEvent } from '@testing-library/react';
 import HoldTypePicker, { buildOptions } from '../hold-type-picker';
+import { tFromCatalog } from '@/app/__test-helpers__/i18n-mock';
+
+vi.mock('react-i18next', () => ({
+  useTranslation: (ns?: string) => ({
+    t: (key: string, options?: Record<string, unknown>) => tFromCatalog(ns, key, options),
+    i18n: { language: 'en-US' },
+  }),
+  Trans: ({ children }: { children?: React.ReactNode }) => children ?? null,
+}));
 
 // Mock HOLD_STATE_MAP so picker color assertions don't depend on the real LED
 // colors — if production LED hex values change, these tests should keep passing

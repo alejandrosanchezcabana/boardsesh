@@ -5,6 +5,15 @@ import type { Climb, BoardDetails, BoardName } from '@/app/lib/types';
 import type { UserBoard } from '@boardsesh/shared-schema';
 import { TickAction } from '../actions/tick-action';
 import type { ClimbActionProps } from '../types';
+import { tFromCatalog } from '@/app/__test-helpers__/i18n-mock';
+
+vi.mock('react-i18next', () => ({
+  useTranslation: (ns?: string) => ({
+    t: (key: string, options?: Record<string, unknown>) => tFromCatalog(ns, key, options),
+    i18n: { language: 'en-US' },
+  }),
+  Trans: ({ children }: { children?: React.ReactNode }) => children ?? null,
+}));
 
 // --- Mock factories ---
 
@@ -368,7 +377,7 @@ describe('TickAction', () => {
       });
 
       const drawer = screen.getByTestId('swipeable-drawer');
-      expect(drawer.getAttribute('data-title')).toBe('actions.tick.drawer.signInRequired');
+      expect(drawer.getAttribute('data-title')).toBe('Sign in required');
       expect(screen.getByText('Sign in to record ticks')).toBeTruthy();
     });
 
@@ -401,7 +410,7 @@ describe('TickAction', () => {
       });
 
       const drawer = screen.getByTestId('swipeable-drawer');
-      expect(drawer.getAttribute('data-title')).toBe('actions.tick.drawer.selectBoard');
+      expect(drawer.getAttribute('data-title')).toBe('Select board');
       expect(screen.getByText('Which board did you climb on?')).toBeTruthy();
       expect(screen.getByTestId('board-card-board-1')).toBeTruthy();
       expect(screen.getByTestId('board-card-board-2')).toBeTruthy();
@@ -439,7 +448,7 @@ describe('TickAction', () => {
 
       // Drawer title should change to "Log Ascent"
       const drawer = screen.getByTestId('swipeable-drawer');
-      expect(drawer.getAttribute('data-title')).toBe('actions.tick.drawer.logAscent');
+      expect(drawer.getAttribute('data-title')).toBe('Log ascent');
     });
 
     it('passes selected board type to BoardProvider', async () => {
@@ -522,7 +531,7 @@ describe('TickAction', () => {
 
       // Should show the board selector (in loading state), NOT skip to form
       const drawer = screen.getByTestId('swipeable-drawer');
-      expect(drawer.getAttribute('data-title')).toBe('actions.tick.drawer.selectBoard');
+      expect(drawer.getAttribute('data-title')).toBe('Select board');
       expect(screen.getByTestId('board-scroll-loading')).toBeTruthy();
     });
 
@@ -636,7 +645,7 @@ describe('TickAction', () => {
       });
 
       const drawer = screen.getByTestId('swipeable-drawer');
-      expect(drawer.getAttribute('data-title')).toBe('actions.tick.drawer.signInRequired');
+      expect(drawer.getAttribute('data-title')).toBe('Sign in required');
       expect(screen.getByText('Sign in to record ticks')).toBeTruthy();
     });
 

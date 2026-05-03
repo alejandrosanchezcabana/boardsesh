@@ -3,6 +3,15 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import React from 'react';
 import { StoreReviewPromptDialog } from '../store-review-prompt-dialog';
 import { requestInAppReview } from '@/app/lib/in-app-review';
+import { tFromCatalog } from '@/app/__test-helpers__/i18n-mock';
+
+vi.mock('react-i18next', () => ({
+  useTranslation: (ns?: string) => ({
+    t: (key: string, options?: Record<string, unknown>) => tFromCatalog(ns, key, options),
+    i18n: { language: 'en-US' },
+  }),
+  Trans: ({ children }: { children?: React.ReactNode }) => children ?? null,
+}));
 
 vi.mock('@/app/lib/in-app-review', () => ({
   requestInAppReview: vi.fn().mockResolvedValue(undefined),

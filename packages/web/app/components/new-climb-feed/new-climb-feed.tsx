@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import Box from '@mui/material/Box';
 import CircularProgress from '@mui/material/CircularProgress';
 import Typography from '@mui/material/Typography';
@@ -37,6 +38,7 @@ export default function NewClimbFeed({
   isAuthenticated,
   isSubscribed = false,
 }: NewClimbFeedProps) {
+  const { t } = useTranslation('feed');
   const { token: wsAuthToken } = useWsAuthToken();
   const clientRef = useRef<Client | null>(null);
   const subscriptionRef = useRef<(() => void) | undefined>(undefined);
@@ -128,8 +130,7 @@ export default function NewClimbFeed({
     <Box>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
         <Typography variant="h6" fontWeight={700}>
-          {/* i18n-ignore-next-line */}
-          New Climbs
+          {t('newClimbFeed.title')}
         </Typography>
         <SubscribeButton
           boardType={boardType}
@@ -142,8 +143,7 @@ export default function NewClimbFeed({
 
       {error && (
         <Alert severity="error" sx={{ mb: 1 }}>
-          {/* i18n-ignore-next-line */}
-          Failed to load climbs. Please try again.
+          {t('newClimbFeed.errorLoad')}
         </Alert>
       )}
 
@@ -165,8 +165,7 @@ export default function NewClimbFeed({
 
       {!isLoading && items.length === 0 && !error && (
         <Typography variant="body2" color="text.secondary">
-          {/* i18n-ignore-next-line */}
-          No climbs yet for this layout. Be the first to set one!
+          {t('newClimbFeed.empty')}
         </Typography>
       )}
     </Box>

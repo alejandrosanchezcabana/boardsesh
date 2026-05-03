@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
@@ -32,6 +33,7 @@ type SessionSummaryFeedItemProps = {
 };
 
 export default function SessionSummaryFeedItem({ item }: SessionSummaryFeedItemProps) {
+  const { t } = useTranslation('feed');
   const { formatGrade, loaded: gradeFormatLoaded } = useGradeFormat();
 
   let metadata: SessionSummaryMetadata = {};
@@ -69,8 +71,7 @@ export default function SessionSummaryFeedItem({ item }: SessionSummaryFeedItemP
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
           <GroupsOutlined fontSize="small" color="primary" />
           <Typography variant="body2" fontWeight={600}>
-            {/* i18n-ignore-next-line */}
-            Session completed
+            {t('sessionSummary.completed')}
           </Typography>
           {item.actorDisplayName && (
             <Typography variant="body2" color="text.secondary">

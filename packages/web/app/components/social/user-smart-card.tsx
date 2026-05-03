@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useLocaleRouter } from '@/app/lib/i18n/use-locale-router';
 import MuiCard from '@mui/material/Card';
 import CardActionArea from '@mui/material/CardActionArea';
@@ -52,6 +53,7 @@ type GradeBar = {
 const CHIP_SX = { height: 20, fontSize: '0.7rem' } as const;
 
 export default function UserSmartCard({ userId, refreshKey = 0 }: UserSmartCardProps) {
+  const { t } = useTranslation('feed');
   const router = useLocaleRouter();
   const { gradeFormat, loaded: gradeFormatLoaded } = useGradeFormat();
   const [profile, setProfile] = useState<ProfileData | null>(null);
@@ -160,11 +162,11 @@ export default function UserSmartCard({ userId, refreshKey = 0 }: UserSmartCardP
               </div>
 
               <Typography variant="caption" component="span" color="text.secondary">
-                {/* i18n-ignore-next-line */}
-                {profile.followerCount} follower{profile.followerCount !== 1 ? 's' : ''}
+                {profile.followerCount === 1
+                  ? t('userSmartCard.followerOne', { count: profile.followerCount })
+                  : t('userSmartCard.followerMany', { count: profile.followerCount })}
                 {' · '}
-                {/* i18n-ignore-next-line */}
-                {profile.followingCount} following
+                {t('userSmartCard.following', { count: profile.followingCount })}
               </Typography>
 
               {profile.credentials && profile.credentials.length > 0 && (
@@ -188,8 +190,9 @@ export default function UserSmartCard({ userId, refreshKey = 0 }: UserSmartCardP
           {gradeBars.length > 0 && (
             <div className={styles.chartSection}>
               <Typography variant="caption" component="span" color="text.secondary" className={styles.chartLabel}>
-                {/* i18n-ignore-next-line */}
-                {totalClimbs} distinct climb{totalClimbs !== 1 ? 's' : ''}
+                {totalClimbs === 1
+                  ? t('userSmartCard.distinctClimbOne', { count: totalClimbs })
+                  : t('userSmartCard.distinctClimbMany', { count: totalClimbs })}
               </Typography>
 
               <div className={styles.gradeBarContainer}>

@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useCallback, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useSnackbar } from '@/app/components/providers/snackbar-provider';
 import { useEntityMutation } from '@/app/hooks/use-entity-mutation';
 import {
@@ -22,13 +23,14 @@ type EditBoardFormProps = {
 };
 
 export default function EditBoardForm({ board, totalAscents, onSuccess, onCancel }: EditBoardFormProps) {
+  const { t } = useTranslation('boards');
   const { showMessage } = useSnackbar();
 
   const availableAngles = ANGLES[board.boardType as BoardName] ?? [];
 
   const { execute } = useEntityMutation<UpdateBoardMutationResponse, UpdateBoardMutationVariables>(UPDATE_BOARD, {
-    successMessage: 'Board updated!',
-    errorMessage: 'Failed to update board',
+    successMessage: t('editBoard.snackbar.updated'),
+    errorMessage: t('editBoard.snackbar.updateFailed'),
   });
 
   const configEditable = useMemo(() => {
@@ -60,8 +62,7 @@ export default function EditBoardForm({ board, totalAscents, onSuccess, onCancel
       serialNumber?: string;
     }) => {
       if (!values.name) {
-        // i18n-ignore-next-line
-        showMessage('Board name is required', 'error');
+        showMessage(t('boardForm.create.nameRequired'), 'error');
         return;
       }
 
@@ -95,14 +96,13 @@ export default function EditBoardForm({ board, totalAscents, onSuccess, onCancel
         onSuccess?.(data.updateBoard);
       }
     },
-    [execute, board.uuid, showMessage, onSuccess, configEditable],
+    [execute, board.uuid, showMessage, onSuccess, configEditable, t],
   );
 
   return (
     <BoardForm
-      // i18n-ignore-next-line
-      title="Edit Board"
-      submitLabel="Save Changes"
+      title={t('editBoard.title')}
+      submitLabel={t('editBoard.submitLabel')}
       initialValues={{
         name: board.name,
         slug: board.slug,

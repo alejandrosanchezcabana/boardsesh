@@ -120,6 +120,7 @@ export const PlayViewActionBar = React.memo(function PlayViewActionBar({
   onOpenQueue,
   angleSelector,
 }: PlayViewActionBarProps) {
+  const { t } = useTranslation('session');
   return (
     <div className={styles.actionBar}>
       <IconButton disabled={!canSwipePrevious} onClick={onPrevClick}>
@@ -148,8 +149,7 @@ export const PlayViewActionBar = React.memo(function PlayViewActionBar({
       </IconButton>
       <ShareBoardButton />
       {angleSelector}
-      {/* i18n-ignore-next-line */}
-      <IconButton onClick={onOpenActions} aria-label="Climb actions">
+      <IconButton onClick={onOpenActions} aria-label={t('playView.actionBar.climbActionsAria')}>
         <MoreHorizOutlined />
       </IconButton>
       <MuiBadge
@@ -162,8 +162,7 @@ export const PlayViewActionBar = React.memo(function PlayViewActionBar({
           },
         }}
       >
-        {/* i18n-ignore-next-line */}
-        <IconButton onClick={onOpenQueue} aria-label="Open queue">
+        <IconButton onClick={onOpenQueue} aria-label={t('playView.actionBar.openQueueAria')}>
           <FormatListBulletedOutlined />
         </IconButton>
       </MuiBadge>
@@ -197,7 +196,7 @@ export const PlayViewTickBar = React.memo<PlayViewTickBarProps>(function PlayVie
   onClose,
   onError,
 }) {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation('session');
   const { logbook } = useBoardProvider();
   const [tickComment, setTickComment] = useState('');
   const [commentFocused, setCommentFocused] = useState(false);
@@ -271,21 +270,22 @@ export const PlayViewTickBar = React.memo<PlayViewTickBarProps>(function PlayVie
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' || e.key === ' ') handleTickBarExpandedChange(!tickBarExpanded);
                 }}
-                aria-label={tickBarExpanded ? 'Collapse tick bar' : 'Expand tick bar'}
+                aria-label={tickBarExpanded ? t('playView.tickBar.collapseAria') : t('playView.tickBar.expandAria')}
               >
                 {tickBarExpanded ? (
                   <KeyboardArrowDownOutlined sx={{ fontSize: 16, opacity: 0.7 }} />
                 ) : (
                   <KeyboardArrowUpOutlined sx={{ fontSize: 16, opacity: 0.7 }} />
                 )}
-                <span className={styles.tickBarExpandLabel}>{tickBarExpanded ? 'Collapse' : 'Expand'}</span>
+                <span className={styles.tickBarExpandLabel}>
+                  {tickBarExpanded ? t('queueBar.tickBar.collapse') : t('queueBar.tickBar.expand')}
+                </span>
               </div>
               <div className={styles.tickBarCloseButton}>
                 <IconButton
                   size="small"
                   onClick={handleClose}
-                  // i18n-ignore-next-line
-                  aria-label="Close tick bar"
+                  aria-label={t('playView.tickBar.closeAria')}
                   sx={{
                     color: 'text.primary',
                     backgroundColor: 'action.selected',
@@ -314,7 +314,7 @@ export const PlayViewTickBar = React.memo<PlayViewTickBarProps>(function PlayVie
                     fullWidth
                     size="small"
                     variant="outlined"
-                    placeholder={t('comment.shortPlaceholder')}
+                    placeholder={t('common:comment.shortPlaceholder')}
                     multiline
                     minRows={1}
                     maxRows={commentFocused ? 4 : 1}
@@ -349,8 +349,7 @@ export const PlayViewTickBar = React.memo<PlayViewTickBarProps>(function PlayVie
                   fullWidth
                   size="small"
                   variant="outlined"
-                  // i18n-ignore-next-line
-                  placeholder="Comment..."
+                  placeholder={t('playView.tickBar.commentPlaceholder')}
                   multiline
                   minRows={2}
                   maxRows={4}
@@ -376,8 +375,7 @@ export const PlayViewTickBar = React.memo<PlayViewTickBarProps>(function PlayVie
             {/* Action buttons — attempt + tick (order matches queue control bar) */}
 
             <div className={styles.tickBarButtons}>
-              {/* i18n-ignore-next-line */}
-              <TickButtonWithLabel label="attempt">
+              <TickButtonWithLabel label={t('playView.tickBar.attemptLabel')}>
                 <IconButton
                   onClick={(e) => quickTickBarRef.current?.saveAttempt(e.currentTarget)}
                   sx={{
@@ -385,8 +383,7 @@ export const PlayViewTickBar = React.memo<PlayViewTickBarProps>(function PlayVie
                     color: themeTokens.colors.error,
                     '&:hover': { backgroundColor: themeTokens.colors.errorMutedHover },
                   }}
-                  // i18n-ignore-next-line
-                  aria-label="Log attempt"
+                  aria-label={t('playView.tickBar.logAttemptAria')}
                 >
                   <PersonFallingIcon />
                 </IconButton>
@@ -403,8 +400,7 @@ export const PlayViewTickBar = React.memo<PlayViewTickBarProps>(function PlayVie
                       backgroundColor: isFlash ? themeTokens.colors.amber : themeTokens.colors.successHover,
                     },
                   }}
-                  // i18n-ignore-next-line
-                  aria-label="Save tick"
+                  aria-label={t('playView.tickBar.saveTickAria')}
                 >
                   <TickIcon isFlash={!!isFlash} />
                 </IconButton>
@@ -426,6 +422,7 @@ type PlayViewDrawerProps = {
 };
 
 const PlayViewDrawer: React.FC<PlayViewDrawerProps> = ({ activeDrawer, setActiveDrawer, boardDetails, angle }) => {
+  const { t } = useTranslation('session');
   const isOpen = activeDrawer === 'play';
   const [isActionsOpen, setIsActionsOpen] = useState(false);
   const [isQueueOpen, setIsQueueOpen] = useState(false);
@@ -562,9 +559,8 @@ const PlayViewDrawer: React.FC<PlayViewDrawerProps> = ({ activeDrawer, setActive
   }, [currentClimb?.uuid]);
 
   const handleTickBarError = useCallback(() => {
-    // i18n-ignore-next-line
-    showMessage("Couldn't save your tick — it's saved as a draft", 'error');
-  }, [showMessage]);
+    showMessage(t('playView.tickError'), 'error');
+  }, [showMessage, t]);
 
   const handlePrevNavClick = useCallback(() => {
     const prev = getPreviousClimbQueueItem();
@@ -792,8 +788,7 @@ const PlayViewDrawer: React.FC<PlayViewDrawerProps> = ({ activeDrawer, setActive
               <button
                 className={`${styles.tickFab} ${hasSuccessfulAscent ? styles.tickFabSuccess : ''} ${isTickBarActive ? styles.tickFabHiding : ''}`}
                 onClick={handleTickFabClick}
-                // i18n-ignore-next-line
-                aria-label="Log ascent"
+                aria-label={t('playView.tickFab.logAscentAria')}
                 disabled={isTickBarActive}
               >
                 <CheckOutlined className={styles.tickFabIcon} />
@@ -906,8 +901,7 @@ const PlayViewDrawer: React.FC<PlayViewDrawerProps> = ({ activeDrawer, setActive
           <IconButton
             size="small"
             onClick={handleClose}
-            // i18n-ignore-next-line
-            aria-label="Close"
+            aria-label={t('playView.closeAria')}
             sx={{
               position: 'absolute',
               top: 8,

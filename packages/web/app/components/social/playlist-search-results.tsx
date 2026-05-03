@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
@@ -33,6 +34,7 @@ type PlaylistPage = {
 };
 
 export default function PlaylistSearchResults({ query, authToken }: PlaylistSearchResultsProps) {
+  const { t } = useTranslation('feed');
   const router = useLocaleRouter();
   const pathname = usePathname();
   const debouncedQuery = useDebouncedValue(query, 300);
@@ -70,8 +72,7 @@ export default function PlaylistSearchResults({ query, authToken }: PlaylistSear
     return (
       <Box sx={{ py: 4, textAlign: 'center' }}>
         <Typography variant="body2" color="text.secondary">
-          {/* i18n-ignore-next-line */}
-          Type at least 2 characters to search
+          {t('search.minCharsHint')}
         </Typography>
       </Box>
     );
@@ -89,8 +90,7 @@ export default function PlaylistSearchResults({ query, authToken }: PlaylistSear
     return (
       <Box sx={{ py: 4, textAlign: 'center' }}>
         <Typography variant="body2" color="text.secondary">
-          {/* i18n-ignore-next-line */}
-          No playlists found for &quot;{debouncedQuery}&quot;
+          {t('search.noPlaylists', { query: debouncedQuery })}
         </Typography>
       </Box>
     );
@@ -133,9 +133,10 @@ export default function PlaylistSearchResults({ query, authToken }: PlaylistSear
                 {playlist.name}
               </Typography>
               <Typography variant="body2" color="text.secondary" noWrap>
-                {/* i18n-ignore-next-line */}
-                {playlist.creatorName} · {playlist.climbCount} climb
-                {playlist.climbCount !== 1 ? 's' : ''}
+                {playlist.creatorName} ·{' '}
+                {playlist.climbCount === 1
+                  ? t('search.climbCountOne', { count: playlist.climbCount })
+                  : t('search.climbCountMany', { count: playlist.climbCount })}
               </Typography>
             </Box>
             <Chip label={playlist.boardType} size="small" variant="outlined" sx={{ flexShrink: 0 }} />

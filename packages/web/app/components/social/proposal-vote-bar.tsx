@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import Box from '@mui/material/Box';
 import LinearProgress from '@mui/material/LinearProgress';
 import Typography from '@mui/material/Typography';
@@ -21,6 +22,7 @@ export default function ProposalVoteBar({
   requiredUpvotes,
   status,
 }: ProposalVoteBarProps) {
+  const { t } = useTranslation('feed');
   const progress = requiredUpvotes > 0 ? Math.min((weightedUpvotes / requiredUpvotes) * 100, 100) : 0;
   const isApproved = status === 'approved';
   const isRejected = status === 'rejected';
@@ -30,8 +32,7 @@ export default function ProposalVoteBar({
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
         <Chip
           icon={<CheckCircleIcon />}
-          // i18n-ignore-next-line
-          label="Approved"
+          label={t('proposalVoteBar.approved')}
           size="small"
           sx={{
             bgcolor: themeTokens.colors.successBg,
@@ -48,8 +49,7 @@ export default function ProposalVoteBar({
     return (
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
         <Chip
-          // i18n-ignore-next-line
-          label="Rejected"
+          label={t('proposalVoteBar.rejected')}
           size="small"
           sx={{
             bgcolor: themeTokens.colors.errorBg,
@@ -65,13 +65,11 @@ export default function ProposalVoteBar({
     <Box sx={{ width: '100%' }}>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 0.5 }}>
         <Typography variant="caption" sx={{ color: themeTokens.neutral[500] }}>
-          {/* i18n-ignore-next-line */}
-          {weightedUpvotes} / {requiredUpvotes} votes needed
+          {t('proposalVoteBar.votesNeeded', { current: weightedUpvotes, required: requiredUpvotes })}
         </Typography>
         {weightedDownvotes > 0 && (
           <Typography variant="caption" sx={{ color: themeTokens.colors.error }}>
-            {/* i18n-ignore-next-line */}
-            {weightedDownvotes} opposed
+            {t('proposalVoteBar.opposed', { count: weightedDownvotes })}
           </Typography>
         )}
       </Box>

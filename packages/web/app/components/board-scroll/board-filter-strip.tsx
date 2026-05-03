@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { UserBoard } from '@boardsesh/shared-schema';
 import BoardScrollSection from './board-scroll-section';
 import BoardScrollCard from './board-scroll-card';
@@ -33,6 +34,7 @@ type BoardFilterStripMultiProps = {
 type BoardFilterStripProps = BoardFilterStripSingleProps | BoardFilterStripMultiProps;
 
 export default function BoardFilterStrip(props: BoardFilterStripProps) {
+  const { t } = useTranslation('boards');
   const { boards, loading, boardTypes, disabledText } = props;
 
   // Extract the appropriate handler based on mode to avoid depending on the whole props object
@@ -82,10 +84,11 @@ export default function BoardFilterStrip(props: BoardFilterStripProps) {
         <div
           className={`${styles.cardSquare} ${styles.filterSquare} ${isAllSelected ? styles.cardSquareSelected : ''}`}
         >
-          <span className={styles.filterLabel}>All</span>
+          <span className={styles.filterLabel}>{t('boardFilterStrip.all')}</span>
         </div>
-        {/* i18n-ignore-next-line */}
-        <div className={`${styles.cardName} ${isAllSelected ? styles.cardNameSelected : ''}`}>All Boards</div>
+        <div className={`${styles.cardName} ${isAllSelected ? styles.cardNameSelected : ''}`}>
+          {t('boardFilterStrip.allBoards')}
+        </div>
       </div>
       {boards.map((board) => (
         <BoardScrollCard

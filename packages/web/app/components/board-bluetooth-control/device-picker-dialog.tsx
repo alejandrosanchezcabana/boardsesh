@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import BluetoothSearching from '@mui/icons-material/BluetoothSearching';
 import HelpOutline from '@mui/icons-material/HelpOutline';
 import SignalCellularAlt from '@mui/icons-material/SignalCellularAlt';
@@ -105,6 +106,7 @@ function SignalBadge({ rssi }: { rssi: number }) {
 }
 
 export function DevicePickerDialog({ devices, onSelect, onCancel, resolvedBoards }: DevicePickerDialogProps) {
+  const { t } = useTranslation('settings');
   const sorted = [...devices].sort((a, b) => b.rssi - a.rssi);
 
   return (
@@ -112,8 +114,7 @@ export function DevicePickerDialog({ devices, onSelect, onCancel, resolvedBoards
       <DialogTitle>
         <Stack direction="row" alignItems="center" spacing={1}>
           <BluetoothSearching />
-          {/* i18n-ignore-next-line */}
-          <span>Select your board</span>
+          <span>{t('devicePicker.title')}</span>
         </Stack>
       </DialogTitle>
       <DialogContent sx={{ minHeight: 160, px: 1 }}>
@@ -121,8 +122,7 @@ export function DevicePickerDialog({ devices, onSelect, onCancel, resolvedBoards
           <Stack direction="row" alignItems="center" spacing={2} sx={{ py: 4, justifyContent: 'center' }}>
             <CircularProgress size={20} />
             <Typography variant="body2" color="text.secondary">
-              {/* i18n-ignore-next-line */}
-              Scanning for boards nearby&hellip;
+              {t('devicePicker.scanning')}
             </Typography>
           </Stack>
         ) : (
@@ -139,10 +139,10 @@ export function DevicePickerDialog({ devices, onSelect, onCancel, resolvedBoards
                 label = entry.board.name;
               } else if (entry?.kind === 'recorded') {
                 preview = <RecordedBoardPreview config={configFromResolvedEntry(entry)} />;
-                label = device.name || 'Last connected board';
+                label = device.name || t('devicePicker.lastConnected');
               } else {
                 preview = <UnknownBoardPreview boardType={inferredType} />;
-                label = device.name || 'Unknown device';
+                label = device.name || t('devicePicker.unknownDevice');
               }
 
               return (
@@ -169,8 +169,7 @@ export function DevicePickerDialog({ devices, onSelect, onCancel, resolvedBoards
                   )}
                   {entry?.kind === 'recorded' && (
                     <div className={styles.deviceCardMeta}>
-                      {/* i18n-ignore-next-line */}
-                      Last connected {formatRelativeTime(entry.config.updatedAt)}
+                      {t('devicePicker.lastConnectedAt', { time: formatRelativeTime(entry.config.updatedAt) })}
                     </div>
                   )}
                 </div>
@@ -180,8 +179,7 @@ export function DevicePickerDialog({ devices, onSelect, onCancel, resolvedBoards
         )}
       </DialogContent>
       <DialogActions>
-        {/* i18n-ignore-next-line */}
-        <Button onClick={onCancel}>Cancel</Button>
+        <Button onClick={onCancel}>{t('devicePicker.cancel')}</Button>
       </DialogActions>
     </Dialog>
   );

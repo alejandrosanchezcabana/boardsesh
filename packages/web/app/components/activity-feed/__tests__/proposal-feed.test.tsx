@@ -6,6 +6,15 @@ import { createTestQueryClient } from '@/app/test-utils/test-providers';
 import type { Proposal } from '@boardsesh/shared-schema';
 import { useWsAuthToken } from '@/app/hooks/use-ws-auth-token';
 import ProposalFeed from '../proposal-feed';
+import { tFromCatalog } from '@/app/__test-helpers__/i18n-mock';
+
+vi.mock('react-i18next', () => ({
+  useTranslation: (ns?: string) => ({
+    t: (key: string, options?: Record<string, unknown>) => tFromCatalog(ns, key, options),
+    i18n: { language: 'en-US' },
+  }),
+  Trans: ({ children }: { children?: React.ReactNode }) => children ?? null,
+}));
 
 // --- Mocks ---
 
@@ -228,7 +237,7 @@ describe('ProposalFeed', () => {
         expect(screen.getByText(/Failed to load proposals/)).toBeTruthy();
       });
 
-      expect(screen.getByText('Retry')).toBeTruthy();
+      expect(screen.getByText('Try again')).toBeTruthy();
     });
 
     it('calls refetch when retry button is clicked', async () => {
@@ -245,7 +254,7 @@ describe('ProposalFeed', () => {
       render(<ProposalFeed isAuthenticated={false} />, { wrapper: createWrapper() });
 
       await waitFor(() => {
-        expect(screen.getByText('Retry')).toBeTruthy();
+        expect(screen.getByText('Try again')).toBeTruthy();
       });
 
       // Set up success response for retry
@@ -253,7 +262,7 @@ describe('ProposalFeed', () => {
         browseProposals: { proposals: [makeProposal('p1')], totalCount: 1, hasMore: false },
       });
 
-      fireEvent.click(screen.getByText('Retry'));
+      fireEvent.click(screen.getByText('Try again'));
 
       await waitFor(() => {
         expect(mockRequest).toHaveBeenCalledTimes(2);

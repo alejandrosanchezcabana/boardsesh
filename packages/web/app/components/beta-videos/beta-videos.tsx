@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import Dialog from '@mui/material/Dialog';
 import DialogTitle from '@mui/material/DialogTitle';
 import DialogContent from '@mui/material/DialogContent';
@@ -23,6 +24,7 @@ type BetaVideosProps = {
 };
 
 const BetaVideos: React.FC<BetaVideosProps> = ({ betaLinks }) => {
+  const { t } = useTranslation('feed');
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedVideo, setSelectedVideo] = useState<BetaLink | null>(null);
   const [iframeKey, setIframeKey] = useState(0);
@@ -68,7 +70,9 @@ const BetaVideos: React.FC<BetaVideosProps> = ({ betaLinks }) => {
                     pointerEvents: 'none',
                   }}
                   scrolling="no"
-                  title={`Beta video by ${betaLink.foreign_username || 'unknown'}`}
+                  title={t('betaVideos.videoTitleByUser', {
+                    name: betaLink.foreign_username || t('betaVideos.unknownUser'),
+                  })}
                 />
               </Box>
             ) : (
@@ -81,8 +85,7 @@ const BetaVideos: React.FC<BetaVideosProps> = ({ betaLinks }) => {
               >
                 <Instagram sx={{ fontSize: 32, color: 'var(--neutral-400)' }} />
                 <Box component="p" sx={{ margin: `${themeTokens.spacing[2]}px 0 0`, color: 'var(--neutral-500)' }}>
-                  {/* i18n-ignore-next-line */}
-                  Unable to load video
+                  {t('betaVideos.unableToLoad')}
                 </Box>
               </Box>
             )}
@@ -106,8 +109,7 @@ const BetaVideos: React.FC<BetaVideosProps> = ({ betaLinks }) => {
                   {betaLink.foreign_username}
                   {betaLink.angle && (
                     <Box component="span" sx={{ marginLeft: 8 }}>
-                      {/* i18n-ignore-next-line */}
-                      {betaLink.angle}&deg;
+                      {t('betaVideos.angleSuffix', { angle: betaLink.angle })}
                     </Box>
                   )}
                 </Typography>
@@ -126,8 +128,7 @@ const BetaVideos: React.FC<BetaVideosProps> = ({ betaLinks }) => {
                   gap: 4,
                 }}
               >
-                {/* i18n-ignore-next-line */}
-                <Instagram sx={{ fontSize: 'inherit' }} /> View
+                <Instagram sx={{ fontSize: 'inherit' }} /> {t('betaVideos.viewLink')}
               </Box>
             </Box>
           </CardContent>
@@ -137,8 +138,7 @@ const BetaVideos: React.FC<BetaVideosProps> = ({ betaLinks }) => {
   };
 
   if (uniqueBetaLinks.length === 0) {
-    // i18n-ignore-next-line
-    return <EmptyState description="No beta videos available" />;
+    return <EmptyState description={t('betaVideos.noVideosAvailable')} />;
   }
 
   const visibleVideos = showAllVideos ? uniqueBetaLinks : uniqueBetaLinks.slice(0, 1);
@@ -160,9 +160,7 @@ const BetaVideos: React.FC<BetaVideosProps> = ({ betaLinks }) => {
           }}
           startIcon={showAllVideos ? <ExpandLessOutlined /> : <ExpandMoreOutlined />}
         >
-          {showAllVideos
-            ? 'Show less'
-            : `Show ${uniqueBetaLinks.length - 1} more video${uniqueBetaLinks.length - 1 !== 1 ? 's' : ''}`}
+          {showAllVideos ? t('betaVideos.showLess') : t('betaVideos.showMore', { count: uniqueBetaLinks.length - 1 })}
         </Button>
       )}
 
@@ -175,7 +173,9 @@ const BetaVideos: React.FC<BetaVideosProps> = ({ betaLinks }) => {
           sx={{ '& .MuiDialog-paper': { maxWidth: '500px', width: '90%' } }}
         >
           <DialogTitle>
-            {selectedVideo?.foreign_username ? `Beta by @${selectedVideo.foreign_username}` : 'Beta Video'}
+            {selectedVideo?.foreign_username
+              ? t('betaVideos.modalTitleByUser', { name: selectedVideo.foreign_username })
+              : t('betaVideos.modalTitle')}
           </DialogTitle>
           <DialogContent>
             {selectedVideo && (
@@ -199,8 +199,7 @@ const BetaVideos: React.FC<BetaVideosProps> = ({ betaLinks }) => {
                     border: 'none',
                   }}
                   scrolling="no"
-                  // i18n-ignore-next-line
-                  title="Beta video"
+                  title={t('betaVideos.videoTitle')}
                 />
               </Box>
             )}
@@ -218,8 +217,7 @@ const BetaVideos: React.FC<BetaVideosProps> = ({ betaLinks }) => {
                 gap: 6,
               }}
             >
-              {/* i18n-ignore-next-line */}
-              <Instagram sx={{ fontSize: 'inherit' }} /> View on Instagram
+              <Instagram sx={{ fontSize: 'inherit' }} /> {t('betaVideos.viewOnInstagram')}
             </Box>
           </DialogActions>
         </Dialog>

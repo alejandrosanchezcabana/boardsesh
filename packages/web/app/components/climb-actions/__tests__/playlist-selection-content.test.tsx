@@ -2,6 +2,16 @@ import { describe, it, expect, vi, beforeEach } from 'vite-plus/test';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import type { BoardDetails } from '@/app/lib/types';
 import PlaylistSelectionContent from '../playlist-selection-content';
+import React from 'react';
+import { tFromCatalog } from '@/app/__test-helpers__/i18n-mock';
+
+vi.mock('react-i18next', () => ({
+  useTranslation: (ns?: string) => ({
+    t: (key: string, options?: Record<string, unknown>) => tFromCatalog(ns, key, options),
+    i18n: { language: 'en-US' },
+  }),
+  Trans: ({ children }: { children?: React.ReactNode }) => children ?? null,
+}));
 
 const mockUsePlaylists = vi.fn();
 const mockShowMessage = vi.fn();
@@ -63,7 +73,7 @@ describe('PlaylistSelectionContent failures', () => {
     fireEvent.click(screen.getByText('Test Playlist'));
 
     await waitFor(() => {
-      expect(mockShowMessage).toHaveBeenCalledWith('actions.playlist.toast.addFailed', 'error');
+      expect(mockShowMessage).toHaveBeenCalledWith('Failed to add to playlist', 'error');
     });
   });
 
@@ -83,7 +93,7 @@ describe('PlaylistSelectionContent failures', () => {
     fireEvent.click(screen.getByText('Test Playlist'));
 
     await waitFor(() => {
-      expect(mockShowMessage).toHaveBeenCalledWith('actions.playlist.toast.removeFailed', 'error');
+      expect(mockShowMessage).toHaveBeenCalledWith('Failed to remove from playlist', 'error');
     });
   });
 
@@ -110,7 +120,7 @@ describe('PlaylistSelectionContent failures', () => {
     fireEvent.click(screen.getByRole('button', { name: /^create$/i }));
 
     await waitFor(() => {
-      expect(mockShowMessage).toHaveBeenCalledWith('actions.playlist.toast.createFailed', 'error');
+      expect(mockShowMessage).toHaveBeenCalledWith('Failed to create playlist', 'error');
     });
     expect(onDone).not.toHaveBeenCalled();
   });

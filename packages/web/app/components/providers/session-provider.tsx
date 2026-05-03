@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useState, type ReactNode } from 'react';
+import { useTranslation } from 'react-i18next';
 import { SessionProvider, signIn } from 'next-auth/react';
 import Snackbar from '@mui/material/Snackbar';
 import Alert from '@mui/material/Alert';
@@ -12,6 +13,7 @@ type SessionProviderWrapperProps = {
 };
 
 export default function SessionProviderWrapper({ children }: SessionProviderWrapperProps) {
+  const { t } = useTranslation('settings');
   const [deepLinkError, setDeepLinkError] = useState(false);
 
   useEffect(() => {
@@ -98,8 +100,7 @@ export default function SessionProviderWrapper({ children }: SessionProviderWrap
       {children}
       <Snackbar open={deepLinkError} autoHideDuration={8000} onClose={() => setDeepLinkError(false)}>
         <Alert severity="warning" onClose={() => setDeepLinkError(false)}>
-          {/* i18n-ignore-next-line */}
-          Sign-in with Google, Apple, or Facebook may not work. Try restarting the app.
+          {t('sessionProvider.deepLinkError')}
         </Alert>
       </Snackbar>
     </SessionProvider>

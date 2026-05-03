@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import Box from '@mui/material/Box';
 import MuiCard from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
@@ -30,6 +31,7 @@ type FeedItemNewClimbProps = {
 };
 
 export default function FeedItemNewClimb({ item }: FeedItemNewClimbProps) {
+  const { t } = useTranslation('feed');
   const [commentsOpen, setCommentsOpen] = useState(false);
   const timeAgo = dayjs(item.createdAt).fromNow();
   const actorProfileHref = item.actorId ? `/profile/${item.actorId}` : null;
@@ -57,8 +59,7 @@ export default function FeedItemNewClimb({ item }: FeedItemNewClimbProps) {
             </MuiTypography>
             <MuiTypography variant="body2" component="span" color="text.secondary">
               {' '}
-              {/* i18n-ignore-next-line */}
-              created a new climb{' '}
+              {t('feedItemNewClimb.createdClimb')}{' '}
             </MuiTypography>
             <MuiTypography variant="body2" component="span" fontWeight={600}>
               {item.climbName}
@@ -111,8 +112,11 @@ export default function FeedItemNewClimb({ item }: FeedItemNewClimbProps) {
         {/* Comments */}
         <Collapse in={commentsOpen} unmountOnExit>
           <Box sx={{ mt: 1 }}>
-            {/* i18n-ignore-next-line */}
-            <CommentSection entityType="climb" entityId={item.climbUuid || item.entityId} title="Comments" />
+            <CommentSection
+              entityType="climb"
+              entityId={item.climbUuid || item.entityId}
+              title={t('feedCommentButton.commentsTitle')}
+            />
           </Box>
         </Collapse>
       </CardContent>

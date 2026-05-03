@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useCallback, useEffect, useMemo, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import IconButton from '@mui/material/IconButton';
 import Stack from '@mui/material/Stack';
 import CheckOutlined from '@mui/icons-material/CheckOutlined';
@@ -38,6 +39,7 @@ export const InlineListTickBar: React.FC<InlineListTickBarProps> = ({
   onClose,
   onError,
 }) => {
+  const { t } = useTranslation('climbs');
   const { logbook } = useBoardProvider();
 
   // Snapshot the tick target once on mount. climb is a required prop so the
@@ -183,8 +185,7 @@ export const InlineListTickBar: React.FC<InlineListTickBarProps> = ({
               ref={saveButtonRef}
               size="small"
               onClick={handleSaveClick}
-              // i18n-ignore-next-line
-              aria-label="Log ascent"
+              aria-label={t('tick.bar.logAscent')}
               sx={{
                 width: 36,
                 height: 36,
@@ -199,8 +200,7 @@ export const InlineListTickBar: React.FC<InlineListTickBarProps> = ({
               ref={attemptButtonRef}
               size="small"
               onClick={handleAttemptClick}
-              // i18n-ignore-next-line
-              aria-label="Log attempt"
+              aria-label={t('tick.bar.logAttempt')}
               sx={{
                 width: 36,
                 height: 36,
@@ -214,8 +214,7 @@ export const InlineListTickBar: React.FC<InlineListTickBarProps> = ({
             <IconButton
               size="small"
               onClick={onClose}
-              // i18n-ignore-next-line
-              aria-label="Cancel"
+              aria-label={t('tick.bar.cancel')}
               sx={{
                 width: 28,
                 height: 28,

@@ -186,5 +186,19 @@
       "addedPartial": "Se añadieron {{added}} bloques. No se pudieron rellenar {{failed}} huecos.",
       "failed": "No se pudo generar la playlist. No se encontraron bloques adecuados."
     }
+  },
+  "bottomTabBar": {
+    "home": "Inicio",
+    "climb": "Vías",
+    "discover": "Descubre",
+    "feed": "Actividad",
+    "create": "Crear",
+    "you": "Tú",
+    "youSignInTitle": "Inicia sesión para ver tu progreso",
+    "youSignInDescription": "Inicia sesión para registrar tus estadísticas, sesiones y logbook.",
+    "selectBoardForPlaylist": "Selecciona un tablero antes de crear una playlist",
+    "boardDetailsMissing": "No se pueden determinar los datos del tablero para crear la playlist",
+    "createdPlaylistToast": "Playlist «{{name}}» creada",
+    "createPlaylistFailed": "No se pudo crear la playlist"
   }
 }

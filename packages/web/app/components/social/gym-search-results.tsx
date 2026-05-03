@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
@@ -20,6 +21,7 @@ type GymSearchResultsProps = {
 };
 
 export default function GymSearchResults({ query, authToken }: GymSearchResultsProps) {
+  const { t } = useTranslation('feed');
   const [selectedGymUuid, setSelectedGymUuid] = useState<string | null>(null);
   const debouncedQuery = useDebouncedValue(query, 300);
 
@@ -53,8 +55,7 @@ export default function GymSearchResults({ query, authToken }: GymSearchResultsP
     return (
       <Box sx={{ py: 4, textAlign: 'center' }}>
         <Typography variant="body2" color="text.secondary">
-          {/* i18n-ignore-next-line */}
-          Type at least 2 characters to search
+          {t('search.minCharsHint')}
         </Typography>
       </Box>
     );
@@ -72,8 +73,7 @@ export default function GymSearchResults({ query, authToken }: GymSearchResultsP
     return (
       <Box sx={{ py: 4, textAlign: 'center' }}>
         <Typography variant="body2" color="text.secondary">
-          {/* i18n-ignore-next-line */}
-          No gyms found for &quot;{debouncedQuery}&quot;
+          {t('search.noGyms', { query: debouncedQuery })}
         </Typography>
       </Box>
     );

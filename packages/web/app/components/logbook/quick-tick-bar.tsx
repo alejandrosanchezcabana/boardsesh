@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useCallback, useEffect, useMemo, useImperativeHandle, useRef, forwardRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import Stack from '@mui/material/Stack';
 import KeyboardArrowUpOutlined from '@mui/icons-material/KeyboardArrowUpOutlined';
 import KeyboardArrowDownOutlined from '@mui/icons-material/KeyboardArrowDownOutlined';
@@ -82,6 +83,7 @@ export const QuickTickBar = forwardRef<QuickTickBarHandle, QuickTickBarProps>(
     },
     ref,
   ) => {
+    const { t } = useTranslation('profile');
     const { logbook } = useBoardProvider();
 
     // Snapshot the target climb the first time we get a non-null climb.
@@ -251,8 +253,7 @@ export const QuickTickBar = forwardRef<QuickTickBarHandle, QuickTickBarProps>(
             <div className={styles.expandedPanelContent}>
               {/* Grade row */}
               <div className={styles.labeledRow}>
-                {/* i18n-ignore-next-line */}
-                <span className={styles.labeledRowLabel}>grade</span>
+                <span className={styles.labeledRowLabel}>{t('logbook.feed.grade')}</span>
                 <div className={styles.labeledRowPicker}>
                   <InlineGradePicker
                     grades={grades}
@@ -266,8 +267,7 @@ export const QuickTickBar = forwardRef<QuickTickBarHandle, QuickTickBarProps>(
 
               {/* Tries row */}
               <div className={styles.labeledRow}>
-                {/* i18n-ignore-next-line */}
-                <span className={styles.labeledRowLabel}>tries</span>
+                <span className={styles.labeledRowLabel}>{t('logbook.feed.tries')}</span>
                 <div className={styles.labeledRowPicker}>
                   <InlineTriesPicker
                     attemptCount={attemptCount}
@@ -279,8 +279,7 @@ export const QuickTickBar = forwardRef<QuickTickBarHandle, QuickTickBarProps>(
 
               {/* Stars row — left-aligned since picker is shorter */}
               <div className={styles.labeledRow}>
-                {/* i18n-ignore-next-line */}
-                <span className={styles.labeledRowLabel}>stars</span>
+                <span className={styles.labeledRowLabel}>{t('logbook.feed.stars')}</span>
                 <div className={styles.labeledRowPickerStart}>
                   <InlineStarPicker quality={quality} onSelect={handleStarSelect} />
                 </div>

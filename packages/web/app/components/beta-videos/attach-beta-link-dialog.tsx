@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import Dialog from '@mui/material/Dialog';
 import DialogTitle from '@mui/material/DialogTitle';
 import DialogContent from '@mui/material/DialogContent';
@@ -23,9 +24,12 @@ const AttachBetaLinkDialog: React.FC<AttachBetaLinkDialogProps> = ({
   climbName,
   angle,
 }) => {
+  const { t } = useTranslation('feed');
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
-      <DialogTitle>{climbName ? `Share beta for ${climbName}` : 'Share beta video'}</DialogTitle>
+      <DialogTitle>
+        {climbName ? t('betaVideos.shareBetaFor', { name: climbName }) : t('betaVideos.shareBetaVideo')}
+      </DialogTitle>
       <DialogContent>
         <AttachBetaLinkForm
           boardType={boardType}
@@ -33,9 +37,8 @@ const AttachBetaLinkDialog: React.FC<AttachBetaLinkDialogProps> = ({
           climbName={climbName}
           angle={angle}
           resetTrigger={open}
-          submitLabel="Share beta"
-          // i18n-ignore-next-line
-          helperText="Paste a reel or post link so others can see your beta."
+          submitLabel={t('betaVideos.shareBeta')}
+          helperText={t('betaVideos.dialogHelper')}
           onSuccess={onClose}
           onCancel={onClose}
           showCancel

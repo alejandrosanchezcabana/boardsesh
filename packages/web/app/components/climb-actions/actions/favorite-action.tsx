@@ -4,6 +4,7 @@ import React, { useCallback } from 'react';
 import FavoriteBorderOutlined from '@mui/icons-material/FavoriteBorderOutlined';
 import Favorite from '@mui/icons-material/Favorite';
 import { track } from '@vercel/analytics';
+import { useTranslation } from 'react-i18next';
 import type { ClimbActionProps, ClimbActionResult } from '../types';
 import { useFavorite } from '../use-favorite';
 import { useAuthModal } from '@/app/components/providers/auth-modal-provider';
@@ -21,6 +22,7 @@ export function FavoriteAction({
   className,
   onComplete,
 }: ClimbActionProps): ClimbActionResult {
+  const { t } = useTranslation('climbs');
   const { openAuthModal } = useAuthModal();
   const { iconSize } = computeActionDisplay(viewMode, size, showLabel);
 
@@ -58,9 +60,8 @@ export function FavoriteAction({
 
       if (!isAuthenticated) {
         openAuthModal({
-          // i18n-ignore-next-line
-          title: 'Sign in to save favorites',
-          description: `Sign in to save "${climb.name}" to your favorites.`,
+          title: t('actions.favorite.auth.title'),
+          description: t('actions.favorite.auth.descriptionWithName', { climbName: climb.name }),
           onSuccess: handleAuthSuccess,
         });
         return;
@@ -87,10 +88,11 @@ export function FavoriteAction({
       onComplete,
       openAuthModal,
       handleAuthSuccess,
+      t,
     ],
   );
 
-  const label = isFavorited ? 'Favorited' : 'Favorite';
+  const label = isFavorited ? t('actions.favorite.label.favorited') : t('actions.favorite.label.favorite');
   const HeartIcon = isFavorited ? Favorite : FavoriteBorderOutlined;
   const iconStyle = isFavorited ? { color: themeTokens.colors.error, fontSize: iconSize } : { fontSize: iconSize };
   const listIcon = <HeartIcon sx={{ fontSize: iconSize }} />;

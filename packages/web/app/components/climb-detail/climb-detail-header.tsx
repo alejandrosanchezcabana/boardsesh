@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import Skeleton from '@mui/material/Skeleton';
@@ -22,6 +23,7 @@ type ClimbDetailHeaderProps = {
  * Layout: Grade (left) | Name + details (center) | Spacer (right, balances grade)
  */
 export default function ClimbDetailHeader({ climb, communityGrade }: ClimbDetailHeaderProps) {
+  const { t } = useTranslation('climbs');
   const isDark = useIsDarkMode();
   const { formatGrade, getGradeColor, loaded: gradeFormatLoaded } = useGradeFormat();
 
@@ -70,8 +72,7 @@ export default function ClimbDetailHeader({ climb, communityGrade }: ClimbDetail
     }
     return (
       <Typography variant="body2" component="span" sx={{ fontStyle: 'italic', color: 'text.secondary' }}>
-        {/* i18n-ignore-next-line */}
-        project
+        {t('card.detailHeader.project')}
       </Typography>
     );
   };

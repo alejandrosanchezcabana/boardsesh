@@ -91,8 +91,7 @@ export default function FavoriteButton({
       }
     } catch (error) {
       console.error(`[FavoriteButton] Error after auth for ${climbUuid}:`, error);
-      // i18n-ignore-next-line
-      showMessage('Failed to save favorite. Please try again.', 'error');
+      showMessage(t('actions.favorite.toast.saveFailed'), 'error');
     }
   };
 

@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useCallback, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import MuiButton from '@mui/material/Button';
 import IconButton from '@mui/material/IconButton';
 import Stack from '@mui/material/Stack';
@@ -48,6 +49,7 @@ const QueueDrawer: React.FC<QueueDrawerProps> = ({
   boardDetails,
   initialShowHistory = false,
 }) => {
+  const { t } = useTranslation('session');
   // Internal state
   const [isEditMode, setIsEditMode] = useState(false);
   const [showHistory, setShowHistory] = useState(initialShowHistory);
@@ -185,8 +187,7 @@ const QueueDrawer: React.FC<QueueDrawerProps> = ({
               fontSize: themeTokens.typography.fontSize.base,
             }}
           >
-            {/* i18n-ignore-next-line */}
-            Queue
+            {t('queueDrawer.title')}
           </Typography>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             {queue.length > 0 &&
@@ -202,8 +203,7 @@ const QueueDrawer: React.FC<QueueDrawerProps> = ({
                       handleExitEditMode();
                     }}
                   >
-                    {/* i18n-ignore-next-line */}
-                    Clear
+                    {t('queueDrawer.clear')}
                   </MuiButton>
                   <IconButton onClick={handleExitEditMode}>
                     <CloseOutlined />
@@ -248,8 +248,7 @@ const QueueDrawer: React.FC<QueueDrawerProps> = ({
         {isEditMode && selectedItems.size > 0 && (
           <div className={styles.bulkRemoveBar}>
             <MuiButton variant="contained" color="error" fullWidth onClick={handleBulkRemove}>
-              {/* i18n-ignore-next-line */}
-              Remove {selectedItems.size} {selectedItems.size === 1 ? 'item' : 'items'}
+              {t('queueDrawer.removeItems', { count: selectedItems.size })}
             </MuiButton>
           </div>
         )}

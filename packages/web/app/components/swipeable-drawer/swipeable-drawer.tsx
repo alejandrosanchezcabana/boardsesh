@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useMemo, useCallback, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import MuiSwipeableDrawer from '@mui/material/SwipeableDrawer';
 import Box from '@mui/material/Box';
 import IconButton from '@mui/material/IconButton';
@@ -69,6 +70,7 @@ const SwipeableDrawer: React.FC<SwipeableDrawerProps> = ({
   open,
   children,
 }) => {
+  const { t } = useTranslation('common');
   // If swipeEnabled is explicitly passed, use it directly.
   // Otherwise, disable swipe when showCloseButton is explicitly false.
   const effectiveSwipeEnabled = swipeEnabled ?? showCloseButton !== false;
@@ -175,8 +177,7 @@ const SwipeableDrawer: React.FC<SwipeableDrawerProps> = ({
         className="drawer-close-btn"
         size="small"
         onClick={(e) => onClose?.(e)}
-        // i18n-ignore-next-line
-        aria-label="Close"
+        aria-label={t('ariaLabels.close')}
         sx={{
           position: 'absolute',
           zIndex: 2,
@@ -189,7 +190,7 @@ const SwipeableDrawer: React.FC<SwipeableDrawerProps> = ({
         <CloseOutlined />
       </IconButton>
     );
-  }, [showCloseButton, placement, onClose]);
+  }, [showCloseButton, placement, onClose, t]);
 
   // Drag handles for top/bottom placements are rendered OUTSIDE the scrollable
   // body Box so MUI's getDomTreeShapes doesn't find a scroll container between

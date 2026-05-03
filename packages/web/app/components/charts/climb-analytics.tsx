@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useState, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { LineChart } from '@mui/x-charts/LineChart';
 import Box from '@mui/material/Box';
 import Chip from '@mui/material/Chip';
@@ -137,6 +138,7 @@ type ClimbAnalyticsProps = {
 };
 
 export default function ClimbAnalytics({ climbUuid, boardType }: ClimbAnalyticsProps) {
+  const { t } = useTranslation('profile');
   const [rows, setRows] = useState<ClimbStatsHistoryEntry[] | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
@@ -214,8 +216,7 @@ export default function ClimbAnalytics({ climbUuid, boardType }: ClimbAnalyticsP
   if (error || !rows || rows.length === 0) {
     return (
       <Typography variant="body2" color="text.secondary" sx={{ py: 2, textAlign: 'center' }}>
-        {/* i18n-ignore-next-line */}
-        No analytics data available yet. Data is collected during sync.
+        {t('analytics.noData')}
       </Typography>
     );
   }
@@ -250,8 +251,7 @@ export default function ClimbAnalytics({ climbUuid, boardType }: ClimbAnalyticsP
       {ascentsData && ascentsData.labels.length > 0 && (
         <Box>
           <Typography variant="body2" fontWeight={600} sx={{ mb: 0.5 }}>
-            {/* i18n-ignore-next-line */}
-            Ascents Over Time
+            {t('analytics.ascentsOverTime')}
           </Typography>
           <LineChart
             series={buildLineSeries(ascentsData, {
@@ -288,8 +288,7 @@ export default function ClimbAnalytics({ climbUuid, boardType }: ClimbAnalyticsP
       {qualityData && qualityData.labels.length > 0 && (
         <Box>
           <Typography variant="body2" fontWeight={600} sx={{ mb: 0.5 }}>
-            {/* i18n-ignore-next-line */}
-            Quality Over Time
+            {t('analytics.qualityOverTime')}
           </Typography>
           <LineChart
             series={buildLineSeries(qualityData)}

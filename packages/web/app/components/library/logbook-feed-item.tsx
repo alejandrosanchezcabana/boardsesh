@@ -162,6 +162,7 @@ function LogbookGradeRow({
   gradeButtonRef?: React.RefObject<HTMLButtonElement | null>;
   triesButtonRef?: React.RefObject<HTMLButtonElement | null>;
 }) {
+  const { t } = useTranslation('profile');
   const isDark = useIsDarkMode();
   const { formatGrade, getGradeColor } = useGradeFormat();
 
@@ -202,8 +203,7 @@ function LogbookGradeRow({
           className={styles.statValue}
           style={{ color: themeTokens.colors.amber }}
         >{`\u2605${consensusStarsLabel}`}</span>
-        {/* i18n-ignore-next-line */}
-        <span className={styles.statLabel}>stars</span>
+        <span className={styles.statLabel}>{t('logbook.feed.stars')}</span>
       </div>
       {/* User stars */}
       {isEditing ? (
@@ -217,8 +217,7 @@ function LogbookGradeRow({
             className={styles.statValue}
             style={{ color: themeTokens.colors.amber }}
           >{`\u2605${editQuality ?? '\u2014'}`}</span>
-          {/* i18n-ignore-next-line */}
-          <span className={styles.statLabel}>user</span>
+          <span className={styles.statLabel}>{t('logbook.feed.user')}</span>
         </ButtonBase>
       ) : (
         <div className={styles.statCell}>
@@ -226,8 +225,7 @@ function LogbookGradeRow({
             className={styles.statValue}
             style={{ color: themeTokens.colors.amber }}
           >{`\u2605${quality ?? '\u2014'}`}</span>
-          {/* i18n-ignore-next-line */}
-          <span className={styles.statLabel}>user</span>
+          <span className={styles.statLabel}>{t('logbook.feed.user')}</span>
         </div>
       )}
       {/* Consensus grade */}
@@ -235,32 +233,28 @@ function LogbookGradeRow({
         <span className={styles.statValue} style={{ color: consensusColor }}>
           {consensusLabel}
         </span>
-        {/* i18n-ignore-next-line */}
-        <span className={styles.statLabel}>grade</span>
+        <span className={styles.statLabel}>{t('logbook.feed.grade')}</span>
       </div>
       {/* User grade */}
       {isEditing ? (
         <ButtonBase
           ref={gradeButtonRef}
           onClick={() => handleToggle('grade')}
-          // i18n-ignore-next-line
-          aria-label="Select logged grade"
+          aria-label={t('logbook.feed.selectGrade')}
           className={styles.gradeCell}
           disableRipple={false}
         >
           <span className={styles.statValue} style={{ color: editGradeColor }}>
             {editGradeLabel}
           </span>
-          {/* i18n-ignore-next-line */}
-          <span className={styles.statLabel}>user</span>
+          <span className={styles.statLabel}>{t('logbook.feed.user')}</span>
         </ButtonBase>
       ) : (
         <div className={styles.gradeCell}>
           <span className={styles.statValue} style={{ color: userColor }}>
             {userLabel}
           </span>
-          {/* i18n-ignore-next-line */}
-          <span className={styles.statLabel}>user</span>
+          <span className={styles.statLabel}>{t('logbook.feed.user')}</span>
         </div>
       )}
       {/* Tries */}
@@ -273,14 +267,12 @@ function LogbookGradeRow({
           disableRipple={false}
         >
           <span className={styles.statValue}>{editAttemptCount}</span>
-          {/* i18n-ignore-next-line */}
-          <span className={styles.statLabel}>tries</span>
+          <span className={styles.statLabel}>{t('logbook.feed.tries')}</span>
         </ButtonBase>
       ) : (
         <div className={styles.statCell}>
           <span className={styles.statValue}>{attemptCount}</span>
-          {/* i18n-ignore-next-line */}
-          <span className={styles.statLabel}>tries</span>
+          <span className={styles.statLabel}>{t('logbook.feed.tries')}</span>
         </div>
       )}
     </div>
@@ -317,6 +309,7 @@ const LogbookFeedItem: React.FC<LogbookFeedItemProps> = React.memo(
     isSwipeHintTarget,
   }) => {
     const { t } = useTranslation('common');
+    const { t: tProfile } = useTranslation('profile');
     const [isActionsOpen, setIsActionsOpen] = useState(false);
     const [instagramDialogOpen, setInstagramDialogOpen] = useState(false);
     const [betaLinkDialogOpen, setBetaLinkDialogOpen] = useState(false);
@@ -620,8 +613,7 @@ const LogbookFeedItem: React.FC<LogbookFeedItemProps> = React.memo(
           {/* aria-hidden: the 3-dot menu exposes Delete to assistive tech. */}
           <div ref={leftActionCombinedRef} className={styles.leftActionLayer} aria-hidden="true">
             <DeleteOutlined className={styles.swipeIcon} />
-            {/* i18n-ignore-next-line */}
-            <span className={styles.deleteLabel}>Delete</span>
+            <span className={styles.deleteLabel}>{tProfile('logbook.feed.deleteSwipeLabel')}</span>
           </div>
 
           {/* aria-hidden: the 3-dot menu exposes Edit to assistive tech. */}
@@ -732,8 +724,7 @@ const LogbookFeedItem: React.FC<LogbookFeedItemProps> = React.memo(
                   <IconButton
                     size="small"
                     onClick={onCancelEdit}
-                    // i18n-ignore-next-line
-                    aria-label="Cancel editing"
+                    aria-label={tProfile('logbook.feed.cancelEditing')}
                     sx={{
                       width: 44,
                       height: 44,
@@ -746,8 +737,7 @@ const LogbookFeedItem: React.FC<LogbookFeedItemProps> = React.memo(
                     size="small"
                     onClick={handleSave}
                     disabled={isSaving}
-                    // i18n-ignore-next-line
-                    aria-label="Save"
+                    aria-label={tProfile('logbook.feed.saveEdit')}
                     sx={{
                       width: 44,
                       height: 44,
@@ -762,8 +752,7 @@ const LogbookFeedItem: React.FC<LogbookFeedItemProps> = React.memo(
               ) : (
                 <IconButton
                   size="small"
-                  // i18n-ignore-next-line
-                  aria-label="More actions"
+                  aria-label={tProfile('logbook.feed.moreActions')}
                   onClick={handleOpenActions}
                   className={styles.menuButton}
                   disableRipple
@@ -834,22 +823,19 @@ const LogbookFeedItem: React.FC<LogbookFeedItemProps> = React.memo(
             <ListItemIcon>
               <ElectricBoltOutlined sx={{ color: themeTokens.colors.amber }} />
             </ListItemIcon>
-            {/* i18n-ignore-next-line */}
-            <ListItemText>Flash</ListItemText>
+            <ListItemText>{tProfile('logbook.feed.status.flash')}</ListItemText>
           </MenuItem>
           <MenuItem onClick={() => handleStatusSelect('send')}>
             <ListItemIcon>
               <CheckOutlined sx={{ color: themeTokens.colors.success }} />
             </ListItemIcon>
-            {/* i18n-ignore-next-line */}
-            <ListItemText>Send</ListItemText>
+            <ListItemText>{tProfile('logbook.feed.status.send')}</ListItemText>
           </MenuItem>
           <MenuItem onClick={() => handleStatusSelect('attempt')}>
             <ListItemIcon>
               <PersonFallingIcon sx={{ color: themeTokens.colors.error }} />
             </ListItemIcon>
-            {/* i18n-ignore-next-line */}
-            <ListItemText>Attempt</ListItemText>
+            <ListItemText>{tProfile('logbook.feed.status.attempt')}</ListItemText>
           </MenuItem>
         </Popover>
 
@@ -875,8 +861,7 @@ const LogbookFeedItem: React.FC<LogbookFeedItemProps> = React.memo(
                 <ListItemIcon>
                   <EditOutlined fontSize="small" />
                 </ListItemIcon>
-                {/* i18n-ignore-next-line */}
-                <ListItemText>Edit log</ListItemText>
+                <ListItemText>{tProfile('logbook.feed.editLog')}</ListItemText>
               </MenuItem>
             )}
             {onDelete && (
@@ -884,8 +869,7 @@ const LogbookFeedItem: React.FC<LogbookFeedItemProps> = React.memo(
                 <ListItemIcon>
                   <DeleteOutlined sx={{ color: 'error.main' }} fontSize="small" />
                 </ListItemIcon>
-                {/* i18n-ignore-next-line */}
-                <ListItemText>Delete log</ListItemText>
+                <ListItemText>{tProfile('logbook.feed.deleteLog')}</ListItemText>
               </MenuItem>
             )}
             {allowInstagramPosting && (
@@ -893,8 +877,7 @@ const LogbookFeedItem: React.FC<LogbookFeedItemProps> = React.memo(
                 <ListItemIcon>
                   <InstagramIcon fontSize="small" />
                 </ListItemIcon>
-                {/* i18n-ignore-next-line */}
-                <ListItemText>Post to Instagram</ListItemText>
+                <ListItemText>{tProfile('logbook.feed.postToInstagram')}</ListItemText>
               </MenuItem>
             )}
             {allowInstagramLinking && (
@@ -902,8 +885,7 @@ const LogbookFeedItem: React.FC<LogbookFeedItemProps> = React.memo(
                 <ListItemIcon>
                   <LinkOutlined fontSize="small" />
                 </ListItemIcon>
-                {/* i18n-ignore-next-line */}
-                <ListItemText>Link Instagram post</ListItemText>
+                <ListItemText>{tProfile('logbook.feed.linkInstagramPost')}</ListItemText>
               </MenuItem>
             )}
             {(onEdit || onDelete || allowInstagramPosting || allowInstagramLinking) && <Divider />}

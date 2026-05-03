@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useRef, useCallback, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import Box from '@mui/material/Box';
 import MuiButton from '@mui/material/Button';
 import MyLocationOutlined from '@mui/icons-material/MyLocationOutlined';
@@ -46,6 +47,7 @@ export default function BoardSearchMap({
   onBoardClick,
   onViewportChange,
 }: BoardSearchMapProps) {
+  const { t } = useTranslation('boards');
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<LeafletMap | null>(null);
   const leafletRef = useRef<typeof LeafletNamespace | null>(null);
@@ -351,8 +353,7 @@ export default function BoardSearchMap({
             textTransform: 'none',
           }}
         >
-          {/* i18n-ignore-next-line */}
-          My location
+          {t('boardSearchMap.myLocation')}
         </MuiButton>
       )}
     </Box>

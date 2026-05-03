@@ -5,6 +5,15 @@ import { QueryClientProvider } from '@tanstack/react-query';
 import { createTestQueryClient } from '@/app/test-utils/test-providers';
 import type { LayoutStats } from '@/app/lib/graphql/operations/ticks';
 import LogbookFeed from '../logbook-feed';
+import { tFromCatalog } from '@/app/__test-helpers__/i18n-mock';
+
+vi.mock('react-i18next', () => ({
+  useTranslation: (ns?: string) => ({
+    t: (key: string, options?: Record<string, unknown>) => tFromCatalog(ns, key, options),
+    i18n: { language: 'en-US' },
+  }),
+  Trans: ({ children }: { children?: React.ReactNode }) => children ?? null,
+}));
 
 // --- Capture hook arguments ---
 // vi.fn() holds its own call history and is reset in beforeEach, so tests stay

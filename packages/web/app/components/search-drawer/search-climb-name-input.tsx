@@ -4,15 +4,16 @@ import React from 'react';
 import TextField from '@mui/material/TextField';
 import InputAdornment from '@mui/material/InputAdornment';
 import SearchOutlined from '@mui/icons-material/SearchOutlined';
+import { useTranslation } from 'react-i18next';
 import { useUISearchParams } from '../queue-control/ui-searchparams-provider';
 
 const SearchClimbNameInput = () => {
+  const { t } = useTranslation('climbs');
   const { uiSearchParams, updateFilters } = useUISearchParams();
 
   return (
     <TextField
-      // i18n-ignore-next-line
-      placeholder="Search climbs..."
+      placeholder={t('search.placeholders.climbs')}
       variant="outlined"
       size="small"
       fullWidth

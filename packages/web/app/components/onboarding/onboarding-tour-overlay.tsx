@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { usePathname } from 'next/navigation';
 import Popper from '@mui/material/Popper';
 import Paper from '@mui/material/Paper';
@@ -159,8 +160,9 @@ function OverlayContent({
   onNext,
   onSkip,
 }: OverlayContentProps) {
+  const { t } = useTranslation('settings');
   const isLast = stepIndex === totalSteps - 1;
-  const buttonLabel = step.primaryLabel ?? (isLast ? 'Finish' : 'Next');
+  const buttonLabel = step.primaryLabel ?? (isLast ? t('onboarding.finish') : t('onboarding.next'));
   const showPrimary = step.primaryLabel !== null;
 
   return (
@@ -177,8 +179,7 @@ function OverlayContent({
         </span>
         <div className={styles.buttonRow}>
           <button type="button" className={styles.skipLink} onClick={onSkip}>
-            {/* i18n-ignore-next-line */}
-            Skip tour
+            {t('onboarding.skipTour')}
           </button>
           {showPrimary && (
             <Button ref={primaryButtonRef} variant="contained" size="small" onClick={onNext}>

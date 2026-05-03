@@ -1,5 +1,6 @@
 'use client';
 
+import { Trans, useTranslation } from 'react-i18next';
 import Button from '@mui/material/Button';
 import Dialog from '@mui/material/Dialog';
 import DialogActions from '@mui/material/DialogActions';
@@ -45,6 +46,7 @@ export function BoardConfigMismatchDialog({
   onConnectAnyway,
   onCancel,
 }: BoardConfigMismatchDialogProps) {
+  const { t } = useTranslation('settings');
   const currentLabel = describeBoardConfig(
     currentBoardDetails.board_name,
     currentBoardDetails.layout_id,
@@ -60,21 +62,17 @@ export function BoardConfigMismatchDialog({
 
   return (
     <Dialog open={open} onClose={onCancel} maxWidth="xs" fullWidth>
-      {/* i18n-ignore-next-line */}
-      <DialogTitle>Board configuration doesn&apos;t match</DialogTitle>
+      <DialogTitle>{t('boardConfigMismatch.title')}</DialogTitle>
       <DialogContent>
-        <DialogContentText component="div">
-          {/* i18n-ignore-next-line */}
-          Our records show this board has a different config than you have configured.
-        </DialogContentText>
+        <DialogContentText component="div">{t('boardConfigMismatch.intro')}</DialogContentText>
         <Stack spacing={`${themeTokens.spacing[1]}px`} sx={{ mt: `${themeTokens.spacing[2]}px` }}>
           <Typography variant="body2">
-            {/* i18n-ignore-next-line */}
-            <strong>You&apos;re configured for:</strong> {currentLabel}
+            <Trans i18nKey="boardConfigMismatch.currentLabel" t={t} components={{ strong: <strong /> }} />{' '}
+            {currentLabel}
           </Typography>
           <Typography variant="body2">
-            {/* i18n-ignore-next-line */}
-            <strong>Recorded for this controller:</strong> {recordedLabel}
+            <Trans i18nKey="boardConfigMismatch.recordedLabel" t={t} components={{ strong: <strong /> }} />{' '}
+            {recordedLabel}
           </Typography>
         </Stack>
       </DialogContent>
@@ -86,15 +84,12 @@ export function BoardConfigMismatchDialog({
           pb: `${themeTokens.spacing[2]}px`,
         }}
       >
-        {/* i18n-ignore-next-line */}
-        <Button onClick={onCancel}>Cancel</Button>
+        <Button onClick={onCancel}>{t('boardConfigMismatch.cancel')}</Button>
         <Button onClick={onConnectAnyway} color="warning">
-          {/* i18n-ignore-next-line */}
-          Connect anyway
+          {t('boardConfigMismatch.connectAnyway')}
         </Button>
         <Button onClick={onSwitch} variant="contained" autoFocus>
-          {/* i18n-ignore-next-line */}
-          Switch to correct config
+          {t('boardConfigMismatch.switchToCorrect')}
         </Button>
       </DialogActions>
     </Dialog>

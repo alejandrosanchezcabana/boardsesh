@@ -56,10 +56,8 @@ export default async function BoardSlugCreatePage(props: CreatePageProps) {
   if (parsedParams.board_name === 'moonboard') {
     const layoutInfo = getMoonBoardLayoutInfo(parsedParams.layout_id);
     if (!layoutInfo) {
-      {
-        /* i18n-ignore-next-line */
-      }
-      return <div>Invalid MoonBoard layout</div>;
+      const { t } = await getServerTranslation('climbs');
+      return <div>{t('moonboard.invalidLayout')}</div>;
     }
 
     const holdSetImages = getMoonBoardHoldSetImages(layoutInfo.layoutKey, parsedParams.set_ids);

@@ -4,6 +4,23 @@ import React from 'react';
 import { BoardConfigMismatchDialog } from '../board-config-mismatch-dialog';
 import type { BoardDetails } from '@/app/lib/types';
 import type { ResolvedBoardConfig } from '@/app/lib/ble/board-config-match';
+import { tFromCatalog } from '@/app/__test-helpers__/i18n-mock';
+
+vi.mock('react-i18next', () => ({
+  useTranslation: (ns?: string) => ({
+    t: (key: string, options?: Record<string, unknown>) => tFromCatalog(ns, key, options),
+    i18n: { language: 'en-US' },
+  }),
+  // Render the resolved translation for Trans with `i18nKey`. Strip `<strong>` etc.
+  // tags so plain-text matchers in tests still find the copy.
+  Trans: ({ i18nKey, children }: { i18nKey?: string; children?: React.ReactNode }) => {
+    if (i18nKey) {
+      const value = tFromCatalog('settings', i18nKey);
+      return value.replace(/<\/?[a-zA-Z][^>]*>/g, '');
+    }
+    return children ?? null;
+  },
+}));
 
 function makeBoardDetails(overrides: Partial<BoardDetails> = {}): BoardDetails {
   return {

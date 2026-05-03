@@ -1,5 +1,6 @@
 'use client';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { getImageUrl } from './util';
 import type { BoardDetails } from '@/app/lib/types';
 import type { HeatmapData, LitUpHoldsMap } from './types';
@@ -59,6 +60,7 @@ type ColorMode =
   | 'userAttempts';
 
 const BoardHeatmap: React.FC<BoardHeatmapProps> = ({ boardDetails, litUpHoldsMap, onHoldClick }) => {
+  const { t } = useTranslation('boards');
   const pathname = usePathname();
   const { uiSearchParams } = useUISearchParams();
 
@@ -259,16 +261,13 @@ const BoardHeatmap: React.FC<BoardHeatmapProps> = ({ boardDetails, litUpHoldsMap
         </defs>
         <rect width={legendWidth} height={legendHeight} fill={`url(#${gradientId})`} rx={8} />
         <text x="0" y="-10" fontSize="28" textAnchor="start" fontWeight="500">
-          {/* i18n-ignore-next-line */}
-          Low ({minValue})
+          {t('boardHeatmap.legend.low', { value: minValue })}
         </text>
         <text x={legendWidth / 2} y="-10" fontSize="28" textAnchor="middle" fontWeight="500">
-          {/* i18n-ignore-next-line */}
-          Mid ({midValue})
+          {t('boardHeatmap.legend.mid', { value: midValue })}
         </text>
         <text x={legendWidth} y="-10" fontSize="28" textAnchor="end" fontWeight="500">
-          {/* i18n-ignore-next-line */}
-          High ({maxValue})
+          {t('boardHeatmap.legend.high', { value: maxValue })}
         </text>
       </g>
     );
@@ -320,8 +319,7 @@ const BoardHeatmap: React.FC<BoardHeatmapProps> = ({ boardDetails, litUpHoldsMap
               <BoardRenderer litUpHoldsMap={animatedHoldsMap} mirrored={false} boardDetails={boardDetails} thumbnail />
             </div>
             <span style={{ fontSize: '14px', color: 'var(--semantic-surface)', fontWeight: 500 }}>
-              {/* i18n-ignore-next-line */}
-              Loading heatmap...
+              {t('boardHeatmap.loading')}
             </span>
           </div>
         )}
