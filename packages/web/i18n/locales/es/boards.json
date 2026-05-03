@@ -51,7 +51,10 @@
       "comments": "comentarios"
     },
     "delete": {
-      "confirm": "¿Eliminar \"{{name}}\"? Esta acción se puede deshacer más tarde."
+      "title": "Eliminar tablero",
+      "confirm": "¿Eliminar \"{{name}}\"? No se puede deshacer.",
+      "cancel": "Cancelar",
+      "delete": "Eliminar"
     },
     "snackbar": {
       "deleted": "Tablero eliminado",
@@ -107,7 +110,7 @@
     },
     "delete": {
       "title": "Eliminar gimnasio",
-      "confirm": "¿Eliminar \"{{name}}\"? Esta acción se puede deshacer más tarde.",
+      "confirm": "¿Eliminar \"{{name}}\"? No se puede deshacer.",
       "cancel": "Cancelar",
       "delete": "Eliminar"
     },
