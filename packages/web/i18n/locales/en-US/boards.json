@@ -51,7 +51,10 @@
       "comments": "comments"
     },
     "delete": {
-      "confirm": "Delete \"{{name}}\"? This action can be undone later."
+      "title": "Delete Board",
+      "confirm": "Delete \"{{name}}\"? This can't be undone.",
+      "cancel": "Cancel",
+      "delete": "Delete"
     },
     "snackbar": {
       "deleted": "Board deleted",
@@ -107,7 +110,7 @@
     },
     "delete": {
       "title": "Delete Gym",
-      "confirm": "Delete \"{{name}}\"? This action can be undone later.",
+      "confirm": "Delete \"{{name}}\"? This can't be undone.",
       "cancel": "Cancel",
       "delete": "Delete"
     },

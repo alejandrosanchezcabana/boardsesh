@@ -10,6 +10,11 @@ import Tab from '@mui/material/Tab';
 import Tabs from '@mui/material/Tabs';
 import Divider from '@mui/material/Divider';
 import MuiButton from '@mui/material/Button';
+import Dialog from '@mui/material/Dialog';
+import DialogTitle from '@mui/material/DialogTitle';
+import DialogContent from '@mui/material/DialogContent';
+import DialogContentText from '@mui/material/DialogContentText';
+import DialogActions from '@mui/material/DialogActions';
 import CircularProgress from '@mui/material/CircularProgress';
 import LocationOnOutlined from '@mui/icons-material/LocationOnOutlined';
 import EditOutlined from '@mui/icons-material/EditOutlined';
@@ -78,6 +83,7 @@ export function BoardDetailContent({
   const [activeTab, setActiveTab] = useState(0);
   const [isEditing, setIsEditing] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showGymDetail, setShowGymDetail] = useState(false);
   const [showGymSelector, setShowGymSelector] = useState(false);
   const { token } = useWsAuthToken();
@@ -113,10 +119,10 @@ export function BoardDetailContent({
 
   const isOwner = !!currentUserId && board?.ownerId === currentUserId;
 
-  const handleDelete = async () => {
+  const handleDeleteConfirm = async () => {
     if (!token || !board) return;
-    if (!window.confirm(t('boardEntity.delete.confirm', { name: board.name }))) return;
 
+    setShowDeleteDialog(false);
     setIsDeleting(true);
     try {
       const client = createGraphQLHttpClient(token);
@@ -340,7 +346,7 @@ export function BoardDetailContent({
                 size="small"
                 color="error"
                 startIcon={<DeleteOutlined />}
-                onClick={handleDelete}
+                onClick={() => setShowDeleteDialog(true)}
                 disabled={isDeleting}
                 sx={{ textTransform: 'none' }}
               >
@@ -371,6 +377,20 @@ export function BoardDetailContent({
       {board.gymUuid && (
         <GymDetail gymUuid={board.gymUuid} open={showGymDetail} onClose={() => setShowGymDetail(false)} anchor="top" />
       )}
+
+      {/* Delete confirmation dialog */}
+      <Dialog open={showDeleteDialog} onClose={() => setShowDeleteDialog(false)}>
+        <DialogTitle>{t('boardEntity.delete.title')}</DialogTitle>
+        <DialogContent>
+          <DialogContentText>{t('boardEntity.delete.confirm', { name: board.name })}</DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <MuiButton onClick={() => setShowDeleteDialog(false)}>{t('boardEntity.delete.cancel')}</MuiButton>
+          <MuiButton onClick={handleDeleteConfirm} color="error" autoFocus>
+            {t('boardEntity.delete.delete')}
+          </MuiButton>
+        </DialogActions>
+      </Dialog>
     </>
   );
 }
