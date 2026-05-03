@@ -1,8 +1,14 @@
 import { mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import { applyFixes, checkFile, formatReport, looksTranslatable } from './check-untranslated-strings';
+
+// Match the script's own `repoRoot` so the relative paths in formatReport
+// output land where the test expects, rather than spanning back to `/`.
+const repoRoot = join(dirname(fileURLToPath(import.meta.url)), '..', '..', '..');
+const fixtureFile = (name: string) => join(repoRoot, 'packages', 'web', 'app', name);
 
 const fakePath = '/tmp/fake-component.tsx';
 
@@ -402,13 +408,13 @@ describe('formatReport — exit code', () => {
       totalFiles: 3,
       filesWithViolations: 0,
       totalViolations: 0,
-      staleMarkers: [{ file: '/repo/packages/web/app/foo.tsx', line: 42 }],
+      staleMarkers: [{ file: fixtureFile('foo.tsx'), line: 42 }],
       violations: [],
     });
     expect(result.exitCode).toBe(1);
     expect(result.stdout).toEqual([]);
     const stderr = result.stderr.join('\n');
-    expect(stderr).toMatch(/foo\.tsx:42\s+stale i18n-ignore-next-line marker/);
+    expect(stderr).toMatch(/^packages\/web\/app\/foo\.tsx:42\s+stale i18n-ignore-next-line marker/m);
     expect(stderr).toMatch(/Found 1 stale i18n-ignore-next-line marker/);
   });
 
@@ -420,7 +426,7 @@ describe('formatReport — exit code', () => {
       staleMarkers: [],
       violations: [
         {
-          file: '/repo/packages/web/app/bar.tsx',
+          file: fixtureFile('bar.tsx'),
           line: 10,
           column: 5,
           kind: 'jsx-text',
@@ -438,10 +444,10 @@ describe('formatReport — exit code', () => {
       totalFiles: 3,
       filesWithViolations: 1,
       totalViolations: 1,
-      staleMarkers: [{ file: '/repo/packages/web/app/foo.tsx', line: 7 }],
+      staleMarkers: [{ file: fixtureFile('foo.tsx'), line: 7 }],
       violations: [
         {
-          file: '/repo/packages/web/app/bar.tsx',
+          file: fixtureFile('bar.tsx'),
           line: 10,
           column: 5,
           kind: 'jsx-text',

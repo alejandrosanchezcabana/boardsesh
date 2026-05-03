@@ -199,6 +199,10 @@
   "moonboardImport": {
     "removeConfirmTitle": "Remove this climb?"
   },
+  "ascents": {
+    "deleteTitle": "Delete ascent",
+    "deleteDescription": "Are you sure? This cannot be undone."
+  },
   "board": {
     "resetZoom": "Reset zoom"
   }

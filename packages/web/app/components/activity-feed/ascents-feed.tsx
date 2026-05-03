@@ -121,10 +121,8 @@ const TickItemRow: React.FC<{
         {item.attemptCount > 1 ? `${item.attemptCount} attempts` : null} {timeAgo}
       </MuiTypography>
       <ConfirmPopover
-        // i18n-ignore-next-line
-        title="Delete ascent"
-        // i18n-ignore-next-line
-        description="Are you sure? This cannot be undone."
+        title={t('ascents.deleteTitle')}
+        description={t('ascents.deleteDescription')}
         onConfirm={() => onDelete(item.uuid)}
         okText={t('actions.delete')}
         cancelText={t('actions.cancel')}
