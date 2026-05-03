@@ -469,6 +469,47 @@ function describe(violation: Violation): string {
   return `${head}  hardcoded ${violation.caller}({ ${violation.attribute} }): ${JSON.stringify(violation.text)}`;
 }
 
+function formatReport(report: Report): { exitCode: 0 | 1; stderr: string[]; stdout: string[] } {
+  const hasViolations = report.violations.length > 0;
+  const hasStaleMarkers = report.staleMarkers.length > 0;
+  const stderr: string[] = [];
+  const stdout: string[] = [];
+
+  if (hasViolations) {
+    for (const violation of report.violations) {
+      stderr.push(describe(violation));
+    }
+    stderr.push('');
+    stderr.push(
+      `Found ${report.totalViolations} hardcoded user-facing string(s) in ${report.filesWithViolations} file(s).`,
+    );
+    stderr.push(
+      "Wrap each in t('namespace:key') (see CLAUDE.md i18n section) or add " +
+        '`// i18n-ignore-next-line` on the line above to mark it as deliberately untranslated. ' +
+        'Run `bun packages/web/scripts/check-untranslated-strings.ts --fix` to bulk-add markers above existing violations.',
+    );
+  }
+
+  if (hasStaleMarkers) {
+    if (hasViolations) stderr.push('');
+    for (const stale of report.staleMarkers) {
+      const rel = relative(repoRoot, stale.file);
+      stderr.push(`${rel}:${stale.line}  stale i18n-ignore-next-line marker (no violation on the next line)`);
+    }
+    stderr.push('');
+    stderr.push(`Found ${report.staleMarkers.length} stale i18n-ignore-next-line marker(s); remove them.`);
+  }
+
+  if (hasViolations || hasStaleMarkers) {
+    return { exitCode: 1, stderr, stdout };
+  }
+
+  stdout.push(
+    `check-untranslated-strings: OK — scanned ${report.totalFiles} .tsx file(s), no hardcoded user-facing strings.`,
+  );
+  return { exitCode: 0, stderr, stdout };
+}
+
 function main(): never {
   const fixMode = process.argv.includes('--fix');
 
@@ -494,45 +535,15 @@ function main(): never {
   }
 
   const report = run();
-  const hasViolations = report.violations.length > 0;
-  const hasStaleMarkers = report.staleMarkers.length > 0;
-
-  if (hasViolations) {
-    for (const violation of report.violations) {
-      console.error(describe(violation));
-    }
-    console.error('');
-    console.error(
-      `Found ${report.totalViolations} hardcoded user-facing string(s) in ${report.filesWithViolations} file(s).`,
-    );
-    console.error(
-      "Wrap each in t('namespace:key') (see CLAUDE.md i18n section) or add " +
-        '`// i18n-ignore-next-line` on the line above to mark it as deliberately untranslated. ' +
-        'Run `bun packages/web/scripts/check-untranslated-strings.ts --fix` to bulk-add markers above existing violations.',
-    );
-  }
-
-  if (hasStaleMarkers) {
-    if (hasViolations) console.error('');
-    for (const stale of report.staleMarkers) {
-      const rel = relative(repoRoot, stale.file);
-      console.error(`${rel}:${stale.line}  stale i18n-ignore-next-line marker (no violation on the next line)`);
-    }
-    console.error('');
-    console.error(`Found ${report.staleMarkers.length} stale i18n-ignore-next-line marker(s); remove them.`);
-  }
-
-  if (hasViolations || hasStaleMarkers) process.exit(1);
-
-  console.info(
-    `check-untranslated-strings: OK — scanned ${report.totalFiles} .tsx file(s), no hardcoded user-facing strings.`,
-  );
-  process.exit(0);
+  const formatted = formatReport(report);
+  for (const line of formatted.stderr) console.error(line);
+  for (const line of formatted.stdout) console.info(line);
+  process.exit(formatted.exitCode);
 }
 
 if (import.meta.main) {
   main();
 }
 
-export { applyFixes, checkFile, looksTranslatable, run };
-export type { Violation };
+export { applyFixes, checkFile, formatReport, looksTranslatable, run };
+export type { Report, Violation };

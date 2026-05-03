@@ -94,9 +94,22 @@ test.describe('Bottom Tab Bar - Navigation', () => {
     // there). `/you` renders the full header with the bell unconditionally.
     await loginAs(page, '/you');
     await waitForPageReady(page);
+    // Wait for hydration so the NextLink click handler is wired up before we click.
+    // /you has no long-poll endpoints, so networkidle settles within ~2s.
+    await page.waitForLoadState('networkidle').catch(() => {});
 
-    await page.getByRole('link', { name: 'Notifications' }).click();
-    await expect(page).toHaveURL(/\/notifications/, { timeout: 15000 });
+    // The bell is rendered as `<IconButton component={LocaleLink} href="/notifications" />`.
+    // Target by href so we don't depend on whether MUI 7's polymorphic anchor surfaces
+    // as role="link" or role="button", and combine with the bell's aria-label so the
+    // selector lands on exactly the visible header bell rather than any stray anchor a
+    // portaled MUI Drawer/Modal may inject during hydration.
+    const bell = page.locator('header a[href="/notifications"][aria-label="Notifications"]');
+    await expect(bell).toBeVisible({ timeout: 15000 });
+
+    // NextLink does client-side routing, so we wait for the URL change atomically
+    // with the click rather than asserting after — the assertion timing window
+    // races with NextLink's own pushState in practice.
+    await Promise.all([page.waitForURL(/\/notifications/, { timeout: 15000 }), bell.click()]);
     await expect(page.locator(bottomTabBar)).toBeVisible();
   });
 

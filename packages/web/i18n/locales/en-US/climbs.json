@@ -205,6 +205,11 @@
       "editLockedAria": "Edit window closed",
       "savedTitle": "Saved",
       "savedAria": "Saved"
+    },
+    "clear": {
+      "title": "Clear climb",
+      "description": "This will clear all holds and reset the form. Are you sure?",
+      "tooltip": "Clear all holds"
     }
   },
   "actions": {

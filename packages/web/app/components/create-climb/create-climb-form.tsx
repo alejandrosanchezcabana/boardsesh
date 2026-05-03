@@ -135,6 +135,7 @@ export default function CreateClimbForm({
   holdSetImages,
 }: CreateClimbFormProps) {
   const { t } = useTranslation('climbs');
+  const { t: tCommon } = useTranslation('common');
   const pathname = usePathname();
   const { data: session } = useSession();
   const { mode } = useColorMode();
@@ -1535,19 +1536,15 @@ export default function CreateClimbForm({
           </MuiTooltip>
         )}
         <ConfirmPopover
-          // i18n-ignore-next-line
-          title="Clear climb"
-          // i18n-ignore-next-line
-          description="This will clear all holds and reset the form. Are you sure?"
+          title={t('create.clear.title')}
+          description={t('create.clear.description')}
           onConfirm={resetHolds}
-          okText={t('common:actions.clear')}
-          cancelText={t('common:actions.cancel')}
+          okText={tCommon('actions.clear')}
+          cancelText={tCommon('actions.cancel')}
         >
-          {/* i18n-ignore-next-line */}
-          <MuiTooltip title="Clear all holds">
+          <MuiTooltip title={t('create.clear.tooltip')}>
             <span>
-              {/* i18n-ignore-next-line */}
-              <IconButton size="small" disabled={totalHolds === 0} aria-label="Clear all holds">
+              <IconButton size="small" disabled={totalHolds === 0} aria-label={t('create.clear.tooltip')}>
                 <DeleteOutlined fontSize="small" />
               </IconButton>
             </span>
