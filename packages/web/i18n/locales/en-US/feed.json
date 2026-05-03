@@ -142,22 +142,6 @@
     "unsubscribed": "Unsubscribed from new climbs",
     "updateFailed": "Couldn't update subscription"
   },
-  "userDrawer": {
-    "signIn": "Sign in",
-    "signInModalTitle": "Sign in to Boardsesh",
-    "signInModalDescription": "Sign in to save favorites, log ascents, and more.",
-    "changeBoard": "Change board",
-    "devUrl": "Dev URL",
-    "development": "Development",
-    "classifyHolds": "Classify holds",
-    "myPlaylists": "My playlists",
-    "recentSessions": "Recent sessions",
-    "help": "Help",
-    "about": "About",
-    "rateBoardsesh": "Rate Boardsesh",
-    "reportBug": "Report a bug",
-    "logout": "Log out"
-  },
   "userSearch": {
     "ascentsThisMonth": "{{count}} ascents this month",
     "climbsSetOne": "{{count}} climb set",
