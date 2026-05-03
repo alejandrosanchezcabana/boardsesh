@@ -33,7 +33,7 @@ export default async function PlaylistsPage() {
   const lcpPreloadUrl = getPlaylistLcpPreloadUrl(initialPlaylists?.[0] ?? initialDiscoverPlaylists?.popular?.[0]);
 
   return (
-    <I18nProvider locale={locale} namespaces={['playlists']}>
+    <I18nProvider locale={locale} namespaces={['playlists', 'climbs', 'feed']}>
       {lcpPreloadUrl && <link rel="preload" as="image" href={lcpPreloadUrl} fetchPriority="high" />}
       <div className={styles.pageContainer}>
         <LibraryPageContent
