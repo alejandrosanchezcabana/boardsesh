@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import MuiRating from '@mui/material/Rating';
 import Chip from '@mui/material/Chip';
 import MuiTooltip from '@mui/material/Tooltip';
@@ -56,6 +57,7 @@ type LogAscentFormProps = {
 };
 
 export const LogAscentForm: React.FC<LogAscentFormProps> = ({ currentClimb, boardDetails, onClose }) => {
+  const { t } = useTranslation('climbs');
   const { saveTick, isAuthenticated } = useBoardProvider();
   const grades = TENSION_KILTER_GRADES;
   const angleOptions = ANGLES[boardDetails.board_name];
@@ -205,7 +207,7 @@ export const LogAscentForm: React.FC<LogAscentFormProps> = ({ currentClimb, boar
                   sx={{ cursor: 'pointer', margin: 0 }}
                   onClick={handleMirrorToggle}
                 />
-                <MuiTooltip title="Click the tag to toggle whether you completed this climb on the mirrored side">
+                <MuiTooltip title={t('actions.tick.drawer.mirroredTooltip')}>
                   <InfoOutlined sx={{ color: 'var(--neutral-400)', cursor: 'pointer' }} />
                 </MuiTooltip>
               </Stack>

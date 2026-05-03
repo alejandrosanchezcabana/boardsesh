@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import LocaleLink from '@/app/components/i18n/locale-link';
 import { useQueueActions, useSessionData } from '../graphql-queue';
 import { constructPlayUrlWithSlugs, getContextAwareClimbViewUrl } from '@/app/lib/url-utils';
@@ -15,13 +16,15 @@ type NextClimbButtonProps = {
   boardDetails?: BoardDetails;
 };
 
-const NextButton = (props: IconButtonProps) => (
-  <IconButton {...props} aria-label="Next climb">
+const NextButton = ({ ariaLabel, ...props }: IconButtonProps & { ariaLabel: string }) => (
+  <IconButton {...props} aria-label={ariaLabel}>
     <FastForwardOutlined />
   </IconButton>
 );
 
 export default function NextClimbButton({ navigate, boardDetails }: NextClimbButtonProps) {
+  const { t } = useTranslation('climbs');
+  const ariaLabel = t('actions.navigation.nextClimb');
   const { setCurrentClimbQueueItem, getNextClimbQueueItem } = useQueueActions();
   const { viewOnlyMode } = useSessionData();
   const { rawParams, angle, pathname, searchParams, isPlayPage, resolvedDetails } =
@@ -83,15 +86,15 @@ export default function NextClimbButton({ navigate, boardDetails }: NextClimbBut
 
   if (!viewOnlyMode && navigate && nextClimb) {
     if (isPlayPage) {
-      return <NextButton onClick={handleClick} />;
+      return <NextButton ariaLabel={ariaLabel} onClick={handleClick} />;
     }
 
     const climbUrl = buildClimbUrl();
     return (
       <LocaleLink href={climbUrl} prefetch={false} onClick={handleClick}>
-        <NextButton />
+        <NextButton ariaLabel={ariaLabel} />
       </LocaleLink>
     );
   }
-  return <NextButton onClick={handleClick} disabled={!nextClimb || viewOnlyMode} />;
+  return <NextButton ariaLabel={ariaLabel} onClick={handleClick} disabled={!nextClimb || viewOnlyMode} />;
 }

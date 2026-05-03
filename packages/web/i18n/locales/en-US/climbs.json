@@ -227,8 +227,21 @@
       "drawer": {
         "signInRequired": "Sign In Required",
         "selectBoard": "Select Board",
-        "logAscent": "Log Ascent"
+        "logAscent": "Log Ascent",
+        "signInToRecord": "Sign in to record ticks",
+        "createAccountBlurb": "Create a Boardsesh account to log your climbs and track your progress.",
+        "signIn": "Sign In",
+        "orLogInOfficialApp": "Or log your tick in the official app:",
+        "openInApp": "Open in App",
+        "alwaysOpenInApp": "Always open in app",
+        "authModalTitle": "Sign in to record ticks",
+        "authModalDescription": "Create an account to log your climbs and track your progress.",
+        "mirroredTooltip": "Click the tag to toggle whether you completed this climb on the mirrored side"
       }
+    },
+    "navigation": {
+      "nextClimb": "Next climb",
+      "previousClimb": "Previous climb"
     },
     "mirror": {
       "label": {

@@ -1,5 +1,8 @@
+'use client';
+
 import SwipeableDrawer from '../swipeable-drawer/swipeable-drawer';
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { LogAscentForm } from './logascent-form';
 import type { BoardDetails, Climb } from '@/app/lib/types';
 
@@ -11,9 +14,10 @@ type LogAscentDrawerProps = {
 };
 
 export const LogAscentDrawer: React.FC<LogAscentDrawerProps> = ({ open, onClose, currentClimb, boardDetails }) => {
+  const { t } = useTranslation('climbs');
   return (
     <SwipeableDrawer
-      title="Log Ascent"
+      title={t('actions.tick.drawer.logAscent')}
       placement="bottom"
       onClose={onClose}
       open={open}

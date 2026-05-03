@@ -1,5 +1,6 @@
 'use client';
 import React, { useEffect, useState, useCallback, useRef, useImperativeHandle, forwardRef, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import Skeleton from '@mui/material/Skeleton';
 import Button from '@mui/material/Button';
@@ -74,6 +75,7 @@ const QueueList = forwardRef<QueueListHandle, QueueListProps>(
     },
     ref,
   ) => {
+    const { t } = useTranslation(['climbs', 'session']);
     const currentClimbUuid = useCurrentClimbUuid();
     const { queue, suggestedClimbs } = useQueueList();
     const { hasMoreResults, isFetchingClimbs, isFetchingNextPage } = useSearchData();
@@ -505,7 +507,7 @@ const QueueList = forwardRef<QueueListHandle, QueueListProps>(
           />
         ) : (
           <SwipeableDrawer
-            title="Sign In Required"
+            title={t('actions.tick.drawer.signInRequired')}
             placement="bottom"
             onClose={closeTickDrawer}
             open={tickDrawerVisible}
@@ -518,23 +520,23 @@ const QueueList = forwardRef<QueueListHandle, QueueListProps>(
                 fontWeight={600}
                 sx={{ fontSize: themeTokens.typography.fontSize.base }}
               >
-                Sign in to record ticks
+                {t('actions.tick.drawer.signInToRecord')}
               </Typography>
               <Typography variant="body1" component="p" color="text.secondary">
-                Create a Boardsesh account to log your climbs and track your progress.
+                {t('actions.tick.drawer.createAccountBlurb')}
               </Typography>
               <Button
                 variant="contained"
                 startIcon={<LoginOutlined />}
                 onClick={() =>
                   openAuthModal({
-                    title: 'Sign in to record ticks',
-                    description: 'Create an account to log your climbs and track your progress.',
+                    title: t('actions.tick.drawer.authModalTitle'),
+                    description: t('actions.tick.drawer.authModalDescription'),
                   })
                 }
                 fullWidth
               >
-                Sign In
+                {t('actions.tick.drawer.signIn')}
               </Button>
             </Stack>
           </SwipeableDrawer>

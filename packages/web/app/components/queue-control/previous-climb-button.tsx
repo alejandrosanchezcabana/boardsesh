@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 
 import LocaleLink from '@/app/components/i18n/locale-link';
 import { useQueueActions, useSessionData } from '../graphql-queue';
@@ -16,13 +17,15 @@ type PreviousClimbButtonProps = {
   boardDetails?: BoardDetails;
 };
 
-const PreviousButton = (props: IconButtonProps) => (
-  <IconButton {...props} aria-label="Previous climb">
+const PreviousButton = ({ ariaLabel, ...props }: IconButtonProps & { ariaLabel: string }) => (
+  <IconButton {...props} aria-label={ariaLabel}>
     <FastRewindOutlined />
   </IconButton>
 );
 
 export default function PreviousClimbButton({ navigate, boardDetails }: PreviousClimbButtonProps) {
+  const { t } = useTranslation('climbs');
+  const ariaLabel = t('actions.navigation.previousClimb');
   const { getPreviousClimbQueueItem, setCurrentClimbQueueItem } = useQueueActions();
   const { viewOnlyMode } = useSessionData();
   const { rawParams, angle, pathname, searchParams, isPlayPage, resolvedDetails } =
@@ -84,15 +87,15 @@ export default function PreviousClimbButton({ navigate, boardDetails }: Previous
 
   if (!viewOnlyMode && navigate && previousClimb) {
     if (isPlayPage) {
-      return <PreviousButton onClick={handleClick} />;
+      return <PreviousButton ariaLabel={ariaLabel} onClick={handleClick} />;
     }
 
     const climbUrl = buildClimbUrl();
     return (
       <LocaleLink href={climbUrl} prefetch={false} onClick={handleClick}>
-        <PreviousButton />
+        <PreviousButton ariaLabel={ariaLabel} />
       </LocaleLink>
     );
   }
-  return <PreviousButton onClick={handleClick} disabled={!previousClimb || viewOnlyMode} />;
+  return <PreviousButton ariaLabel={ariaLabel} onClick={handleClick} disabled={!previousClimb || viewOnlyMode} />;
 }

@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useRef, useState, useCallback, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import MuiTooltip from '@mui/material/Tooltip';
 import MuiAvatar from '@mui/material/Avatar';
 import MuiCheckbox from '@mui/material/Checkbox';
@@ -65,6 +66,7 @@ const QueueClimbListItem: React.FC<QueueClimbListItemProps> = ({
   onEditClimb,
   isEditable = false,
 }) => {
+  const { t } = useTranslation('session');
   const [closestEdge, setClosestEdge] = useState<Edge | null>(null);
   const itemRef = useRef<HTMLDivElement>(null);
 
@@ -111,7 +113,7 @@ const QueueClimbListItem: React.FC<QueueClimbListItemProps> = ({
         </MuiAvatar>
       </MuiTooltip>
     ) : (
-      <MuiTooltip title="Added via Bluetooth">
+      <MuiTooltip title={t('queueList.addedViaBluetooth')}>
         <MuiAvatar sx={avatarBluetoothStyle}>
           <BluetoothIcon style={{ color: 'var(--neutral-400)' }} />
         </MuiAvatar>
@@ -124,7 +126,7 @@ const QueueClimbListItem: React.FC<QueueClimbListItemProps> = ({
 
     return (
       <MuiStack direction="row" spacing={0.5} alignItems="center">
-        <MuiTooltip title="Edit this climb">
+        <MuiTooltip title={t('queueList.editClimb')}>
           <MuiIconButton size="small" onClick={handleEditClick} sx={{ width: 24, height: 24 }}>
             <EditOutlined sx={{ fontSize: 16 }} />
           </MuiIconButton>
@@ -132,7 +134,7 @@ const QueueClimbListItem: React.FC<QueueClimbListItemProps> = ({
         {avatar}
       </MuiStack>
     );
-  }, [item.addedByUser, isEditable, onEditClimb, handleEditClick]);
+  }, [item.addedByUser, isEditable, onEditClimb, handleEditClick, t]);
 
   // onSelect handler — double-tap sets current climb
   const handleSelect = useCallback(() => {

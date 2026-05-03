@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { Angle, Climb, BoardDetails } from '@/app/lib/types';
 import { useBoardProvider } from '../board-provider/board-provider-context';
 import MuiBadge from '@mui/material/Badge';
@@ -46,6 +47,7 @@ export const TickButton: React.FC<TickButtonProps> = ({
   isFlash,
   ascentType,
 }) => {
+  const { t } = useTranslation('climbs');
   const { logbook, isAuthenticated } = useBoardProvider();
   const [drawerVisible, setDrawerVisible] = useState(false);
   const { openAuthModal } = useAuthModal();
@@ -172,7 +174,7 @@ export const TickButton: React.FC<TickButtonProps> = ({
         />
       ) : (
         <SwipeableDrawer
-          title="Sign In Required"
+          title={t('actions.tick.drawer.signInRequired')}
           placement="bottom"
           onClose={closeDrawer}
           open={drawerVisible}
@@ -180,31 +182,31 @@ export const TickButton: React.FC<TickButtonProps> = ({
         >
           <Stack spacing={3} sx={{ width: '100%', textAlign: 'center', padding: '24px 0' }}>
             <Typography variant="body2" component="span" fontWeight={600} sx={{ fontSize: 16 }}>
-              Sign in to record ticks
+              {t('actions.tick.drawer.signInToRecord')}
             </Typography>
             <Typography variant="body1" component="p" color="text.secondary">
-              Create a Boardsesh account to log your climbs and track your progress.
+              {t('actions.tick.drawer.createAccountBlurb')}
             </Typography>
             <Button
               variant="contained"
               startIcon={<LoginOutlined />}
               onClick={() =>
                 openAuthModal({
-                  title: 'Sign in to record ticks',
-                  description: 'Create an account to log your climbs and track your progress.',
+                  title: t('actions.tick.drawer.authModalTitle'),
+                  description: t('actions.tick.drawer.authModalDescription'),
                 })
               }
               fullWidth
             >
-              Sign In
+              {t('actions.tick.drawer.signIn')}
             </Button>
             {openInAppUrl && (
               <>
                 <Typography variant="body1" component="p" color="text.secondary">
-                  Or log your tick in the official app:
+                  {t('actions.tick.drawer.orLogInOfficialApp')}
                 </Typography>
                 <Button variant="outlined" startIcon={<AppsOutlined />} onClick={handleOpenInApp} fullWidth>
-                  Open in App
+                  {t('actions.tick.drawer.openInApp')}
                 </Button>
                 <Button
                   variant="text"
@@ -215,7 +217,7 @@ export const TickButton: React.FC<TickButtonProps> = ({
                     handleOpenInApp();
                   }}
                 >
-                  Always open in app
+                  {t('actions.tick.drawer.alwaysOpenInApp')}
                 </Button>
               </>
             )}

@@ -202,5 +202,26 @@
   },
   "overview": {
     "goal": "Goal: {{goal}}"
+  },
+  "queueBar": {
+    "ariaLabels": {
+      "leaveSession": "Leave session",
+      "keepReconnecting": "Keep reconnecting",
+      "dismissOfflineNotice": "Dismiss offline notice",
+      "shareSessionLink": "Share session link",
+      "closeTickBar": "Close tick bar",
+      "enterPlayMode": "Enter play mode",
+      "logAttempt": "Log attempt"
+    }
+  },
+  "queueDrawer": {
+    "title": "Queue",
+    "clearTitle": "Clear queue",
+    "clearDescription": "Are you sure you want to clear all items from the queue?",
+    "clearConfirm": "Clear"
+  },
+  "queueList": {
+    "editClimb": "Edit this climb",
+    "addedViaBluetooth": "Added via Bluetooth"
   }
 }

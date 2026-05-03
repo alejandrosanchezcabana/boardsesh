@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useCallback, useContext } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useSnackbar } from '@/app/components/providers/snackbar-provider';
 import MuiButton from '@mui/material/Button';
 import Box from '@mui/material/Box';
@@ -100,6 +101,7 @@ const actionSx = {
 };
 
 function BottomTabBar({ boardDetails, angle, boardConfigs }: BottomTabBarProps) {
+  const { t } = useTranslation(['playlists', 'climbs', 'common']);
   const { mode } = useColorMode();
   const isDark = mode === 'dark';
   const [isCreatePlaylistOpen, setIsCreatePlaylistOpen] = useState(false);
@@ -462,16 +464,16 @@ function BottomTabBar({ boardDetails, angle, boardConfigs }: BottomTabBarProps) 
   const validatePlaylistForm = useCallback((): boolean => {
     const errors: Record<string, string> = {};
     if (!playlistFormValues.name.trim()) {
-      errors.name = 'Please enter a playlist name';
+      errors.name = t('actions.playlist.validation.nameRequired', { ns: 'climbs' });
     } else if (playlistFormValues.name.length > 100) {
-      errors.name = 'Name too long';
+      errors.name = t('actions.playlist.validation.nameTooLong', { ns: 'climbs' });
     }
     if (playlistFormValues.description.length > 500) {
-      errors.description = 'Description too long';
+      errors.description = t('actions.playlist.validation.descriptionTooLong', { ns: 'climbs' });
     }
     setPlaylistFormErrors(errors);
     return Object.keys(errors).length === 0;
-  }, [playlistFormValues]);
+  }, [playlistFormValues, t]);
 
   const handleCreatePlaylist = useCallback(async () => {
     if (!validatePlaylistForm() || !createPlaylist) {
@@ -583,7 +585,7 @@ function BottomTabBar({ boardDetails, angle, boardConfigs }: BottomTabBarProps) 
       {/* Create Playlist Drawer */}
       {isCreatePlaylistRendered && (
         <SwipeableDrawer
-          title="Create Playlist"
+          title={t('create.drawerTitle')}
           placement="bottom"
           open={isCreatePlaylistOpen}
           onClose={() => {
@@ -598,17 +600,17 @@ function BottomTabBar({ boardDetails, angle, boardConfigs }: BottomTabBarProps) 
           }}
           extra={
             <MuiButton variant="contained" onClick={handleCreatePlaylist} disabled={isCreatingPlaylist}>
-              {isCreatingPlaylist ? 'Creating...' : 'Create'}
+              {isCreatingPlaylist ? t('create.submitting') : t('create.submit')}
             </MuiButton>
           }
         >
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
             <Box>
               <Typography variant="body2" fontWeight={600} sx={{ mb: 0.5 }}>
-                Name
+                {t('create.fields.name')}
               </Typography>
               <TextField
-                placeholder="e.g., Hard Crimps"
+                placeholder={t('create.fields.namePlaceholder')}
                 autoFocus
                 fullWidth
                 size="small"
@@ -623,10 +625,10 @@ function BottomTabBar({ boardDetails, angle, boardConfigs }: BottomTabBarProps) 
             </Box>
             <Box>
               <Typography variant="body2" fontWeight={600} sx={{ mb: 0.5 }}>
-                Description (optional)
+                {t('create.fields.description')}
               </Typography>
               <TextField
-                placeholder="Optional description..."
+                placeholder={t('create.fields.descriptionPlaceholder')}
                 multiline
                 rows={2}
                 fullWidth
@@ -643,7 +645,7 @@ function BottomTabBar({ boardDetails, angle, boardConfigs }: BottomTabBarProps) 
             </Box>
             <Box>
               <Typography variant="body2" fontWeight={600} sx={{ mb: 0.5 }}>
-                Color (optional)
+                {t('create.fields.color')}
               </Typography>
               <TextField
                 type="color"
@@ -660,7 +662,7 @@ function BottomTabBar({ boardDetails, angle, boardConfigs }: BottomTabBarProps) 
       {/* Board Selector Drawer */}
       {isBoardSelectorRendered && (
         <SwipeableDrawer
-          title="Pick a board"
+          title={t('boardSelector.title', { ns: 'common' })}
           placement="bottom"
           open={isBoardSelectorOpen}
           onClose={() => {
