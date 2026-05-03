@@ -34,15 +34,14 @@ function detectLocale(): Locale {
 }
 
 export default function GlobalError({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
-  const [locale, setLocale] = useState<Locale>('en-US');
+  // Lazy initializer so Spanish users on /es/* see Spanish copy on the first
+  // paint instead of flashing English between mount and the first effect.
+  // global-error always renders client-side so there's no hydration mismatch.
+  const [locale] = useState<Locale>(detectLocale);
 
   useEffect(() => {
     Sentry.captureException(error);
   }, [error]);
-
-  useEffect(() => {
-    setLocale(detectLocale());
-  }, []);
 
   const copy = COPY[locale];
 
