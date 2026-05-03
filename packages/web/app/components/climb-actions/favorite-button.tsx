@@ -10,6 +10,7 @@ import { useFavorite } from './use-favorite';
 import type { BoardName } from '@/app/lib/types';
 import { useAuthModal } from '@/app/components/providers/auth-modal-provider';
 import { themeTokens } from '@/app/theme/theme-config';
+import { useTranslation } from 'react-i18next';
 
 type FavoriteButtonProps = {
   boardName: BoardName;
@@ -30,6 +31,7 @@ export default function FavoriteButton({
   showLabel = false,
   size = 'default',
 }: FavoriteButtonProps) {
+  const { t } = useTranslation('climbs');
   const { isFavorited, isLoading, toggleFavorite, isAuthenticated } = useFavorite({
     climbUuid,
   });
@@ -42,10 +44,10 @@ export default function FavoriteButton({
 
     if (!isAuthenticated) {
       openAuthModal({
-        title: 'Sign in to save favorites',
+        title: t('actions.favorite.auth.title'),
         description: climbName
-          ? `Sign in to save "${climbName}" to your favorites.`
-          : 'Sign in to save climbs to your favorites.',
+          ? t('actions.favorite.auth.descriptionWithName', { climbName })
+          : t('actions.favorite.auth.description'),
         onSuccess: handleAuthSuccess,
       });
       return;
@@ -61,7 +63,7 @@ export default function FavoriteButton({
       });
     } catch (error) {
       console.error(`[FavoriteButton] Error toggling favorite for ${climbUuid}:`, error);
-      showMessage('Failed to update favorite. Please try again.', 'error');
+      showMessage(t('actions.favorite.toast.updateFailed'), 'error');
     }
   };
 
@@ -85,7 +87,7 @@ export default function FavoriteButton({
         });
       } else {
         console.error(`[FavoriteButton] API error for ${climbUuid}: ${response.status}`);
-        showMessage('Failed to save favorite. Please try again.', 'error');
+        showMessage(t('actions.favorite.toast.saveFailed'), 'error');
       }
     } catch (error) {
       console.error(`[FavoriteButton] Error after auth for ${climbUuid}:`, error);
@@ -105,12 +107,16 @@ export default function FavoriteButton({
   const content = (
     <>
       <Icon style={iconStyle} />
-      {showLabel && <span style={{ marginLeft: 8 }}>{isFavorited ? 'Favorited' : 'Favorite'}</span>}
+      {showLabel && (
+        <span style={{ marginLeft: 8 }}>
+          {isFavorited ? t('actions.favorite.label.favorited') : t('actions.favorite.label.favorite')}
+        </span>
+      )}
     </>
   );
 
   return (
-    <Tooltip title={isFavorited ? 'Remove from favorites' : 'Add to favorites'}>
+    <Tooltip title={isFavorited ? t('actions.favorite.tooltip.remove') : t('actions.favorite.tooltip.add')}>
       <span
         onClick={handleClick}
         className={className}
@@ -120,7 +126,7 @@ export default function FavoriteButton({
           cursor: isLoading ? 'wait' : 'pointer',
         }}
         role="button"
-        aria-label={isFavorited ? 'Remove from favorites' : 'Add to favorites'}
+        aria-label={isFavorited ? t('actions.favorite.tooltip.remove') : t('actions.favorite.tooltip.add')}
       >
         {content}
       </span>

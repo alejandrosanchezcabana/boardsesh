@@ -76,6 +76,8 @@
   "share": {
     "title": "{{climbName}} en Boardsesh",
     "text": "Mira {{climbName}} en Boardsesh",
+    "actionLabel": "Compartir",
+    "actionText": "Mira \"{{climbName}}\" ({{difficulty}}) en Boardsesh",
     "linkCopied": "Enlace copiado",
     "shareFailed": "No se pudo compartir"
   },
@@ -190,6 +192,59 @@
       "timeRange": "Rango de tiempo",
       "from": "Desde",
       "to": "Hasta"
+    }
+  },
+  "actions": {
+    "playlist": {
+      "toast": {
+        "added": "Añadido a la playlist",
+        "removed": "Eliminado de la playlist",
+        "addFailed": "No se pudo añadir a la playlist",
+        "removeFailed": "No se pudo eliminar de la playlist",
+        "createdNamed": "Playlist creada \"{{name}}\"",
+        "createFailed": "No se pudo crear la playlist"
+      },
+      "validation": {
+        "nameRequired": "Introduce un nombre para la playlist",
+        "nameTooLong": "Nombre demasiado largo",
+        "descriptionTooLong": "Descripción demasiado larga"
+      }
+    },
+    "tick": {
+      "drawer": {
+        "signInRequired": "Iniciar sesión requerido",
+        "selectBoard": "Selecciona una tabla",
+        "logAscent": "Registrar encadene"
+      }
+    },
+    "mirror": {
+      "label": {
+        "mirrored": "Reflejado",
+        "mirror": "Reflejar"
+      },
+      "tooltip": {
+        "mirrored": "Reflejado (toca para resetear)",
+        "mirror": "Reflejar bloque"
+      }
+    },
+    "favorite": {
+      "label": {
+        "favorited": "Favorito",
+        "favorite": "Favorito"
+      },
+      "tooltip": {
+        "add": "Añadir a favoritos",
+        "remove": "Quitar de favoritos"
+      },
+      "auth": {
+        "title": "Inicia sesión para guardar favoritos",
+        "descriptionWithName": "Inicia sesión para guardar \"{{climbName}}\" en tus favoritos.",
+        "description": "Inicia sesión para guardar bloques en tus favoritos."
+      },
+      "toast": {
+        "updateFailed": "No se pudo actualizar el favorito. Inténtalo de nuevo.",
+        "saveFailed": "No se pudo guardar el favorito. Inténtalo de nuevo."
+      }
     }
   }
 }

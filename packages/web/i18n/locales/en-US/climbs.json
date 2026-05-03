@@ -76,6 +76,8 @@
   "share": {
     "title": "{{climbName}} on Boardsesh",
     "text": "Check out {{climbName}} on Boardsesh",
+    "actionLabel": "Share",
+    "actionText": "Check out \"{{climbName}}\" ({{difficulty}}) on Boardsesh",
     "linkCopied": "Link copied",
     "shareFailed": "Failed to share"
   },
@@ -190,6 +192,59 @@
       "timeRange": "Time Range",
       "from": "From",
       "to": "To"
+    }
+  },
+  "actions": {
+    "playlist": {
+      "toast": {
+        "added": "Added to playlist",
+        "removed": "Removed from playlist",
+        "addFailed": "Failed to add to playlist",
+        "removeFailed": "Failed to remove from playlist",
+        "createdNamed": "Created playlist \"{{name}}\"",
+        "createFailed": "Failed to create playlist"
+      },
+      "validation": {
+        "nameRequired": "Please enter a playlist name",
+        "nameTooLong": "Name too long",
+        "descriptionTooLong": "Description too long"
+      }
+    },
+    "tick": {
+      "drawer": {
+        "signInRequired": "Sign In Required",
+        "selectBoard": "Select Board",
+        "logAscent": "Log Ascent"
+      }
+    },
+    "mirror": {
+      "label": {
+        "mirrored": "Mirrored",
+        "mirror": "Mirror"
+      },
+      "tooltip": {
+        "mirrored": "Mirrored (click to reset)",
+        "mirror": "Mirror climb"
+      }
+    },
+    "favorite": {
+      "label": {
+        "favorited": "Favorited",
+        "favorite": "Favorite"
+      },
+      "tooltip": {
+        "add": "Add to favorites",
+        "remove": "Remove from favorites"
+      },
+      "auth": {
+        "title": "Sign in to save favorites",
+        "descriptionWithName": "Sign in to save \"{{climbName}}\" to your favorites.",
+        "description": "Sign in to save climbs to your favorites."
+      },
+      "toast": {
+        "updateFailed": "Failed to update favorite. Please try again.",
+        "saveFailed": "Failed to save favorite. Please try again."
+      }
     }
   }
 }

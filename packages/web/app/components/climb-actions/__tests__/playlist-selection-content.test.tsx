@@ -63,7 +63,7 @@ describe('PlaylistSelectionContent failures', () => {
     fireEvent.click(screen.getByText('Test Playlist'));
 
     await waitFor(() => {
-      expect(mockShowMessage).toHaveBeenCalledWith('Failed to add to playlist', 'error');
+      expect(mockShowMessage).toHaveBeenCalledWith('actions.playlist.toast.addFailed', 'error');
     });
   });
 
@@ -83,7 +83,7 @@ describe('PlaylistSelectionContent failures', () => {
     fireEvent.click(screen.getByText('Test Playlist'));
 
     await waitFor(() => {
-      expect(mockShowMessage).toHaveBeenCalledWith('Failed to remove from playlist', 'error');
+      expect(mockShowMessage).toHaveBeenCalledWith('actions.playlist.toast.removeFailed', 'error');
     });
   });
 
@@ -110,7 +110,7 @@ describe('PlaylistSelectionContent failures', () => {
     fireEvent.click(screen.getByRole('button', { name: /^create$/i }));
 
     await waitFor(() => {
-      expect(mockShowMessage).toHaveBeenCalledWith('Failed to create playlist', 'error');
+      expect(mockShowMessage).toHaveBeenCalledWith('actions.playlist.toast.createFailed', 'error');
     });
     expect(onDone).not.toHaveBeenCalled();
   });

@@ -28,6 +28,7 @@ import type { UserBoard } from '@boardsesh/shared-schema';
 import type { BoardName, BoardDetails } from '@/app/lib/types';
 import { LogAscentDrawer } from '../../logbook/log-ascent-drawer';
 import type { LogbookEntry } from '@/app/hooks/use-logbook';
+import { useTranslation } from 'react-i18next';
 
 const VALID_BOARD_NAMES: ReadonlySet<string> = new Set<BoardName>(['kilter', 'tension', 'moonboard']);
 const EMPTY_LOGBOOK: LogbookEntry[] = [];
@@ -48,6 +49,7 @@ export function TickAction({
   onComplete,
   onTickAction,
 }: ClimbActionProps): ClimbActionResult {
+  const { t } = useTranslation('climbs');
   const [drawerVisible, setDrawerVisible] = useState(false);
   const [selectedBoard, setSelectedBoard] = useState<UserBoard | null>(null);
   const { openAuthModal } = useAuthModal();
@@ -266,7 +268,7 @@ export function TickAction({
       }
       return (
         <SwipeableDrawer
-          title="Sign In Required"
+          title={t('actions.tick.drawer.signInRequired')}
           placement="bottom"
           onClose={closeDrawer}
           open={drawerVisible}
@@ -280,7 +282,7 @@ export function TickAction({
       // Outside board route, authenticated - board selector + log form
       return (
         <SwipeableDrawer
-          title={showBoardSelector ? 'Select Board' : 'Log Ascent'}
+          title={showBoardSelector ? t('actions.tick.drawer.selectBoard') : t('actions.tick.drawer.logAscent')}
           placement="bottom"
           onClose={closeDrawer}
           open={drawerVisible}
@@ -301,7 +303,7 @@ export function TickAction({
     // Outside board route, not authenticated - sign-in prompt
     return (
       <SwipeableDrawer
-        title="Sign In Required"
+        title={t('actions.tick.drawer.signInRequired')}
         placement="bottom"
         onClose={closeDrawer}
         open={drawerVisible}
