@@ -1,12 +1,12 @@
 {
   "languageSwitcher": {
     "ariaLabel": "Langue",
-    "ariaLabelWithCurrent": "Langue : {{language}}",
-    "switchTo": "Passer en {{language}}"
+    "ariaLabelWithCurrent": "Langue : {{language}}"
   },
   "languages": {
     "en-US": "English",
-    "es": "Español"
+    "es": "Español",
+    "fr": "Français"
   },
   "lightControl": {
     "title": "Lumières",

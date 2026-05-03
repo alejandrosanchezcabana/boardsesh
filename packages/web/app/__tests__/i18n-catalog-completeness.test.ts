@@ -1,0 +1,47 @@
+import { describe, it, expect } from 'vite-plus/test';
+import { readdirSync, readFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { DEFAULT_LOCALE } from '@/app/lib/i18n/config';
+
+const LOCALES_DIR = join(dirname(fileURLToPath(import.meta.url)), '..', '..', 'i18n', 'locales');
+
+// Locales we ship and own end-to-end. Community-maintained locales (e.g. `es`)
+// are intentionally allowed to have gaps — i18next falls back to English. New
+// owned locales must stay at full parity so a missing key surfaces here, not
+// in production as silently-English copy.
+const STRICTLY_ENFORCED_LOCALES = ['fr'] as const;
+
+type Catalog = Record<string, unknown>;
+
+function loadCatalog(locale: string, namespace: string): Catalog {
+  return JSON.parse(readFileSync(join(LOCALES_DIR, locale, namespace), 'utf8'));
+}
+
+function collectKeys(node: unknown, prefix = ''): string[] {
+  if (node === null || typeof node !== 'object') {
+    return [prefix];
+  }
+  const keys: string[] = [];
+  for (const [key, value] of Object.entries(node)) {
+    const next = prefix ? `${prefix}.${key}` : key;
+    keys.push(...collectKeys(value, next));
+  }
+  return keys;
+}
+
+const namespaces = readdirSync(join(LOCALES_DIR, DEFAULT_LOCALE)).filter((file) => file.endsWith('.json'));
+
+describe('i18n catalog completeness', () => {
+  for (const locale of STRICTLY_ENFORCED_LOCALES) {
+    describe(locale, () => {
+      it.each(namespaces)('%s ships the same key set as en-US', (namespace) => {
+        const expected = new Set(collectKeys(loadCatalog(DEFAULT_LOCALE, namespace)));
+        const actual = new Set(collectKeys(loadCatalog(locale, namespace)));
+        const missing = [...expected].filter((key) => !actual.has(key));
+        const extra = [...actual].filter((key) => !expected.has(key));
+        expect({ namespace, missing, extra }).toEqual({ namespace, missing: [], extra: [] });
+      });
+    });
+  }
+});

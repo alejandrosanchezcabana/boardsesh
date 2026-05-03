@@ -1,12 +1,12 @@
 {
   "languageSwitcher": {
     "ariaLabel": "Idioma",
-    "ariaLabelWithCurrent": "Idioma: {{language}}",
-    "switchTo": "Cambiar a {{language}}"
+    "ariaLabelWithCurrent": "Idioma: {{language}}"
   },
   "languages": {
     "en-US": "English",
-    "es": "Español"
+    "es": "Español",
+    "fr": "Français"
   },
   "actions": {
     "yes": "Sí",

@@ -49,9 +49,10 @@ describe('page metadata exports', () => {
 
     expect(aboutMetadata.title).toBe('About | Boardsesh');
     expect(aboutMetadata.alternates?.canonical).toBe('/about');
-    expect(aboutMetadata.alternates?.languages).toMatchObject({
+    expect(aboutMetadata.alternates?.languages).toEqual({
       'en-US': '/about',
       es: '/es/about',
+      fr: '/fr/about',
       'x-default': '/about',
     });
     expect(aboutMetadata.openGraph?.url).toBe('/about');
