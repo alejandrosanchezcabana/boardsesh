@@ -57,6 +57,7 @@ export default function FeedItemNewClimb({ item }: FeedItemNewClimbProps) {
             </MuiTypography>
             <MuiTypography variant="body2" component="span" color="text.secondary">
               {' '}
+              {/* i18n-ignore-next-line */}
               created a new climb{' '}
             </MuiTypography>
             <MuiTypography variant="body2" component="span" fontWeight={600}>
@@ -110,6 +111,7 @@ export default function FeedItemNewClimb({ item }: FeedItemNewClimbProps) {
         {/* Comments */}
         <Collapse in={commentsOpen} unmountOnExit>
           <Box sx={{ mt: 1 }}>
+            {/* i18n-ignore-next-line */}
             <CommentSection entityType="climb" entityId={item.climbUuid || item.entityId} title="Comments" />
           </Box>
         </Collapse>

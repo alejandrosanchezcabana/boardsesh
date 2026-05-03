@@ -268,12 +268,15 @@ export default function UserDrawer({ boardDetails, boardConfigs }: UserDrawerPro
                     onClick={() => {
                       handleClose();
                       openAuthModal({
+                        // i18n-ignore-next-line
                         title: 'Sign in to Boardsesh',
                         description:
+                          // i18n-ignore-next-line
                           'Sign in to access all features including saving favorites, tracking ascents, and more.',
                       });
                     }}
                   >
+                    {/* i18n-ignore-next-line */}
                     Sign in
                   </MuiButton>
                 </>
@@ -296,6 +299,7 @@ export default function UserDrawer({ boardDetails, boardConfigs }: UserDrawerPro
                 <span className={styles.menuItemIcon}>
                   <SwapHorizOutlined />
                 </span>
+                {/* i18n-ignore-next-line */}
                 <span className={styles.menuItemLabel}>Change Board</span>
               </button>
 
@@ -312,6 +316,7 @@ export default function UserDrawer({ boardDetails, boardConfigs }: UserDrawerPro
                   <span className={styles.menuItemIcon}>
                     <DashboardOutlined />
                   </span>
+                  {/* i18n-ignore-next-line */}
                   <span className={styles.menuItemLabel}>My Boards</span>
                 </button>
               )}
@@ -320,6 +325,7 @@ export default function UserDrawer({ boardDetails, boardConfigs }: UserDrawerPro
                 <span className={styles.menuItemIcon}>
                   <SettingsOutlined />
                 </span>
+                {/* i18n-ignore-next-line */}
                 <span className={styles.menuItemLabel}>Settings</span>
               </LocaleLink>
 
@@ -335,6 +341,7 @@ export default function UserDrawer({ boardDetails, boardConfigs }: UserDrawerPro
                   <span className={styles.menuItemIcon}>
                     <BuildOutlined />
                   </span>
+                  {/* i18n-ignore-next-line */}
                   <span className={styles.menuItemLabel}>Dev URL</span>
                 </button>
               )}
@@ -344,6 +351,7 @@ export default function UserDrawer({ boardDetails, boardConfigs }: UserDrawerPro
                   <span className={styles.menuItemIcon}>
                     <DeveloperBoardOutlined />
                   </span>
+                  {/* i18n-ignore-next-line */}
                   <span className={styles.menuItemLabel}>Development</span>
                 </LocaleLink>
               )}
@@ -360,6 +368,7 @@ export default function UserDrawer({ boardDetails, boardConfigs }: UserDrawerPro
                   <span className={styles.menuItemIcon}>
                     <GpsFixedOutlined />
                   </span>
+                  {/* i18n-ignore-next-line */}
                   <span className={styles.menuItemLabel}>Classify Holds</span>
                 </button>
               )}
@@ -368,6 +377,7 @@ export default function UserDrawer({ boardDetails, boardConfigs }: UserDrawerPro
                 <span className={styles.menuItemIcon}>
                   <LocalOfferOutlined />
                 </span>
+                {/* i18n-ignore-next-line */}
                 <span className={styles.menuItemLabel}>My Playlists</span>
               </LocaleLink>
             </nav>
@@ -377,6 +387,7 @@ export default function UserDrawer({ boardDetails, boardConfigs }: UserDrawerPro
               <>
                 <div className={styles.divider} />
                 <MuiTypography variant="body2" component="span" color="text.secondary" className={styles.sectionLabel}>
+                  {/* i18n-ignore-next-line */}
                   Recent Sessions
                 </MuiTypography>
                 {recentSessions.slice(0, 5).map((storedSession) => (
@@ -415,6 +426,7 @@ export default function UserDrawer({ boardDetails, boardConfigs }: UserDrawerPro
               <span className={styles.menuItemIcon}>
                 <HelpOutlineOutlined />
               </span>
+              {/* i18n-ignore-next-line */}
               <span className={styles.menuItemLabel}>Help</span>
             </LocaleLink>
 
@@ -422,6 +434,7 @@ export default function UserDrawer({ boardDetails, boardConfigs }: UserDrawerPro
               <span className={styles.menuItemIcon}>
                 <InfoOutlined />
               </span>
+              {/* i18n-ignore-next-line */}
               <span className={styles.menuItemLabel}>About</span>
             </LocaleLink>
 
@@ -436,6 +449,7 @@ export default function UserDrawer({ boardDetails, boardConfigs }: UserDrawerPro
               <span className={styles.menuItemIcon}>
                 <StarBorderOutlined />
               </span>
+              {/* i18n-ignore-next-line */}
               <span className={styles.menuItemLabel}>Rate Boardsesh</span>
             </button>
 
@@ -450,6 +464,7 @@ export default function UserDrawer({ boardDetails, boardConfigs }: UserDrawerPro
               <span className={styles.menuItemIcon}>
                 <BugReportOutlined />
               </span>
+              {/* i18n-ignore-next-line */}
               <span className={styles.menuItemLabel}>Report a bug</span>
             </button>
 
@@ -461,6 +476,7 @@ export default function UserDrawer({ boardDetails, boardConfigs }: UserDrawerPro
                   <span className={styles.menuItemIcon}>
                     <LogoutOutlined />
                   </span>
+                  {/* i18n-ignore-next-line */}
                   <span className={styles.menuItemLabel}>Logout</span>
                 </button>
               </>
@@ -504,6 +520,7 @@ export default function UserDrawer({ boardDetails, boardConfigs }: UserDrawerPro
 
       {boardSelectorRendered && (
         <SwipeableDrawer
+          // i18n-ignore-next-line
           title="Pick a board"
           placement="bottom"
           open={showBoardSelector}

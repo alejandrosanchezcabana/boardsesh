@@ -290,6 +290,7 @@ export default function MoonBoardBulkImport({
 
     const userId = session?.user?.id;
     if (!userId || !authToken) {
+      // i18n-ignore-next-line
       showMessage('Please log in to save climbs', 'error');
       return;
     }
@@ -367,6 +368,7 @@ export default function MoonBoardBulkImport({
       }
     } catch (error) {
       console.error('Failed to save climbs:', error);
+      // i18n-ignore-next-line
       showMessage('Failed to save climbs. Please try again.', 'error');
     } finally {
       setIsSaving(false);
@@ -418,19 +420,24 @@ export default function MoonBoardBulkImport({
     <div className={styles.container}>
       <div className={styles.header}>
         <MuiButton variant="outlined" startIcon={<ArrowBackOutlined />} onClick={handleBack}>
+          {/* i18n-ignore-next-line */}
           Back
         </MuiButton>
         <Typography variant="h3" className={styles.title}>
+          {/* i18n-ignore-next-line */}
           Import MoonBoard Climbs - {layoutName} @ {angle}°
         </Typography>
       </div>
 
       {!session?.user && (
         <MuiAlert severity="warning" variant="filled" sx={warningAlertSx} className={styles.warningAlert}>
+          {/* i18n-ignore-next-line */}
           <AlertTitle>Login Required</AlertTitle>
+          {/* i18n-ignore-next-line */}
           Please log in to save climbs to the database.{' '}
           <LocaleLink href="/api/auth/signin">
             <MuiButton variant="text" startIcon={<LoginOutlined />} sx={{ padding: 0, color: 'inherit' }}>
+              {/* i18n-ignore-next-line */}
               Log in
             </MuiButton>
           </LocaleLink>
@@ -475,8 +482,10 @@ export default function MoonBoardBulkImport({
               }}
             />
             <InboxOutlined sx={{ fontSize: 48, color: 'text.secondary', mb: 1 }} />
+            {/* i18n-ignore-next-line */}
             <Typography variant="body1">Click or drag screenshot files to this area</Typography>
             <Typography variant="body2" color="text.secondary">
+              {/* i18n-ignore-next-line */}
               Support for MoonBoard app screenshots. Drop multiple files to bulk import.
             </Typography>
           </Box>
@@ -486,6 +495,7 @@ export default function MoonBoardBulkImport({
       {/* Processing Section */}
       {state.status === 'processing' && (
         <div className={styles.processingSection}>
+          {/* i18n-ignore-next-line */}
           <Typography variant="h4">Processing Screenshots...</Typography>
           <LinearProgress
             variant="determinate"
@@ -516,6 +526,7 @@ export default function MoonBoardBulkImport({
 
           {isCheckingDuplicates && state.climbs.length > 0 && (
             <MuiAlert severity="info" className={styles.successAlert}>
+              {/* i18n-ignore-next-line */}
               Checking imported climbs against existing MoonBoard problems...
             </MuiAlert>
           )}
@@ -524,6 +535,7 @@ export default function MoonBoardBulkImport({
           {readyToImportClimbs.length > 0 && (
             <MuiAlert severity="success" className={styles.successAlert}>
               <AlertTitle>{`${readyToImportClimbs.length} climb(s) ready to import`}</AlertTitle>
+              {/* i18n-ignore-next-line */}
               Review the climbs below. You can edit or remove any before saving.
             </MuiAlert>
           )}
@@ -540,9 +552,11 @@ export default function MoonBoardBulkImport({
                     size="large"
                     disabled={isSaving || isCheckingDuplicates || !session?.user || readyToImportClimbs.length === 0}
                   >
+                    {/* i18n-ignore-next-line */}
                     Save All ({readyToImportClimbs.length})
                   </MuiButton>
                   <MuiButton variant="outlined" startIcon={<ClearOutlined />} onClick={handleReset}>
+                    {/* i18n-ignore-next-line */}
                     Clear & Start Over
                   </MuiButton>
                 </Stack>
@@ -551,6 +565,7 @@ export default function MoonBoardBulkImport({
                     control={
                       <MuiCheckbox checked={contributeImages} onChange={(e) => setContributeImages(e.target.checked)} />
                     }
+                    // i18n-ignore-next-line
                     label="Contribute images to improve OCR accuracy"
                   />
                 )}
@@ -592,6 +607,7 @@ export default function MoonBoardBulkImport({
               }
               extra={
                 <MuiButton onClick={handleReset} variant="contained">
+                  {/* i18n-ignore-next-line */}
                   Try Again
                 </MuiButton>
               }

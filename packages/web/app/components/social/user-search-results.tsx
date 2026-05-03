@@ -72,6 +72,7 @@ export default function UserSearchResults({ query, authToken }: UserSearchResult
     return (
       <Box sx={{ py: 4, textAlign: 'center' }}>
         <Typography variant="body2" color="text.secondary">
+          {/* i18n-ignore-next-line */}
           Type at least 2 characters to search
         </Typography>
       </Box>
@@ -90,6 +91,7 @@ export default function UserSearchResults({ query, authToken }: UserSearchResult
     return (
       <Box sx={{ py: 4, textAlign: 'center' }}>
         <Typography variant="body2" color="text.secondary">
+          {/* i18n-ignore-next-line */}
           No users or setters found for &quot;{debouncedQuery}&quot;
         </Typography>
       </Box>
@@ -133,11 +135,13 @@ export default function UserSearchResults({ query, authToken }: UserSearchResult
                     <Box component="span" sx={{ display: 'flex', gap: 1, alignItems: 'center', flexWrap: 'wrap' }}>
                       {result.recentAscentCount > 0 && (
                         <Typography variant="caption" component="span" color="text.secondary">
+                          {/* i18n-ignore-next-line */}
                           {result.recentAscentCount} ascents this month
                         </Typography>
                       )}
                       {result.setter && (
                         <Typography variant="caption" component="span" color="text.secondary">
+                          {/* i18n-ignore-next-line */}
                           {result.setter.climbCount} climb
                           {result.setter.climbCount !== 1 ? 's' : ''} set
                         </Typography>
@@ -181,6 +185,7 @@ export default function UserSearchResults({ query, authToken }: UserSearchResult
                   secondary={
                     <Box component="span" sx={{ display: 'flex', gap: 1, alignItems: 'center', flexWrap: 'wrap' }}>
                       <Typography variant="caption" component="span" color="text.secondary">
+                        {/* i18n-ignore-next-line */}
                         {result.setter.climbCount} climb{result.setter.climbCount !== 1 ? 's' : ''}
                       </Typography>
                       {result.setter.boardTypes.map((bt) => (

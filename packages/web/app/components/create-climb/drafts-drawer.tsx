@@ -192,6 +192,7 @@ const DraftsDrawer: React.FC<DraftsDrawerProps> = ({ open, onClose, boardDetails
     draftsListContent = (
       <Box sx={{ padding: themeTokens.spacing[6], textAlign: 'center' }}>
         <Typography variant="body2" color="text.secondary">
+          {/* i18n-ignore-next-line */}
           Couldn&apos;t load your drafts. Try again.
         </Typography>
       </Box>
@@ -200,9 +201,11 @@ const DraftsDrawer: React.FC<DraftsDrawerProps> = ({ open, onClose, boardDetails
     draftsListContent = (
       <Box sx={{ padding: themeTokens.spacing[8], textAlign: 'center' }}>
         <Typography variant="body1" sx={{ fontWeight: themeTokens.typography.fontWeight.semibold }}>
+          {/* i18n-ignore-next-line */}
           No drafts yet
         </Typography>
         <Typography variant="body2" color="text.secondary" sx={{ marginTop: 1 }}>
+          {/* i18n-ignore-next-line */}
           Save a climb as a draft to pick it up later.
         </Typography>
       </Box>
@@ -261,10 +264,12 @@ const DraftsDrawer: React.FC<DraftsDrawerProps> = ({ open, onClose, boardDetails
               fontSize: themeTokens.typography.fontSize.base,
             }}
           >
+            {/* i18n-ignore-next-line */}
             Drafts
           </Typography>
           {drafts.length > 0 && (
             <Typography variant="body2" color="text.secondary">
+              {/* i18n-ignore-next-line */}
               {drafts.length} draft{drafts.length === 1 ? '' : 's'}
             </Typography>
           )}

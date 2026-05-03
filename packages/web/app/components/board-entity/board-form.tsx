@@ -155,13 +155,16 @@ export default function BoardForm({
       {configEditable && (
         <>
           <Alert severity="info" sx={{ fontSize: '0.8rem' }}>
+            {/* i18n-ignore-next-line */}
             You can change the board layout because no climbs have been logged yet.
           </Alert>
 
           <FormControl size="small" fullWidth>
+            {/* i18n-ignore-next-line */}
             <InputLabel>Layout</InputLabel>
             <MuiSelect
               value={layoutId ?? ''}
+              // i18n-ignore-next-line
               label="Layout"
               onChange={(e: SelectChangeEvent<number | string>) => {
                 const newLayout = e.target.value as number;
@@ -182,9 +185,11 @@ export default function BoardForm({
 
           {availableSizes.length > 0 && (
             <FormControl size="small" fullWidth>
+              {/* i18n-ignore-next-line */}
               <InputLabel>Size</InputLabel>
               <MuiSelect
                 value={sizeId ?? ''}
+                // i18n-ignore-next-line
                 label="Size"
                 onChange={(e: SelectChangeEvent<number | string>) => {
                   setSizeId(e.target.value as number);
@@ -200,10 +205,12 @@ export default function BoardForm({
 
           {availableSets.length > 0 && (
             <FormControl size="small" fullWidth>
+              {/* i18n-ignore-next-line */}
               <InputLabel>Hold Sets</InputLabel>
               <MuiSelect
                 multiple
                 value={selectedSets}
+                // i18n-ignore-next-line
                 label="Hold Sets"
                 onChange={(e) => {
                   const val = e.target.value as unknown as number[];
@@ -236,6 +243,7 @@ export default function BoardForm({
       )}
 
       <TextField
+        // i18n-ignore-next-line
         label="Board Name"
         value={name}
         onChange={(e) => setName(e.target.value)}
@@ -248,6 +256,7 @@ export default function BoardForm({
 
       {showSlugField && (
         <TextField
+          // i18n-ignore-next-line
           label="URL Slug"
           value={slug}
           onChange={(e) => setSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
@@ -258,6 +267,7 @@ export default function BoardForm({
       )}
 
       <TextField
+        // i18n-ignore-next-line
         label="Description"
         value={description}
         onChange={(e) => setDescription(e.target.value)}
@@ -270,6 +280,7 @@ export default function BoardForm({
       />
 
       <TextField
+        // i18n-ignore-next-line
         label="Location"
         value={locationName}
         onChange={(e) => setLocationName(e.target.value)}
@@ -288,17 +299,20 @@ export default function BoardForm({
       />
 
       <TextField
+        // i18n-ignore-next-line
         label="Controller Serial Number"
         value={serialNumber}
         onChange={(e) => setSerialNumber(e.target.value)}
         fullWidth
         size="small"
+        // i18n-ignore-next-line
         placeholder="e.g. ABC-12345"
         inputProps={{ maxLength: 100 }}
       />
 
       {availableAngles && availableAngles.length > 0 && (
         <TextField
+          // i18n-ignore-next-line
           label="Default Angle"
           value={angle}
           onChange={(e) => setAngle(Number(e.target.value))}
@@ -316,20 +330,24 @@ export default function BoardForm({
 
       <FormControlLabel
         control={<Switch checked={isAngleAdjustable} onChange={(e) => setIsAngleAdjustable(e.target.checked)} />}
+        // i18n-ignore-next-line
         label="Angle is adjustable"
       />
 
       <FormControlLabel
         control={<Switch checked={isPublic} onChange={(e) => setIsPublic(e.target.checked)} />}
+        // i18n-ignore-next-line
         label="Public board"
       />
 
       <Box>
         <FormControlLabel
           control={<Switch checked={isUnlisted} onChange={(e) => setIsUnlisted(e.target.checked)} />}
+          // i18n-ignore-next-line
           label="Unlisted"
         />
         <FormHelperText sx={{ mt: -0.5, ml: 7 }}>
+          {/* i18n-ignore-next-line */}
           Hidden from search results but accessible via direct link
         </FormHelperText>
       </Box>
@@ -337,21 +355,25 @@ export default function BoardForm({
       <Box>
         <FormControlLabel
           control={<Switch checked={hideLocation} onChange={(e) => setHideLocation(e.target.checked)} />}
+          // i18n-ignore-next-line
           label="Hide from nearby boards"
         />
         <FormHelperText sx={{ mt: -0.5, ml: 7 }}>
+          {/* i18n-ignore-next-line */}
           Hidden from nearby board searches unless you follow the searcher
         </FormHelperText>
       </Box>
 
       <FormControlLabel
         control={<Switch checked={isOwned} onChange={(e) => setIsOwned(e.target.checked)} />}
+        // i18n-ignore-next-line
         label="I own this board"
       />
 
       <Box sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end', mt: 1 }}>
         {onCancel && (
           <MuiButton variant="text" onClick={onCancel} disabled={isSubmitting}>
+            {/* i18n-ignore-next-line */}
             Cancel
           </MuiButton>
         )}

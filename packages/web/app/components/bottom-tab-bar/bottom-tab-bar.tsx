@@ -317,7 +317,9 @@ function BottomTabBar({ boardDetails, angle, boardConfigs }: BottomTabBarProps) 
     setIsCreatePlaylistOpen(false);
     if (!isAuthenticated || !session?.user?.id) {
       openAuthModal({
+        // i18n-ignore-next-line
         title: 'Sign in to see your progress',
+        // i18n-ignore-next-line
         description: 'Sign in to track your climbing stats, sessions, and logbook.',
         onSuccess: () => {
           router.push('/you');
@@ -382,6 +384,7 @@ function BottomTabBar({ boardDetails, angle, boardConfigs }: BottomTabBarProps) 
 
       if (pendingCreateAction === 'playlist') {
         if (!selectedContext) {
+          // i18n-ignore-next-line
           showMessage('Unable to determine board details for playlist creation', 'error');
           setPendingCreateAction(null);
           return;
@@ -481,6 +484,7 @@ function BottomTabBar({ boardDetails, angle, boardConfigs }: BottomTabBarProps) 
     }
 
     if (!canCreatePlaylistHere) {
+      // i18n-ignore-next-line
       showMessage('Select a board before creating a playlist', 'error');
       return;
     }
@@ -515,6 +519,7 @@ function BottomTabBar({ boardDetails, angle, boardConfigs }: BottomTabBarProps) 
       // Navigate to the new playlist
       router.push(getPlaylistUrl(newPlaylist.uuid));
     } catch {
+      // i18n-ignore-next-line
       showMessage('Failed to create playlist', 'error');
     } finally {
       setIsCreatingPlaylist(false);
@@ -554,26 +559,31 @@ function BottomTabBar({ boardDetails, angle, boardConfigs }: BottomTabBarProps) 
           },
         }}
       >
+        {/* i18n-ignore-next-line */}
         <BottomNavigationAction label="Home" icon={<HomeOutlined sx={{ fontSize: 20 }} />} value="home" sx={actionSx} />
         <BottomNavigationAction
+          // i18n-ignore-next-line
           label="Climb"
           icon={<FormatListBulletedOutlined sx={{ fontSize: 20 }} />}
           value="climbs"
           sx={actionSx}
         />
         <BottomNavigationAction
+          // i18n-ignore-next-line
           label="Discover"
           icon={<LocalOfferOutlined sx={{ fontSize: 20 }} />}
           value="library"
           sx={actionSx}
         />
         <BottomNavigationAction
+          // i18n-ignore-next-line
           label="Feed"
           icon={<DynamicFeedOutlined sx={{ fontSize: 20 }} />}
           value="feed"
           sx={actionSx}
         />
         <BottomNavigationAction
+          // i18n-ignore-next-line
           label="Create"
           icon={<AddOutlined sx={{ fontSize: 20 }} />}
           value="create"

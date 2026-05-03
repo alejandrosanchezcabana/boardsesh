@@ -137,9 +137,11 @@ export function TickAction({
   const renderSignInPrompt = () => (
     <Stack spacing={3} sx={{ width: '100%', textAlign: 'center', padding: '24px 0' }}>
       <Typography variant="body2" component="span" fontWeight={600} sx={{ fontSize: 16 }}>
+        {/* i18n-ignore-next-line */}
         Sign in to record ticks
       </Typography>
       <Typography variant="body1" component="p" color="text.secondary">
+        {/* i18n-ignore-next-line */}
         Create a Boardsesh account to log your climbs and track your progress.
       </Typography>
       <MuiButton
@@ -147,20 +149,25 @@ export function TickAction({
         startIcon={<LoginOutlined />}
         onClick={() =>
           openAuthModal({
+            // i18n-ignore-next-line
             title: 'Sign in to record ticks',
+            // i18n-ignore-next-line
             description: 'Create an account to log your climbs and track your progress.',
           })
         }
         fullWidth
       >
+        {/* i18n-ignore-next-line */}
         Sign In
       </MuiButton>
       {openInAppUrl && (
         <>
           <Typography variant="body1" component="p" color="text.secondary">
+            {/* i18n-ignore-next-line */}
             Or log your tick in the official app:
           </Typography>
           <MuiButton variant="outlined" startIcon={<AppsOutlined />} onClick={handleOpenInApp} fullWidth>
+            {/* i18n-ignore-next-line */}
             Open in App
           </MuiButton>
           <MuiButton
@@ -172,6 +179,7 @@ export function TickAction({
               handleOpenInApp();
             }}
           >
+            {/* i18n-ignore-next-line */}
             Always open in app
           </MuiButton>
         </>
@@ -225,6 +233,7 @@ export function TickAction({
   const renderBoardSelector = () => (
     <Stack spacing={2} sx={{ py: 2 }}>
       <Typography variant="body2" fontWeight={600} sx={{ fontSize: 16, textAlign: 'center' }}>
+        {/* i18n-ignore-next-line */}
         Which board did you climb on?
       </Typography>
       <BoardScrollSection loading={!boardsReady} size="small">

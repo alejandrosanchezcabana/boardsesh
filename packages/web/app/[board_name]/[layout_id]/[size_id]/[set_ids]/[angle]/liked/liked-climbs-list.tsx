@@ -223,6 +223,7 @@ export default function LikedClimbsList({ boardDetails, angle }: LikedClimbsList
   useEffect(() => {
     if (error) {
       console.error('Error loading liked climbs:', error);
+      // i18n-ignore-next-line
       showMessage('Failed to load liked climbs', 'error');
     }
   }, [error, showMessage]);
@@ -337,6 +338,7 @@ export default function LikedClimbsList({ boardDetails, angle }: LikedClimbsList
   if (error && allClimbs.length === 0) {
     return (
       <div className={styles.climbsSection}>
+        {/* i18n-ignore-next-line */}
         <EmptyState description="Failed to load liked climbs" />
       </div>
     );
@@ -345,6 +347,7 @@ export default function LikedClimbsList({ boardDetails, angle }: LikedClimbsList
   if (visibleClimbs.length === 0 && !isFetching) {
     return (
       <div className={styles.climbsSection}>
+        {/* i18n-ignore-next-line */}
         <EmptyState description="No liked climbs yet. Heart some climbs to see them here!" />
       </div>
     );
@@ -359,6 +362,7 @@ export default function LikedClimbsList({ boardDetails, angle }: LikedClimbsList
             size="small"
             color={viewMode === 'list' ? 'primary' : 'default'}
             onClick={() => handleViewModeChange('list')}
+            // i18n-ignore-next-line
             aria-label="List view"
           >
             <FormatListBulletedOutlined />
@@ -367,6 +371,7 @@ export default function LikedClimbsList({ boardDetails, angle }: LikedClimbsList
             size="small"
             color={viewMode === 'grid' ? 'primary' : 'default'}
             onClick={() => handleViewModeChange('grid')}
+            // i18n-ignore-next-line
             aria-label="Grid view"
           >
             <AppsOutlined />

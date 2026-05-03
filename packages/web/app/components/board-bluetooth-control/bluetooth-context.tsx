@@ -406,6 +406,7 @@ export function BluetoothProvider({
       // Provider mounted on a route that doesn't carry an [angle] segment.
       // Silently building a URL at angle 0 would yank the user to a fake
       // angle they never picked — surface the issue and let them choose.
+      // i18n-ignore-next-line
       showMessage("Couldn't switch — open a climb at a specific angle first.", 'warning');
       return;
     }
@@ -414,6 +415,7 @@ export function BluetoothProvider({
       // Couldn't resolve a switch URL (unknown layout/size, missing slug data).
       // Don't silently close both dialogs and strand the user — surface the
       // failure so they can pick "Connect anyway" or cancel deliberately.
+      // i18n-ignore-next-line
       showMessage("Couldn't switch to that board's config. Try Connect anyway.", 'warning');
       return;
     }

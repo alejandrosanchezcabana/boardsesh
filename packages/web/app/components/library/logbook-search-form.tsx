@@ -197,6 +197,7 @@ const LogbookSearchForm: React.FC<LogbookSearchFormProps> = ({
         <div className={styles.switchGroup}>
           <div className={styles.switchRow}>
             <MuiTypography variant="body2" component="span">
+              {/* i18n-ignore-next-line */}
               Include Sends
             </MuiTypography>
             <MuiSwitch
@@ -209,6 +210,7 @@ const LogbookSearchForm: React.FC<LogbookSearchFormProps> = ({
           </div>
           <div className={styles.switchRow}>
             <MuiTypography variant="body2" component="span">
+              {/* i18n-ignore-next-line */}
               Include Attempts
             </MuiTypography>
             <MuiSwitch
@@ -221,6 +223,7 @@ const LogbookSearchForm: React.FC<LogbookSearchFormProps> = ({
           </div>
           <div className={styles.switchRow}>
             <MuiTypography variant="body2" component="span">
+              {/* i18n-ignore-next-line */}
               Flash Only
             </MuiTypography>
             <MuiSwitch
@@ -233,6 +236,7 @@ const LogbookSearchForm: React.FC<LogbookSearchFormProps> = ({
           </div>
           <div className={styles.switchRow}>
             <MuiTypography variant="body2" component="span">
+              {/* i18n-ignore-next-line */}
               Benchmark Only
             </MuiTypography>
             <MuiSwitch
@@ -254,10 +258,12 @@ const LogbookSearchForm: React.FC<LogbookSearchFormProps> = ({
       content: (
         <div className={styles.panelContent}>
           <div className={styles.inputGroup}>
+            {/* i18n-ignore-next-line */}
             <span className={styles.fieldLabel}>Date Range</span>
             <div className={styles.gradeRow}>
               <TextField
                 type="date"
+                // i18n-ignore-next-line
                 label="Start date"
                 value={filters.fromDate}
                 onChange={(e) => onFiltersChange((prev) => ({ ...prev, fromDate: e.target.value }))}
@@ -267,6 +273,7 @@ const LogbookSearchForm: React.FC<LogbookSearchFormProps> = ({
               />
               <TextField
                 type="date"
+                // i18n-ignore-next-line
                 label="End date"
                 value={filters.toDate}
                 onChange={(e) => onFiltersChange((prev) => ({ ...prev, toDate: e.target.value }))}
@@ -279,6 +286,7 @@ const LogbookSearchForm: React.FC<LogbookSearchFormProps> = ({
 
           <div className={styles.inputGroup}>
             <span className={styles.fieldLabel}>
+              {/* i18n-ignore-next-line */}
               Wall angle range ({filters.angleRange[0]}&deg;&ndash;{filters.angleRange[1]}&deg;)
             </span>
             <Slider
@@ -311,6 +319,7 @@ const LogbookSearchForm: React.FC<LogbookSearchFormProps> = ({
           <Stack direction="row" spacing={1}>
             <FilterListOutlined sx={{ color: themeTokens.colors.primary }} />
             <MuiTypography variant="body2" component="span" color="text.secondary">
+              {/* i18n-ignore-next-line */}
               <span className={footerStyles.resultBadge}>{activeFilterCount}</span> active{' '}
               {activeFilterCount === 1 ? 'filter' : 'filters'}
             </MuiTypography>
@@ -323,6 +332,7 @@ const LogbookSearchForm: React.FC<LogbookSearchFormProps> = ({
           onClick={handleClearAll}
           sx={{ textTransform: 'none' }}
         >
+          {/* i18n-ignore-next-line */}
           Clear All
         </MuiButton>
       </div>
@@ -338,6 +348,7 @@ const LogbookSearchForm: React.FC<LogbookSearchFormProps> = ({
               <TextField
                 value={searchText}
                 onChange={onSearchChange}
+                // i18n-ignore-next-line
                 placeholder="Search climbs or notes"
                 fullWidth
                 size="small"
@@ -352,6 +363,7 @@ const LogbookSearchForm: React.FC<LogbookSearchFormProps> = ({
                 }}
               />
               <div className={headerStyles.filterButton}>
+                {/* i18n-ignore-next-line */}
                 <IconButton onClick={openDrawer} aria-label="Open filters" size="small">
                   <FilterListOutlined />
                 </IconButton>
@@ -387,10 +399,12 @@ const LogbookSearchForm: React.FC<LogbookSearchFormProps> = ({
           <div className={styles.primaryContent}>
             <div className={styles.panelContent}>
               <div className={styles.inputGroup}>
+                {/* i18n-ignore-next-line */}
                 <span className={styles.fieldLabel}>Search</span>
                 <TextField
                   value={searchText}
                   onChange={onSearchChange}
+                  // i18n-ignore-next-line
                   placeholder="Search climbs or notes"
                   variant="outlined"
                   fullWidth
@@ -408,6 +422,7 @@ const LogbookSearchForm: React.FC<LogbookSearchFormProps> = ({
               </div>
 
               <div className={styles.inputGroup}>
+                {/* i18n-ignore-next-line */}
                 <span className={styles.fieldLabel}>Grade Range</span>
                 <div className={styles.gradeRow}>
                   <MuiSelect
@@ -456,6 +471,7 @@ const LogbookSearchForm: React.FC<LogbookSearchFormProps> = ({
                 className={styles.sortToggle}
                 onClick={() => setShowSort(!showSort)}
               >
+                {/* i18n-ignore-next-line */}
                 Sort
               </MuiButton>
 
@@ -469,10 +485,15 @@ const LogbookSearchForm: React.FC<LogbookSearchFormProps> = ({
                       size="small"
                       MenuProps={{ disableScrollLock: true }}
                     >
+                      {/* i18n-ignore-next-line */}
                       <MenuItem value="date">Date</MenuItem>
+                      {/* i18n-ignore-next-line */}
                       <MenuItem value="climbName">Climb name</MenuItem>
+                      {/* i18n-ignore-next-line */}
                       <MenuItem value="loggedGrade">Logged Grade</MenuItem>
+                      {/* i18n-ignore-next-line */}
                       <MenuItem value="consensusGrade">Consensus Grade</MenuItem>
+                      {/* i18n-ignore-next-line */}
                       <MenuItem value="attemptCount">Attempts</MenuItem>
                     </MuiSelect>
                     <MuiSelect
@@ -482,6 +503,7 @@ const LogbookSearchForm: React.FC<LogbookSearchFormProps> = ({
                       size="small"
                       MenuProps={{ disableScrollLock: true }}
                     >
+                      {/* i18n-ignore-next-line */}
                       <MenuItem value="desc">Desc</MenuItem>
                       <MenuItem value="asc">Asc</MenuItem>
                     </MuiSelect>

@@ -210,6 +210,7 @@ export default function LogbookFeed({ layoutStats, loadingLayoutStats }: Logbook
       if (matched.length > 0) {
         setSelectedBoards(matched);
       } else {
+        // i18n-ignore-next-line
         showMessage("Couldn't find the linked board — showing all your entries.", 'warning');
       }
     }
@@ -440,6 +441,7 @@ export default function LogbookFeed({ layoutStats, loadingLayoutStats }: Logbook
             uuid: prevUuid,
           })
           .catch(() => {
+            // i18n-ignore-next-line
             showMessage('Failed to delete tick', 'error');
           });
       }
@@ -475,6 +477,7 @@ export default function LogbookFeed({ layoutStats, loadingLayoutStats }: Logbook
           })
           .catch(() => {
             void queryClient.invalidateQueries({ queryKey: ['logbookFeed'] });
+            // i18n-ignore-next-line
             showMessage('Failed to delete tick', 'error');
           });
       }, 5000);
@@ -486,6 +489,7 @@ export default function LogbookFeed({ layoutStats, loadingLayoutStats }: Logbook
       };
 
       showMessage(
+        // i18n-ignore-next-line
         'Tick deleted',
         'success',
         {

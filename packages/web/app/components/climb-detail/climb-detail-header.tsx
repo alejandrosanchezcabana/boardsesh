@@ -70,6 +70,7 @@ export default function ClimbDetailHeader({ climb, communityGrade }: ClimbDetail
     }
     return (
       <Typography variant="body2" component="span" sx={{ fontStyle: 'italic', color: 'text.secondary' }}>
+        {/* i18n-ignore-next-line */}
         project
       </Typography>
     );

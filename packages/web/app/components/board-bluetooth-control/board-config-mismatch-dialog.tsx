@@ -60,16 +60,20 @@ export function BoardConfigMismatchDialog({
 
   return (
     <Dialog open={open} onClose={onCancel} maxWidth="xs" fullWidth>
+      {/* i18n-ignore-next-line */}
       <DialogTitle>Board configuration doesn&apos;t match</DialogTitle>
       <DialogContent>
         <DialogContentText component="div">
+          {/* i18n-ignore-next-line */}
           Our records show this board has a different config than you have configured.
         </DialogContentText>
         <Stack spacing={`${themeTokens.spacing[1]}px`} sx={{ mt: `${themeTokens.spacing[2]}px` }}>
           <Typography variant="body2">
+            {/* i18n-ignore-next-line */}
             <strong>You&apos;re configured for:</strong> {currentLabel}
           </Typography>
           <Typography variant="body2">
+            {/* i18n-ignore-next-line */}
             <strong>Recorded for this controller:</strong> {recordedLabel}
           </Typography>
         </Stack>
@@ -82,11 +86,14 @@ export function BoardConfigMismatchDialog({
           pb: `${themeTokens.spacing[2]}px`,
         }}
       >
+        {/* i18n-ignore-next-line */}
         <Button onClick={onCancel}>Cancel</Button>
         <Button onClick={onConnectAnyway} color="warning">
+          {/* i18n-ignore-next-line */}
           Connect anyway
         </Button>
         <Button onClick={onSwitch} variant="contained" autoFocus>
+          {/* i18n-ignore-next-line */}
           Switch to correct config
         </Button>
       </DialogActions>

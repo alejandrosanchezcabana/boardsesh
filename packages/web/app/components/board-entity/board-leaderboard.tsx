@@ -116,6 +116,7 @@ export default function BoardLeaderboard({ boardUuid }: BoardLeaderboardProps) {
       )}
       {!isLoading && (!leaderboard || leaderboard.entries.length === 0) && (
         <MuiTypography variant="body2" color="text.secondary" sx={{ textAlign: 'center', py: 4 }}>
+          {/* i18n-ignore-next-line */}
           No activity yet for this period.
         </MuiTypography>
       )}
@@ -126,8 +127,10 @@ export default function BoardLeaderboard({ boardUuid }: BoardLeaderboardProps) {
               <TableHead>
                 <TableRow>
                   <TableCell sx={{ fontWeight: themeTokens.typography.fontWeight.semibold, width: 40 }}>#</TableCell>
+                  {/* i18n-ignore-next-line */}
                   <TableCell sx={{ fontWeight: themeTokens.typography.fontWeight.semibold }}>Climber</TableCell>
                   <TableCell align="right" sx={{ fontWeight: themeTokens.typography.fontWeight.semibold }}>
+                    {/* i18n-ignore-next-line */}
                     Sends
                   </TableCell>
                   <TableCell
@@ -137,9 +140,11 @@ export default function BoardLeaderboard({ boardUuid }: BoardLeaderboardProps) {
                       display: { xs: 'none', sm: 'table-cell' },
                     }}
                   >
+                    {/* i18n-ignore-next-line */}
                     Flashes
                   </TableCell>
                   <TableCell align="right" sx={{ fontWeight: themeTokens.typography.fontWeight.semibold }}>
+                    {/* i18n-ignore-next-line */}
                     Hardest
                   </TableCell>
                 </TableRow>

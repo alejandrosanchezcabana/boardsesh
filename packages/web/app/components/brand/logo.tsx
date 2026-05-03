@@ -30,6 +30,7 @@ const Logo = ({ size = 'md', showText = true, linkToHome = true }: LogoProps) =>
         color: 'inherit',
       }}
     >
+      {/* i18n-ignore-next-line */}
       <Image src="/icon.svg" width={icon} height={icon} alt="Boardsesh logo" priority />
       {showText && (
         <span
@@ -41,6 +42,7 @@ const Logo = ({ size = 'md', showText = true, linkToHome = true }: LogoProps) =>
             lineHeight: 1,
           }}
         >
+          {/* i18n-ignore-next-line */}
           boardsesh
         </span>
       )}

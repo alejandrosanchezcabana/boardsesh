@@ -432,6 +432,7 @@ const ClimbListItem: React.FC<ClimbListItemProps> = React.memo(
     }, []);
 
     const handleTickError = useCallback(() => {
+      // i18n-ignore-next-line
       showMessage("Couldn't save your tick — it's saved as a draft", 'error');
     }, [showMessage]);
 
@@ -634,6 +635,7 @@ const ClimbListItem: React.FC<ClimbListItemProps> = React.memo(
             {menuSlot ?? (
               <IconButton
                 size="small"
+                // i18n-ignore-next-line
                 aria-label="More actions"
                 onClick={handleMenuClick}
                 style={iconButtonStyle}

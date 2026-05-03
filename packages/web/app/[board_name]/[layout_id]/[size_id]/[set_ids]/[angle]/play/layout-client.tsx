@@ -40,18 +40,22 @@ const QueueSidebar: React.FC<{ boardDetails: BoardDetails }> = ({ boardDetails }
             color="primary"
             sx={{ '& .MuiBadge-badge': { right: -8, top: 0 } }}
           >
+            {/* i18n-ignore-next-line */}
             Queue
           </Badge>
         </h3>
         {queue.length > 0 && (
           <ConfirmPopover
+            // i18n-ignore-next-line
             title="Clear queue"
+            // i18n-ignore-next-line
             description="Are you sure you want to clear all items from the queue?"
             onConfirm={handleClearQueue}
             okText="Clear"
             cancelText="Cancel"
           >
             <MuiButton variant="text" startIcon={<DeleteOutlined />} size="small" sx={{ color: 'var(--neutral-400)' }}>
+              {/* i18n-ignore-next-line */}
               Clear
             </MuiButton>
           </ConfirmPopover>

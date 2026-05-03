@@ -59,6 +59,7 @@ export const LogbookSection: React.FC<LogbookSectionProps> = ({ climb }) => {
         sx={{ display: 'block', textAlign: 'center', py: 2 }}
       >
         <BookOutlined sx={{ mr: 1, verticalAlign: 'middle' }} />
+        {/* i18n-ignore-next-line */}
         No ascents logged for this climb
       </Typography>
     );

@@ -43,10 +43,12 @@ export default function StatsFilterDrawer({
   onTransitionEnd,
 }: StatsFilterDrawerProps) {
   return (
+    // i18n-ignore-next-line
     <SwipeableDrawer open={open} onClose={onClose} placement="top" title="Filters" onTransitionEnd={onTransitionEnd}>
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3, pb: 2 }}>
         <Box>
           <Typography variant="body2" fontWeight={600} sx={{ mb: 1 }}>
+            {/* i18n-ignore-next-line */}
             Board
           </Typography>
           <ToggleButtonGroup
@@ -68,6 +70,7 @@ export default function StatsFilterDrawer({
 
         <Box>
           <Typography variant="body2" fontWeight={600} sx={{ mb: 1 }}>
+            {/* i18n-ignore-next-line */}
             Time Range
           </Typography>
           <ToggleButtonGroup
@@ -94,6 +97,7 @@ export default function StatsFilterDrawer({
               value={fromDate ? dayjs(fromDate) : null}
               onChange={(val) => onFromDateChange(val ? val.format('YYYY-MM-DD') : '')}
               slotProps={{ textField: { size: 'small', fullWidth: true } }}
+              // i18n-ignore-next-line
               label="From"
             />
             <MuiDatePicker

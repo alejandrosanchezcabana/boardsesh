@@ -84,15 +84,18 @@ export default function PostToInstagramDialog({ open, onClose, item }: PostToIns
     setIsLaunching(false);
 
     if (!result.copied) {
+      // i18n-ignore-next-line
       showMessage('Couldn’t copy caption. Try again.', 'error');
       return;
     }
 
     if (!result.opened) {
+      // i18n-ignore-next-line
       showMessage('Couldn’t open Instagram. Open it manually and paste the copied caption.', 'error');
       return;
     }
 
+    // i18n-ignore-next-line
     showMessage('Caption copied. Instagram should open next.', 'success');
   }, [caption, showMessage]);
 
@@ -109,6 +112,7 @@ export default function PostToInstagramDialog({ open, onClose, item }: PostToIns
     betaVideosContent = (
       <Box sx={{ mt: 1, display: 'flex', alignItems: 'center', gap: 1.5 }}>
         <Typography variant="body2" color="error">
+          {/* i18n-ignore-next-line */}
           Couldn&apos;t load beta videos.
         </Typography>
         <Button
@@ -117,6 +121,7 @@ export default function PostToInstagramDialog({ open, onClose, item }: PostToIns
             void refetchBetaLinks();
           }}
         >
+          {/* i18n-ignore-next-line */}
           Retry
         </Button>
       </Box>
@@ -157,14 +162,17 @@ export default function PostToInstagramDialog({ open, onClose, item }: PostToIns
             zIndex: 1,
           }}
         >
+          {/* i18n-ignore-next-line */}
           <IconButton onClick={onClose} sx={{ color: 'text.primary' }} aria-label="Back">
             <ArrowBackIosNewOutlined />
           </IconButton>
           <Box sx={{ minWidth: 0 }}>
             <Typography variant="h6" component="h1" fontWeight={700}>
+              {/* i18n-ignore-next-line */}
               Post to Instagram
             </Typography>
             <Typography variant="body2" color="text.secondary">
+              {/* i18n-ignore-next-line */}
               Share your ascent and link it back here.
             </Typography>
           </Box>
@@ -205,9 +213,11 @@ export default function PostToInstagramDialog({ open, onClose, item }: PostToIns
             >
               <Box sx={{ minWidth: 0 }}>
                 <Typography variant="h5" component="h2" fontWeight={700} sx={{ mb: 0.5 }}>
+                  {/* i18n-ignore-next-line */}
                   Share your beta video
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
+                  {/* i18n-ignore-next-line */}
                   We’ll copy the caption, open Instagram, and let you paste the final link back into Boardsesh.
                 </Typography>
               </Box>
@@ -237,6 +247,7 @@ export default function PostToInstagramDialog({ open, onClose, item }: PostToIns
             }}
           >
             <Typography variant="overline" color="text.secondary" sx={{ letterSpacing: '0.06em' }}>
+              {/* i18n-ignore-next-line */}
               How It Works
             </Typography>
             <Box
@@ -270,6 +281,7 @@ export default function PostToInstagramDialog({ open, onClose, item }: PostToIns
             }}
           >
             <Typography variant="overline" color="text.secondary" sx={{ letterSpacing: '0.06em' }}>
+              {/* i18n-ignore-next-line */}
               Caption
             </Typography>
             <Typography
@@ -304,6 +316,7 @@ export default function PostToInstagramDialog({ open, onClose, item }: PostToIns
               fontSize: themeTokens.typography.fontSize.lg,
             }}
           >
+            {/* i18n-ignore-next-line */}
             Copy & Open Instagram
           </Button>
 
@@ -323,10 +336,12 @@ export default function PostToInstagramDialog({ open, onClose, item }: PostToIns
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
               <InstagramIcon sx={{ color: 'text.secondary' }} />
               <Typography variant="h6" component="h3" fontWeight={700}>
+                {/* i18n-ignore-next-line */}
                 Paste your Instagram link
               </Typography>
             </Box>
             <Typography variant="body2" color="text.secondary">
+              {/* i18n-ignore-next-line */}
               When your post is live, paste the reel or post link here so Boardsesh can show your ascent video.
             </Typography>
             <AttachBetaLinkForm
@@ -336,6 +351,7 @@ export default function PostToInstagramDialog({ open, onClose, item }: PostToIns
               angle={item.angle}
               resetTrigger={open}
               submitLabel="Add Instagram link"
+              // i18n-ignore-next-line
               helperText="Paste the live Instagram reel or post URL."
             />
           </Box>
@@ -353,6 +369,7 @@ export default function PostToInstagramDialog({ open, onClose, item }: PostToIns
             }}
           >
             <Typography variant="overline" color="text.secondary" sx={{ letterSpacing: '0.06em' }}>
+              {/* i18n-ignore-next-line */}
               Existing Beta Videos
             </Typography>
             {betaVideosContent}

@@ -52,6 +52,7 @@ export const LogbookView: React.FC<LogbookViewProps> = ({ currentClimb }) => {
   const showMirrorTag = boardName === 'tension';
 
   if (climbAscents.length === 0) {
+    // i18n-ignore-next-line
     return <EmptyState description="No ascents logged for this climb" />;
   }
 

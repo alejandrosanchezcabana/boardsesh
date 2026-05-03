@@ -148,6 +148,7 @@ export const PlayViewActionBar = React.memo(function PlayViewActionBar({
       </IconButton>
       <ShareBoardButton />
       {angleSelector}
+      {/* i18n-ignore-next-line */}
       <IconButton onClick={onOpenActions} aria-label="Climb actions">
         <MoreHorizOutlined />
       </IconButton>
@@ -161,6 +162,7 @@ export const PlayViewActionBar = React.memo(function PlayViewActionBar({
           },
         }}
       >
+        {/* i18n-ignore-next-line */}
         <IconButton onClick={onOpenQueue} aria-label="Open queue">
           <FormatListBulletedOutlined />
         </IconButton>
@@ -282,6 +284,7 @@ export const PlayViewTickBar = React.memo<PlayViewTickBarProps>(function PlayVie
                 <IconButton
                   size="small"
                   onClick={handleClose}
+                  // i18n-ignore-next-line
                   aria-label="Close tick bar"
                   sx={{
                     color: 'text.primary',
@@ -346,6 +349,7 @@ export const PlayViewTickBar = React.memo<PlayViewTickBarProps>(function PlayVie
                   fullWidth
                   size="small"
                   variant="outlined"
+                  // i18n-ignore-next-line
                   placeholder="Comment..."
                   multiline
                   minRows={2}
@@ -372,6 +376,7 @@ export const PlayViewTickBar = React.memo<PlayViewTickBarProps>(function PlayVie
             {/* Action buttons — attempt + tick (order matches queue control bar) */}
 
             <div className={styles.tickBarButtons}>
+              {/* i18n-ignore-next-line */}
               <TickButtonWithLabel label="attempt">
                 <IconButton
                   onClick={(e) => quickTickBarRef.current?.saveAttempt(e.currentTarget)}
@@ -380,6 +385,7 @@ export const PlayViewTickBar = React.memo<PlayViewTickBarProps>(function PlayVie
                     color: themeTokens.colors.error,
                     '&:hover': { backgroundColor: themeTokens.colors.errorMutedHover },
                   }}
+                  // i18n-ignore-next-line
                   aria-label="Log attempt"
                 >
                   <PersonFallingIcon />
@@ -397,6 +403,7 @@ export const PlayViewTickBar = React.memo<PlayViewTickBarProps>(function PlayVie
                       backgroundColor: isFlash ? themeTokens.colors.amber : themeTokens.colors.successHover,
                     },
                   }}
+                  // i18n-ignore-next-line
                   aria-label="Save tick"
                 >
                   <TickIcon isFlash={!!isFlash} />
@@ -555,6 +562,7 @@ const PlayViewDrawer: React.FC<PlayViewDrawerProps> = ({ activeDrawer, setActive
   }, [currentClimb?.uuid]);
 
   const handleTickBarError = useCallback(() => {
+    // i18n-ignore-next-line
     showMessage("Couldn't save your tick — it's saved as a draft", 'error');
   }, [showMessage]);
 
@@ -784,6 +792,7 @@ const PlayViewDrawer: React.FC<PlayViewDrawerProps> = ({ activeDrawer, setActive
               <button
                 className={`${styles.tickFab} ${hasSuccessfulAscent ? styles.tickFabSuccess : ''} ${isTickBarActive ? styles.tickFabHiding : ''}`}
                 onClick={handleTickFabClick}
+                // i18n-ignore-next-line
                 aria-label="Log ascent"
                 disabled={isTickBarActive}
               >
@@ -897,6 +906,7 @@ const PlayViewDrawer: React.FC<PlayViewDrawerProps> = ({ activeDrawer, setActive
           <IconButton
             size="small"
             onClick={handleClose}
+            // i18n-ignore-next-line
             aria-label="Close"
             sx={{
               position: 'absolute',

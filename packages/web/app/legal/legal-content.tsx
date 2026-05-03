@@ -182,7 +182,7 @@ export default function LegalContent() {
                   {t('legal.dmca.review1')}
                 </Typography>
                 <Typography variant="body1" component="p">
-                  <strong>{t('legal.dmca.contactLabel')}</strong>{' '}
+                  <strong>{t('legal.dmca.contactLabel')}</strong> {/* i18n-ignore-next-line */}
                   <MuiLink href="mailto:legal@mdj.ac">legal@mdj.ac</MuiLink>
                 </Typography>
               </section>

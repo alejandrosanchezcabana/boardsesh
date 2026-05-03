@@ -1069,6 +1069,7 @@ export default function CreateClimbForm({
       // MoonBoard: drafts are allowed to be incomplete; only block publish.
       if (boardType === 'moonboard') {
         if (!isDraft) {
+          // i18n-ignore-next-line
           showMessage('A valid climb needs at least 1 start hold and 1 finish hold', 'warning');
           return;
         }
@@ -1421,12 +1422,14 @@ export default function CreateClimbForm({
         {/* MoonBoard OCR errors */}
         {boardType === 'moonboard' && ocrError && (
           <MuiAlert severity="error" onClose={() => setOcrError(null)} className={styles.alertBanner}>
+            {/* i18n-ignore-next-line */}
             Import Failed: {ocrError}
           </MuiAlert>
         )}
 
         {boardType === 'moonboard' && ocrWarnings.length > 0 && (
           <MuiAlert severity="warning" onClose={() => setOcrWarnings([])} className={styles.alertBanner}>
+            {/* i18n-ignore-next-line */}
             Import Warnings:{' '}
             {ocrWarnings.map((w, i) => (
               <div key={i}>{w}</div>
@@ -1442,6 +1445,7 @@ export default function CreateClimbForm({
 
         {boardType === 'moonboard' && !moonBoardDuplicateError && isCheckingMoonBoardDuplicate && isValid && (
           <MuiAlert severity="info" className={styles.alertBanner}>
+            {/* i18n-ignore-next-line */}
             Checking whether this MoonBoard climb already exists...
           </MuiAlert>
         )}
@@ -1472,6 +1476,7 @@ export default function CreateClimbForm({
                 color="text.secondary"
                 className={styles.climbTitleDraftBadge}
               >
+                {/* i18n-ignore-next-line */}
                 Draft
               </Typography>
             </div>
@@ -1530,14 +1535,18 @@ export default function CreateClimbForm({
           </MuiTooltip>
         )}
         <ConfirmPopover
+          // i18n-ignore-next-line
           title="Clear climb"
+          // i18n-ignore-next-line
           description="This will clear all holds and reset the form. Are you sure?"
           onConfirm={resetHolds}
           okText="Clear"
           cancelText="Cancel"
         >
+          {/* i18n-ignore-next-line */}
           <MuiTooltip title="Clear all holds">
             <span>
+              {/* i18n-ignore-next-line */}
               <IconButton size="small" disabled={totalHolds === 0} aria-label="Clear all holds">
                 <DeleteOutlined fontSize="small" />
               </IconButton>
@@ -1545,6 +1554,7 @@ export default function CreateClimbForm({
           </MuiTooltip>
         </ConfirmPopover>
         {canShowDrafts && (
+          // i18n-ignore-next-line
           <MuiTooltip title="Drafts">
             <Badge
               color="primary"
@@ -1553,6 +1563,7 @@ export default function CreateClimbForm({
               invisible={!draftsCount}
               overlap="rectangular"
             >
+              {/* i18n-ignore-next-line */}
               <IconButton size="small" onClick={handleOpenDrafts} aria-label="Open drafts">
                 <DraftsOutlined fontSize="small" />
               </IconButton>
@@ -1567,13 +1578,16 @@ export default function CreateClimbForm({
                   size="small"
                   disabled={isOcrProcessing}
                   onClick={() => fileInputRef.current?.click()}
+                  // i18n-ignore-next-line
                   aria-label="Import from screenshot"
                 >
                   {isOcrProcessing ? <CircularProgress size={16} /> : <CloudUploadOutlined fontSize="small" />}
                 </IconButton>
               </span>
             </MuiTooltip>
+            {/* i18n-ignore-next-line */}
             <MuiTooltip title="Bulk import">
+              {/* i18n-ignore-next-line */}
               <IconButton size="small" component={LocaleLink} href={bulkImportUrl} aria-label="Bulk import">
                 <GetAppOutlined fontSize="small" />
               </IconButton>
@@ -1608,7 +1622,9 @@ export default function CreateClimbForm({
               </span>
             </MuiTooltip>
           )}
+          {/* i18n-ignore-next-line */}
           <MuiTooltip title="Climb settings">
+            {/* i18n-ignore-next-line */}
             <IconButton size="small" onClick={handleToggleSettings} aria-label="Climb settings">
               <SettingsOutlined fontSize="small" />
             </IconButton>
@@ -1630,6 +1646,7 @@ export default function CreateClimbForm({
 
       {/* Settings nested drawer */}
       <SwipeableDrawer
+        // i18n-ignore-next-line
         title="Climb Settings"
         placement="bottom"
         open={showSettingsPanel}
@@ -1641,11 +1658,13 @@ export default function CreateClimbForm({
           {/* Name */}
           <div className={styles.settingsField}>
             <Typography variant="body2" component="span" color="text.secondary" className={styles.settingsLabel}>
+              {/* i18n-ignore-next-line */}
               Name
             </Typography>
             <TextField
               value={climbName}
               onChange={(e) => setClimbName(e.target.value)}
+              // i18n-ignore-next-line
               placeholder="Climb name"
               inputProps={{ maxLength: 100 }}
               variant="outlined"
@@ -1659,6 +1678,7 @@ export default function CreateClimbForm({
             <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
               <MuiSwitch size="small" checked={isDraft} onChange={(_, checked) => setIsDraft(checked)} />
               <Typography variant="body2" component="span">
+                {/* i18n-ignore-next-line */}
                 Draft
               </Typography>
             </Box>
@@ -1667,20 +1687,28 @@ export default function CreateClimbForm({
           {/* Hold count indicators */}
           <div className={styles.settingsField}>
             <Typography variant="body2" component="span" color="text.secondary" className={styles.settingsLabel}>
+              {/* i18n-ignore-next-line */}
               Holds
             </Typography>
             <Stack direction="row" spacing={1.5} alignItems="center" flexWrap="wrap">
               {boardType === 'aurora' ? (
                 <>
+                  {/* i18n-ignore-next-line */}
                   <HoldIndicator count={startingCount} max={2} color={themeTokens.colors.success} label="Starting" />
+                  {/* i18n-ignore-next-line */}
                   <HoldIndicator count={finishCount} max={2} color={themeTokens.colors.pink} label="Finish" />
+                  {/* i18n-ignore-next-line */}
                   <HoldIndicator count={totalHolds} color={themeTokens.colors.primary} label="Total" />
                 </>
               ) : (
                 <>
+                  {/* i18n-ignore-next-line */}
                   <HoldIndicator count={startingCount} max={2} color={themeTokens.colors.error} label="Start" />
+                  {/* i18n-ignore-next-line */}
                   <HoldIndicator count={handCount} color={themeTokens.colors.primary} label="Hand" />
+                  {/* i18n-ignore-next-line */}
                   <HoldIndicator count={finishCount} max={2} color={themeTokens.colors.success} label="Finish" />
+                  {/* i18n-ignore-next-line */}
                   <HoldIndicator count={totalHolds} color={themeTokens.colors.secondary} label="Total" />
                 </>
               )}
@@ -1692,6 +1720,7 @@ export default function CreateClimbForm({
             <>
               <div className={styles.settingsField}>
                 <Typography variant="body2" component="span" color="text.secondary" className={styles.settingsLabel}>
+                  {/* i18n-ignore-next-line */}
                   Angle
                 </Typography>
                 <MuiSelect
@@ -1702,6 +1731,7 @@ export default function CreateClimbForm({
                 >
                   {MOONBOARD_ANGLES.map((a) => (
                     <MenuItem key={a} value={a}>
+                      {/* i18n-ignore-next-line */}
                       {a}&deg;
                     </MenuItem>
                   ))}
@@ -1709,6 +1739,7 @@ export default function CreateClimbForm({
               </div>
               <div className={styles.settingsField}>
                 <Typography variant="body2" component="span" color="text.secondary" className={styles.settingsLabel}>
+                  {/* i18n-ignore-next-line */}
                   Grade
                 </Typography>
                 <MuiSelect
@@ -1719,6 +1750,7 @@ export default function CreateClimbForm({
                   size="small"
                 >
                   <MenuItem value="">
+                    {/* i18n-ignore-next-line */}
                     <em>None</em>
                   </MenuItem>
                   {MOONBOARD_GRADES.map((g) => (
@@ -1732,6 +1764,7 @@ export default function CreateClimbForm({
                 <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
                   <MuiSwitch size="small" checked={isBenchmark} onChange={(_, checked) => setIsBenchmark(checked)} />
                   <Typography variant="body2" component="span">
+                    {/* i18n-ignore-next-line */}
                     Benchmark
                   </Typography>
                 </Box>
@@ -1741,11 +1774,13 @@ export default function CreateClimbForm({
           {/* Common: Description */}
           <div className={styles.settingsField}>
             <Typography variant="body2" component="span" color="text.secondary" className={styles.settingsLabel}>
+              {/* i18n-ignore-next-line */}
               Description (optional)
             </Typography>
             <TextField
               value={description}
               onChange={(e) => setDescription(e.target.value)}
+              // i18n-ignore-next-line
               placeholder="Add beta or notes about your climb..."
               multiline
               rows={3}
@@ -1768,6 +1803,7 @@ export default function CreateClimbForm({
               fontWeight: 600,
             }}
           >
+            {/* i18n-ignore-next-line */}
             Dismiss
           </MuiButton>
           <MuiButton

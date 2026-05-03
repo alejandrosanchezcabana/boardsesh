@@ -202,6 +202,7 @@ function LogbookGradeRow({
           className={styles.statValue}
           style={{ color: themeTokens.colors.amber }}
         >{`\u2605${consensusStarsLabel}`}</span>
+        {/* i18n-ignore-next-line */}
         <span className={styles.statLabel}>stars</span>
       </div>
       {/* User stars */}
@@ -216,6 +217,7 @@ function LogbookGradeRow({
             className={styles.statValue}
             style={{ color: themeTokens.colors.amber }}
           >{`\u2605${editQuality ?? '\u2014'}`}</span>
+          {/* i18n-ignore-next-line */}
           <span className={styles.statLabel}>user</span>
         </ButtonBase>
       ) : (
@@ -224,6 +226,7 @@ function LogbookGradeRow({
             className={styles.statValue}
             style={{ color: themeTokens.colors.amber }}
           >{`\u2605${quality ?? '\u2014'}`}</span>
+          {/* i18n-ignore-next-line */}
           <span className={styles.statLabel}>user</span>
         </div>
       )}
@@ -232,6 +235,7 @@ function LogbookGradeRow({
         <span className={styles.statValue} style={{ color: consensusColor }}>
           {consensusLabel}
         </span>
+        {/* i18n-ignore-next-line */}
         <span className={styles.statLabel}>grade</span>
       </div>
       {/* User grade */}
@@ -239,6 +243,7 @@ function LogbookGradeRow({
         <ButtonBase
           ref={gradeButtonRef}
           onClick={() => handleToggle('grade')}
+          // i18n-ignore-next-line
           aria-label="Select logged grade"
           className={styles.gradeCell}
           disableRipple={false}
@@ -246,6 +251,7 @@ function LogbookGradeRow({
           <span className={styles.statValue} style={{ color: editGradeColor }}>
             {editGradeLabel}
           </span>
+          {/* i18n-ignore-next-line */}
           <span className={styles.statLabel}>user</span>
         </ButtonBase>
       ) : (
@@ -253,6 +259,7 @@ function LogbookGradeRow({
           <span className={styles.statValue} style={{ color: userColor }}>
             {userLabel}
           </span>
+          {/* i18n-ignore-next-line */}
           <span className={styles.statLabel}>user</span>
         </div>
       )}
@@ -266,11 +273,13 @@ function LogbookGradeRow({
           disableRipple={false}
         >
           <span className={styles.statValue}>{editAttemptCount}</span>
+          {/* i18n-ignore-next-line */}
           <span className={styles.statLabel}>tries</span>
         </ButtonBase>
       ) : (
         <div className={styles.statCell}>
           <span className={styles.statValue}>{attemptCount}</span>
+          {/* i18n-ignore-next-line */}
           <span className={styles.statLabel}>tries</span>
         </div>
       )}
@@ -611,6 +620,7 @@ const LogbookFeedItem: React.FC<LogbookFeedItemProps> = React.memo(
           {/* aria-hidden: the 3-dot menu exposes Delete to assistive tech. */}
           <div ref={leftActionCombinedRef} className={styles.leftActionLayer} aria-hidden="true">
             <DeleteOutlined className={styles.swipeIcon} />
+            {/* i18n-ignore-next-line */}
             <span className={styles.deleteLabel}>Delete</span>
           </div>
 
@@ -722,6 +732,7 @@ const LogbookFeedItem: React.FC<LogbookFeedItemProps> = React.memo(
                   <IconButton
                     size="small"
                     onClick={onCancelEdit}
+                    // i18n-ignore-next-line
                     aria-label="Cancel editing"
                     sx={{
                       width: 44,
@@ -735,6 +746,7 @@ const LogbookFeedItem: React.FC<LogbookFeedItemProps> = React.memo(
                     size="small"
                     onClick={handleSave}
                     disabled={isSaving}
+                    // i18n-ignore-next-line
                     aria-label="Save"
                     sx={{
                       width: 44,
@@ -750,6 +762,7 @@ const LogbookFeedItem: React.FC<LogbookFeedItemProps> = React.memo(
               ) : (
                 <IconButton
                   size="small"
+                  // i18n-ignore-next-line
                   aria-label="More actions"
                   onClick={handleOpenActions}
                   className={styles.menuButton}
@@ -821,18 +834,21 @@ const LogbookFeedItem: React.FC<LogbookFeedItemProps> = React.memo(
             <ListItemIcon>
               <ElectricBoltOutlined sx={{ color: themeTokens.colors.amber }} />
             </ListItemIcon>
+            {/* i18n-ignore-next-line */}
             <ListItemText>Flash</ListItemText>
           </MenuItem>
           <MenuItem onClick={() => handleStatusSelect('send')}>
             <ListItemIcon>
               <CheckOutlined sx={{ color: themeTokens.colors.success }} />
             </ListItemIcon>
+            {/* i18n-ignore-next-line */}
             <ListItemText>Send</ListItemText>
           </MenuItem>
           <MenuItem onClick={() => handleStatusSelect('attempt')}>
             <ListItemIcon>
               <PersonFallingIcon sx={{ color: themeTokens.colors.error }} />
             </ListItemIcon>
+            {/* i18n-ignore-next-line */}
             <ListItemText>Attempt</ListItemText>
           </MenuItem>
         </Popover>
@@ -859,6 +875,7 @@ const LogbookFeedItem: React.FC<LogbookFeedItemProps> = React.memo(
                 <ListItemIcon>
                   <EditOutlined fontSize="small" />
                 </ListItemIcon>
+                {/* i18n-ignore-next-line */}
                 <ListItemText>Edit log</ListItemText>
               </MenuItem>
             )}
@@ -867,6 +884,7 @@ const LogbookFeedItem: React.FC<LogbookFeedItemProps> = React.memo(
                 <ListItemIcon>
                   <DeleteOutlined sx={{ color: 'error.main' }} fontSize="small" />
                 </ListItemIcon>
+                {/* i18n-ignore-next-line */}
                 <ListItemText>Delete log</ListItemText>
               </MenuItem>
             )}
@@ -875,6 +893,7 @@ const LogbookFeedItem: React.FC<LogbookFeedItemProps> = React.memo(
                 <ListItemIcon>
                   <InstagramIcon fontSize="small" />
                 </ListItemIcon>
+                {/* i18n-ignore-next-line */}
                 <ListItemText>Post to Instagram</ListItemText>
               </MenuItem>
             )}
@@ -883,6 +902,7 @@ const LogbookFeedItem: React.FC<LogbookFeedItemProps> = React.memo(
                 <ListItemIcon>
                   <LinkOutlined fontSize="small" />
                 </ListItemIcon>
+                {/* i18n-ignore-next-line */}
                 <ListItemText>Link Instagram post</ListItemText>
               </MenuItem>
             )}

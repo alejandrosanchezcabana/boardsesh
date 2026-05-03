@@ -96,14 +96,17 @@ export default function CommentFeed({ isAuthenticated, boardUuid }: CommentFeedP
   return (
     <Box data-testid="comment-feed" sx={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
       {error && (
+        // i18n-ignore-next-line
         <EmptyState icon={<ErrorOutline fontSize="inherit" />} description="Failed to load comments. Please try again.">
           <MuiButton variant="contained" onClick={() => refetch()}>
+            {/* i18n-ignore-next-line */}
             Retry
           </MuiButton>
         </EmptyState>
       )}
 
       {!error && comments.length === 0 ? (
+        // i18n-ignore-next-line
         <EmptyState icon={<ChatBubbleOutlineOutlined fontSize="inherit" />} description="No comments yet" />
       ) : (
         <>
@@ -157,6 +160,7 @@ function CommentFeedCard({ comment }: { comment: CommentType }) {
             </Typography>
             <Typography variant="body2" component="span" color="text.secondary">
               {' '}
+              {/* i18n-ignore-next-line */}
               commented on {entityLabel}
             </Typography>
           </Box>

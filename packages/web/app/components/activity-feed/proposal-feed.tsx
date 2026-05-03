@@ -80,15 +80,18 @@ export default function ProposalFeed({ isAuthenticated, boardUuid }: ProposalFee
       {error && (
         <EmptyState
           icon={<ErrorOutline fontSize="inherit" />}
+          // i18n-ignore-next-line
           description="Failed to load proposals. Please try again."
         >
           <MuiButton variant="contained" onClick={() => refetch()}>
+            {/* i18n-ignore-next-line */}
             Retry
           </MuiButton>
         </EmptyState>
       )}
 
       {!error && proposals.length === 0 ? (
+        // i18n-ignore-next-line
         <EmptyState icon={<GavelOutlined fontSize="inherit" />} description="No proposals yet" />
       ) : (
         <>

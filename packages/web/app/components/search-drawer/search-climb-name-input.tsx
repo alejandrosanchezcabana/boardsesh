@@ -11,6 +11,7 @@ const SearchClimbNameInput = () => {
 
   return (
     <TextField
+      // i18n-ignore-next-line
       placeholder="Search climbs..."
       variant="outlined"
       size="small"

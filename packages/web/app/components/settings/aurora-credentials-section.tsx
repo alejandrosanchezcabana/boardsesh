@@ -579,9 +579,7 @@ export default function AuroraCredentialsSection() {
     }
   };
 
-  const importingBoardName = importingBoard
-    ? importingBoard.charAt(0).toUpperCase() + importingBoard.slice(1)
-    : '';
+  const importingBoardName = importingBoard ? importingBoard.charAt(0).toUpperCase() + importingBoard.slice(1) : '';
 
   if (loading) {
     return (

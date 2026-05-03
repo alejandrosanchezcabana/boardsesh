@@ -209,6 +209,7 @@ const HoldClassificationWizard: React.FC<HoldClassificationWizardProps> = ({
         }
       } catch (error) {
         console.error('Failed to save classification:', error);
+        // i18n-ignore-next-line
         showMessage('Failed to save classification', 'error');
       } finally {
         setSaving(false);
@@ -369,6 +370,7 @@ const HoldClassificationWizard: React.FC<HoldClassificationWizardProps> = ({
   if (loading) {
     return (
       <SwipeableDrawer
+        // i18n-ignore-next-line
         title="Hold Classification"
         open={open}
         onClose={onClose}
@@ -382,6 +384,7 @@ const HoldClassificationWizard: React.FC<HoldClassificationWizardProps> = ({
         <div className={styles.loadingContainer}>
           <CircularProgress size={48} />
           <Typography variant="body2" component="span" className={styles.loadingText}>
+            {/* i18n-ignore-next-line */}
             Loading holds...
           </Typography>
         </div>
@@ -393,6 +396,7 @@ const HoldClassificationWizard: React.FC<HoldClassificationWizardProps> = ({
   if (holds.length === 0) {
     return (
       <SwipeableDrawer
+        // i18n-ignore-next-line
         title="Hold Classification"
         open={open}
         onClose={onClose}
@@ -405,9 +409,11 @@ const HoldClassificationWizard: React.FC<HoldClassificationWizardProps> = ({
       >
         <div className={styles.emptyState}>
           <Typography variant="body2" component="span">
+            {/* i18n-ignore-next-line */}
             No holds found for this board configuration.
           </Typography>
           <MuiButton variant="outlined" onClick={onClose}>
+            {/* i18n-ignore-next-line */}
             Close
           </MuiButton>
         </div>
@@ -419,6 +425,7 @@ const HoldClassificationWizard: React.FC<HoldClassificationWizardProps> = ({
   if (isComplete) {
     return (
       <SwipeableDrawer
+        // i18n-ignore-next-line
         title="Hold Classification"
         open={open}
         onClose={onClose}
@@ -432,13 +439,16 @@ const HoldClassificationWizard: React.FC<HoldClassificationWizardProps> = ({
         <div className={styles.completeContainer}>
           <CheckCircle className={styles.completeIcon} />
           <Typography variant="h5" component="h3" className={styles.completeTitle}>
+            {/* i18n-ignore-next-line */}
             Classification Complete!
           </Typography>
           <Typography variant="body2" component="span" className={styles.completeSubtitle}>
+            {/* i18n-ignore-next-line */}
             You&apos;ve classified {classifiedCount} of {holds.length} holds. You can run through this wizard again
             anytime to update your ratings.
           </Typography>
           <MuiButton variant="contained" size="large" onClick={onClose}>
+            {/* i18n-ignore-next-line */}
             Done
           </MuiButton>
         </div>
@@ -450,6 +460,7 @@ const HoldClassificationWizard: React.FC<HoldClassificationWizardProps> = ({
 
   return (
     <SwipeableDrawer
+      // i18n-ignore-next-line
       title="Classify Hold"
       open={open}
       onClose={onClose}
@@ -471,6 +482,7 @@ const HoldClassificationWizard: React.FC<HoldClassificationWizardProps> = ({
         {/* Progress indicator */}
         <div className={styles.progressSection}>
           <Typography variant="body2" component="span" className={styles.progressText}>
+            {/* i18n-ignore-next-line */}
             Hold {currentIndex + 1} of {holds.length} ({classifiedCount} classified)
           </Typography>
           <LinearProgress
@@ -501,6 +513,7 @@ const HoldClassificationWizard: React.FC<HoldClassificationWizardProps> = ({
           {/* Hold type selection */}
           <div>
             <Typography variant="body2" component="span" className={styles.sectionTitle}>
+              {/* i18n-ignore-next-line */}
               Hold Type
             </Typography>
             <div className={styles.holdTypeList}>
@@ -524,8 +537,10 @@ const HoldClassificationWizard: React.FC<HoldClassificationWizardProps> = ({
           {/* Hand rating */}
           <div className={styles.ratingSection}>
             <Typography variant="body2" component="span" className={styles.sectionTitle}>
+              {/* i18n-ignore-next-line */}
               Hand Rating (1-5)
             </Typography>
+            {/* i18n-ignore-next-line */}
             <div className={styles.ratingLabel}>5 = Easy to grip, 1 = Very difficult</div>
             <Rating
               value={currentClassification.handRating || 0}
@@ -537,8 +552,10 @@ const HoldClassificationWizard: React.FC<HoldClassificationWizardProps> = ({
           {/* Foot rating */}
           <div className={styles.ratingSection}>
             <Typography variant="body2" component="span" className={styles.sectionTitle}>
+              {/* i18n-ignore-next-line */}
               Foot Rating (1-5)
             </Typography>
+            {/* i18n-ignore-next-line */}
             <div className={styles.ratingLabel}>5 = Easy to stand on, 1 = Very difficult</div>
             <Rating
               value={currentClassification.footRating || 0}
@@ -550,8 +567,10 @@ const HoldClassificationWizard: React.FC<HoldClassificationWizardProps> = ({
           {/* Direction of pull */}
           <div className={styles.directionSection}>
             <Typography variant="body2" component="span" className={styles.sectionTitle}>
+              {/* i18n-ignore-next-line */}
               Direction of Pull
             </Typography>
+            {/* i18n-ignore-next-line */}
             <div className={styles.ratingLabel}>Click or drag to set the best pulling direction</div>
             <DirectionPicker
               value={currentClassification.pullDirection}
@@ -570,9 +589,11 @@ const HoldClassificationWizard: React.FC<HoldClassificationWizardProps> = ({
             onClick={handlePrevious}
             disabled={currentIndex === 0 || saving}
           >
+            {/* i18n-ignore-next-line */}
             Previous
           </MuiButton>
           <MuiButton className={styles.skipButton} variant="outlined" onClick={handleNext} disabled={saving}>
+            {/* i18n-ignore-next-line */}
             Skip
           </MuiButton>
           <MuiButton

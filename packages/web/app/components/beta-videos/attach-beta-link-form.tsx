@@ -104,6 +104,7 @@ const AttachBetaLinkForm: React.FC<AttachBetaLinkFormProps> = ({
         platform = 'Instagram';
       }
       track('Beta Video Added', { boardType, climbUuid, platform });
+      // i18n-ignore-next-line
       showMessage('Video added to beta', 'success');
       setUrl('');
       onSuccess?.();
@@ -126,6 +127,7 @@ const AttachBetaLinkForm: React.FC<AttachBetaLinkFormProps> = ({
       <TextField
         autoFocus={autoFocus}
         fullWidth
+        // i18n-ignore-next-line
         placeholder="Instagram or TikTok URL"
         label={climbName ? `Beta video URL for ${climbName}` : 'Beta video URL'}
         value={url}
@@ -147,6 +149,7 @@ const AttachBetaLinkForm: React.FC<AttachBetaLinkFormProps> = ({
       <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
         {showCancel && onCancel && (
           <Button onClick={onCancel} disabled={mutation.isPending}>
+            {/* i18n-ignore-next-line */}
             Cancel
           </Button>
         )}

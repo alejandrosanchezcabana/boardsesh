@@ -393,17 +393,22 @@ const AccordionSearchForm: React.FC<AccordionSearchFormProps> = ({ boardDetails,
                   startIcon={<LoginOutlined />}
                   onClick={() =>
                     openAuthModal({
+                      // i18n-ignore-next-line
                       title: 'Sign in to Boardsesh',
+                      // i18n-ignore-next-line
                       description: 'Create an account to filter by your climbing progress and save favorites.',
                     })
                   }
                 >
+                  {/* i18n-ignore-next-line */}
                   Sign In
                 </MuiButton>
               }
             >
+              {/* i18n-ignore-next-line */}
               <strong>Sign in to filter by your data</strong>
               <br />
+              {/* i18n-ignore-next-line */}
               Login to filter climbs based on your attempt and completion history.
             </MuiAlert>
           ) : (
@@ -421,6 +426,7 @@ const AccordionSearchForm: React.FC<AccordionSearchFormProps> = ({ boardDetails,
                 }
                 label={
                   <MuiTypography variant="body2" component="span">
+                    {/* i18n-ignore-next-line */}
                     Hide Attempted
                   </MuiTypography>
                 }
@@ -438,6 +444,7 @@ const AccordionSearchForm: React.FC<AccordionSearchFormProps> = ({ boardDetails,
                 }
                 label={
                   <MuiTypography variant="body2" component="span">
+                    {/* i18n-ignore-next-line */}
                     Hide Completed
                   </MuiTypography>
                 }
@@ -455,6 +462,7 @@ const AccordionSearchForm: React.FC<AccordionSearchFormProps> = ({ boardDetails,
                 }
                 label={
                   <MuiTypography variant="body2" component="span">
+                    {/* i18n-ignore-next-line */}
                     Only Attempted
                   </MuiTypography>
                 }
@@ -472,6 +480,7 @@ const AccordionSearchForm: React.FC<AccordionSearchFormProps> = ({ boardDetails,
                 }
                 label={
                   <MuiTypography variant="body2" component="span">
+                    {/* i18n-ignore-next-line */}
                     Only Completed
                   </MuiTypography>
                 }

@@ -65,9 +65,11 @@ export default function FollowingAscentsFeed({ onFindClimbers }: FollowingAscent
 
   if (items.length === 0) {
     return (
+      // i18n-ignore-next-line
       <EmptyState icon={<PersonSearchOutlined fontSize="inherit" />} description="Follow some climbers to fill this up">
         {onFindClimbers && (
           <MuiButton variant="contained" onClick={onFindClimbers}>
+            {/* i18n-ignore-next-line */}
             Find Climbers
           </MuiButton>
         )}

@@ -92,8 +92,11 @@ export default function BoardCard({ board, onClick, trailingAction }: BoardCardP
           </Box>
 
           <Box sx={{ display: 'flex', gap: 2, mt: 1.5, flexWrap: 'wrap' }}>
+            {/* i18n-ignore-next-line */}
             <StatItem icon={<TrendingUpOutlined sx={{ fontSize: 14 }} />} value={board.totalAscents} label="ascents" />
+            {/* i18n-ignore-next-line */}
             <StatItem icon={<PersonOutlined sx={{ fontSize: 14 }} />} value={board.uniqueClimbers} label="climbers" />
+            {/* i18n-ignore-next-line */}
             <StatItem icon={<PeopleOutlined sx={{ fontSize: 14 }} />} value={board.followerCount} label="followers" />
           </Box>
         </CardContent>

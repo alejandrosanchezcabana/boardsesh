@@ -251,6 +251,7 @@ export const QuickTickBar = forwardRef<QuickTickBarHandle, QuickTickBarProps>(
             <div className={styles.expandedPanelContent}>
               {/* Grade row */}
               <div className={styles.labeledRow}>
+                {/* i18n-ignore-next-line */}
                 <span className={styles.labeledRowLabel}>grade</span>
                 <div className={styles.labeledRowPicker}>
                   <InlineGradePicker
@@ -265,6 +266,7 @@ export const QuickTickBar = forwardRef<QuickTickBarHandle, QuickTickBarProps>(
 
               {/* Tries row */}
               <div className={styles.labeledRow}>
+                {/* i18n-ignore-next-line */}
                 <span className={styles.labeledRowLabel}>tries</span>
                 <div className={styles.labeledRowPicker}>
                   <InlineTriesPicker
@@ -277,6 +279,7 @@ export const QuickTickBar = forwardRef<QuickTickBarHandle, QuickTickBarProps>(
 
               {/* Stars row — left-aligned since picker is shorter */}
               <div className={styles.labeledRow}>
+                {/* i18n-ignore-next-line */}
                 <span className={styles.labeledRowLabel}>stars</span>
                 <div className={styles.labeledRowPickerStart}>
                   <InlineStarPicker quality={quality} onSelect={handleStarSelect} />

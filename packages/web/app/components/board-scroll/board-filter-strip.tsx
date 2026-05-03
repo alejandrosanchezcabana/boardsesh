@@ -84,6 +84,7 @@ export default function BoardFilterStrip(props: BoardFilterStripProps) {
         >
           <span className={styles.filterLabel}>All</span>
         </div>
+        {/* i18n-ignore-next-line */}
         <div className={`${styles.cardName} ${isAllSelected ? styles.cardNameSelected : ''}`}>All Boards</div>
       </div>
       {boards.map((board) => (

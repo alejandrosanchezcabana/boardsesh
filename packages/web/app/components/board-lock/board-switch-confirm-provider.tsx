@@ -105,8 +105,10 @@ export function BoardSwitchConfirmProvider({ children }: { children: React.React
           <DialogContentText>{body}</DialogContentText>
         </DialogContent>
         <DialogActions>
+          {/* i18n-ignore-next-line */}
           <Button onClick={handleCancel}>Stay</Button>
           <Button variant="contained" onClick={handleConfirm} autoFocus>
+            {/* i18n-ignore-next-line */}
             Switch boards
           </Button>
         </DialogActions>

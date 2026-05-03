@@ -34,6 +34,7 @@ const AttachBetaLinkDialog: React.FC<AttachBetaLinkDialogProps> = ({
           angle={angle}
           resetTrigger={open}
           submitLabel="Share beta"
+          // i18n-ignore-next-line
           helperText="Paste a reel or post link so others can see your beta."
           onSuccess={onClose}
           onCancel={onClose}

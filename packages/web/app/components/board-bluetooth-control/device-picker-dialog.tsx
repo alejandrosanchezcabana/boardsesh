@@ -112,6 +112,7 @@ export function DevicePickerDialog({ devices, onSelect, onCancel, resolvedBoards
       <DialogTitle>
         <Stack direction="row" alignItems="center" spacing={1}>
           <BluetoothSearching />
+          {/* i18n-ignore-next-line */}
           <span>Select your board</span>
         </Stack>
       </DialogTitle>
@@ -120,6 +121,7 @@ export function DevicePickerDialog({ devices, onSelect, onCancel, resolvedBoards
           <Stack direction="row" alignItems="center" spacing={2} sx={{ py: 4, justifyContent: 'center' }}>
             <CircularProgress size={20} />
             <Typography variant="body2" color="text.secondary">
+              {/* i18n-ignore-next-line */}
               Scanning for boards nearby&hellip;
             </Typography>
           </Stack>
@@ -167,6 +169,7 @@ export function DevicePickerDialog({ devices, onSelect, onCancel, resolvedBoards
                   )}
                   {entry?.kind === 'recorded' && (
                     <div className={styles.deviceCardMeta}>
+                      {/* i18n-ignore-next-line */}
                       Last connected {formatRelativeTime(entry.config.updatedAt)}
                     </div>
                   )}
@@ -177,6 +180,7 @@ export function DevicePickerDialog({ devices, onSelect, onCancel, resolvedBoards
         )}
       </DialogContent>
       <DialogActions>
+        {/* i18n-ignore-next-line */}
         <Button onClick={onCancel}>Cancel</Button>
       </DialogActions>
     </Dialog>

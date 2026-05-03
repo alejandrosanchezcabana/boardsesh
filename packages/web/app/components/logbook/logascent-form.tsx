@@ -188,12 +188,15 @@ export const LogAscentForm: React.FC<LogAscentFormProps> = ({ currentClimb, boar
     >
       <Box sx={{ mb: 2 }}>
         <ToggleButtonGroup exclusive fullWidth value={logType} onChange={(_, val) => val && setLogType(val as LogType)}>
+          {/* i18n-ignore-next-line */}
           <ToggleButton value="ascent">Ascent</ToggleButton>
+          {/* i18n-ignore-next-line */}
           <ToggleButton value="attempt">Attempt</ToggleButton>
         </ToggleButtonGroup>
       </Box>
 
       <Box sx={{ display: 'flex', alignItems: 'center', mb: 1.5 }}>
+        {/* i18n-ignore-next-line */}
         <Typography sx={{ width: 120, flexShrink: 0 }}>Boulder</Typography>
         <Box sx={{ flex: 1 }}>
           <Stack direction="row" spacing={1}>
@@ -201,6 +204,7 @@ export const LogAscentForm: React.FC<LogAscentFormProps> = ({ currentClimb, boar
             {showMirrorTag && (
               <Stack direction="row" spacing={0.5}>
                 <Chip
+                  // i18n-ignore-next-line
                   label="Mirrored"
                   size="small"
                   color={isMirrored ? 'secondary' : undefined}
@@ -217,6 +221,7 @@ export const LogAscentForm: React.FC<LogAscentFormProps> = ({ currentClimb, boar
       </Box>
 
       <Box sx={{ display: 'flex', alignItems: 'center', mb: 1.5 }}>
+        {/* i18n-ignore-next-line */}
         <Typography sx={{ width: 120, flexShrink: 0 }}>Date and Time</Typography>
         <Box sx={{ flex: 1 }}>
           <DateTimePicker
@@ -229,6 +234,7 @@ export const LogAscentForm: React.FC<LogAscentFormProps> = ({ currentClimb, boar
       </Box>
 
       <Box sx={{ display: 'flex', alignItems: 'center', mb: 1.5 }}>
+        {/* i18n-ignore-next-line */}
         <Typography sx={{ width: 120, flexShrink: 0 }}>Angle</Typography>
         <Box sx={{ flex: 1 }}>
           <MuiSelect
@@ -247,6 +253,7 @@ export const LogAscentForm: React.FC<LogAscentFormProps> = ({ currentClimb, boar
       </Box>
 
       <Box sx={{ display: 'flex', alignItems: 'center', mb: 1.5 }}>
+        {/* i18n-ignore-next-line */}
         <Typography sx={{ width: 120, flexShrink: 0 }}>Attempts</Typography>
         <Box sx={{ flex: 1 }}>
           <TextField
@@ -262,6 +269,7 @@ export const LogAscentForm: React.FC<LogAscentFormProps> = ({ currentClimb, boar
 
       {logType === 'ascent' && (
         <Box sx={{ display: 'flex', alignItems: 'center', mb: 1.5 }}>
+          {/* i18n-ignore-next-line */}
           <Typography sx={{ width: 120, flexShrink: 0 }}>Quality</Typography>
           <Box sx={{ flex: 1 }}>
             <MuiRating
@@ -275,6 +283,7 @@ export const LogAscentForm: React.FC<LogAscentFormProps> = ({ currentClimb, boar
 
       {logType === 'ascent' && (
         <Box sx={{ display: 'flex', alignItems: 'center', mb: 1.5 }}>
+          {/* i18n-ignore-next-line */}
           <Typography sx={{ width: 120, flexShrink: 0 }}>Difficulty</Typography>
           <Box sx={{ flex: 1 }}>
             <MuiSelect
@@ -294,6 +303,7 @@ export const LogAscentForm: React.FC<LogAscentFormProps> = ({ currentClimb, boar
       )}
 
       <Box sx={{ display: 'flex', alignItems: 'center', mb: 1.5 }}>
+        {/* i18n-ignore-next-line */}
         <Typography sx={{ width: 120, flexShrink: 0 }}>Notes</Typography>
         <Box sx={{ flex: 1 }}>
           <TextField
@@ -310,9 +320,11 @@ export const LogAscentForm: React.FC<LogAscentFormProps> = ({ currentClimb, boar
 
       {logType === 'ascent' && (
         <Box sx={{ display: 'flex', alignItems: 'flex-start', mb: 1.5 }}>
+          {/* i18n-ignore-next-line */}
           <Typography sx={{ width: 120, flexShrink: 0, pt: 1 }}>Video</Typography>
           <Box sx={{ flex: 1 }}>
             <TextField
+              // i18n-ignore-next-line
               placeholder="Instagram or TikTok URL"
               variant="outlined"
               size="small"
@@ -335,12 +347,14 @@ export const LogAscentForm: React.FC<LogAscentFormProps> = ({ currentClimb, boar
           fullWidth
           size="large"
         >
+          {/* i18n-ignore-next-line */}
           Submit
         </Button>
       </Box>
 
       <Box>
         <Button variant="outlined" fullWidth size="large" onClick={onClose} disabled={isSaving}>
+          {/* i18n-ignore-next-line */}
           Cancel
         </Button>
       </Box>

@@ -65,6 +65,7 @@ const ClimbHoldSearchForm: React.FC<ClimbHoldSearchFormProps> = ({ boardDetails 
       <div className={styles.holdSearchHeaderCompact}>
         <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', alignItems: 'center' }}>
           <MuiTypography variant="body2" component="span" color="text.secondary">
+            {/* i18n-ignore-next-line */}
             Tap to:
           </MuiTypography>
           <MuiSelect

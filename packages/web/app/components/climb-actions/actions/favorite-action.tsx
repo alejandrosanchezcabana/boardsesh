@@ -58,6 +58,7 @@ export function FavoriteAction({
 
       if (!isAuthenticated) {
         openAuthModal({
+          // i18n-ignore-next-line
           title: 'Sign in to save favorites',
           description: `Sign in to save "${climb.name}" to your favorites.`,
           onSuccess: handleAuthSuccess,

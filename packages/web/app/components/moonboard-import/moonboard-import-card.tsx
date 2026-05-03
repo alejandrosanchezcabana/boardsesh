@@ -55,6 +55,7 @@ export default function MoonBoardImportCard({
           </Typography>
           {duplicateMatch?.exists && (
             <Chip
+              // i18n-ignore-next-line
               label="Skipping"
               size="small"
               className={styles.duplicateTag}
@@ -92,16 +93,19 @@ export default function MoonBoardImportCard({
       </CardContent>
       <CardActions>
         <MuiButton key="edit" variant="text" startIcon={<EditOutlined />} onClick={onEdit}>
+          {/* i18n-ignore-next-line */}
           Edit
         </MuiButton>
         <ConfirmPopover
           title={t('moonboardImport.removeConfirmTitle')}
+          // i18n-ignore-next-line
           description="This climb will not be imported."
           onConfirm={onRemove}
           okText="Remove"
           cancelText="Cancel"
         >
           <MuiButton variant="text" color="error" startIcon={<DeleteOutlined />}>
+            {/* i18n-ignore-next-line */}
             Remove
           </MuiButton>
         </ConfirmPopover>

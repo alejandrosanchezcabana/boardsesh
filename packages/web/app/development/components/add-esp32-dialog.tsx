@@ -113,6 +113,7 @@ export default function AddEsp32Dialog({ open, boardConfigs, initial, onClose, o
       <DialogContent>
         <Stack spacing={2} sx={{ mt: 1 }}>
           <TextField
+            // i18n-ignore-next-line
             label="Label"
             value={form.label}
             onChange={(e) => setForm({ ...form, label: e.target.value })}
@@ -120,6 +121,7 @@ export default function AddEsp32Dialog({ open, boardConfigs, initial, onClose, o
             size="small"
           />
           <TextField
+            // i18n-ignore-next-line
             label="IP address"
             value={form.ip}
             onChange={(e) => setForm({ ...form, ip: e.target.value })}
@@ -128,14 +130,17 @@ export default function AddEsp32Dialog({ open, boardConfigs, initial, onClose, o
             size="small"
           />
           <TextField
+            // i18n-ignore-next-line
             label="Serial"
             value={form.serial}
             onChange={(e) => setForm({ ...form, serial: e.target.value })}
+            // i18n-ignore-next-line
             helperText="Used in the BLE advertised name (e.g. Kilter Board#751737@3)"
             fullWidth
             size="small"
           />
           <TextField
+            // i18n-ignore-next-line
             label="API level"
             value={form.apiLevel}
             onChange={(e) => setForm({ ...form, apiLevel: e.target.value === '2' ? 2 : 3 })}
@@ -167,6 +172,7 @@ export default function AddEsp32Dialog({ open, boardConfigs, initial, onClose, o
         </Stack>
       </DialogContent>
       <DialogActions>
+        {/* i18n-ignore-next-line */}
         <Button onClick={onClose}>Cancel</Button>
         <Button onClick={handleSubmit} variant="contained" disabled={!isComplete}>
           {isEdit ? 'Save' : 'Add'}

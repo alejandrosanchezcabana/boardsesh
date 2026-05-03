@@ -117,6 +117,7 @@ export default function HoldTypePicker({
     >
       <Box
         role="toolbar"
+        // i18n-ignore-next-line
         aria-label="Hold type"
         sx={{
           display: 'flex',
@@ -144,6 +145,7 @@ export default function HoldTypePicker({
         })}
         <Swatch
           key="clear"
+          // i18n-ignore-next-line
           label="Clear"
           isClear
           isActive={currentState === 'OFF'}

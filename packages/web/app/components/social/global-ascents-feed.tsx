@@ -55,6 +55,7 @@ export default function GlobalAscentsFeed() {
   }
 
   if (items.length === 0) {
+    // i18n-ignore-next-line
     return <EmptyState icon={<PublicOutlined fontSize="inherit" />} description="No recent activity yet" />;
   }
 

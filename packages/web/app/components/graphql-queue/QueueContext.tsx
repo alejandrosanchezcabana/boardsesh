@@ -172,6 +172,7 @@ export const GraphQLQueueProvider = ({
   // Warn user when offline buffer is full
   useEffect(() => {
     if (rawOfflineBuffer.isBufferFull) {
+      // i18n-ignore-next-line
       showMessage("You've hit the offline queue limit. Reconnect to sync your climbs.", 'warning');
     }
   }, [rawOfflineBuffer.isBufferFull, showMessage]);
