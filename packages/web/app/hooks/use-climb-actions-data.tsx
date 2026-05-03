@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useMemo, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useWsAuthToken } from '@/app/hooks/use-ws-auth-token';
 import { useSnackbar } from '@/app/components/providers/snackbar-provider';
@@ -53,6 +54,7 @@ const EMPTY_SET = new Set<string>();
 const EMPTY_MAP = new Map<string, Set<string>>();
 
 export function useClimbActionsData({ boardName, layoutId, angle, climbUuids }: UseClimbActionsDataOptions) {
+  const { t } = useTranslation('climbs');
   const { token, isAuthenticated, isLoading: isAuthLoading } = useWsAuthToken();
   const { showMessage } = useSnackbar();
   const queryClient = useQueryClient();
@@ -125,8 +127,7 @@ export function useClimbActionsData({ boardName, layoutId, angle, climbUuids }: 
       if (context?.previousFavorites) {
         queryClient.setQueryData(favAccKey, context.previousFavorites);
       }
-      // i18n-ignore-next-line
-      showMessage('Failed to update favorite. Please try again.', 'error');
+      showMessage(t('actions.favorite.toast.updateFailed'), 'error');
     },
   });
 

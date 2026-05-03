@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import TextField from '@mui/material/TextField';
 import Button from '@mui/material/Button';
 import CircularProgress from '@mui/material/CircularProgress';
@@ -61,7 +62,7 @@ const AttachBetaLinkForm: React.FC<AttachBetaLinkFormProps> = ({
   climbName,
   angle,
   resetTrigger,
-  submitLabel = 'Share beta',
+  submitLabel,
   helperText,
   onSuccess,
   onCancel,
@@ -69,6 +70,8 @@ const AttachBetaLinkForm: React.FC<AttachBetaLinkFormProps> = ({
   autoFocus = false,
   compact = false,
 }) => {
+  const { t } = useTranslation('feed');
+  const resolvedSubmitLabel = submitLabel ?? t('betaVideos.shareBeta');
   const [url, setUrl] = useState('');
   const { token } = useWsAuthToken();
   const queryClient = useQueryClient();
@@ -104,8 +107,7 @@ const AttachBetaLinkForm: React.FC<AttachBetaLinkFormProps> = ({
         platform = 'Instagram';
       }
       track('Beta Video Added', { boardType, climbUuid, platform });
-      // i18n-ignore-next-line
-      showMessage('Video added to beta', 'success');
+      showMessage(t('betaVideos.addedToast'), 'success');
       setUrl('');
       onSuccess?.();
     },
@@ -116,7 +118,7 @@ const AttachBetaLinkForm: React.FC<AttachBetaLinkFormProps> = ({
       // (network, library internals, type assertions) that field can carry
       // raw stack traces or implementation strings that shouldn't be shown.
       const serverMessage = extractGraphQLErrorMessage(error);
-      showMessage(serverMessage ?? 'Couldn’t add video. Try again.', 'error');
+      showMessage(serverMessage ?? t('betaVideos.addError'), 'error');
     },
   });
 
@@ -127,17 +129,12 @@ const AttachBetaLinkForm: React.FC<AttachBetaLinkFormProps> = ({
       <TextField
         autoFocus={autoFocus}
         fullWidth
-        // i18n-ignore-next-line
-        placeholder="Instagram or TikTok URL"
-        label={climbName ? `Beta video URL for ${climbName}` : 'Beta video URL'}
+        placeholder={t('betaVideos.urlPlaceholder')}
+        label={climbName ? t('betaVideos.urlLabelForClimb', { name: climbName }) : t('betaVideos.urlLabel')}
         value={url}
         onChange={(e) => setUrl(e.target.value)}
         error={!!validationError}
-        helperText={
-          validationError ??
-          helperText ??
-          'Paste a public Instagram reel/post or TikTok URL so others can see your beta.'
-        }
+        helperText={validationError ?? helperText ?? t('betaVideos.defaultHelper')}
         onKeyDown={(e) => {
           if (e.key === 'Enter' && canSubmit) {
             e.preventDefault();
@@ -149,8 +146,7 @@ const AttachBetaLinkForm: React.FC<AttachBetaLinkFormProps> = ({
       <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
         {showCancel && onCancel && (
           <Button onClick={onCancel} disabled={mutation.isPending}>
-            {/* i18n-ignore-next-line */}
-            Cancel
+            {t('betaVideos.cancel')}
           </Button>
         )}
         <Button
@@ -159,7 +155,7 @@ const AttachBetaLinkForm: React.FC<AttachBetaLinkFormProps> = ({
           disabled={!canSubmit}
           startIcon={mutation.isPending ? <CircularProgress size={16} /> : undefined}
         >
-          {submitLabel}
+          {resolvedSubmitLabel}
         </Button>
       </Box>
     </Box>

@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import Box from '@mui/material/Box';
 import CircularProgress from '@mui/material/CircularProgress';
 import { useQuery } from '@tanstack/react-query';
@@ -23,6 +24,7 @@ type CrewLogbookViewProps = {
 };
 
 export const CrewLogbookView: React.FC<CrewLogbookViewProps> = ({ currentClimb, boardType }) => {
+  const { t } = useTranslation('profile');
   const { token, isAuthenticated, isLoading: authLoading } = useWsAuthToken();
   const { data: session } = useSession();
   const userId = session?.user?.id ?? null;
@@ -59,18 +61,15 @@ export const CrewLogbookView: React.FC<CrewLogbookViewProps> = ({ currentClimb, 
   }
 
   if (!isAuthenticated) {
-    // i18n-ignore-next-line
-    return <EmptyState description="Sign in to see your crew's logbook for this climb" />;
+    return <EmptyState description={t('logbook.crew.signInPrompt')} />;
   }
 
   if (isError) {
-    // i18n-ignore-next-line
-    return <EmptyState description="Couldn't load your crew's logbook. Try again in a bit." />;
+    return <EmptyState description={t('logbook.crew.loadError')} />;
   }
 
   if (items.length === 0) {
-    // i18n-ignore-next-line
-    return <EmptyState description="None of your crew have logged this climb yet" />;
+    return <EmptyState description={t('logbook.crew.noneYet')} />;
   }
 
   const showMirrorTag = boardType === 'tension';

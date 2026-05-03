@@ -8,6 +8,15 @@ import { TickAction } from '../actions/tick-action';
 import { FavoriteAction } from '../actions/favorite-action';
 import { QueueAction } from '../actions/queue-action';
 import { MirrorAction } from '../actions/mirror-action';
+import { tFromCatalog } from '@/app/__test-helpers__/i18n-mock';
+
+vi.mock('react-i18next', () => ({
+  useTranslation: (ns?: string) => ({
+    t: (key: string, options?: Record<string, unknown>) => tFromCatalog(ns, key, options),
+    i18n: { language: 'en-US' },
+  }),
+  Trans: ({ children }: { children?: React.ReactNode }) => children ?? null,
+}));
 
 // --- Mock factories ---
 
@@ -433,7 +442,7 @@ describe('List mode uses neutral colors (no per-action colored icons)', () => {
       });
 
       const button = screen.getByRole('button');
-      expect(screen.getByText('actions.mirror.label.mirrored')).toBeTruthy();
+      expect(screen.getByText('Mirrored')).toBeTruthy();
 
       // The list icon is created as:
       //   const listIcon = <SwapHorizOutlined sx={{ fontSize: iconSize }} />;
@@ -457,7 +466,7 @@ describe('List mode uses neutral colors (no per-action colored icons)', () => {
       });
 
       const button = screen.getByRole('button');
-      expect(screen.getByText('actions.mirror.label.mirror')).toBeTruthy();
+      expect(screen.getByText('Mirror')).toBeTruthy();
 
       const svg = button.querySelector('svg');
       expect(svg).toBeTruthy();

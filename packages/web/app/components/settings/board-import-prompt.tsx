@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
+import { Trans, useTranslation } from 'react-i18next';
 import Box from '@mui/material/Box';
 import Dialog from '@mui/material/Dialog';
 import DialogTitle from '@mui/material/DialogTitle';
@@ -39,6 +40,7 @@ type BoardImportPromptProps = {
 };
 
 export default function BoardImportPrompt({ boardType, onImportComplete }: BoardImportPromptProps) {
+  const { t } = useTranslation('settings');
   const { showMessage } = useSnackbar();
   const boardName = boardType.charAt(0).toUpperCase() + boardType.slice(1);
 
@@ -110,12 +112,12 @@ export default function BoardImportPrompt({ boardType, onImportComplete }: Board
         throw new Error(error.error || 'Failed to save credentials');
       }
 
-      showMessage(`${boardName} account linked. Your data will show up within 12 hours.`, 'success');
+      showMessage(t('aurora.linkDialog.linkSuccess', { boardName }), 'success');
       setIsModalOpen(false);
       setFormValues({ username: '', password: '' });
       await fetchCredential();
     } catch (error) {
-      showMessage(error instanceof Error ? error.message : 'Failed to link account', 'error');
+      showMessage(error instanceof Error ? error.message : t('aurora.linkDialog.linkError'), 'error');
     } finally {
       setIsSaving(false);
     }
@@ -135,11 +137,10 @@ export default function BoardImportPrompt({ boardType, onImportComplete }: Board
         throw new Error(error.error || 'Failed to remove credentials');
       }
 
-      // i18n-ignore-next-line
-      showMessage('Account unlinked successfully', 'success');
+      showMessage(t('auroraImport.unlinkSuccessToast'), 'success');
       await fetchCredential();
     } catch (error) {
-      showMessage(error instanceof Error ? error.message : 'Failed to unlink account', 'error');
+      showMessage(error instanceof Error ? error.message : t('aurora.unlinkError'), 'error');
     } finally {
       setIsRemoving(false);
     }
@@ -166,8 +167,7 @@ export default function BoardImportPrompt({ boardType, onImportComplete }: Board
 
     const maxSizeBytes = 200 * 1024 * 1024;
     if (file.size > maxSizeBytes) {
-      // i18n-ignore-next-line
-      showMessage('File is too large (max 200MB). Please check you selected the correct file.', 'error');
+      showMessage(t('aurora.import.tooLarge'), 'error');
       event.target.value = '';
       return;
     }
@@ -186,15 +186,11 @@ export default function BoardImportPrompt({ boardType, onImportComplete }: Board
         setImportPreview(parsed.preview);
         setImportPhase('preview');
       } catch (err) {
-        showMessage(
-          err instanceof Error ? err.message : 'Failed to parse JSON file. Please check the file format.',
-          'error',
-        );
+        showMessage(err instanceof Error ? err.message : t('aurora.import.parseError'), 'error');
       }
     };
     reader.onerror = () => {
-      // i18n-ignore-next-line
-      showMessage('Failed to read file. Please try again.', 'error');
+      showMessage(t('aurora.import.readError'), 'error');
     };
     reader.readAsText(file);
     event.target.value = '';
@@ -230,7 +226,7 @@ export default function BoardImportPrompt({ boardType, onImportComplete }: Board
                 event.results.ascents.imported +
                 event.results.attempts.imported +
                 event.results.circuits.imported;
-              showMessage(`Successfully imported ${totalImported} items`, 'success');
+              showMessage(t('aurora.import.successCount', { count: totalImported }), 'success');
             }
             break;
           case 'error':
@@ -243,15 +239,12 @@ export default function BoardImportPrompt({ boardType, onImportComplete }: Board
       });
 
       if (!receivedCompleteRef.current) {
-        setImportError(
-          'Import was interrupted. The server may have timed out. Your data may have been partially imported.',
-        );
+        setImportError(t('aurora.import.interrupted'));
         setImportPhase('error');
-        // i18n-ignore-next-line
-        showMessage('Import was interrupted', 'error');
+        showMessage(t('aurora.import.interruptedShort'), 'error');
       }
     } catch (error) {
-      const msg = error instanceof Error ? error.message : 'Import failed';
+      const msg = error instanceof Error ? error.message : t('aurora.import.failed');
       setImportError(msg);
       setImportPhase('error');
       showMessage(msg, 'error');
@@ -272,13 +265,13 @@ export default function BoardImportPrompt({ boardType, onImportComplete }: Board
   const getImportDialogTitle = () => {
     switch (importPhase) {
       case 'preview':
-        return 'Import Aurora Data';
+        return t('aurora.import.dialog.previewTitle');
       case 'importing':
-        return 'Importing Aurora Data...';
+        return t('aurora.import.dialog.importingTitle');
       case 'complete':
-        return 'Import Complete';
+        return t('aurora.import.dialog.completeTitle');
       case 'error':
-        return 'Import Failed';
+        return t('aurora.import.dialog.errorTitle');
       default:
         return '';
     }
@@ -305,19 +298,16 @@ export default function BoardImportPrompt({ boardType, onImportComplete }: Board
         type="file"
         accept=".json"
         onChange={handleFileSelected}
-        // i18n-ignore-next-line
-        aria-label="Upload Aurora JSON export file"
+        aria-label={t('auroraImport.uploadAriaLabel')}
         hidden
       />
 
       {/* Link Account Dialog */}
       <Dialog open={isModalOpen} onClose={handleModalCancel} maxWidth="sm" fullWidth>
-        <DialogTitle>{`Link ${boardName} Account`}</DialogTitle>
+        <DialogTitle>{t('aurora.linkDialog.title', { boardName })}</DialogTitle>
         <DialogContent>
           <Typography variant="body2" component="span" color="text.secondary" className={styles.modalDescription}>
-            {/* i18n-ignore-next-line */}
-            Enter your {boardName} Board username and password to import your Aurora data. Your credentials are
-            encrypted and securely stored. Data syncs every 12 hours.
+            {t('aurora.linkDialog.description', { boardName })}
           </Typography>
           <Box
             component="form"
@@ -329,10 +319,8 @@ export default function BoardImportPrompt({ boardType, onImportComplete }: Board
             sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 2 }}
           >
             <TextField
-              // i18n-ignore-next-line
-              label="Username"
-              // i18n-ignore-next-line
-              placeholder="Enter your username"
+              label={t('aurora.linkDialog.usernameLabel')}
+              placeholder={t('aurora.linkDialog.usernamePlaceholder')}
               variant="outlined"
               size="small"
               fullWidth
@@ -341,11 +329,9 @@ export default function BoardImportPrompt({ boardType, onImportComplete }: Board
               onChange={(e) => setFormValues((prev) => ({ ...prev, username: e.target.value }))}
             />
             <TextField
-              // i18n-ignore-next-line
-              label="Password"
+              label={t('aurora.linkDialog.passwordLabel')}
               type="password"
-              // i18n-ignore-next-line
-              placeholder="Enter your password"
+              placeholder={t('aurora.linkDialog.passwordPlaceholder')}
               variant="outlined"
               size="small"
               fullWidth
@@ -360,7 +346,7 @@ export default function BoardImportPrompt({ boardType, onImportComplete }: Board
               startIcon={isSaving ? <CircularProgress size={16} /> : undefined}
               fullWidth
             >
-              {isSaving ? 'Linking...' : 'Link Account'}
+              {isSaving ? t('aurora.linkDialog.submitting') : t('aurora.linkDialog.submit')}
             </Button>
           </Box>
         </DialogContent>
@@ -379,29 +365,31 @@ export default function BoardImportPrompt({ boardType, onImportComplete }: Board
           {importPhase === 'preview' && importPreview && (
             <>
               <Typography variant="body2" color="text.secondary" className={styles.modalDescription}>
-                {/* i18n-ignore-next-line */}
-                Import data from <strong>{importPreview.username}</strong> to <strong>{boardName}</strong>:
+                <Trans
+                  i18nKey="aurora.import.dialog.previewIntro"
+                  t={t}
+                  values={{ username: importPreview.username, boardName }}
+                  components={{ strong: <strong /> }}
+                />
               </Typography>
               <List dense>
                 {importPreview.climbs > 0 && (
                   <ListItem>
-                    <ListItemText primary={`${importPreview.climbs} draft climbs`} />
+                    <ListItemText primary={t('aurora.import.dialog.draftClimbs', { count: importPreview.climbs })} />
                   </ListItem>
                 )}
                 <ListItem>
-                  <ListItemText primary={`${importPreview.ascents} ascents`} />
+                  <ListItemText primary={t('aurora.import.dialog.ascents', { count: importPreview.ascents })} />
                 </ListItem>
                 <ListItem>
-                  <ListItemText primary={`${importPreview.attempts} attempts`} />
+                  <ListItemText primary={t('aurora.import.dialog.attempts', { count: importPreview.attempts })} />
                 </ListItem>
                 <ListItem>
-                  <ListItemText primary={`${importPreview.circuits} circuits`} />
+                  <ListItemText primary={t('aurora.import.dialog.circuits', { count: importPreview.circuits })} />
                 </ListItem>
               </List>
               <Typography variant="body2" color="text.secondary">
-                {/* i18n-ignore-next-line */}
-                Climbs will be matched by name. Any that can&apos;t be matched will be reported after import.
-                Re-importing the same file will not create duplicates.
+                {t('aurora.import.dialog.previewNote')}
               </Typography>
             </>
           )}
@@ -414,41 +402,50 @@ export default function BoardImportPrompt({ boardType, onImportComplete }: Board
                 {(importResult.climbs.imported > 0 || importResult.climbs.failed > 0) && (
                   <ListItem>
                     <ListItemText
-                      // i18n-ignore-next-line
-                      primary="Draft Climbs"
-                      secondary={`${importResult.climbs.imported} imported, ${importResult.climbs.skipped} skipped, ${importResult.climbs.failed} failed`}
+                      primary={t('aurora.import.results.draftClimbs')}
+                      secondary={t('aurora.import.results.draftClimbsSummary', {
+                        imported: importResult.climbs.imported,
+                        skipped: importResult.climbs.skipped,
+                        failed: importResult.climbs.failed,
+                      })}
                     />
                   </ListItem>
                 )}
                 <ListItem>
                   <ListItemText
-                    // i18n-ignore-next-line
-                    primary="Ascents"
-                    secondary={`${importResult.ascents.imported} imported, ${importResult.ascents.skipped} skipped (already exist), ${importResult.ascents.failed} unmatched`}
+                    primary={t('aurora.import.results.ascents')}
+                    secondary={t('aurora.import.results.ascentsSummary', {
+                      imported: importResult.ascents.imported,
+                      skipped: importResult.ascents.skipped,
+                      failed: importResult.ascents.failed,
+                    })}
                   />
                 </ListItem>
                 <ListItem>
                   <ListItemText
-                    // i18n-ignore-next-line
-                    primary="Attempts"
-                    secondary={`${importResult.attempts.imported} imported, ${importResult.attempts.skipped} skipped (already exist), ${importResult.attempts.failed} unmatched`}
+                    primary={t('aurora.import.results.attempts')}
+                    secondary={t('aurora.import.results.attemptsSummary', {
+                      imported: importResult.attempts.imported,
+                      skipped: importResult.attempts.skipped,
+                      failed: importResult.attempts.failed,
+                    })}
                   />
                 </ListItem>
                 <ListItem>
                   <ListItemText
-                    // i18n-ignore-next-line
-                    primary="Circuits"
-                    secondary={`${importResult.circuits.imported} imported, ${importResult.circuits.skipped} skipped, ${importResult.circuits.failed} failed`}
+                    primary={t('aurora.import.results.circuits')}
+                    secondary={t('aurora.import.results.circuitsSummary', {
+                      imported: importResult.circuits.imported,
+                      skipped: importResult.circuits.skipped,
+                      failed: importResult.circuits.failed,
+                    })}
                   />
                 </ListItem>
               </List>
               {importResult.unresolvedClimbs.length > 0 && (
                 <MuiAlert severity="warning" className={styles.unsyncedAlert}>
                   <AlertTitle>
-                    {/* i18n-ignore-next-line */}
-                    {importResult.unresolvedClimbs.length} climb
-                    {/* i18n-ignore-next-line */}
-                    {importResult.unresolvedClimbs.length > 1 ? 's' : ''} could not be matched
+                    {t('aurora.import.results.unresolvedTitle', { count: importResult.unresolvedClimbs.length })}
                   </AlertTitle>
                   <div className={styles.unresolvedList}>
                     {importResult.unresolvedClimbs.slice(0, 20).map((name) => (
@@ -458,8 +455,9 @@ export default function BoardImportPrompt({ boardType, onImportComplete }: Board
                     ))}
                     {importResult.unresolvedClimbs.length > 20 && (
                       <Typography variant="body2" color="text.secondary">
-                        {/* i18n-ignore-next-line */}
-                        ...and {importResult.unresolvedClimbs.length - 20} more
+                        {t('aurora.import.results.unresolvedMore', {
+                          count: importResult.unresolvedClimbs.length - 20,
+                        })}
                       </Typography>
                     )}
                   </div>
@@ -470,8 +468,7 @@ export default function BoardImportPrompt({ boardType, onImportComplete }: Board
 
           {importPhase === 'error' && importError && (
             <MuiAlert severity="error">
-              {/* i18n-ignore-next-line */}
-              <AlertTitle>Import failed</AlertTitle>
+              <AlertTitle>{t('aurora.import.dialog.errorTitleShort')}</AlertTitle>
               {importError}
             </MuiAlert>
           )}
@@ -479,19 +476,16 @@ export default function BoardImportPrompt({ boardType, onImportComplete }: Board
 
         {importPhase === 'preview' && (
           <DialogActions>
-            {/* i18n-ignore-next-line */}
-            <Button onClick={handleImportDialogClose}>Cancel</Button>
+            <Button onClick={handleImportDialogClose}>{t('aurora.import.dialog.cancel')}</Button>
             <Button variant="contained" onClick={handleImportConfirm}>
-              {/* i18n-ignore-next-line */}
-              Import
+              {t('aurora.import.dialog.confirm')}
             </Button>
           </DialogActions>
         )}
         {(importPhase === 'complete' || importPhase === 'error') && (
           <DialogActions>
             <Button variant="contained" onClick={handleImportDialogClose}>
-              {/* i18n-ignore-next-line */}
-              Close
+              {t('aurora.import.dialog.close')}
             </Button>
           </DialogActions>
         )}

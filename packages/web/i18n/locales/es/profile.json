@@ -70,7 +70,136 @@
     "noClimbingData": "Sin datos de escalada en este periodo"
   },
   "filter": {
-    "pageTitle": "Estadísticas"
+    "pageTitle": "Estadísticas",
+    "drawer": {
+      "title": "Filtros",
+      "board": "Board",
+      "timeRange": "Rango de tiempo",
+      "from": "Desde",
+      "to": "Hasta"
+    }
+  },
+  "analytics": {
+    "noData": "Sin datos analíticos disponibles todavía. Los datos se recopilan durante la sincronización.",
+    "ascentsOverTime": "Ascensos a lo largo del tiempo",
+    "qualityOverTime": "Calidad a lo largo del tiempo"
+  },
+  "logbook": {
+    "section": {
+      "noAscentsLogged": "Sin encadenes registrados para este bloque"
+    },
+    "crew": {
+      "signInPrompt": "Inicia sesión para ver la bitácora de tu crew para este bloque",
+      "loadError": "No se pudo cargar la bitácora de tu crew. Inténtalo de nuevo en un rato.",
+      "noneYet": "Nadie de tu crew ha registrado este bloque todavía"
+    },
+    "entry": {
+      "mirroredTag": "Reflejado",
+      "attemptsLabel": "Intentos: {{count}}"
+    },
+    "form": {
+      "ascent": "Encadene",
+      "attempt": "Intento",
+      "boulder": "Bloque",
+      "dateAndTime": "Fecha y hora",
+      "angle": "Ángulo",
+      "attempts": "Intentos",
+      "quality": "Calidad",
+      "difficulty": "Dificultad",
+      "notes": "Notas",
+      "video": "Vídeo",
+      "videoPlaceholder": "URL de Instagram o TikTok",
+      "videoHelper": "Pega un enlace de Instagram o TikTok para que otros vean tu beta. (Opcional)",
+      "mirrored": "Reflejado",
+      "submit": "Enviar",
+      "cancel": "Cancelar"
+    },
+    "feed": {
+      "deleteSwipeLabel": "Eliminar",
+      "cancelEditing": "Cancelar edición",
+      "saveEdit": "Guardar",
+      "moreActions": "Más acciones",
+      "editLog": "Editar registro",
+      "deleteLog": "Eliminar registro",
+      "postToInstagram": "Publicar en Instagram",
+      "linkInstagramPost": "Vincular publicación de Instagram",
+      "stars": "estrellas",
+      "user": "usuario",
+      "grade": "grado",
+      "tries": "intentos",
+      "selectGrade": "Selecciona el grado registrado",
+      "status": {
+        "flash": "Flash",
+        "send": "Encadene",
+        "attempt": "Intento"
+      },
+      "snackbar": {
+        "boardsLinkMissing": "No se encontró la tabla enlazada — mostrando todas tus entradas.",
+        "deleteFailed": "No se pudo eliminar la marca",
+        "tickDeleted": "Marca eliminada",
+        "undo": "Deshacer"
+      }
+    },
+    "search": {
+      "placeholder": "Busca bloques o notas",
+      "openFilters": "Abrir filtros",
+      "search": "Buscar",
+      "gradeRange": "Rango de grados",
+      "sort": "Ordenar",
+      "clearAll": "Limpiar todo",
+      "filterCount_one": "filtro activo",
+      "filterCount_other": "filtros activos",
+      "resultType": {
+        "includeSends": "Incluir encadenes",
+        "includeAttempts": "Incluir intentos",
+        "flashOnly": "Solo flash",
+        "benchmarkOnly": "Solo benchmark"
+      },
+      "dateAngle": {
+        "dateRange": "Rango de fechas",
+        "startDate": "Fecha de inicio",
+        "endDate": "Fecha de fin",
+        "wallAngleRange": "Rango de ángulo de la pared ({{min}}°–{{max}}°)"
+      },
+      "sortFields": {
+        "date": "Fecha",
+        "climbName": "Nombre del bloque",
+        "loggedGrade": "Grado registrado",
+        "consensusGrade": "Grado consensuado",
+        "attemptCount": "Intentos"
+      },
+      "sortDirection": {
+        "desc": "Desc"
+      }
+    },
+    "instagram": {
+      "back": "Atrás",
+      "title": "Publicar en Instagram",
+      "subtitle": "Comparte tu encadene y vincúlalo aquí.",
+      "betaLoadFailed": "No se pudieron cargar los vídeos de beta.",
+      "retry": "Reintentar",
+      "steps": {
+        "copy": "Copia el pie de foto y abre Instagram.",
+        "paste": "Pega el pie de foto al crear tu publicación.",
+        "comeBack": "Cuando tu publicación esté en vivo, vuelve aquí.",
+        "pasteLink": "Pega el enlace de Instagram para mostrar aquí tu vídeo de encadene."
+      },
+      "addLinkSubmit": "Añadir enlace de Instagram",
+      "shareYourBeta": "Comparte tu vídeo de beta",
+      "shareYourBetaBody": "Copiamos el pie de foto, abrimos Instagram y luego pegas el enlace final en Boardsesh.",
+      "howItWorks": "Cómo funciona",
+      "caption": "Pie de foto",
+      "copyAndOpen": "Copiar y abrir Instagram",
+      "pasteLinkTitle": "Pega tu enlace de Instagram",
+      "pasteLinkBody": "Cuando tu publicación esté en vivo, pega el enlace del reel o post aquí para que Boardsesh muestre tu vídeo de encadene.",
+      "pasteLinkHelper": "Pega la URL del reel o post de Instagram.",
+      "existingBetaVideos": "Vídeos de beta existentes",
+      "snackbar": {
+        "copyFailed": "No se pudo copiar el pie de foto. Inténtalo de nuevo.",
+        "openFailed": "No se pudo abrir Instagram. Ábrelo manualmente y pega el pie de foto copiado.",
+        "copied": "Pie de foto copiado. Instagram debería abrirse a continuación."
+      }
+    }
   },
   "setter": {
     "notFoundTitle": "Aperturista no encontrado",

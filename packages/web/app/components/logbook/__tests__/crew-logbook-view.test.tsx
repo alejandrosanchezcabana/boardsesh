@@ -6,6 +6,15 @@ import { render, screen, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import type { Climb } from '@/app/lib/types';
 import { CrewLogbookView } from '../crew-logbook-view';
+import { tFromCatalog } from '@/app/__test-helpers__/i18n-mock';
+
+vi.mock('react-i18next', () => ({
+  useTranslation: (ns?: string) => ({
+    t: (key: string, options?: Record<string, unknown>) => tFromCatalog(ns, key, options),
+    i18n: { language: 'en-US' },
+  }),
+  Trans: ({ children }: { children?: React.ReactNode }) => children ?? null,
+}));
 
 const mockRequest = vi.fn();
 const mockUseWsAuthToken = vi.fn();

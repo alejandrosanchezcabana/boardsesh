@@ -267,5 +267,93 @@
     "saving": "Guardando en Apple Health…",
     "saved": "Guardado en Apple Health",
     "retry": "Guardar en Apple Health (reintentar)"
+  },
+  "feedbackDialog": {
+    "titleRating": "Valora Boardsesh",
+    "titleBug": "Reportar un fallo",
+    "submitRating": "Enviar",
+    "submitBug": "Enviar reporte",
+    "successRating": "Gracias — registrado.",
+    "successBug": "Fallo registrado — gracias.",
+    "errorRating": "No se pudo enviar — guardamos tus comentarios.",
+    "closeAria": "Cerrar"
+  },
+  "feedbackForm": {
+    "missingHeading": "¿Qué falta?",
+    "compactPlaceholder": "Cuéntanos qué te ayudaría",
+    "skip": "Omitir",
+    "sendAria": "Enviar",
+    "cancel": "Cancelar",
+    "saveDefault": "Guardar",
+    "bugPlaceholder": "¿Qué estabas haciendo? ¿Qué esperabas y qué viste?",
+    "ratingPlaceholder": "¿Qué piensas?",
+    "remainingChars": "Faltan {{count}} caracteres",
+    "nextAria": "Siguiente"
+  },
+  "feedbackBanner": {
+    "successToast": "Gracias — registrado.",
+    "errorToast": "No se pudo enviar — guardamos tu valoración.",
+    "dismissAria": "Descartar"
+  },
+  "shakeToReport": {
+    "disabledToast": "Sacudir para reportar desactivado. Toca tu avatar arriba para enviar comentarios.",
+    "dontShowAgain": "No mostrar de nuevo"
+  },
+  "storeReview": {
+    "title": "Ayuda a otros a descubrir Boardsesh",
+    "body": "Gracias por la valoración. ¿Dejarías también una reseña rápida en tu tienda de apps? Es lo mejor que puedes hacer para ayudar a otros escaladores a encontrarnos.",
+    "notNow": "Ahora no",
+    "leaveReview": "Dejar reseña"
+  },
+  "sessionProvider": {
+    "deepLinkError": "El inicio de sesión con Google, Apple o Facebook puede no funcionar. Prueba a reiniciar la app."
+  },
+  "onboarding": {
+    "skipTour": "Saltar tour",
+    "finish": "Finalizar",
+    "next": "Siguiente",
+    "stepProgress": "{{current}} de {{total}}"
+  },
+  "devUrlDialog": {
+    "title": "URL de desarrollo",
+    "intro": "Apunta el WebView a un origen diferente. La app se reiniciará al guardar.",
+    "urlLabel": "URL del servidor",
+    "useProduction": "Usar producción",
+    "currentlyOverriding": "Actualmente apunta a: {{url}}",
+    "cancel": "Cancelar",
+    "clearOverride": "Quitar override",
+    "save": "Guardar y reiniciar",
+    "restarting": "Reiniciando…",
+    "validation": {
+      "enterUrl": "Introduce una URL",
+      "mustBeHttp": "La URL debe empezar por http:// o https://",
+      "invalid": "URL no válida",
+      "generic": "Algo salió mal"
+    }
+  },
+  "boardConfigMismatch": {
+    "title": "La configuración del tablero no coincide",
+    "intro": "Nuestros registros muestran que este tablero tiene una configuración diferente a la que tienes seleccionada.",
+    "currentLabel": "<strong>Tienes configurado:</strong>",
+    "recordedLabel": "<strong>Registrado para este controlador:</strong>",
+    "cancel": "Cancelar",
+    "connectAnyway": "Conectar igualmente",
+    "switchToCorrect": "Cambiar a la configuración correcta"
+  },
+  "devicePicker": {
+    "title": "Selecciona tu tablero",
+    "scanning": "Buscando tableros cercanos…",
+    "lastConnected": "Último tablero conectado",
+    "unknownDevice": "Dispositivo desconocido",
+    "lastConnectedAt": "Conectado por última vez {{time}}",
+    "cancel": "Cancelar"
+  },
+  "bluetoothMismatch": {
+    "switchNoAngleToast": "No se pudo cambiar — abre una vía con un ángulo concreto primero.",
+    "switchUrlFailedToast": "No se pudo cambiar a esa configuración. Prueba Conectar igualmente."
+  },
+  "auroraImport": {
+    "unlinkSuccessToast": "Cuenta desvinculada",
+    "uploadAriaLabel": "Subir archivo JSON exportado de Aurora"
   }
 }

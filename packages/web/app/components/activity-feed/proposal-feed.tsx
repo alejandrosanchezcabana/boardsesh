@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import Box from '@mui/material/Box';
 import MuiButton from '@mui/material/Button';
 import ErrorOutline from '@mui/icons-material/ErrorOutline';
@@ -25,6 +26,7 @@ type ProposalFeedProps = {
 };
 
 export default function ProposalFeed({ isAuthenticated, boardUuid }: ProposalFeedProps) {
+  const { t } = useTranslation('feed');
   const { token, isLoading: authLoading } = useWsAuthToken();
   const PAGE_SIZE = 20;
 
@@ -78,21 +80,15 @@ export default function ProposalFeed({ isAuthenticated, boardUuid }: ProposalFee
   return (
     <Box data-testid="proposal-feed" sx={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
       {error && (
-        <EmptyState
-          icon={<ErrorOutline fontSize="inherit" />}
-          // i18n-ignore-next-line
-          description="Failed to load proposals. Please try again."
-        >
+        <EmptyState icon={<ErrorOutline fontSize="inherit" />} description={t('errors.loadProposals')}>
           <MuiButton variant="contained" onClick={() => refetch()}>
-            {/* i18n-ignore-next-line */}
-            Retry
+            {t('common:actions.retry')}
           </MuiButton>
         </EmptyState>
       )}
 
       {!error && proposals.length === 0 ? (
-        // i18n-ignore-next-line
-        <EmptyState icon={<GavelOutlined fontSize="inherit" />} description="No proposals yet" />
+        <EmptyState icon={<GavelOutlined fontSize="inherit" />} description={t('proposalFeed.empty')} />
       ) : (
         <>
           {proposals.map((proposal) => (

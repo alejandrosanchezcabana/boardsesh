@@ -4,6 +4,15 @@ import React from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import DraftsDrawer from '../drafts-drawer';
 import type { BoardDetails } from '@/app/lib/types';
+import { tFromCatalog } from '@/app/__test-helpers__/i18n-mock';
+
+vi.mock('react-i18next', () => ({
+  useTranslation: (ns?: string) => ({
+    t: (key: string, options?: Record<string, unknown>) => tFromCatalog(ns, key, options),
+    i18n: { language: 'en-US' },
+  }),
+  Trans: ({ children }: { children?: React.ReactNode }) => children ?? null,
+}));
 
 const mockPush = vi.fn();
 const mockRequest = vi.fn();

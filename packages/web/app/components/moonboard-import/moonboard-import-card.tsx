@@ -37,11 +37,11 @@ export default function MoonBoardImportCard({
   onEdit,
   onRemove,
 }: MoonBoardImportCardProps) {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation('climbs');
   const totalHolds = climb.holds.start.length + climb.holds.hand.length + climb.holds.finish.length;
   const duplicateMessage = duplicateMatch?.existingClimbName
-    ? `Skipping: Already Exists as "${duplicateMatch.existingClimbName}"`
-    : 'Skipping: Already Exists';
+    ? t('moonboardImport.card.duplicateNamed', { name: duplicateMatch.existingClimbName })
+    : t('moonboardImport.card.duplicate');
 
   return (
     <MuiCard className={styles.card}>
@@ -55,8 +55,7 @@ export default function MoonBoardImportCard({
           </Typography>
           {duplicateMatch?.exists && (
             <Chip
-              // i18n-ignore-next-line
-              label="Skipping"
+              label={t('moonboardImport.card.skipping')}
               size="small"
               className={styles.duplicateTag}
               sx={{
@@ -93,20 +92,17 @@ export default function MoonBoardImportCard({
       </CardContent>
       <CardActions>
         <MuiButton key="edit" variant="text" startIcon={<EditOutlined />} onClick={onEdit}>
-          {/* i18n-ignore-next-line */}
-          Edit
+          {t('common:actions.edit')}
         </MuiButton>
         <ConfirmPopover
-          title={t('moonboardImport.removeConfirmTitle')}
-          // i18n-ignore-next-line
-          description="This climb will not be imported."
+          title={t('common:moonboardImport.removeConfirmTitle')}
+          description={t('moonboardImport.card.removeDescription')}
           onConfirm={onRemove}
-          okText={t('actions.remove')}
-          cancelText={t('actions.cancel')}
+          okText={t('moonboardImport.card.removeAction')}
+          cancelText={t('common:actions.cancel')}
         >
           <MuiButton variant="text" color="error" startIcon={<DeleteOutlined />}>
-            {/* i18n-ignore-next-line */}
-            Remove
+            {t('moonboardImport.card.removeAction')}
           </MuiButton>
         </ConfirmPopover>
       </CardActions>

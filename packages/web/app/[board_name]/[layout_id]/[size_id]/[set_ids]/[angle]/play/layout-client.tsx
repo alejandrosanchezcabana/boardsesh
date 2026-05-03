@@ -19,7 +19,7 @@ type PlayLayoutClientProps = {
 };
 
 const QueueSidebar: React.FC<{ boardDetails: BoardDetails }> = ({ boardDetails }) => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation('session');
   const { queue } = useQueueList();
   const { setQueue } = useQueueActions();
 
@@ -42,23 +42,19 @@ const QueueSidebar: React.FC<{ boardDetails: BoardDetails }> = ({ boardDetails }
             color="primary"
             sx={{ '& .MuiBadge-badge': { right: -8, top: 0 } }}
           >
-            {/* i18n-ignore-next-line */}
-            Queue
+            {t('queueDrawer.title')}
           </Badge>
         </h3>
         {queue.length > 0 && (
           <ConfirmPopover
-            // i18n-ignore-next-line
-            title="Clear queue"
-            // i18n-ignore-next-line
-            description="Are you sure you want to clear all items from the queue?"
+            title={t('queueDrawer.clearTitle')}
+            description={t('queueDrawer.clearDescription')}
             onConfirm={handleClearQueue}
-            okText={t('actions.clear')}
-            cancelText={t('actions.cancel')}
+            okText={t('queueDrawer.clearConfirm')}
+            cancelText={t('common:actions.cancel')}
           >
             <MuiButton variant="text" startIcon={<DeleteOutlined />} size="small" sx={{ color: 'var(--neutral-400)' }}>
-              {/* i18n-ignore-next-line */}
-              Clear
+              {t('queueDrawer.clear')}
             </MuiButton>
           </ConfirmPopover>
         )}

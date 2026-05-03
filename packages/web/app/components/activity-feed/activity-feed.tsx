@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import Box from '@mui/material/Box';
 import MuiButton from '@mui/material/Button';
 import MuiAlert from '@mui/material/Alert';
@@ -38,6 +39,7 @@ export default function ActivityFeed({
   onFindClimbers,
   initialFeedResult,
 }: ActivityFeedProps) {
+  const { t } = useTranslation('feed');
   const { token, isLoading: authLoading, error: authError } = useWsAuthToken();
 
   const hasInitialData = !!initialFeedResult && initialFeedResult.sessions.length > 0;
@@ -102,20 +104,17 @@ export default function ActivityFeed({
   let emptyStateContent: React.ReactNode = null;
   if (isAuthenticated) {
     emptyStateContent = (
-      // i18n-ignore-next-line
-      <EmptyState icon={<PersonSearchOutlined fontSize="inherit" />} description="Follow some climbers to fill this up">
+      <EmptyState icon={<PersonSearchOutlined fontSize="inherit" />} description={t('emptyStates.followClimbers')}>
         {onFindClimbers && (
           <MuiButton variant="contained" onClick={onFindClimbers}>
-            {/* i18n-ignore-next-line */}
-            Find Climbers
+            {t('emptyStates.findClimbers')}
           </MuiButton>
         )}
       </EmptyState>
     );
   } else {
     emptyStateContent = (
-      // i18n-ignore-next-line
-      <EmptyState icon={<PublicOutlined fontSize="inherit" />} description="No recent activity yet" />
+      <EmptyState icon={<PublicOutlined fontSize="inherit" />} description={t('emptyStates.noRecentActivity')} />
     );
   }
 
@@ -123,8 +122,7 @@ export default function ActivityFeed({
     <Box data-testid="activity-feed" sx={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
       {!isAuthenticated && (
         <MuiAlert severity="info" sx={{ mb: 1 }}>
-          {/* i18n-ignore-next-line */}
-          Sign in to see a personalized feed from climbers you follow.
+          {t('activityFeed.signInPrompt')}
         </MuiAlert>
       )}
 
@@ -137,14 +135,9 @@ export default function ActivityFeed({
       )}
 
       {error && (
-        <EmptyState
-          icon={<ErrorOutline fontSize="inherit" />}
-          // i18n-ignore-next-line
-          description="Failed to load activity feed. Please try again."
-        >
+        <EmptyState icon={<ErrorOutline fontSize="inherit" />} description={t('errors.loadFeed')}>
           <MuiButton variant="contained" onClick={() => refetch()}>
-            {/* i18n-ignore-next-line */}
-            Retry
+            {t('common:actions.retry')}
           </MuiButton>
         </EmptyState>
       )}

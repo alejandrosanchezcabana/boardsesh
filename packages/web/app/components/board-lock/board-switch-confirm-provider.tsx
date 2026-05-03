@@ -1,6 +1,7 @@
 'use client';
 
 import React, { createContext, useCallback, useContext, useMemo, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import Dialog from '@mui/material/Dialog';
 import DialogTitle from '@mui/material/DialogTitle';
 import DialogContent from '@mui/material/DialogContent';
@@ -50,6 +51,7 @@ type DialogState = {
 };
 
 export function BoardSwitchConfirmProvider({ children }: { children: React.ReactNode }) {
+  const { t } = useTranslation('boards');
   const [state, setState] = useState<DialogState | null>(null);
   // Hold onConfirmed in a ref so handlers never read a stale closure and
   // the render doesn't need to re-run when the callback changes.
@@ -83,11 +85,12 @@ export function BoardSwitchConfirmProvider({ children }: { children: React.React
 
   const value = useMemo<BoardSwitchConfirmContextValue>(() => ({ confirmBoardSwitch }), [confirmBoardSwitch]);
 
-  const title = state?.reason === 'session' ? 'Leave your session?' : 'Disconnect your board?';
+  const title =
+    state?.reason === 'session' ? t('boardSwitchConfirm.session.title') : t('boardSwitchConfirm.connection.title');
   const body =
     state?.reason === 'session'
-      ? `You're in a session on ${state?.lockedLabel}. Switching to ${state?.targetLabel} disconnects your board but keeps the session running.`
-      : `Your ${state?.lockedLabel} is still connected. Switching to ${state?.targetLabel} disconnects it.`;
+      ? t('boardSwitchConfirm.session.body', { lockedLabel: state?.lockedLabel, targetLabel: state?.targetLabel })
+      : t('boardSwitchConfirm.connection.body', { lockedLabel: state?.lockedLabel, targetLabel: state?.targetLabel });
 
   return (
     <BoardSwitchConfirmContext.Provider value={value}>
@@ -105,11 +108,9 @@ export function BoardSwitchConfirmProvider({ children }: { children: React.React
           <DialogContentText>{body}</DialogContentText>
         </DialogContent>
         <DialogActions>
-          {/* i18n-ignore-next-line */}
-          <Button onClick={handleCancel}>Stay</Button>
+          <Button onClick={handleCancel}>{t('boardSwitchConfirm.stay')}</Button>
           <Button variant="contained" onClick={handleConfirm} autoFocus>
-            {/* i18n-ignore-next-line */}
-            Switch boards
+            {t('boardSwitchConfirm.switch')}
           </Button>
         </DialogActions>
       </Dialog>

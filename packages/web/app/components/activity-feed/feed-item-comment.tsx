@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import Box from '@mui/material/Box';
 import MuiCard from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
@@ -22,6 +23,7 @@ type FeedItemCommentProps = {
 };
 
 export default function FeedItemComment({ item }: FeedItemCommentProps) {
+  const { t } = useTranslation('feed');
   const timeAgo = dayjs(item.createdAt).fromNow();
   const actorProfileHref = item.actorId ? `/profile/${item.actorId}` : null;
 
@@ -48,8 +50,7 @@ export default function FeedItemComment({ item }: FeedItemCommentProps) {
             </MuiTypography>
             <MuiTypography variant="body2" component="span" color="text.secondary">
               {' '}
-              {/* i18n-ignore-next-line */}
-              commented
+              {t('feedItemComment.commented')}
             </MuiTypography>
             {item.climbName && (
               <>

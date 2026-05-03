@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import Box from '@mui/material/Box';
 import IconButton from '@mui/material/IconButton';
 import Typography from '@mui/material/Typography';
@@ -22,6 +23,7 @@ export default function FeedCommentButton({
   commentCount = 0,
   defaultExpanded = false,
 }: FeedCommentButtonProps) {
+  const { t } = useTranslation('feed');
   const [open, setOpen] = useState(defaultExpanded);
 
   const handleToggle = useCallback((e: React.MouseEvent) => {
@@ -52,8 +54,7 @@ export default function FeedCommentButton({
 
       <Collapse in={open} unmountOnExit>
         <Box sx={{ mt: 1 }}>
-          {/* i18n-ignore-next-line */}
-          <CommentSection entityType={entityType} entityId={entityId} title="Comments" />
+          <CommentSection entityType={entityType} entityId={entityId} title={t('feedCommentButton.commentsTitle')} />
         </Box>
       </Collapse>
     </Box>

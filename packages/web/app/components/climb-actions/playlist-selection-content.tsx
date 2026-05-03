@@ -157,40 +157,34 @@ export default function PlaylistSelectionContent({
             fontSize: themeTokens.typography.fontSize.base,
           }}
         >
-          {/* i18n-ignore-next-line */}
-          Add to Playlist
+          {t('actions.playlist.popover.title')}
         </MuiTypography>
       </Box>
 
       {!isAuthenticated && (
         <Stack spacing={1} sx={{ width: '100%', textAlign: 'center', py: themeTokens.spacing[1] }}>
           <MuiTypography component="span" color="text.secondary" sx={{ fontSize: themeTokens.typography.fontSize.sm }}>
-            {/* i18n-ignore-next-line */}
-            Sign in to create and manage playlists
+            {t('actions.playlist.popover.signInBlurb')}
           </MuiTypography>
           <MuiButton
             variant="contained"
             onClick={() =>
               openAuthModal({
-                // i18n-ignore-next-line
-                title: 'Sign in to create playlists',
-                // i18n-ignore-next-line
-                description: 'Sign in to organize your climbs into custom playlists.',
+                title: t('actions.playlist.auth.title'),
+                description: t('actions.playlist.auth.description'),
               })
             }
             fullWidth
             size="small"
           >
-            {/* i18n-ignore-next-line */}
-            Sign In
+            {t('actions.tick.drawer.signIn')}
           </MuiButton>
         </Stack>
       )}
       {isAuthenticated && playlists.length === 0 && !showCreateForm && (
         <Stack spacing={1} sx={{ width: '100%', textAlign: 'center', py: themeTokens.spacing[1] }}>
           <MuiTypography component="span" color="text.secondary" sx={{ fontSize: themeTokens.typography.fontSize.sm }}>
-            {/* i18n-ignore-next-line */}
-            No playlists yet
+            {t('actions.playlist.popover.empty')}
           </MuiTypography>
           <MuiButton
             variant="contained"
@@ -199,8 +193,7 @@ export default function PlaylistSelectionContent({
             fullWidth
             size="small"
           >
-            {/* i18n-ignore-next-line */}
-            Create Your First Playlist
+            {t('actions.playlist.popover.createFirst')}
           </MuiButton>
         </Stack>
       )}
@@ -265,8 +258,7 @@ export default function PlaylistSelectionContent({
                 size="medium"
                 sx={{ marginTop: `${themeTokens.spacing[2]}px` }}
               >
-                {/* i18n-ignore-next-line */}
-                Create New Playlist
+                {t('actions.playlist.popover.createNew')}
               </MuiButton>
             </>
           )}
@@ -276,12 +268,10 @@ export default function PlaylistSelectionContent({
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
                 <Box>
                   <MuiTypography variant="body2" fontWeight={600} sx={{ mb: 0.5, fontSize: 12 }}>
-                    {/* i18n-ignore-next-line */}
-                    Playlist Name
+                    {t('actions.playlist.create.nameLabel')}
                   </MuiTypography>
                   <TextField
-                    // i18n-ignore-next-line
-                    placeholder="e.g., Hard Crimps"
+                    placeholder={t('actions.playlist.create.namePlaceholder')}
                     autoFocus
                     fullWidth
                     size="small"
@@ -292,12 +282,10 @@ export default function PlaylistSelectionContent({
                 </Box>
                 <Box>
                   <MuiTypography variant="body2" fontWeight={600} sx={{ mb: 0.5, fontSize: 12 }}>
-                    {/* i18n-ignore-next-line */}
-                    Description (optional)
+                    {t('actions.playlist.create.descriptionLabel')}
                   </MuiTypography>
                   <TextField
-                    // i18n-ignore-next-line
-                    placeholder="Optional description..."
+                    placeholder={t('actions.playlist.create.descriptionPlaceholder')}
                     multiline
                     rows={2}
                     fullWidth
@@ -309,8 +297,7 @@ export default function PlaylistSelectionContent({
                 </Box>
                 <Box>
                   <MuiTypography variant="body2" fontWeight={600} sx={{ mb: 0.5, fontSize: 12 }}>
-                    {/* i18n-ignore-next-line */}
-                    Color (optional)
+                    {t('actions.playlist.create.colorLabel')}
                   </MuiTypography>
                   <TextField
                     type="color"
@@ -334,8 +321,7 @@ export default function PlaylistSelectionContent({
                     setCreateFormValues({ name: '', description: '', color: '' });
                   }}
                 >
-                  {/* i18n-ignore-next-line */}
-                  Cancel
+                  {t('common:actions.cancel')}
                 </MuiButton>
                 <MuiButton
                   variant="contained"
@@ -344,8 +330,7 @@ export default function PlaylistSelectionContent({
                   disabled={creatingPlaylist}
                   startIcon={creatingPlaylist ? <CircularProgress size={16} /> : undefined}
                 >
-                  {/* i18n-ignore-next-line */}
-                  Create
+                  {t('actions.playlist.create.submit')}
                 </MuiButton>
               </Stack>
             </div>

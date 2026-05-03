@@ -173,7 +173,7 @@ export async function GET(request: NextRequest) {
             fontWeight: 600,
           }}
         >
-          {/* i18n-ignore-next-line */}
+          {/* i18n-ignore-next-line -- OG image, brand-only text */}
           boardsesh.com
         </div>
       </div>,

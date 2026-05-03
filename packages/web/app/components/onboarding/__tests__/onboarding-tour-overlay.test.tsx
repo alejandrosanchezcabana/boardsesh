@@ -47,6 +47,15 @@ vi.mock('@mui/material/Popper', () => ({
 }));
 
 import OnboardingTourOverlay from '../onboarding-tour-overlay';
+import { tFromCatalog } from '@/app/__test-helpers__/i18n-mock';
+
+vi.mock('react-i18next', () => ({
+  useTranslation: (ns?: string) => ({
+    t: (key: string, options?: Record<string, unknown>) => tFromCatalog(ns, key, options),
+    i18n: { language: 'en-US' },
+  }),
+  Trans: ({ children }: { children?: React.ReactNode }) => children ?? null,
+}));
 /* eslint-enable import/first */
 
 // --- Helpers ---------------------------------------------------------------

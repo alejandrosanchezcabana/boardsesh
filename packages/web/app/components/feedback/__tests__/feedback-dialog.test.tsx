@@ -4,6 +4,15 @@ import React from 'react';
 import { FeedbackDialog } from '../feedback-dialog';
 import { useSubmitAppFeedback } from '@/app/hooks/use-submit-app-feedback';
 import { setFeedbackStatus } from '@/app/lib/feedback-prompt-db';
+import { tFromCatalog } from '@/app/__test-helpers__/i18n-mock';
+
+vi.mock('react-i18next', () => ({
+  useTranslation: (ns?: string) => ({
+    t: (key: string, options?: Record<string, unknown>) => tFromCatalog(ns, key, options),
+    i18n: { language: 'en-US' },
+  }),
+  Trans: ({ children }: { children?: React.ReactNode }) => children ?? null,
+}));
 
 // The dialog pulls in a React Query hook, a snackbar provider, and an
 // IndexedDB-backed db module. Stub them out so these tests focus on the

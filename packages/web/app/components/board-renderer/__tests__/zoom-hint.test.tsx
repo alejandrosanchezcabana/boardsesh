@@ -1,6 +1,16 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vite-plus/test';
 import { render, screen, fireEvent, act } from '@testing-library/react';
 import ZoomHint from '../zoom-hint';
+import React from 'react';
+import { tFromCatalog } from '@/app/__test-helpers__/i18n-mock';
+
+vi.mock('react-i18next', () => ({
+  useTranslation: (ns?: string) => ({
+    t: (key: string, options?: Record<string, unknown>) => tFromCatalog(ns, key, options),
+    i18n: { language: 'en-US' },
+  }),
+  Trans: ({ children }: { children?: React.ReactNode }) => children ?? null,
+}));
 
 // Mock IndexedDB preferences
 const mockGetPreference = vi.fn();

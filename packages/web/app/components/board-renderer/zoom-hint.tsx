@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useState, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import ZoomInOutlined from '@mui/icons-material/ZoomInOutlined';
 import { getPreference, setPreference } from '@/app/lib/user-preferences-db';
 import styles from './swipe-board-carousel.module.css';
@@ -13,6 +14,7 @@ type ZoomHintProps = {
 };
 
 export default function ZoomHint({ visible }: ZoomHintProps) {
+  const { t } = useTranslation('boards');
   const [show, setShow] = useState(false);
 
   useEffect(() => {
@@ -48,8 +50,7 @@ export default function ZoomHint({ visible }: ZoomHintProps) {
     <div className={styles.zoomHintOverlay} onClick={dismiss}>
       <div className={styles.zoomHintPill}>
         <ZoomInOutlined sx={{ fontSize: 20 }} />
-        {/* i18n-ignore-next-line */}
-        <span>Pinch to zoom</span>
+        <span>{t('zoomHint.pinchToZoom')}</span>
       </div>
     </div>
   );

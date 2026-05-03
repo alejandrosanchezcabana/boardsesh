@@ -4,6 +4,15 @@ import { render, screen, act } from '@testing-library/react';
 import type { Angle, BoardDetails, BoardName, Climb } from '@/app/lib/types';
 import type { LogbookEntry } from '@/app/hooks/use-logbook';
 import { InlineListTickBar } from '../inline-list-tick-bar';
+import { tFromCatalog } from '@/app/__test-helpers__/i18n-mock';
+
+vi.mock('react-i18next', () => ({
+  useTranslation: (ns?: string) => ({
+    t: (key: string, options?: Record<string, unknown>) => tFromCatalog(ns, key, options),
+    i18n: { language: 'en-US' },
+  }),
+  Trans: ({ children }: { children?: React.ReactNode }) => children ?? null,
+}));
 
 // --- Mocks (must be hoisted before imports of the component under test) ---
 

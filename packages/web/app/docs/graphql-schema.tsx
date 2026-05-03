@@ -188,7 +188,7 @@ export default function GraphQLSchemaViewer() {
     <div>
       <div className={styles.searchContainer}>
         <TextField
-          // i18n-ignore-next-line
+          // i18n-ignore-next-line -- technical reference, English only
           placeholder="Search types, fields, descriptions..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
@@ -215,14 +215,14 @@ export default function GraphQLSchemaViewer() {
         <Tab label={`Inputs (${groupedSections.inputs.length})`} value="inputs" />
         <Tab label={`Enums (${groupedSections.enums.length})`} value="enums" />
         <Tab label={`Others (${groupedSections.others.length})`} value="others" />
-        {/* i18n-ignore-next-line */}
+        {/* i18n-ignore-next-line -- technical reference, English only */}
         <Tab label="Full Schema" value="full" />
       </Tabs>
 
       <TabPanel value={activeTab} index="operations">
         <div>
           <Typography variant="body1" component="p" color="text.secondary" className={styles.operationsDescription}>
-            {/* i18n-ignore-next-line */}
+            {/* i18n-ignore-next-line -- technical reference, English only */}
             Queries, Mutations, and Subscriptions available via the WebSocket GraphQL API.
           </Typography>
           {renderSectionList(groupedSections.operations)}

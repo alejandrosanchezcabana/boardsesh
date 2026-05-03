@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import Box from '@mui/material/Box';
 import CircularProgress from '@mui/material/CircularProgress';
 import PublicOutlined from '@mui/icons-material/PublicOutlined';
@@ -18,6 +19,7 @@ import SocialFeedItem from '@/app/components/activity-feed/social-feed-item';
 import { useInfiniteScroll } from '@/app/hooks/use-infinite-scroll';
 
 export default function GlobalAscentsFeed() {
+  const { t } = useTranslation('feed');
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } = useInfiniteQuery({
     queryKey: ['globalAscentsFeed'],
     queryFn: async ({ pageParam }) => {
@@ -55,8 +57,7 @@ export default function GlobalAscentsFeed() {
   }
 
   if (items.length === 0) {
-    // i18n-ignore-next-line
-    return <EmptyState icon={<PublicOutlined fontSize="inherit" />} description="No recent activity yet" />;
+    return <EmptyState icon={<PublicOutlined fontSize="inherit" />} description={t('emptyStates.noRecentActivity')} />;
   }
 
   return (

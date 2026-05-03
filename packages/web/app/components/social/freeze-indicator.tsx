@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import Alert from '@mui/material/Alert';
 import LockIcon from '@mui/icons-material/Lock';
 
@@ -9,11 +10,11 @@ type FreezeIndicatorProps = {
 };
 
 export default function FreezeIndicator({ reason }: FreezeIndicatorProps) {
+  const { t } = useTranslation('feed');
   return (
     <Alert severity="warning" icon={<LockIcon fontSize="small" />} sx={{ mb: 2, fontSize: 13 }}>
-      {/* i18n-ignore-next-line */}
-      This climb is frozen from receiving new proposals.
-      {reason && ` Reason: ${reason}`}
+      {t('freezeIndicator.frozen')}
+      {reason && ` ${t('freezeIndicator.reasonPrefix', { reason })}`}
     </Alert>
   );
 }

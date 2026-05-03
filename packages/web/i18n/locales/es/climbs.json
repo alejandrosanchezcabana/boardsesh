@@ -221,11 +221,30 @@
         "nameRequired": "Introduce un nombre para la playlist",
         "nameTooLong": "Nombre demasiado largo",
         "descriptionTooLong": "Descripción demasiado larga"
+      },
+      "auth": {
+        "title": "Inicia sesión para crear playlists",
+        "description": "Inicia sesión para organizar tus bloques en playlists personalizadas."
+      },
+      "popover": {
+        "title": "Añadir a la playlist",
+        "empty": "Aún no hay playlists",
+        "createFirst": "Crea tu primera playlist",
+        "createNew": "Crear nueva playlist",
+        "signInBlurb": "Inicia sesión para crear y gestionar playlists"
+      },
+      "create": {
+        "nameLabel": "Nombre de la playlist",
+        "namePlaceholder": "p. ej., Regletas duras",
+        "descriptionLabel": "Descripción (opcional)",
+        "descriptionPlaceholder": "Descripción opcional...",
+        "colorLabel": "Color (opcional)",
+        "submit": "Crear"
       }
     },
     "tick": {
       "drawer": {
-        "signInRequired": "Iniciar sesión requerido",
+        "signInRequired": "Inicia sesión",
         "selectBoard": "Selecciona una tabla",
         "logAscent": "Registrar encadene",
         "signInToRecord": "Inicia sesión para registrar marcas",
@@ -236,7 +255,8 @@
         "alwaysOpenInApp": "Abrir siempre en la app",
         "authModalTitle": "Inicia sesión para registrar marcas",
         "authModalDescription": "Crea una cuenta para registrar tus bloques y seguir tu progreso.",
-        "mirroredTooltip": "Pulsa la etiqueta para indicar si completaste este bloque en el lado espejo."
+        "mirroredTooltip": "Pulsa la etiqueta para indicar si completaste este bloque en el lado espejo.",
+        "whichBoard": "¿En qué tabla escalaste?"
       }
     },
     "navigation": {
@@ -273,6 +293,62 @@
       }
     }
   },
+  "card": {
+    "title": {
+      "noClimbSelected": "Ningún bloque seleccionado",
+      "project": "proyecto",
+      "projectAtAngle": "proyecto @ {{angle}}°",
+      "draftBy": "Borrador de {{name}}",
+      "by": "Por {{name}}",
+      "byWithSends": "Por {{name}} - {{sends}}"
+    },
+    "list": {
+      "moreActions": "Más acciones",
+      "tickError": "No se pudo guardar tu marca — se guardó como borrador"
+    },
+    "detailHeader": {
+      "project": "proyecto",
+      "unknownSetter": "Aperturista desconocido"
+    }
+  },
+  "detail": {
+    "sections": {
+      "beta": "Beta",
+      "logbook": "Tu bitácora",
+      "logbookEmpty": "Sin encadenes",
+      "crewLogbook": "Bitácora del crew",
+      "crewLogbookSummary": "Mira los encadenes de tu crew",
+      "community": "Comunidad",
+      "communitySummary": "Votos, comentarios, propuestas",
+      "analytics": "Analíticas",
+      "analyticsSummary": "Encadenes, tendencias de calidad"
+    }
+  },
+  "multiboardList": {
+    "noClimbsFound": "No se encontraron bloques",
+    "popular": "Popular",
+    "new": "Nuevos",
+    "count_one": "{{count}} bloque",
+    "count_other": "{{count}} bloques"
+  },
+  "tick": {
+    "controls": {
+      "selectGrade": "Selecciona el grado registrado",
+      "userByline": "usuario",
+      "starsLabel": "estrellas",
+      "triesLabel": "intentos",
+      "starRating": "Valoración con estrellas",
+      "noRating": "Sin valoración",
+      "gradeOverride": "Grado personalizado",
+      "clearGradeOverride": "Borrar grado personalizado",
+      "attemptCount": "Número de intentos"
+    },
+    "bar": {
+      "logAscent": "Registrar encadene",
+      "logAttempt": "Registrar intento",
+      "cancel": "Cancelar"
+    }
+  },
   "liked": {
     "heroTitle": "Bloques favoritos",
     "heroSubtitle": "Tus bloques favoritos",
@@ -284,6 +360,144 @@
     "noClimbsToAdd": "No hay bloques que añadir",
     "addedToQueue_one": "Se añadió {{count}} bloque a la cola",
     "addedToQueue_other": "Se añadieron {{count}} bloques a la cola",
-    "addToQueueFailed": "Error al añadir los bloques a la cola"
+    "addToQueueFailed": "Error al añadir los bloques a la cola",
+    "loadFailed": "Error al cargar los bloques favoritos",
+    "emptyState": "Aún no tienes bloques favoritos. Marca algunos con el corazón para verlos aquí."
+  },
+  "moonboard": {
+    "invalidLayout": "Layout de MoonBoard no válido"
+  },
+  "createClimbForm": {
+    "draftBadge": "Borrador",
+    "namePlaceholder": "Nombre del bloque",
+    "descriptionPlaceholder": "Añade beta o notas sobre tu bloque...",
+    "openDrafts": "Abrir borradores",
+    "processing": "Procesando...",
+    "importFromScreenshot": "Importar desde captura",
+    "bulkImport": "Importación masiva",
+    "dismiss": "Descartar",
+    "alerts": {
+      "importFailed": "Importación fallida: {{error}}",
+      "importWarnings": "Avisos de importación:",
+      "checkingMoonBoardDuplicate": "Comprobando si este bloque de MoonBoard ya existe..."
+    },
+    "clear": {
+      "title": "Limpiar bloque",
+      "description": "Esto borrará todas las presas y reiniciará el formulario. ¿Seguro?",
+      "confirm": "Limpiar",
+      "tooltip": "Limpiar todas las presas"
+    },
+    "settings": {
+      "tooltip": "Ajustes del bloque",
+      "title": "Ajustes del bloque"
+    },
+    "fields": {
+      "name": "Nombre",
+      "holds": "Presas",
+      "angle": "Ángulo",
+      "grade": "Grado",
+      "gradeNone": "Ninguno",
+      "benchmark": "Benchmark",
+      "description": "Descripción (opcional)"
+    },
+    "holds": {
+      "starting": "Salida",
+      "start": "Salida",
+      "hand": "Mano",
+      "finish": "Final",
+      "total": "Total"
+    },
+    "validation": {
+      "needsStartFinish": "Un bloque válido necesita al menos 1 presa de salida y 1 de final"
+    }
+  },
+  "draftsDrawer": {
+    "title": "Borradores",
+    "count_one": "{{count}} borrador",
+    "count_other": "{{count}} borradores",
+    "loadError": "No se pudieron cargar tus borradores. Inténtalo de nuevo.",
+    "empty": {
+      "title": "Aún no hay borradores",
+      "subtitle": "Guarda un bloque como borrador para retomarlo más tarde."
+    }
+  },
+  "holdTypePicker": {
+    "toolbarAriaLabel": "Tipo de presa",
+    "clear": "Borrar",
+    "states": {
+      "starting": "Salida",
+      "hand": "Media",
+      "finish": "Final",
+      "foot": "Pie"
+    }
+  },
+  "directionPicker": {
+    "down": "Abajo"
+  },
+  "holdClassification": {
+    "drawerTitle": "Clasificación de presas",
+    "classifyHoldTitle": "Clasificar presa",
+    "loadingHolds": "Cargando presas...",
+    "emptyState": "No se encontraron presas para esta configuración de tabla.",
+    "progress": "Presa {{current}} de {{total}} ({{classified}} clasificadas)",
+    "complete": {
+      "title": "¡Clasificación completa!",
+      "subtitle": "Has clasificado {{classified}} de {{total}} presas. Puedes volver a pasar por este asistente cuando quieras para actualizar tus valoraciones."
+    },
+    "fields": {
+      "holdType": "Tipo de presa",
+      "handRating": "Valoración de mano (1-5)",
+      "footRating": "Valoración de pie (1-5)",
+      "pullDirection": "Dirección de tracción"
+    },
+    "hints": {
+      "handRating": "5 = Fácil de agarrar, 1 = Muy difícil",
+      "footRating": "5 = Fácil de pisar, 1 = Muy difícil",
+      "pullDirection": "Toca o arrastra para fijar la mejor dirección de tracción"
+    },
+    "actions": {
+      "previous": "Anterior",
+      "skip": "Saltar",
+      "finish": "Terminar"
+    },
+    "toast": {
+      "saveFailed": "No se pudo guardar la clasificación"
+    }
+  },
+  "moonboardImport": {
+    "card": {
+      "skipping": "Omitiendo",
+      "duplicate": "Omitiendo: ya existe",
+      "duplicateNamed": "Omitiendo: ya existe como \"{{name}}\"",
+      "removeAction": "Quitar",
+      "removeDescription": "Este bloque no se importará."
+    },
+    "bulk": {
+      "title": "Importar bloques de MoonBoard - {{layoutName}} @ {{angle}}°",
+      "loginRequired": "Inicia sesión para guardar bloques",
+      "loginRequiredTitle": "Inicio de sesión requerido",
+      "loginRequiredBody": "Inicia sesión para guardar bloques en la base de datos.",
+      "logIn": "Iniciar sesión",
+      "uploadPrompt": "Toca o arrastra capturas de pantalla a esta zona",
+      "uploadHelp": "Compatible con capturas de la app de MoonBoard. Suelta varios archivos para importar en lote.",
+      "processing": "Procesando capturas...",
+      "checkingDuplicates": "Comprobando los bloques importados con problemas de MoonBoard existentes...",
+      "reviewBeforeSaving": "Revisa los bloques de abajo. Puedes editar o quitar cualquiera antes de guardar.",
+      "saveAll": "Guardar todos ({{count}})",
+      "clearAndRestart": "Limpiar y empezar de nuevo",
+      "contributeImages": "Contribuir con imágenes para mejorar la precisión del OCR",
+      "tryAgain": "Reintentar",
+      "saveFailed": "No se pudieron guardar los bloques. Inténtalo de nuevo."
+    }
+  },
+  "moonboardEditModal": {
+    "title": "Editar bloque",
+    "nameLabel": "Nombre del bloque",
+    "nameRequired": "Introduce un nombre",
+    "save": "Guardar cambios",
+    "setter": "Aperturista: {{setter}}",
+    "grade": "Grado: {{grade}}",
+    "angle": "Ángulo: {{angle}}°",
+    "unknown": "Desconocido"
   }
 }

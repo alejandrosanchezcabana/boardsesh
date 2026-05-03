@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import Popover from '@mui/material/Popover';
 import Box from '@mui/material/Box';
 import ButtonBase from '@mui/material/ButtonBase';
@@ -91,7 +92,10 @@ export default function HoldTypePicker({
   onSelect,
   onClose,
 }: HoldTypePickerProps) {
+  const { t } = useTranslation('climbs');
   const options = useMemo(() => buildOptions(boardName), [boardName]);
+  const localizedLabel = (state: PickerHoldState) =>
+    t(`holdTypePicker.states.${state.toLowerCase() as Lowercase<PickerHoldState>}`);
 
   const handleSelect = (state: SelectableState, disabled: boolean) => {
     if (disabled) return;
@@ -117,8 +121,7 @@ export default function HoldTypePicker({
     >
       <Box
         role="toolbar"
-        // i18n-ignore-next-line
-        aria-label="Hold type"
+        aria-label={t('holdTypePicker.toolbarAriaLabel')}
         sx={{
           display: 'flex',
           alignItems: 'flex-start',
@@ -135,7 +138,7 @@ export default function HoldTypePicker({
           return (
             <Swatch
               key={option.state}
-              label={option.label}
+              label={localizedLabel(option.state)}
               color={option.color}
               isActive={isActive}
               isDisabled={isDisabled}
@@ -145,8 +148,7 @@ export default function HoldTypePicker({
         })}
         <Swatch
           key="clear"
-          // i18n-ignore-next-line
-          label="Clear"
+          label={t('holdTypePicker.clear')}
           isClear
           isActive={currentState === 'OFF'}
           isDisabled={currentState === 'OFF'}

@@ -5,6 +5,16 @@ import { useSnackbar } from '@/app/components/providers/snackbar-provider';
 import { useClimbActionsData } from '../use-climb-actions-data';
 import { createQueryWrapper } from '@/app/test-utils/test-providers';
 import type { Playlist } from '@/app/lib/graphql/operations/playlists';
+import React from 'react';
+import { tFromCatalog } from '@/app/__test-helpers__/i18n-mock';
+
+vi.mock('react-i18next', () => ({
+  useTranslation: (ns?: string) => ({
+    t: (key: string, options?: Record<string, unknown>) => tFromCatalog(ns, key, options),
+    i18n: { language: 'en-US' },
+  }),
+  Trans: ({ children }: { children?: React.ReactNode }) => children ?? null,
+}));
 
 vi.mock('@/app/hooks/use-ws-auth-token', () => ({
   useWsAuthToken: vi.fn(),

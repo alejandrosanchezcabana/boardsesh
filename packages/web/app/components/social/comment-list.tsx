@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useCallback, useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import Box from '@mui/material/Box';
 import MuiTypography from '@mui/material/Typography';
 import ToggleButton from '@mui/material/ToggleButton';
@@ -27,6 +28,7 @@ type CommentListProps = {
 const PAGE_SIZE = 20;
 
 export default function CommentList({ entityType, entityId, refreshKey = 0, currentUserId }: CommentListProps) {
+  const { t } = useTranslation('common');
   const [comments, setComments] = useState<CommentType[]>([]);
   const [totalCount, setTotalCount] = useState(0);
   const [hasMore, setHasMore] = useState(false);
@@ -137,21 +139,22 @@ export default function CommentList({ entityType, entityId, refreshKey = 0, curr
       {totalCount > 0 && (
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
           <MuiTypography variant="caption" color="text.secondary">
-            {totalCount} {totalCount === 1 ? 'comment' : 'comments'}
+            {totalCount === 1
+              ? t('comment.countOne', { count: totalCount })
+              : t('comment.countMany', { count: totalCount })}
           </MuiTypography>
           <ToggleButtonGroup value={sortBy} exclusive onChange={handleSortChange} size="small">
             <ToggleButton value="new" sx={{ textTransform: 'none', px: 1, py: 0.25, fontSize: 12 }}>
-              New
+              {t('comment.sort.new')}
             </ToggleButton>
             <ToggleButton value="top" sx={{ textTransform: 'none', px: 1, py: 0.25, fontSize: 12 }}>
-              Top
+              {t('comment.sort.top')}
             </ToggleButton>
             <ToggleButton value="controversial" sx={{ textTransform: 'none', px: 1, py: 0.25, fontSize: 12 }}>
-              {/* i18n-ignore-next-line */}
-              Controversial
+              {t('comment.sort.controversial')}
             </ToggleButton>
             <ToggleButton value="hot" sx={{ textTransform: 'none', px: 1, py: 0.25, fontSize: 12 }}>
-              Hot
+              {t('comment.sort.hot')}
             </ToggleButton>
           </ToggleButtonGroup>
         </Box>
@@ -162,8 +165,7 @@ export default function CommentList({ entityType, entityId, refreshKey = 0, curr
         <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', py: 4, gap: 1 }}>
           <ChatBubbleOutlineOutlined sx={{ fontSize: 32, color: 'var(--neutral-300)' }} />
           <MuiTypography variant="body2" color="text.secondary">
-            {/* i18n-ignore-next-line */}
-            No comments yet. Say something.
+            {t('comment.empty')}
           </MuiTypography>
         </Box>
       ) : (

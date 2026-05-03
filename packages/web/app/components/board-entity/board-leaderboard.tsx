@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import Box from '@mui/material/Box';
 import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
@@ -25,18 +26,21 @@ import { themeTokens } from '@/app/theme/theme-config';
 
 type Period = 'week' | 'month' | 'year' | 'all';
 
-const PERIOD_OPTIONS: { value: Period; label: string }[] = [
-  { value: 'week', label: 'Week' },
-  { value: 'month', label: 'Month' },
-  { value: 'year', label: 'Year' },
-  { value: 'all', label: 'All Time' },
-];
-
 type BoardLeaderboardProps = {
   boardUuid: string;
 };
 
 export default function BoardLeaderboard({ boardUuid }: BoardLeaderboardProps) {
+  const { t } = useTranslation('boards');
+  const periodOptions = useMemo<{ value: Period; label: string }[]>(
+    () => [
+      { value: 'week', label: t('boardLeaderboard.period.week') },
+      { value: 'month', label: t('boardLeaderboard.period.month') },
+      { value: 'year', label: t('boardLeaderboard.period.year') },
+      { value: 'all', label: t('boardLeaderboard.period.all') },
+    ],
+    [t],
+  );
   const [period, setPeriod] = useState<Period>('all');
   const [leaderboard, setLeaderboard] = useState<BoardLeaderboardType | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -97,7 +101,7 @@ export default function BoardLeaderboard({ boardUuid }: BoardLeaderboardProps) {
   return (
     <Box>
       <Box sx={{ display: 'flex', gap: 1, mb: 2, flexWrap: 'wrap' }}>
-        {PERIOD_OPTIONS.map((opt) => (
+        {periodOptions.map((opt) => (
           <Chip
             key={opt.value}
             label={opt.label}
@@ -116,8 +120,7 @@ export default function BoardLeaderboard({ boardUuid }: BoardLeaderboardProps) {
       )}
       {!isLoading && (!leaderboard || leaderboard.entries.length === 0) && (
         <MuiTypography variant="body2" color="text.secondary" sx={{ textAlign: 'center', py: 4 }}>
-          {/* i18n-ignore-next-line */}
-          No activity yet for this period.
+          {t('boardLeaderboard.empty')}
         </MuiTypography>
       )}
       {!isLoading && leaderboard && leaderboard.entries.length > 0 && (
@@ -127,11 +130,11 @@ export default function BoardLeaderboard({ boardUuid }: BoardLeaderboardProps) {
               <TableHead>
                 <TableRow>
                   <TableCell sx={{ fontWeight: themeTokens.typography.fontWeight.semibold, width: 40 }}>#</TableCell>
-                  {/* i18n-ignore-next-line */}
-                  <TableCell sx={{ fontWeight: themeTokens.typography.fontWeight.semibold }}>Climber</TableCell>
+                  <TableCell sx={{ fontWeight: themeTokens.typography.fontWeight.semibold }}>
+                    {t('boardLeaderboard.columns.climber')}
+                  </TableCell>
                   <TableCell align="right" sx={{ fontWeight: themeTokens.typography.fontWeight.semibold }}>
-                    {/* i18n-ignore-next-line */}
-                    Sends
+                    {t('boardLeaderboard.columns.sends')}
                   </TableCell>
                   <TableCell
                     align="right"
@@ -140,12 +143,10 @@ export default function BoardLeaderboard({ boardUuid }: BoardLeaderboardProps) {
                       display: { xs: 'none', sm: 'table-cell' },
                     }}
                   >
-                    {/* i18n-ignore-next-line */}
-                    Flashes
+                    {t('boardLeaderboard.columns.flashes')}
                   </TableCell>
                   <TableCell align="right" sx={{ fontWeight: themeTokens.typography.fontWeight.semibold }}>
-                    {/* i18n-ignore-next-line */}
-                    Hardest
+                    {t('boardLeaderboard.columns.hardest')}
                   </TableCell>
                 </TableRow>
               </TableHead>

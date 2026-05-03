@@ -139,7 +139,7 @@ async function openBoardSelector() {
   await act(async () => {
     fireEvent.click(screen.getByRole('button', { name: /user menu/i }));
   });
-  fireEvent.click(screen.getByText('Change Board'));
+  fireEvent.click(screen.getByText('Change board'));
   expect(screen.getByTestId('board-discovery-scroll')).toBeTruthy();
   // Verify the mock captured the callbacks — a null here would otherwise surface
   // as a confusing "TypeError: null is not a function" inside individual tests.

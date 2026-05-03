@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import MuiButton from '@mui/material/Button';
@@ -37,6 +38,7 @@ type FollowerCountProps = {
 type DrawerMode = 'followers' | 'following' | null;
 
 export default function FollowerCount({ userId, followerCount, followingCount }: FollowerCountProps) {
+  const { t } = useTranslation('feed');
   const [drawerMode, setDrawerMode] = useState<DrawerMode>(null);
   const [users, setUsers] = useState<PublicUserProfile[]>([]);
   const [loading, setLoading] = useState(false);
@@ -188,8 +190,7 @@ export default function FollowerCount({ userId, followerCount, followingCount }:
             '&:hover': { textDecoration: 'underline' },
           }}
         >
-          {/* i18n-ignore-next-line */}
-          <strong>{followingCount}</strong> following
+          <strong>{followingCount}</strong> {t('followerCount.followingLabel')}
         </Typography>
       </Box>
 

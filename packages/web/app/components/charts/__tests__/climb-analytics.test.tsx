@@ -4,6 +4,15 @@ import { describe, it, expect, vi, beforeEach } from 'vite-plus/test';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import React from 'react';
 import ClimbAnalytics from '../climb-analytics';
+import { tFromCatalog } from '@/app/__test-helpers__/i18n-mock';
+
+vi.mock('react-i18next', () => ({
+  useTranslation: (ns?: string) => ({
+    t: (key: string, options?: Record<string, unknown>) => tFromCatalog(ns, key, options),
+    i18n: { language: 'en-US' },
+  }),
+  Trans: ({ children }: { children?: React.ReactNode }) => children ?? null,
+}));
 
 const mockRequest = vi.fn();
 const mockLineChart = vi.fn();

@@ -186,5 +186,19 @@
       "addedPartial": "Added {{added}} climbs. {{failed}} slots couldn't be filled.",
       "failed": "Failed to generate playlist. No suitable climbs found."
     }
+  },
+  "bottomTabBar": {
+    "home": "Home",
+    "climb": "Climb",
+    "discover": "Discover",
+    "feed": "Feed",
+    "create": "Create",
+    "you": "You",
+    "youSignInTitle": "Sign in to see your progress",
+    "youSignInDescription": "Sign in to track your climbing stats, sessions, and logbook.",
+    "selectBoardForPlaylist": "Select a board before creating a playlist",
+    "boardDetailsMissing": "Unable to determine board details for playlist creation",
+    "createdPlaylistToast": "Created playlist \"{{name}}\"",
+    "createPlaylistFailed": "Failed to create playlist"
   }
 }

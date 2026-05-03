@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useMemo, useState, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import Dialog from '@mui/material/Dialog';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
@@ -37,15 +38,18 @@ type PostToInstagramDialogProps = {
   item: InstagramPostingTarget | null;
 };
 
-const instructions = [
-  'Copy the caption and open Instagram.',
-  'Paste the caption when creating your post.',
-  'Once your post is live, come back here.',
-  'Paste the Instagram link so we can display your ascent video here.',
-];
-
 export default function PostToInstagramDialog({ open, onClose, item }: PostToInstagramDialogProps) {
+  const { t } = useTranslation('profile');
   const { showMessage } = useSnackbar();
+  const instructions = useMemo(
+    () => [
+      t('logbook.instagram.steps.copy'),
+      t('logbook.instagram.steps.paste'),
+      t('logbook.instagram.steps.comeBack'),
+      t('logbook.instagram.steps.pasteLink'),
+    ],
+    [t],
+  );
   const [isLaunching, setIsLaunching] = useState(false);
   const {
     data: betaLinks = [],
@@ -84,20 +88,17 @@ export default function PostToInstagramDialog({ open, onClose, item }: PostToIns
     setIsLaunching(false);
 
     if (!result.copied) {
-      // i18n-ignore-next-line
-      showMessage('Couldn’t copy caption. Try again.', 'error');
+      showMessage(t('logbook.instagram.snackbar.copyFailed'), 'error');
       return;
     }
 
     if (!result.opened) {
-      // i18n-ignore-next-line
-      showMessage('Couldn’t open Instagram. Open it manually and paste the copied caption.', 'error');
+      showMessage(t('logbook.instagram.snackbar.openFailed'), 'error');
       return;
     }
 
-    // i18n-ignore-next-line
-    showMessage('Caption copied. Instagram should open next.', 'success');
-  }, [caption, showMessage]);
+    showMessage(t('logbook.instagram.snackbar.copied'), 'success');
+  }, [caption, showMessage, t]);
 
   if (!item) return null;
 
@@ -112,8 +113,7 @@ export default function PostToInstagramDialog({ open, onClose, item }: PostToIns
     betaVideosContent = (
       <Box sx={{ mt: 1, display: 'flex', alignItems: 'center', gap: 1.5 }}>
         <Typography variant="body2" color="error">
-          {/* i18n-ignore-next-line */}
-          Couldn&apos;t load beta videos.
+          {t('logbook.instagram.betaLoadFailed')}
         </Typography>
         <Button
           size="small"
@@ -121,8 +121,7 @@ export default function PostToInstagramDialog({ open, onClose, item }: PostToIns
             void refetchBetaLinks();
           }}
         >
-          {/* i18n-ignore-next-line */}
-          Retry
+          {t('logbook.instagram.retry')}
         </Button>
       </Box>
     );
@@ -162,18 +161,15 @@ export default function PostToInstagramDialog({ open, onClose, item }: PostToIns
             zIndex: 1,
           }}
         >
-          {/* i18n-ignore-next-line */}
-          <IconButton onClick={onClose} sx={{ color: 'text.primary' }} aria-label="Back">
+          <IconButton onClick={onClose} sx={{ color: 'text.primary' }} aria-label={t('logbook.instagram.back')}>
             <ArrowBackIosNewOutlined />
           </IconButton>
           <Box sx={{ minWidth: 0 }}>
             <Typography variant="h6" component="h1" fontWeight={700}>
-              {/* i18n-ignore-next-line */}
-              Post to Instagram
+              {t('logbook.instagram.title')}
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              {/* i18n-ignore-next-line */}
-              Share your ascent and link it back here.
+              {t('logbook.instagram.subtitle')}
             </Typography>
           </Box>
         </Box>
@@ -213,12 +209,10 @@ export default function PostToInstagramDialog({ open, onClose, item }: PostToIns
             >
               <Box sx={{ minWidth: 0 }}>
                 <Typography variant="h5" component="h2" fontWeight={700} sx={{ mb: 0.5 }}>
-                  {/* i18n-ignore-next-line */}
-                  Share your beta video
+                  {t('logbook.instagram.shareYourBeta')}
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
-                  {/* i18n-ignore-next-line */}
-                  We’ll copy the caption, open Instagram, and let you paste the final link back into Boardsesh.
+                  {t('logbook.instagram.shareYourBetaBody')}
                 </Typography>
               </Box>
               <InstagramIcon sx={{ color: 'primary.main', fontSize: 28, flexShrink: 0 }} />
@@ -247,8 +241,7 @@ export default function PostToInstagramDialog({ open, onClose, item }: PostToIns
             }}
           >
             <Typography variant="overline" color="text.secondary" sx={{ letterSpacing: '0.06em' }}>
-              {/* i18n-ignore-next-line */}
-              How It Works
+              {t('logbook.instagram.howItWorks')}
             </Typography>
             <Box
               sx={{
@@ -281,8 +274,7 @@ export default function PostToInstagramDialog({ open, onClose, item }: PostToIns
             }}
           >
             <Typography variant="overline" color="text.secondary" sx={{ letterSpacing: '0.06em' }}>
-              {/* i18n-ignore-next-line */}
-              Caption
+              {t('logbook.instagram.caption')}
             </Typography>
             <Typography
               variant="h5"
@@ -316,8 +308,7 @@ export default function PostToInstagramDialog({ open, onClose, item }: PostToIns
               fontSize: themeTokens.typography.fontSize.lg,
             }}
           >
-            {/* i18n-ignore-next-line */}
-            Copy & Open Instagram
+            {t('logbook.instagram.copyAndOpen')}
           </Button>
 
           <Box
@@ -336,13 +327,11 @@ export default function PostToInstagramDialog({ open, onClose, item }: PostToIns
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
               <InstagramIcon sx={{ color: 'text.secondary' }} />
               <Typography variant="h6" component="h3" fontWeight={700}>
-                {/* i18n-ignore-next-line */}
-                Paste your Instagram link
+                {t('logbook.instagram.pasteLinkTitle')}
               </Typography>
             </Box>
             <Typography variant="body2" color="text.secondary">
-              {/* i18n-ignore-next-line */}
-              When your post is live, paste the reel or post link here so Boardsesh can show your ascent video.
+              {t('logbook.instagram.pasteLinkBody')}
             </Typography>
             <AttachBetaLinkForm
               boardType={item.boardType}
@@ -350,9 +339,8 @@ export default function PostToInstagramDialog({ open, onClose, item }: PostToIns
               climbName={item.climbName}
               angle={item.angle}
               resetTrigger={open}
-              submitLabel="Add Instagram link"
-              // i18n-ignore-next-line
-              helperText="Paste the live Instagram reel or post URL."
+              submitLabel={t('logbook.instagram.addLinkSubmit')}
+              helperText={t('logbook.instagram.pasteLinkHelper')}
             />
           </Box>
 
@@ -369,8 +357,7 @@ export default function PostToInstagramDialog({ open, onClose, item }: PostToIns
             }}
           >
             <Typography variant="overline" color="text.secondary" sx={{ letterSpacing: '0.06em' }}>
-              {/* i18n-ignore-next-line */}
-              Existing Beta Videos
+              {t('logbook.instagram.existingBetaVideos')}
             </Typography>
             {betaVideosContent}
           </Box>

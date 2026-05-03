@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useSnackbar } from '@/app/components/providers/snackbar-provider';
 import { useEntityMutation } from '@/app/hooks/use-entity-mutation';
 import {
@@ -18,18 +19,18 @@ type EditGymFormProps = {
 };
 
 export default function EditGymForm({ gym, onSuccess, onCancel }: EditGymFormProps) {
+  const { t } = useTranslation('boards');
   const { showMessage } = useSnackbar();
 
   const { execute } = useEntityMutation<UpdateGymMutationResponse, UpdateGymMutationVariables>(UPDATE_GYM, {
-    successMessage: 'Gym updated!',
-    errorMessage: 'Failed to update gym',
+    successMessage: t('editGym.snackbar.updated'),
+    errorMessage: t('editGym.snackbar.updateFailed'),
   });
 
   const handleSubmit = useCallback(
     async (values: GymFormFieldValues) => {
       if (!values.name) {
-        // i18n-ignore-next-line
-        showMessage('Gym name is required', 'error');
+        showMessage(t('gymForm.create.nameRequired'), 'error');
         return;
       }
 
@@ -50,14 +51,13 @@ export default function EditGymForm({ gym, onSuccess, onCancel }: EditGymFormPro
         onSuccess?.(data.updateGym);
       }
     },
-    [execute, gym.uuid, showMessage, onSuccess],
+    [execute, gym.uuid, showMessage, onSuccess, t],
   );
 
   return (
     <GymForm
-      // i18n-ignore-next-line
-      title="Edit Gym"
-      submitLabel="Save Changes"
+      title={t('editGym.title')}
+      submitLabel={t('editGym.submitLabel')}
       initialValues={{
         name: gym.name,
         slug: gym.slug ?? '',

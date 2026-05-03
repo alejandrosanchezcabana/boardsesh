@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import Chip from '@mui/material/Chip';
@@ -12,10 +13,13 @@ import { formatTickAbsoluteTime, tickTimeMs } from '@/app/lib/format-tick-time';
 import { AscentStatusIcon } from '@/app/components/ascent-status/ascent-status-icon';
 import { normalizeAscentStatus, type AscentStatusValue } from '@/app/components/ascent-status/ascent-status-utils';
 
-function getAscentChipLabel(status: AscentStatusValue): string {
-  if (status === 'flash') return 'Flash';
-  if (status === 'send') return 'Send';
-  return 'Attempt';
+function useAscentChipLabel() {
+  const { t } = useTranslation('profile');
+  return (status: AscentStatusValue): string => {
+    if (status === 'flash') return t('logbook.feed.status.flash');
+    if (status === 'send') return t('logbook.feed.status.send');
+    return t('logbook.feed.status.attempt');
+  };
 }
 
 type PlayViewCommentsProps = {
@@ -23,6 +27,8 @@ type PlayViewCommentsProps = {
 };
 
 const PlayViewComments: React.FC<PlayViewCommentsProps> = ({ climbUuid }) => {
+  const { t } = useTranslation('session');
+  const getAscentChipLabel = useAscentChipLabel();
   const { logbook } = useBoardProvider();
 
   const ascents = useMemo(
@@ -52,8 +58,7 @@ const PlayViewComments: React.FC<PlayViewCommentsProps> = ({ climbUuid }) => {
         }}
       >
         <ChatBubbleOutlineOutlined sx={{ fontSize: themeTokens.typography.fontSize.sm }} />
-        {/* i18n-ignore-next-line */}
-        Your Ascents ({ascents.length})
+        {t('playView.yourAscents', { count: ascents.length })}
       </Typography>
 
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: `${themeTokens.spacing[1]}px` }}>
@@ -110,8 +115,7 @@ const PlayViewComments: React.FC<PlayViewCommentsProps> = ({ climbUuid }) => {
                       color="text.secondary"
                       sx={{ fontSize: themeTokens.typography.fontSize.xs }}
                     >
-                      {/* i18n-ignore-next-line */}
-                      {ascent.tries} tries
+                      {t('playView.triesCount', { count: ascent.tries })}
                     </Typography>
                   )}
                 </Box>

@@ -11,5 +11,165 @@
     "sessions": "Sesiones",
     "proposals": "Propuestas",
     "comments": "Comentarios"
+  },
+  "activityFeed": {
+    "signInPrompt": "Inicia sesión para ver un feed de los escaladores que sigues."
+  },
+  "ascentsFeed": {
+    "attempts": "{{count}} intentos",
+    "deleteAscent": {
+      "title": "Eliminar ascenso",
+      "description": "¿Seguro? No se puede deshacer."
+    },
+    "mirrored": "Espejo",
+    "benchmark": "Referencia",
+    "setBy": "Por {{name}}",
+    "empty": "Aún no hay ascensos"
+  },
+  "betaVideos": {
+    "shareBetaFor": "Comparte beta para {{name}}",
+    "shareBetaVideo": "Comparte un vídeo de beta",
+    "shareBeta": "Compartir beta",
+    "dialogHelper": "Pega un enlace de reel o post para que otros vean tu beta.",
+    "addedToast": "Vídeo añadido al beta",
+    "addError": "No se pudo añadir el vídeo. Inténtalo de nuevo.",
+    "urlPlaceholder": "URL de Instagram o TikTok",
+    "urlLabel": "URL del vídeo de beta",
+    "urlLabelForClimb": "URL del vídeo de beta para {{name}}",
+    "defaultHelper": "Pega una URL pública de Instagram (reel/post) o TikTok para que otros vean tu beta.",
+    "cancel": "Cancelar",
+    "unableToLoad": "No se pudo cargar el vídeo",
+    "viewLink": "Ver",
+    "videoTitle": "Vídeo de beta",
+    "videoTitleByUser": "Vídeo de beta por {{name}}",
+    "modalTitle": "Vídeo de beta",
+    "modalTitleByUser": "Beta de @{{name}}",
+    "viewOnInstagram": "Ver en Instagram",
+    "showLess": "Ver menos",
+    "showMore_one": "Ver 1 vídeo más",
+    "showMore_other": "Ver {{count}} vídeos más",
+    "noVideosAvailable": "No hay vídeos de beta disponibles",
+    "angleSuffix": "{{angle}}°",
+    "unknownUser": "desconocido"
+  },
+  "commentFeed": {
+    "empty": "Sin comentarios todavía",
+    "commentedOn": "comentó en {{entity}}"
+  },
+  "emptyStates": {
+    "followClimbers": "Sigue a algunos escaladores para llenar esto",
+    "findClimbers": "Buscar escaladores",
+    "noRecentActivity": "Sin actividad reciente"
+  },
+  "errors": {
+    "loadFeed": "No se pudo cargar la actividad. Inténtalo de nuevo.",
+    "loadActivity": "No se pudo cargar la actividad",
+    "loadComments": "No se pudieron cargar los comentarios. Inténtalo de nuevo.",
+    "loadProposals": "No se pudieron cargar las propuestas. Inténtalo de nuevo."
+  },
+  "feedCommentButton": {
+    "commentsTitle": "Comentarios"
+  },
+  "feedItemComment": {
+    "commented": "comentó"
+  },
+  "feedItemNewClimb": {
+    "createdClimb": "creó un nuevo bloque"
+  },
+  "followerCount": {
+    "followingLabel": "siguiendo"
+  },
+  "freezeDialog": {
+    "reasonLabel": "Motivo (opcional)",
+    "reasonPlaceholder": "¿Por qué congelar/descongelar este bloque?"
+  },
+  "freezeIndicator": {
+    "frozen": "Este bloque está congelado y no acepta nuevas propuestas.",
+    "reasonPrefix": "Motivo: {{reason}}"
+  },
+  "newClimbFeed": {
+    "title": "Nuevos bloques",
+    "errorLoad": "No se pudieron cargar los bloques. Inténtalo de nuevo.",
+    "empty": "Aún no hay bloques en este layout. ¡Sé el primero!"
+  },
+  "proposalCard": {
+    "quotedReason": "“{{reason}}”",
+    "support": "Apoyar",
+    "oppose": "Oponerse",
+    "approve": "Aprobar",
+    "reject": "Rechazar",
+    "deleteProposal": "Eliminar propuesta",
+    "deleteDialog": {
+      "title": "Eliminar propuesta aceptada",
+      "description": "Esto revertirá los efectos de esta propuesta (p. ej., cambio de grado, estado de referencia/clásico) y la eliminará permanentemente. No se puede deshacer."
+    }
+  },
+  "proposalFeed": {
+    "empty": "Sin propuestas todavía"
+  },
+  "proposalSection": {
+    "title": "Propuestas de la comunidad",
+    "noOpen": "No hay propuestas abiertas"
+  },
+  "proposalVoteBar": {
+    "approved": "Aprobada",
+    "rejected": "Rechazada",
+    "votesNeeded": "{{current}} / {{required}} votos necesarios",
+    "opposed": "{{count}} en contra"
+  },
+  "search": {
+    "minCharsHint": "Escribe al menos 2 caracteres para buscar",
+    "noBoards": "No hay tablas para \"{{query}}\"",
+    "noGyms": "No hay gimnasios para \"{{query}}\"",
+    "noPlaylists": "No hay listas para \"{{query}}\"",
+    "noUsers": "No hay usuarios ni setters para \"{{query}}\"",
+    "climbCountOne": "{{count}} bloque",
+    "climbCountMany": "{{count}} bloques"
+  },
+  "sessionFeedCard": {
+    "climbCountOne": "{{count}} bloque",
+    "climbCountMany": "{{count}} bloques"
+  },
+  "sessionSummary": {
+    "completed": "Sesión completada"
+  },
+  "socialFeedItem": {
+    "climbed": "escaló"
+  },
+  "subscribeButton": {
+    "signInPrompt": "Inicia sesión para gestionar las suscripciones",
+    "subscribed": "Suscrito a nuevos bloques",
+    "unsubscribed": "Suscripción cancelada",
+    "updateFailed": "No se pudo actualizar la suscripción"
+  },
+  "userDrawer": {
+    "signIn": "Iniciar sesión",
+    "signInModalTitle": "Inicia sesión en Boardsesh",
+    "signInModalDescription": "Inicia sesión para guardar favoritos, registrar ascensos y más.",
+    "changeBoard": "Cambiar tabla",
+    "devUrl": "URL de dev",
+    "development": "Desarrollo",
+    "classifyHolds": "Clasificar presas",
+    "myPlaylists": "Mis listas",
+    "recentSessions": "Sesiones recientes",
+    "help": "Ayuda",
+    "about": "Sobre",
+    "rateBoardsesh": "Valorar Boardsesh",
+    "reportBug": "Reportar un bug",
+    "logout": "Cerrar sesión"
+  },
+  "userSearch": {
+    "ascentsThisMonth": "{{count}} ascensos este mes",
+    "climbsSetOne": "{{count}} bloque creado",
+    "climbsSetMany": "{{count}} bloques creados",
+    "climbCountOne": "{{count}} bloque",
+    "climbCountMany": "{{count}} bloques"
+  },
+  "userSmartCard": {
+    "followerOne": "{{count}} seguidor",
+    "followerMany": "{{count}} seguidores",
+    "following": "{{count}} siguiendo",
+    "distinctClimbOne": "{{count}} bloque distinto",
+    "distinctClimbMany": "{{count}} bloques distintos"
   }
 }

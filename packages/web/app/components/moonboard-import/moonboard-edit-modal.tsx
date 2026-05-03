@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import Typography from '@mui/material/Typography';
 import TextField from '@mui/material/TextField';
 import Dialog from '@mui/material/Dialog';
@@ -86,6 +87,7 @@ export default function MoonBoardEditModal({
   onSave,
   onCancel,
 }: MoonBoardEditModalProps) {
+  const { t } = useTranslation('climbs');
   const [climbName, setClimbName] = useState(climb.name);
 
   const initialHoldsMap = convertClimbToHoldsMap(climb);
@@ -116,8 +118,7 @@ export default function MoonBoardEditModal({
 
   return (
     <Dialog open={open} onClose={onCancel} maxWidth="sm" fullWidth className={styles.modal}>
-      {/* i18n-ignore-next-line */}
-      <DialogTitle>Edit Climb</DialogTitle>
+      <DialogTitle>{t('moonboardEditModal.title')}</DialogTitle>
       <DialogContent>
         <div className={styles.content}>
           <div className={styles.boardSection}>
@@ -139,63 +140,69 @@ export default function MoonBoardEditModal({
             />
 
             <Stack direction="row" spacing={1.5} flexWrap="wrap" justifyContent="center" className={styles.holdCounts}>
-              {/* i18n-ignore-next-line */}
-              <HoldIndicator count={startingCount} max={2} color={themeTokens.colors.error} label="Start" />
-              {/* i18n-ignore-next-line */}
-              <HoldIndicator count={handCount} color={themeTokens.colors.primary} label="Hand" />
-              {/* i18n-ignore-next-line */}
-              <HoldIndicator count={finishCount} max={2} color={themeTokens.colors.success} label="Finish" />
-              {/* i18n-ignore-next-line */}
-              <HoldIndicator count={totalHolds} color={themeTokens.colors.secondary} label="Total" />
+              <HoldIndicator
+                count={startingCount}
+                max={2}
+                color={themeTokens.colors.error}
+                label={t('createClimbForm.holds.start')}
+              />
+              <HoldIndicator
+                count={handCount}
+                color={themeTokens.colors.primary}
+                label={t('createClimbForm.holds.hand')}
+              />
+              <HoldIndicator
+                count={finishCount}
+                max={2}
+                color={themeTokens.colors.success}
+                label={t('createClimbForm.holds.finish')}
+              />
+              <HoldIndicator
+                count={totalHolds}
+                color={themeTokens.colors.secondary}
+                label={t('createClimbForm.holds.total')}
+              />
             </Stack>
 
             {!isValid && totalHolds > 0 && (
               <Typography variant="body2" component="span" color="text.secondary" className={styles.validationHint}>
-                {/* i18n-ignore-next-line */}
-                A valid climb needs at least 1 start hold and 1 finish hold
+                {t('createClimbForm.validation.needsStartFinish')}
               </Typography>
             )}
           </div>
 
           <div className={styles.formSection}>
             <TextField
-              // i18n-ignore-next-line
-              label="Climb Name"
+              label={t('moonboardEditModal.nameLabel')}
               value={climbName}
               onChange={(e) => setClimbName(e.target.value)}
               required
               fullWidth
               size="small"
-              // i18n-ignore-next-line
-              placeholder="Climb name"
+              placeholder={t('createClimbForm.namePlaceholder')}
               slotProps={{ htmlInput: { maxLength: 100 } }}
               error={!climbName.trim()}
-              helperText={!climbName.trim() ? 'Please enter a name' : undefined}
+              helperText={!climbName.trim() ? t('moonboardEditModal.nameRequired') : undefined}
             />
 
             <div className={styles.climbInfo}>
               <Typography variant="body2" component="span" color="text.secondary">
-                {/* i18n-ignore-next-line */}
-                Setter: {climb.setter || 'Unknown'}
+                {t('moonboardEditModal.setter', { setter: climb.setter || t('moonboardEditModal.unknown') })}
               </Typography>
               <Typography variant="body2" component="span" color="text.secondary">
-                {/* i18n-ignore-next-line */}
-                Grade: {climb.userGrade || 'Unknown'}
+                {t('moonboardEditModal.grade', { grade: climb.userGrade || t('moonboardEditModal.unknown') })}
               </Typography>
               <Typography variant="body2" component="span" color="text.secondary">
-                {/* i18n-ignore-next-line */}
-                Angle: {climb.angle}°
+                {t('moonboardEditModal.angle', { angle: climb.angle })}
               </Typography>
             </div>
           </div>
         </div>
       </DialogContent>
       <DialogActions>
-        {/* i18n-ignore-next-line */}
-        <Button onClick={onCancel}>Cancel</Button>
+        <Button onClick={onCancel}>{t('common:actions.cancel')}</Button>
         <Button variant="contained" onClick={handleOk} disabled={!isValid}>
-          {/* i18n-ignore-next-line */}
-          Save Changes
+          {t('moonboardEditModal.save')}
         </Button>
       </DialogActions>
     </Dialog>

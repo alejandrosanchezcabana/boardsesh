@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
@@ -57,6 +58,7 @@ function formatRelativeTime(isoString: string): string {
 }
 
 export default function SessionFeedCard({ session }: SessionFeedCardProps) {
+  const { t } = useTranslation('feed');
   const { formatGrade, loaded: gradeFormatLoaded } = useGradeFormat();
 
   const {
@@ -303,8 +305,9 @@ export default function SessionFeedCard({ session }: SessionFeedCardProps) {
                 {boardTypes.map((bt) => bt.charAt(0).toUpperCase() + bt.slice(1)).join(', ')}
               </Typography>
               <Typography variant="caption" color="text.secondary" sx={{ ml: 'auto' }}>
-                {/* i18n-ignore-next-line */}
-                {tickCount} climb{tickCount !== 1 ? 's' : ''}
+                {tickCount === 1
+                  ? t('sessionFeedCard.climbCountOne', { count: tickCount })
+                  : t('sessionFeedCard.climbCountMany', { count: tickCount })}
               </Typography>
             </Box>
           )}

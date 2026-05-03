@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import Box from '@mui/material/Box';
 import TextField from '@mui/material/TextField';
 import InputAdornment from '@mui/material/InputAdornment';
@@ -36,6 +37,7 @@ type BoardSearchDrawerProps = {
 };
 
 export default function BoardSearchDrawer({ open, onClose, onBoardOpen }: BoardSearchDrawerProps) {
+  const { t } = useTranslation('boards');
   const { coordinates: userCoords, requestPermission } = useGeolocation();
 
   const [query, setQuery] = useState('');
@@ -165,8 +167,7 @@ export default function BoardSearchDrawer({ open, onClose, onBoardOpen }: BoardS
       placement="bottom"
       open={open}
       onClose={onClose}
-      // i18n-ignore-next-line
-      title="Find a board"
+      title={t('boardSearchDrawer.title')}
       fullHeight
       height="100dvh"
       showCloseButton
@@ -179,8 +180,7 @@ export default function BoardSearchDrawer({ open, onClose, onBoardOpen }: BoardS
           <TextField
             fullWidth
             size="small"
-            // i18n-ignore-next-line
-            placeholder="Search boards by name or location"
+            placeholder={t('boardSearchDrawer.searchPlaceholder')}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             slotProps={{
@@ -192,8 +192,7 @@ export default function BoardSearchDrawer({ open, onClose, onBoardOpen }: BoardS
                 ),
                 endAdornment: query ? (
                   <InputAdornment position="end">
-                    {/* i18n-ignore-next-line */}
-                    <IconButton size="small" onClick={() => setQuery('')} aria-label="Clear">
+                    <IconButton size="small" onClick={() => setQuery('')} aria-label={t('boardSearchDrawer.clear')}>
                       <CloseOutlined fontSize="small" />
                     </IconButton>
                   </InputAdornment>
@@ -210,8 +209,7 @@ export default function BoardSearchDrawer({ open, onClose, onBoardOpen }: BoardS
             }}
           >
             <Typography variant="caption" color="text.secondary">
-              {/* i18n-ignore-next-line */}
-              Showing boards within {radiusKm} km of map center
+              {t('boardSearchDrawer.radiusInfo', { radiusKm })}
             </Typography>
             {isFetching && boards.length > 0 && <CircularProgress size={14} />}
           </Box>
@@ -248,8 +246,8 @@ export default function BoardSearchDrawer({ open, onClose, onBoardOpen }: BoardS
             <Box sx={{ py: 3, textAlign: 'center', px: 2 }}>
               <Typography variant="body2" color="text.secondary">
                 {query.trim().length >= 2
-                  ? `No boards match "${query.trim()}" here. Try zooming out or searching elsewhere.`
-                  : 'No boards in this area. Pan or zoom out to find more.'}
+                  ? t('boardSearchDrawer.emptyWithQuery', { query: query.trim() })
+                  : t('boardSearchDrawer.empty')}
               </Typography>
             </Box>
           )}
@@ -307,8 +305,7 @@ export default function BoardSearchDrawer({ open, onClose, onBoardOpen }: BoardS
                               }}
                               sx={{ textTransform: 'none' }}
                             >
-                              {/* i18n-ignore-next-line */}
-                              Open
+                              {t('boardSearchDrawer.open')}
                             </Button>
                           </Stack>
                         ) : undefined

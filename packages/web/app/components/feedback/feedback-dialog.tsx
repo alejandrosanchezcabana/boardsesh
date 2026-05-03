@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import Button from '@mui/material/Button';
 import Dialog from '@mui/material/Dialog';
 import DialogActions from '@mui/material/DialogActions';
@@ -54,10 +55,11 @@ const FeedbackDialogBody: React.FC<Omit<FeedbackDialogProps, 'open'>> = ({
   onSubmitted,
   secondaryAction,
 }) => {
+  const { t } = useTranslation('settings');
   const { mutate } = useSubmitAppFeedback();
   const { showMessage } = useSnackbar();
   const isBug = mode === 'bug';
-  const resolvedTitle = title ?? (isBug ? 'Report a bug' : 'Rate Boardsesh');
+  const resolvedTitle = title ?? (isBug ? t('feedbackDialog.titleBug') : t('feedbackDialog.titleRating'));
 
   const handleSubmit = (values: FeedbackSubmission) => {
     if (isBug) {
@@ -84,15 +86,14 @@ const FeedbackDialogBody: React.FC<Omit<FeedbackDialogProps, 'open'>> = ({
       },
       {
         onSuccess: () => {
-          showMessage(isBug ? 'Bug logged — thanks.' : 'Thanks — logged.', 'success');
+          showMessage(isBug ? t('feedbackDialog.successBug') : t('feedbackDialog.successRating'), 'success');
           // Fire chained follow-ups (e.g. "also leave a store review?") only
           // on successful submission. Otherwise we'd be prompting the user to
           // publicly review the app right after telling them their feedback
           // didn't save.
           onSubmitted?.(values);
         },
-        // i18n-ignore-next-line
-        onError: () => showMessage("Couldn't send — we'll keep your feedback.", 'warning'),
+        onError: () => showMessage(t('feedbackDialog.errorRating'), 'warning'),
       },
     );
     onClose();
@@ -100,15 +101,19 @@ const FeedbackDialogBody: React.FC<Omit<FeedbackDialogProps, 'open'>> = ({
 
   return (
     <div className={styles.dialogBody}>
-      {/* i18n-ignore-next-line */}
-      <IconButton aria-label="Close" onClick={onClose} className={styles.closeButton} size="small">
+      <IconButton
+        aria-label={t('feedbackDialog.closeAria')}
+        onClick={onClose}
+        className={styles.closeButton}
+        size="small"
+      >
         <CloseOutlined fontSize="small" />
       </IconButton>
       <DialogContent>
         <FeedbackForm
           mode={isBug ? 'bug' : 'drawer-feedback'}
           title={resolvedTitle}
-          submitLabel={isBug ? 'Send bug report' : 'Send'}
+          submitLabel={isBug ? t('feedbackDialog.submitBug') : t('feedbackDialog.submitRating')}
           onSubmit={handleSubmit}
           onCancel={onClose}
         />

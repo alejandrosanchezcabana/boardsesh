@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useRef, useCallback, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import Box from '@mui/material/Box';
 import MuiButton from '@mui/material/Button';
 import MuiTypography from '@mui/material/Typography';
@@ -31,6 +32,7 @@ type MapLocationPickerProps = {
 };
 
 export default function MapLocationPicker({ latitude, longitude, onChange }: MapLocationPickerProps) {
+  const { t } = useTranslation('boards');
   const mapRef = useRef<LeafletMap | null>(null);
   const markerRef = useRef<LeafletMarker | null>(null);
   const leafletRef = useRef<typeof LeafletNamespace | null>(null);
@@ -209,7 +211,12 @@ export default function MapLocationPicker({ latitude, longitude, onChange }: Map
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           <MapOutlined fontSize="small" color="action" />
           <MuiTypography variant="body2">
-            {hasLocation ? `Location: ${latitude.toFixed(4)}, ${longitude.toFixed(4)}` : 'Set location on map'}
+            {hasLocation
+              ? t('mapLocationPicker.locationDisplay', {
+                  lat: latitude.toFixed(4),
+                  lng: longitude.toFixed(4),
+                })
+              : t('mapLocationPicker.setOnMap')}
           </MuiTypography>
         </Box>
       </AccordionSummary>
@@ -218,8 +225,7 @@ export default function MapLocationPicker({ latitude, longitude, onChange }: Map
           <TextField
             size="small"
             fullWidth
-            // i18n-ignore-next-line
-            placeholder="Search address or city..."
+            placeholder={t('mapLocationPicker.searchPlaceholder')}
             value={searchQuery}
             onChange={(e) => handleAddressSearch(e.target.value)}
             onKeyDown={(e) => {
@@ -258,14 +264,12 @@ export default function MapLocationPicker({ latitude, longitude, onChange }: Map
                 textTransform: 'none',
               }}
             >
-              {/* i18n-ignore-next-line */}
-              My location
+              {t('mapLocationPicker.myLocation')}
             </MuiButton>
           )}
         </Box>
         <MuiTypography variant="caption" color="text.secondary" sx={{ px: 2, py: 1, display: 'block' }}>
-          {/* i18n-ignore-next-line */}
-          Click the map to set your board&apos;s location, or drag the marker to adjust
+          {t('mapLocationPicker.helpText')}
         </MuiTypography>
       </AccordionDetails>
     </Accordion>

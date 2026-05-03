@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import Dialog from '@mui/material/Dialog';
 import DialogTitle from '@mui/material/DialogTitle';
 import DialogContent from '@mui/material/DialogContent';
@@ -32,6 +33,7 @@ export default function FreezeClimbDialog({
   currentlyFrozen,
   onFreezeChanged,
 }: FreezeClimbDialogProps) {
+  const { t } = useTranslation('feed');
   const { token } = useWsAuthToken();
   const [frozen, setFrozen] = useState(currentlyFrozen);
   const [reason, setReason] = useState('');
@@ -71,22 +73,19 @@ export default function FreezeClimbDialog({
             sx={{ mb: 2, mt: 1 }}
           />
           <TextField
-            // i18n-ignore-next-line
-            label="Reason (optional)"
+            label={t('freezeDialog.reasonLabel')}
             value={reason}
             onChange={(e) => setReason(e.target.value)}
             multiline
             rows={2}
             size="small"
             fullWidth
-            // i18n-ignore-next-line
-            placeholder="Why freeze/unfreeze this climb?"
+            placeholder={t('freezeDialog.reasonPlaceholder')}
           />
         </DialogContent>
         <DialogActions>
           <Button onClick={onClose} sx={{ textTransform: 'none' }}>
-            {/* i18n-ignore-next-line */}
-            Cancel
+            {t('common:actions.cancel')}
           </Button>
           <Button
             onClick={handleSubmit}

@@ -245,8 +245,7 @@ export default function ProposalCard({ proposal, isAdminOrLeader, onUpdate, onDe
           {/* Reason */}
           {localProposal.reason && (
             <Typography variant="body2" sx={{ color: themeTokens.neutral[600], mb: 1.5, fontStyle: 'italic' }}>
-              {/* i18n-ignore-next-line */}
-              &ldquo;{localProposal.reason}&rdquo;
+              {t('feed:proposalCard.quotedReason', { reason: localProposal.reason })}
             </Typography>
           )}
 
@@ -261,8 +260,7 @@ export default function ProposalCard({ proposal, isAdminOrLeader, onUpdate, onDe
           {/* Vote buttons + admin actions */}
           {localProposal.status === 'open' && (
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 1.5 }}>
-              {/* i18n-ignore-next-line */}
-              <Tooltip title="Support">
+              <Tooltip title={t('feed:proposalCard.support')}>
                 <IconButton
                   size="small"
                   disabled={loading}
@@ -278,8 +276,7 @@ export default function ProposalCard({ proposal, isAdminOrLeader, onUpdate, onDe
                   )}
                 </IconButton>
               </Tooltip>
-              {/* i18n-ignore-next-line */}
-              <Tooltip title="Oppose">
+              <Tooltip title={t('feed:proposalCard.oppose')}>
                 <IconButton
                   size="small"
                   disabled={loading}
@@ -311,8 +308,7 @@ export default function ProposalCard({ proposal, isAdminOrLeader, onUpdate, onDe
                       textTransform: 'none',
                     }}
                   >
-                    {/* i18n-ignore-next-line */}
-                    Approve
+                    {t('feed:proposalCard.approve')}
                   </Button>
                   <Button
                     size="small"
@@ -327,8 +323,7 @@ export default function ProposalCard({ proposal, isAdminOrLeader, onUpdate, onDe
                       textTransform: 'none',
                     }}
                   >
-                    {/* i18n-ignore-next-line */}
-                    Reject
+                    {t('feed:proposalCard.reject')}
                   </Button>
                 </Box>
               )}
@@ -351,8 +346,7 @@ export default function ProposalCard({ proposal, isAdminOrLeader, onUpdate, onDe
                   textTransform: 'none',
                 }}
               >
-                {/* i18n-ignore-next-line */}
-                Delete Proposal
+                {t('feed:proposalCard.deleteProposal')}
               </Button>
             </Box>
           )}
@@ -371,23 +365,16 @@ export default function ProposalCard({ proposal, isAdminOrLeader, onUpdate, onDe
 
       {/* TODO: Lift delete Dialog to parent (proposal-section/proposal-feed) to avoid N Dialog instances in lists */}
       <Dialog open={showDeleteDialog} onClose={() => setShowDeleteDialog(false)}>
-        {/* i18n-ignore-next-line */}
-        <DialogTitle>Delete Accepted Proposal</DialogTitle>
+        <DialogTitle>{t('feed:proposalCard.deleteDialog.title')}</DialogTitle>
         <DialogContent>
-          <DialogContentText>
-            {/* i18n-ignore-next-line */}
-            This will revert the effects of this proposal (e.g., grade change, benchmark/classic status) and permanently
-            delete it. This action cannot be undone.
-          </DialogContentText>
+          <DialogContentText>{t('feed:proposalCard.deleteDialog.description')}</DialogContentText>
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setShowDeleteDialog(false)} disabled={loading}>
-            {/* i18n-ignore-next-line */}
-            Cancel
+            {t('actions.cancel')}
           </Button>
           <Button onClick={handleDelete} color="error" disabled={loading}>
-            {/* i18n-ignore-next-line */}
-            Delete
+            {t('actions.delete')}
           </Button>
         </DialogActions>
       </Dialog>

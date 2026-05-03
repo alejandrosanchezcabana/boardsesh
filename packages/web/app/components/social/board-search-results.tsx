@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useMemo, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
@@ -36,6 +37,7 @@ export default function BoardSearchResults({
   showFollowButton,
   onBoardSelect,
 }: BoardSearchResultsProps) {
+  const { t } = useTranslation('feed');
   const [selectedBoardUuid, setSelectedBoardUuid] = useState<string | null>(null);
   const debouncedQuery = useDebouncedValue(query, 300);
   const queryClient = useQueryClient();
@@ -111,8 +113,7 @@ export default function BoardSearchResults({
     return (
       <Box sx={{ py: 4, textAlign: 'center' }}>
         <Typography variant="body2" color="text.secondary">
-          {/* i18n-ignore-next-line */}
-          Type at least 2 characters to search
+          {t('search.minCharsHint')}
         </Typography>
       </Box>
     );
@@ -130,8 +131,7 @@ export default function BoardSearchResults({
     return (
       <Box sx={{ py: 4, textAlign: 'center' }}>
         <Typography variant="body2" color="text.secondary">
-          {/* i18n-ignore-next-line */}
-          No boards found for &quot;{debouncedQuery}&quot;
+          {t('search.noBoards', { query: debouncedQuery })}
         </Typography>
       </Box>
     );

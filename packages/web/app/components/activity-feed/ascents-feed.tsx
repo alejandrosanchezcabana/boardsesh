@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import MuiCard from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
 import MuiTypography from '@mui/material/Typography';
@@ -16,7 +17,6 @@ import { PersonFallingIcon } from '@/app/components/icons/person-falling-icon';
 import LocationOnOutlined from '@mui/icons-material/LocationOnOutlined';
 import DeleteOutlined from '@mui/icons-material/DeleteOutlined';
 import { useInfiniteQuery } from '@tanstack/react-query';
-import { useTranslation } from 'react-i18next';
 import type { TFunction } from 'i18next';
 import { formatTickRelativeTime, tickTimeMs } from '@/app/lib/format-tick-time';
 import { createGraphQLHttpClient } from '@/app/lib/graphql/client';
@@ -214,10 +214,8 @@ const GroupedFeedItem: React.FC<{
               <MuiTypography variant="body2" component="span" color="text.secondary" className={styles.boardType}>
                 {boardDisplay}
               </MuiTypography>
-              {/* i18n-ignore-next-line */}
-              {group.isMirror && <Chip label="Mirrored" size="small" color="secondary" />}
-              {/* i18n-ignore-next-line */}
-              {group.isBenchmark && <Chip label="Benchmark" size="small" />}
+              {group.isMirror && <Chip label={t('ascentsFeed.mirrored')} size="small" color="secondary" />}
+              {group.isBenchmark && <Chip label={t('ascentsFeed.benchmark')} size="small" />}
             </Box>
 
             {hasSuccess && group.bestQuality && (
@@ -226,8 +224,7 @@ const GroupedFeedItem: React.FC<{
 
             {group.setterUsername && (
               <MuiTypography variant="body2" component="span" color="text.secondary" className={styles.setter}>
-                {/* i18n-ignore-next-line */}
-                Set by {group.setterUsername}
+                {t('ascentsFeed.setBy', { name: group.setterUsername })}
               </MuiTypography>
             )}
 
@@ -260,6 +257,7 @@ const GroupedFeedItem: React.FC<{
 };
 
 export const AscentsFeed: React.FC<AscentsFeedProps> = ({ userId, pageSize = 10, isOwnProfile = false }) => {
+  const { t } = useTranslation('feed');
   const deleteTick = useDeleteTick();
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading, error } = useInfiniteQuery({
     queryKey: ['ascentsFeed', userId, pageSize],
@@ -300,13 +298,11 @@ export const AscentsFeed: React.FC<AscentsFeedProps> = ({ userId, pageSize = 10,
   }
 
   if (error) {
-    // i18n-ignore-next-line
-    return <EmptyState description="Failed to load activity feed" />;
+    return <EmptyState description={t('errors.loadActivity')} />;
   }
 
   if (groups.length === 0) {
-    // i18n-ignore-next-line
-    return <EmptyState description="No ascents logged yet" />;
+    return <EmptyState description={t('ascentsFeed.empty')} />;
   }
 
   return (

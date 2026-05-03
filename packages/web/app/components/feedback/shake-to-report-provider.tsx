@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useCallback, useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useShakeDetector } from '@/app/hooks/use-shake-detector';
 import { useSnackbar } from '@/app/components/providers/snackbar-provider';
 import { getShakeToReportDismissed, setShakeToReportDismissed } from '@/app/lib/user-preferences-db';
@@ -16,6 +17,7 @@ import { BugReportDialog } from './bug-report-dialog';
  * good. The manual drawer entry is unaffected.
  */
 export const ShakeToReportProvider: React.FC = () => {
+  const { t } = useTranslation('settings');
   const [open, setOpen] = useState(false);
   // null = hydration pending. We keep the detector detached until IndexedDB
   // resolves: defaulting to "not dismissed" would let a previously opted-out
@@ -51,9 +53,8 @@ export const ShakeToReportProvider: React.FC = () => {
     setDismissed(true);
     setOpen(false);
     void setShakeToReportDismissed(true);
-    // i18n-ignore-next-line
-    showMessage('Shake to report off. Tap your avatar up top to send feedback.', 'info', undefined, 6000);
-  }, [showMessage]);
+    showMessage(t('shakeToReport.disabledToast'), 'info', undefined, 6000);
+  }, [showMessage, t]);
 
   useShakeDetector(handleShake, { enabled: !open && dismissed === false });
 
@@ -62,7 +63,7 @@ export const ShakeToReportProvider: React.FC = () => {
       open={open}
       onClose={handleClose}
       source="shake-bug"
-      secondaryAction={{ label: "Don't show this again", onClick: handleDontShowAgain }}
+      secondaryAction={{ label: t('shakeToReport.dontShowAgain'), onClick: handleDontShowAgain }}
     />
   );
 };

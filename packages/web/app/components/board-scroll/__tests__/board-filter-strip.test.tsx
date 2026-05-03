@@ -3,6 +3,15 @@ import { render, fireEvent } from '@testing-library/react';
 import React from 'react';
 import type { UserBoard } from '@boardsesh/shared-schema';
 import BoardFilterStrip from '../board-filter-strip';
+import { tFromCatalog } from '@/app/__test-helpers__/i18n-mock';
+
+vi.mock('react-i18next', () => ({
+  useTranslation: (ns?: string) => ({
+    t: (key: string, options?: Record<string, unknown>) => tFromCatalog(ns, key, options),
+    i18n: { language: 'en-US' },
+  }),
+  Trans: ({ children }: { children?: React.ReactNode }) => children ?? null,
+}));
 
 // Mock BoardRenderer (transitive dep via BoardScrollCard)
 vi.mock('../../board-renderer/board-renderer', () => ({

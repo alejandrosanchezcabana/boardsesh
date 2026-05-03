@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import Box from '@mui/material/Box';
 import List from '@mui/material/List';
 import ListItem from '@mui/material/ListItem';
@@ -34,6 +35,7 @@ type UserSearchResultsProps = {
 };
 
 export default function UserSearchResults({ query, authToken }: UserSearchResultsProps) {
+  const { t } = useTranslation('feed');
   const debouncedQuery = useDebouncedValue(query, 300);
 
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } = useInfiniteQuery<
@@ -72,8 +74,7 @@ export default function UserSearchResults({ query, authToken }: UserSearchResult
     return (
       <Box sx={{ py: 4, textAlign: 'center' }}>
         <Typography variant="body2" color="text.secondary">
-          {/* i18n-ignore-next-line */}
-          Type at least 2 characters to search
+          {t('search.minCharsHint')}
         </Typography>
       </Box>
     );
@@ -91,8 +92,7 @@ export default function UserSearchResults({ query, authToken }: UserSearchResult
     return (
       <Box sx={{ py: 4, textAlign: 'center' }}>
         <Typography variant="body2" color="text.secondary">
-          {/* i18n-ignore-next-line */}
-          No users or setters found for &quot;{debouncedQuery}&quot;
+          {t('search.noUsers', { query: debouncedQuery })}
         </Typography>
       </Box>
     );
@@ -135,15 +135,14 @@ export default function UserSearchResults({ query, authToken }: UserSearchResult
                     <Box component="span" sx={{ display: 'flex', gap: 1, alignItems: 'center', flexWrap: 'wrap' }}>
                       {result.recentAscentCount > 0 && (
                         <Typography variant="caption" component="span" color="text.secondary">
-                          {/* i18n-ignore-next-line */}
-                          {result.recentAscentCount} ascents this month
+                          {t('userSearch.ascentsThisMonth', { count: result.recentAscentCount })}
                         </Typography>
                       )}
                       {result.setter && (
                         <Typography variant="caption" component="span" color="text.secondary">
-                          {/* i18n-ignore-next-line */}
-                          {result.setter.climbCount} climb
-                          {result.setter.climbCount !== 1 ? 's' : ''} set
+                          {result.setter.climbCount === 1
+                            ? t('userSearch.climbsSetOne', { count: result.setter.climbCount })
+                            : t('userSearch.climbsSetMany', { count: result.setter.climbCount })}
                         </Typography>
                       )}
                     </Box>
@@ -185,8 +184,9 @@ export default function UserSearchResults({ query, authToken }: UserSearchResult
                   secondary={
                     <Box component="span" sx={{ display: 'flex', gap: 1, alignItems: 'center', flexWrap: 'wrap' }}>
                       <Typography variant="caption" component="span" color="text.secondary">
-                        {/* i18n-ignore-next-line */}
-                        {result.setter.climbCount} climb{result.setter.climbCount !== 1 ? 's' : ''}
+                        {result.setter.climbCount === 1
+                          ? t('userSearch.climbCountOne', { count: result.setter.climbCount })
+                          : t('userSearch.climbCountMany', { count: result.setter.climbCount })}
                       </Typography>
                       {result.setter.boardTypes.map((bt) => (
                         <Chip

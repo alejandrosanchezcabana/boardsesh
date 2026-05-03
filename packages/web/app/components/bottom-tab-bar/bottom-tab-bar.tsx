@@ -317,10 +317,8 @@ function BottomTabBar({ boardDetails, angle, boardConfigs }: BottomTabBarProps) 
     setIsCreatePlaylistOpen(false);
     if (!isAuthenticated || !session?.user?.id) {
       openAuthModal({
-        // i18n-ignore-next-line
-        title: 'Sign in to see your progress',
-        // i18n-ignore-next-line
-        description: 'Sign in to track your climbing stats, sessions, and logbook.',
+        title: t('bottomTabBar.youSignInTitle'),
+        description: t('bottomTabBar.youSignInDescription'),
         onSuccess: () => {
           router.push('/you');
         },
@@ -384,8 +382,7 @@ function BottomTabBar({ boardDetails, angle, boardConfigs }: BottomTabBarProps) 
 
       if (pendingCreateAction === 'playlist') {
         if (!selectedContext) {
-          // i18n-ignore-next-line
-          showMessage('Unable to determine board details for playlist creation', 'error');
+          showMessage(t('bottomTabBar.boardDetailsMissing'), 'error');
           setPendingCreateAction(null);
           return;
         }
@@ -407,7 +404,7 @@ function BottomTabBar({ boardDetails, angle, boardConfigs }: BottomTabBarProps) 
         router.push(url);
       }
     },
-    [pendingCreateAction, router, showMessage, guardBoardSwitch],
+    [pendingCreateAction, router, showMessage, guardBoardSwitch, t],
   );
 
   const handleDiscoveryBoardClick = useCallback(
@@ -484,8 +481,7 @@ function BottomTabBar({ boardDetails, angle, boardConfigs }: BottomTabBarProps) 
     }
 
     if (!canCreatePlaylistHere) {
-      // i18n-ignore-next-line
-      showMessage('Select a board before creating a playlist', 'error');
+      showMessage(t('bottomTabBar.selectBoardForPlaylist'), 'error');
       return;
     }
 
@@ -505,7 +501,7 @@ function BottomTabBar({ boardDetails, angle, boardConfigs }: BottomTabBarProps) 
         undefined,
       );
 
-      showMessage(`Created playlist "${playlistFormValues.name}"`, 'success');
+      showMessage(t('bottomTabBar.createdPlaylistToast', { name: playlistFormValues.name }), 'success');
       track('Create Playlist', {
         boardName: playlistBoardName || 'unknown',
         playlistName: playlistFormValues.name,
@@ -519,8 +515,7 @@ function BottomTabBar({ boardDetails, angle, boardConfigs }: BottomTabBarProps) 
       // Navigate to the new playlist
       router.push(getPlaylistUrl(newPlaylist.uuid));
     } catch {
-      // i18n-ignore-next-line
-      showMessage('Failed to create playlist', 'error');
+      showMessage(t('bottomTabBar.createPlaylistFailed'), 'error');
     } finally {
       setIsCreatingPlaylist(false);
     }
@@ -559,37 +554,42 @@ function BottomTabBar({ boardDetails, angle, boardConfigs }: BottomTabBarProps) 
           },
         }}
       >
-        {/* i18n-ignore-next-line */}
-        <BottomNavigationAction label="Home" icon={<HomeOutlined sx={{ fontSize: 20 }} />} value="home" sx={actionSx} />
         <BottomNavigationAction
-          // i18n-ignore-next-line
-          label="Climb"
+          label={t('bottomTabBar.home')}
+          icon={<HomeOutlined sx={{ fontSize: 20 }} />}
+          value="home"
+          sx={actionSx}
+        />
+        <BottomNavigationAction
+          label={t('bottomTabBar.climb')}
           icon={<FormatListBulletedOutlined sx={{ fontSize: 20 }} />}
           value="climbs"
           sx={actionSx}
         />
         <BottomNavigationAction
-          // i18n-ignore-next-line
-          label="Discover"
+          label={t('bottomTabBar.discover')}
           icon={<LocalOfferOutlined sx={{ fontSize: 20 }} />}
           value="library"
           sx={actionSx}
         />
         <BottomNavigationAction
-          // i18n-ignore-next-line
-          label="Feed"
+          label={t('bottomTabBar.feed')}
           icon={<DynamicFeedOutlined sx={{ fontSize: 20 }} />}
           value="feed"
           sx={actionSx}
         />
         <BottomNavigationAction
-          // i18n-ignore-next-line
-          label="Create"
+          label={t('bottomTabBar.create')}
           icon={<AddOutlined sx={{ fontSize: 20 }} />}
           value="create"
           sx={actionSx}
         />
-        <BottomNavigationAction label="You" icon={<PersonOutlined sx={{ fontSize: 20 }} />} value="you" sx={actionSx} />
+        <BottomNavigationAction
+          label={t('bottomTabBar.you')}
+          icon={<PersonOutlined sx={{ fontSize: 20 }} />}
+          value="you"
+          sx={actionSx}
+        />
       </BottomNavigation>
 
       {/* Create Playlist Drawer */}

@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import Dialog from '@mui/material/Dialog';
 import DialogTitle from '@mui/material/DialogTitle';
 import DialogContent from '@mui/material/DialogContent';
@@ -23,21 +24,22 @@ type DevUrlDialogProps = {
 // the plugin call silently no-ops in a release build).
 const RESTART_TIMEOUT_MS = 1500;
 
-function validateUrl(input: string): string | null {
+function validateUrl(input: string, t: (key: string) => string): string | null {
   const trimmed = input.trim();
-  if (!trimmed) return 'Enter a URL';
+  if (!trimmed) return t('devUrlDialog.validation.enterUrl');
   try {
     const parsed = new URL(trimmed);
     if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
-      return 'URL must start with http:// or https://';
+      return t('devUrlDialog.validation.mustBeHttp');
     }
     return null;
   } catch {
-    return 'Not a valid URL';
+    return t('devUrlDialog.validation.invalid');
   }
 }
 
 export default function DevUrlDialog({ open, onClose }: DevUrlDialogProps) {
+  const { t } = useTranslation('settings');
   const [state, setState] = useState<DevUrlState | null>(null);
   const [input, setInput] = useState('');
   const [busy, setBusy] = useState(false);
@@ -77,7 +79,7 @@ export default function DevUrlDialog({ open, onClose }: DevUrlDialogProps) {
       await action();
       succeeded = true;
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Something went wrong');
+      setError(e instanceof Error ? e.message : t('devUrlDialog.validation.generic'));
     } finally {
       if (succeeded) {
         // Plugin resolved — native side should now kill the process. If it
@@ -91,7 +93,7 @@ export default function DevUrlDialog({ open, onClose }: DevUrlDialogProps) {
   };
 
   const save = () => {
-    const validationError = validateUrl(input);
+    const validationError = validateUrl(input, t);
     if (validationError) {
       setError(validationError);
       return;
@@ -110,17 +112,14 @@ export default function DevUrlDialog({ open, onClose }: DevUrlDialogProps) {
 
   return (
     <Dialog open={open} onClose={busy ? undefined : onClose} fullWidth maxWidth="xs">
-      {/* i18n-ignore-next-line */}
-      <DialogTitle>Dev URL</DialogTitle>
+      <DialogTitle>{t('devUrlDialog.title')}</DialogTitle>
       <DialogContent>
         <Stack spacing={2} sx={{ mt: 1 }}>
           <Typography variant="body2" color="text.secondary">
-            {/* i18n-ignore-next-line */}
-            Point the WebView at a different origin. The app will restart after saving.
+            {t('devUrlDialog.intro')}
           </Typography>
           <TextField
-            // i18n-ignore-next-line
-            label="Server URL"
+            label={t('devUrlDialog.urlLabel')}
             placeholder={state?.defaultUrl ?? 'https://www.boardsesh.com'}
             value={input}
             onChange={(e) => {
@@ -136,25 +135,21 @@ export default function DevUrlDialog({ open, onClose }: DevUrlDialogProps) {
             spellCheck={false}
           />
           <Button size="small" variant="outlined" onClick={useDefault} disabled={busy}>
-            {/* i18n-ignore-next-line */}
-            Use production
+            {t('devUrlDialog.useProduction')}
           </Button>
           {state?.currentUrl && (
             <Typography variant="caption" color="text.secondary">
-              {/* i18n-ignore-next-line */}
-              Currently overriding to: {state.currentUrl}
+              {t('devUrlDialog.currentlyOverriding', { url: state.currentUrl })}
             </Typography>
           )}
         </Stack>
       </DialogContent>
       <DialogActions>
         <Button onClick={onClose} disabled={busy}>
-          {/* i18n-ignore-next-line */}
-          Cancel
+          {t('devUrlDialog.cancel')}
         </Button>
         <Button onClick={clear} disabled={busy || !state?.currentUrl} color="warning">
-          {/* i18n-ignore-next-line */}
-          Clear override
+          {t('devUrlDialog.clearOverride')}
         </Button>
         <Button
           onClick={save}
@@ -162,7 +157,7 @@ export default function DevUrlDialog({ open, onClose }: DevUrlDialogProps) {
           variant="contained"
           startIcon={busy ? <CircularProgress size={14} color="inherit" /> : undefined}
         >
-          {busy ? 'Restarting…' : 'Save & restart'}
+          {busy ? t('devUrlDialog.restarting') : t('devUrlDialog.save')}
         </Button>
       </DialogActions>
     </Dialog>

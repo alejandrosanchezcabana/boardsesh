@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import Typography from '@mui/material/Typography';
 import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
 import ToggleButton from '@mui/material/ToggleButton';
@@ -42,14 +43,19 @@ export default function StatsFilterDrawer({
   onToDateChange,
   onTransitionEnd,
 }: StatsFilterDrawerProps) {
+  const { t } = useTranslation('profile');
   return (
-    // i18n-ignore-next-line
-    <SwipeableDrawer open={open} onClose={onClose} placement="top" title="Filters" onTransitionEnd={onTransitionEnd}>
+    <SwipeableDrawer
+      open={open}
+      onClose={onClose}
+      placement="top"
+      title={t('filter.drawer.title')}
+      onTransitionEnd={onTransitionEnd}
+    >
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3, pb: 2 }}>
         <Box>
           <Typography variant="body2" fontWeight={600} sx={{ mb: 1 }}>
-            {/* i18n-ignore-next-line */}
-            Board
+            {t('filter.drawer.board')}
           </Typography>
           <ToggleButtonGroup
             exclusive
@@ -70,8 +76,7 @@ export default function StatsFilterDrawer({
 
         <Box>
           <Typography variant="body2" fontWeight={600} sx={{ mb: 1 }}>
-            {/* i18n-ignore-next-line */}
-            Time Range
+            {t('filter.drawer.timeRange')}
           </Typography>
           <ToggleButtonGroup
             exclusive
@@ -97,14 +102,13 @@ export default function StatsFilterDrawer({
               value={fromDate ? dayjs(fromDate) : null}
               onChange={(val) => onFromDateChange(val ? val.format('YYYY-MM-DD') : '')}
               slotProps={{ textField: { size: 'small', fullWidth: true } }}
-              // i18n-ignore-next-line
-              label="From"
+              label={t('filter.drawer.from')}
             />
             <MuiDatePicker
               value={toDate ? dayjs(toDate) : null}
               onChange={(val) => onToDateChange(val ? val.format('YYYY-MM-DD') : '')}
               slotProps={{ textField: { size: 'small', fullWidth: true } }}
-              label="To"
+              label={t('filter.drawer.to')}
             />
           </Stack>
         )}

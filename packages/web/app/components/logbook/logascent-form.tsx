@@ -58,6 +58,7 @@ type LogAscentFormProps = {
 
 export const LogAscentForm: React.FC<LogAscentFormProps> = ({ currentClimb, boardDetails, onClose }) => {
   const { t } = useTranslation('climbs');
+  const { t: tProfile } = useTranslation('profile');
   const { saveTick, isAuthenticated } = useBoardProvider();
   const grades = TENSION_KILTER_GRADES;
   const angleOptions = ANGLES[boardDetails.board_name];
@@ -188,24 +189,20 @@ export const LogAscentForm: React.FC<LogAscentFormProps> = ({ currentClimb, boar
     >
       <Box sx={{ mb: 2 }}>
         <ToggleButtonGroup exclusive fullWidth value={logType} onChange={(_, val) => val && setLogType(val as LogType)}>
-          {/* i18n-ignore-next-line */}
-          <ToggleButton value="ascent">Ascent</ToggleButton>
-          {/* i18n-ignore-next-line */}
-          <ToggleButton value="attempt">Attempt</ToggleButton>
+          <ToggleButton value="ascent">{tProfile('logbook.form.ascent')}</ToggleButton>
+          <ToggleButton value="attempt">{tProfile('logbook.form.attempt')}</ToggleButton>
         </ToggleButtonGroup>
       </Box>
 
       <Box sx={{ display: 'flex', alignItems: 'center', mb: 1.5 }}>
-        {/* i18n-ignore-next-line */}
-        <Typography sx={{ width: 120, flexShrink: 0 }}>Boulder</Typography>
+        <Typography sx={{ width: 120, flexShrink: 0 }}>{tProfile('logbook.form.boulder')}</Typography>
         <Box sx={{ flex: 1 }}>
           <Stack direction="row" spacing={1}>
             <strong>{currentClimb?.name || 'N/A'}</strong>
             {showMirrorTag && (
               <Stack direction="row" spacing={0.5}>
                 <Chip
-                  // i18n-ignore-next-line
-                  label="Mirrored"
+                  label={tProfile('logbook.form.mirrored')}
                   size="small"
                   color={isMirrored ? 'secondary' : undefined}
                   sx={{ cursor: 'pointer', margin: 0 }}
@@ -221,8 +218,7 @@ export const LogAscentForm: React.FC<LogAscentFormProps> = ({ currentClimb, boar
       </Box>
 
       <Box sx={{ display: 'flex', alignItems: 'center', mb: 1.5 }}>
-        {/* i18n-ignore-next-line */}
-        <Typography sx={{ width: 120, flexShrink: 0 }}>Date and Time</Typography>
+        <Typography sx={{ width: 120, flexShrink: 0 }}>{tProfile('logbook.form.dateAndTime')}</Typography>
         <Box sx={{ flex: 1 }}>
           <DateTimePicker
             value={formValues.date}
@@ -234,8 +230,7 @@ export const LogAscentForm: React.FC<LogAscentFormProps> = ({ currentClimb, boar
       </Box>
 
       <Box sx={{ display: 'flex', alignItems: 'center', mb: 1.5 }}>
-        {/* i18n-ignore-next-line */}
-        <Typography sx={{ width: 120, flexShrink: 0 }}>Angle</Typography>
+        <Typography sx={{ width: 120, flexShrink: 0 }}>{tProfile('logbook.form.angle')}</Typography>
         <Box sx={{ flex: 1 }}>
           <MuiSelect
             value={formValues.angle}
@@ -253,8 +248,7 @@ export const LogAscentForm: React.FC<LogAscentFormProps> = ({ currentClimb, boar
       </Box>
 
       <Box sx={{ display: 'flex', alignItems: 'center', mb: 1.5 }}>
-        {/* i18n-ignore-next-line */}
-        <Typography sx={{ width: 120, flexShrink: 0 }}>Attempts</Typography>
+        <Typography sx={{ width: 120, flexShrink: 0 }}>{tProfile('logbook.form.attempts')}</Typography>
         <Box sx={{ flex: 1 }}>
           <TextField
             type="number"
@@ -269,8 +263,7 @@ export const LogAscentForm: React.FC<LogAscentFormProps> = ({ currentClimb, boar
 
       {logType === 'ascent' && (
         <Box sx={{ display: 'flex', alignItems: 'center', mb: 1.5 }}>
-          {/* i18n-ignore-next-line */}
-          <Typography sx={{ width: 120, flexShrink: 0 }}>Quality</Typography>
+          <Typography sx={{ width: 120, flexShrink: 0 }}>{tProfile('logbook.form.quality')}</Typography>
           <Box sx={{ flex: 1 }}>
             <MuiRating
               value={formValues.quality}
@@ -283,8 +276,7 @@ export const LogAscentForm: React.FC<LogAscentFormProps> = ({ currentClimb, boar
 
       {logType === 'ascent' && (
         <Box sx={{ display: 'flex', alignItems: 'center', mb: 1.5 }}>
-          {/* i18n-ignore-next-line */}
-          <Typography sx={{ width: 120, flexShrink: 0 }}>Difficulty</Typography>
+          <Typography sx={{ width: 120, flexShrink: 0 }}>{tProfile('logbook.form.difficulty')}</Typography>
           <Box sx={{ flex: 1 }}>
             <MuiSelect
               value={formValues.difficulty}
@@ -303,8 +295,7 @@ export const LogAscentForm: React.FC<LogAscentFormProps> = ({ currentClimb, boar
       )}
 
       <Box sx={{ display: 'flex', alignItems: 'center', mb: 1.5 }}>
-        {/* i18n-ignore-next-line */}
-        <Typography sx={{ width: 120, flexShrink: 0 }}>Notes</Typography>
+        <Typography sx={{ width: 120, flexShrink: 0 }}>{tProfile('logbook.form.notes')}</Typography>
         <Box sx={{ flex: 1 }}>
           <TextField
             multiline
@@ -320,19 +311,17 @@ export const LogAscentForm: React.FC<LogAscentFormProps> = ({ currentClimb, boar
 
       {logType === 'ascent' && (
         <Box sx={{ display: 'flex', alignItems: 'flex-start', mb: 1.5 }}>
-          {/* i18n-ignore-next-line */}
-          <Typography sx={{ width: 120, flexShrink: 0, pt: 1 }}>Video</Typography>
+          <Typography sx={{ width: 120, flexShrink: 0, pt: 1 }}>{tProfile('logbook.form.video')}</Typography>
           <Box sx={{ flex: 1 }}>
             <TextField
-              // i18n-ignore-next-line
-              placeholder="Instagram or TikTok URL"
+              placeholder={tProfile('logbook.form.videoPlaceholder')}
               variant="outlined"
               size="small"
               fullWidth
               value={formValues.videoUrl || ''}
               onChange={(e) => setFormValues((prev) => ({ ...prev, videoUrl: e.target.value }))}
               error={!!videoUrlError}
-              helperText={videoUrlError ?? 'Paste an Instagram or TikTok link so others can see your beta. (Optional)'}
+              helperText={videoUrlError ?? tProfile('logbook.form.videoHelper')}
             />
           </Box>
         </Box>
@@ -347,15 +336,13 @@ export const LogAscentForm: React.FC<LogAscentFormProps> = ({ currentClimb, boar
           fullWidth
           size="large"
         >
-          {/* i18n-ignore-next-line */}
-          Submit
+          {tProfile('logbook.form.submit')}
         </Button>
       </Box>
 
       <Box>
         <Button variant="outlined" fullWidth size="large" onClick={onClose} disabled={isSaving}>
-          {/* i18n-ignore-next-line */}
-          Cancel
+          {tProfile('logbook.form.cancel')}
         </Button>
       </Box>
     </Box>

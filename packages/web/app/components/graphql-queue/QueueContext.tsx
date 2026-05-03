@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useContext, createContext, useCallback, useMemo, useRef, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useSearchParams } from 'next/navigation';
 import { v4 as uuidv4 } from 'uuid';
 import { useQueueReducer } from '../queue-control/reducer';
@@ -90,6 +91,7 @@ export const GraphQLQueueProvider = ({
   const isOffBoardMode = propsBaseBoardPath !== undefined;
   const correlationCounterRef = useRef(0);
   const { showMessage } = useSnackbar();
+  const { t } = useTranslation('session');
 
   const { profile, username, avatarUrl } = usePartyProfile();
   const { state: connectionState } = useWebSocketConnection();
@@ -172,10 +174,9 @@ export const GraphQLQueueProvider = ({
   // Warn user when offline buffer is full
   useEffect(() => {
     if (rawOfflineBuffer.isBufferFull) {
-      // i18n-ignore-next-line
-      showMessage("You've hit the offline queue limit. Reconnect to sync your climbs.", 'warning');
+      showMessage(t('queueProvider.offlineLimitReached'), 'warning');
     }
-  }, [rawOfflineBuffer.isBufferFull, showMessage]);
+  }, [rawOfflineBuffer.isBufferFull, showMessage, t]);
 
   // --- Offline reconciliation (push buffered additions on reconnect) ---
   useOfflineReconciliation({

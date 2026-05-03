@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import Box from '@mui/material/Box';
 import TextField from '@mui/material/TextField';
 import MuiSelect, { type SelectChangeEvent } from '@mui/material/Select';
@@ -124,6 +125,7 @@ const LogbookSearchForm: React.FC<LogbookSearchFormProps> = ({
   filters,
   onFiltersChange,
 }) => {
+  const { t } = useTranslation('profile');
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [showSort, setShowSort] = useState(false);
 
@@ -197,8 +199,7 @@ const LogbookSearchForm: React.FC<LogbookSearchFormProps> = ({
         <div className={styles.switchGroup}>
           <div className={styles.switchRow}>
             <MuiTypography variant="body2" component="span">
-              {/* i18n-ignore-next-line */}
-              Include Sends
+              {t('logbook.search.resultType.includeSends')}
             </MuiTypography>
             <MuiSwitch
               size="small"
@@ -210,8 +211,7 @@ const LogbookSearchForm: React.FC<LogbookSearchFormProps> = ({
           </div>
           <div className={styles.switchRow}>
             <MuiTypography variant="body2" component="span">
-              {/* i18n-ignore-next-line */}
-              Include Attempts
+              {t('logbook.search.resultType.includeAttempts')}
             </MuiTypography>
             <MuiSwitch
               size="small"
@@ -223,8 +223,7 @@ const LogbookSearchForm: React.FC<LogbookSearchFormProps> = ({
           </div>
           <div className={styles.switchRow}>
             <MuiTypography variant="body2" component="span">
-              {/* i18n-ignore-next-line */}
-              Flash Only
+              {t('logbook.search.resultType.flashOnly')}
             </MuiTypography>
             <MuiSwitch
               size="small"
@@ -236,8 +235,7 @@ const LogbookSearchForm: React.FC<LogbookSearchFormProps> = ({
           </div>
           <div className={styles.switchRow}>
             <MuiTypography variant="body2" component="span">
-              {/* i18n-ignore-next-line */}
-              Benchmark Only
+              {t('logbook.search.resultType.benchmarkOnly')}
             </MuiTypography>
             <MuiSwitch
               size="small"
@@ -258,13 +256,11 @@ const LogbookSearchForm: React.FC<LogbookSearchFormProps> = ({
       content: (
         <div className={styles.panelContent}>
           <div className={styles.inputGroup}>
-            {/* i18n-ignore-next-line */}
-            <span className={styles.fieldLabel}>Date Range</span>
+            <span className={styles.fieldLabel}>{t('logbook.search.dateAngle.dateRange')}</span>
             <div className={styles.gradeRow}>
               <TextField
                 type="date"
-                // i18n-ignore-next-line
-                label="Start date"
+                label={t('logbook.search.dateAngle.startDate')}
                 value={filters.fromDate}
                 onChange={(e) => onFiltersChange((prev) => ({ ...prev, fromDate: e.target.value }))}
                 size="small"
@@ -273,8 +269,7 @@ const LogbookSearchForm: React.FC<LogbookSearchFormProps> = ({
               />
               <TextField
                 type="date"
-                // i18n-ignore-next-line
-                label="End date"
+                label={t('logbook.search.dateAngle.endDate')}
                 value={filters.toDate}
                 onChange={(e) => onFiltersChange((prev) => ({ ...prev, toDate: e.target.value }))}
                 size="small"
@@ -286,8 +281,10 @@ const LogbookSearchForm: React.FC<LogbookSearchFormProps> = ({
 
           <div className={styles.inputGroup}>
             <span className={styles.fieldLabel}>
-              {/* i18n-ignore-next-line */}
-              Wall angle range ({filters.angleRange[0]}&deg;&ndash;{filters.angleRange[1]}&deg;)
+              {t('logbook.search.dateAngle.wallAngleRange', {
+                min: filters.angleRange[0],
+                max: filters.angleRange[1],
+              })}
             </span>
             <Slider
               value={filters.angleRange}
@@ -319,9 +316,8 @@ const LogbookSearchForm: React.FC<LogbookSearchFormProps> = ({
           <Stack direction="row" spacing={1}>
             <FilterListOutlined sx={{ color: themeTokens.colors.primary }} />
             <MuiTypography variant="body2" component="span" color="text.secondary">
-              {/* i18n-ignore-next-line */}
-              <span className={footerStyles.resultBadge}>{activeFilterCount}</span> active{' '}
-              {activeFilterCount === 1 ? 'filter' : 'filters'}
+              <span className={footerStyles.resultBadge}>{activeFilterCount}</span>{' '}
+              {t('logbook.search.filterCount', { count: activeFilterCount })}
             </MuiTypography>
           </Stack>
         </div>
@@ -332,8 +328,7 @@ const LogbookSearchForm: React.FC<LogbookSearchFormProps> = ({
           onClick={handleClearAll}
           sx={{ textTransform: 'none' }}
         >
-          {/* i18n-ignore-next-line */}
-          Clear All
+          {t('logbook.search.clearAll')}
         </MuiButton>
       </div>
     ) : undefined;
@@ -348,8 +343,7 @@ const LogbookSearchForm: React.FC<LogbookSearchFormProps> = ({
               <TextField
                 value={searchText}
                 onChange={onSearchChange}
-                // i18n-ignore-next-line
-                placeholder="Search climbs or notes"
+                placeholder={t('logbook.search.placeholder')}
                 fullWidth
                 size="small"
                 slotProps={{
@@ -363,8 +357,7 @@ const LogbookSearchForm: React.FC<LogbookSearchFormProps> = ({
                 }}
               />
               <div className={headerStyles.filterButton}>
-                {/* i18n-ignore-next-line */}
-                <IconButton onClick={openDrawer} aria-label="Open filters" size="small">
+                <IconButton onClick={openDrawer} aria-label={t('logbook.search.openFilters')} size="small">
                   <FilterListOutlined />
                 </IconButton>
                 {activeFilterCount > 0 && <span className={headerStyles.filterActiveIndicator} />}
@@ -399,13 +392,11 @@ const LogbookSearchForm: React.FC<LogbookSearchFormProps> = ({
           <div className={styles.primaryContent}>
             <div className={styles.panelContent}>
               <div className={styles.inputGroup}>
-                {/* i18n-ignore-next-line */}
-                <span className={styles.fieldLabel}>Search</span>
+                <span className={styles.fieldLabel}>{t('logbook.search.search')}</span>
                 <TextField
                   value={searchText}
                   onChange={onSearchChange}
-                  // i18n-ignore-next-line
-                  placeholder="Search climbs or notes"
+                  placeholder={t('logbook.search.placeholder')}
                   variant="outlined"
                   fullWidth
                   size="small"
@@ -422,8 +413,7 @@ const LogbookSearchForm: React.FC<LogbookSearchFormProps> = ({
               </div>
 
               <div className={styles.inputGroup}>
-                {/* i18n-ignore-next-line */}
-                <span className={styles.fieldLabel}>Grade Range</span>
+                <span className={styles.fieldLabel}>{t('logbook.search.gradeRange')}</span>
                 <div className={styles.gradeRow}>
                   <MuiSelect
                     value={minGrade === '' ? '' : minGrade}
@@ -471,8 +461,7 @@ const LogbookSearchForm: React.FC<LogbookSearchFormProps> = ({
                 className={styles.sortToggle}
                 onClick={() => setShowSort(!showSort)}
               >
-                {/* i18n-ignore-next-line */}
-                Sort
+                {t('logbook.search.sort')}
               </MuiButton>
 
               {showSort && (
@@ -485,16 +474,11 @@ const LogbookSearchForm: React.FC<LogbookSearchFormProps> = ({
                       size="small"
                       MenuProps={{ disableScrollLock: true }}
                     >
-                      {/* i18n-ignore-next-line */}
-                      <MenuItem value="date">Date</MenuItem>
-                      {/* i18n-ignore-next-line */}
-                      <MenuItem value="climbName">Climb name</MenuItem>
-                      {/* i18n-ignore-next-line */}
-                      <MenuItem value="loggedGrade">Logged Grade</MenuItem>
-                      {/* i18n-ignore-next-line */}
-                      <MenuItem value="consensusGrade">Consensus Grade</MenuItem>
-                      {/* i18n-ignore-next-line */}
-                      <MenuItem value="attemptCount">Attempts</MenuItem>
+                      <MenuItem value="date">{t('logbook.search.sortFields.date')}</MenuItem>
+                      <MenuItem value="climbName">{t('logbook.search.sortFields.climbName')}</MenuItem>
+                      <MenuItem value="loggedGrade">{t('logbook.search.sortFields.loggedGrade')}</MenuItem>
+                      <MenuItem value="consensusGrade">{t('logbook.search.sortFields.consensusGrade')}</MenuItem>
+                      <MenuItem value="attemptCount">{t('logbook.search.sortFields.attemptCount')}</MenuItem>
                     </MuiSelect>
                     <MuiSelect
                       value={sortState.primaryDirection}
@@ -503,8 +487,7 @@ const LogbookSearchForm: React.FC<LogbookSearchFormProps> = ({
                       size="small"
                       MenuProps={{ disableScrollLock: true }}
                     >
-                      {/* i18n-ignore-next-line */}
-                      <MenuItem value="desc">Desc</MenuItem>
+                      <MenuItem value="desc">{t('logbook.search.sortDirection.desc')}</MenuItem>
                       <MenuItem value="asc">Asc</MenuItem>
                     </MuiSelect>
                   </div>

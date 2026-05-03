@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import Typography from '@mui/material/Typography';
 import BookOutlined from '@mui/icons-material/BookOutlined';
 import { LogbookView } from './logbook-view';
@@ -48,6 +49,7 @@ export function useLogbookSummary(climbUuid: string): LogbookSummary | null {
 }
 
 export const LogbookSection: React.FC<LogbookSectionProps> = ({ climb }) => {
+  const { t } = useTranslation('profile');
   const summary = useLogbookSummary(climb.uuid);
 
   if (!summary) {
@@ -59,8 +61,7 @@ export const LogbookSection: React.FC<LogbookSectionProps> = ({ climb }) => {
         sx={{ display: 'block', textAlign: 'center', py: 2 }}
       >
         <BookOutlined sx={{ mr: 1, verticalAlign: 'middle' }} />
-        {/* i18n-ignore-next-line */}
-        No ascents logged for this climb
+        {t('logbook.section.noAscentsLogged')}
       </Typography>
     );
   }

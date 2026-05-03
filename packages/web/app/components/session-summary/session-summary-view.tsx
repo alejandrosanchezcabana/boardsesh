@@ -50,8 +50,7 @@ export default function SessionSummaryView({ summary }: SessionSummaryViewProps)
               {summary.totalSends}
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              {/* i18n-ignore-next-line */}
-              Sends
+              {t('summary.sends')}
             </Typography>
           </CardContent>
         </Card>
@@ -61,8 +60,7 @@ export default function SessionSummaryView({ summary }: SessionSummaryViewProps)
               {summary.totalAttempts}
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              {/* i18n-ignore-next-line */}
-              Attempts
+              {t('summary.attempts')}
             </Typography>
           </CardContent>
         </Card>
@@ -76,8 +74,7 @@ export default function SessionSummaryView({ summary }: SessionSummaryViewProps)
                 </Typography>
               </Box>
               <Typography variant="body2" color="text.secondary">
-                {/* i18n-ignore-next-line */}
-                Duration
+                {t('summary.duration')}
               </Typography>
             </CardContent>
           </Card>
@@ -91,8 +88,7 @@ export default function SessionSummaryView({ summary }: SessionSummaryViewProps)
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
               <FlagOutlined fontSize="small" color="action" />
               <Typography variant="body2" color="text.secondary">
-                {/* i18n-ignore-next-line */}
-                Goal:
+                {t('summary.goal')}
               </Typography>
               <Typography variant="body2" fontWeight={500}>
                 {summary.goal}
@@ -109,8 +105,7 @@ export default function SessionSummaryView({ summary }: SessionSummaryViewProps)
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
               <EmojiEventsOutlined fontSize="small" sx={{ color: 'warning.main' }} />
               <Typography variant="body2" color="text.secondary">
-                {/* i18n-ignore-next-line */}
-                Hardest send:
+                {t('summary.hardestSend')}
               </Typography>
               <Typography variant="body2" fontWeight={600}>
                 {summary.hardestClimb.climbName}
@@ -138,8 +133,7 @@ export default function SessionSummaryView({ summary }: SessionSummaryViewProps)
         <Card>
           <CardContent sx={{ p: 1.5, '&:last-child': { pb: 1.5 } }}>
             <Typography variant="subtitle2" gutterBottom>
-              {/* i18n-ignore-next-line */}
-              Grade Distribution
+              {t('summary.gradeDistribution')}
             </Typography>
             <Stack spacing={0.75}>
               {summary.gradeDistribution.map((g) => (
@@ -180,8 +174,7 @@ export default function SessionSummaryView({ summary }: SessionSummaryViewProps)
         <Card>
           <CardContent sx={{ p: 1.5, '&:last-child': { pb: 1.5 } }}>
             <Typography variant="subtitle2" gutterBottom>
-              {/* i18n-ignore-next-line */}
-              Participants
+              {t('summary.participants')}
             </Typography>
             <List disablePadding dense>
               {summary.participants.map((p) => (

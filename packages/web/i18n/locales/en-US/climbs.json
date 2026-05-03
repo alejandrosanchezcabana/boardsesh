@@ -226,13 +226,32 @@
         "nameRequired": "Please enter a playlist name",
         "nameTooLong": "Name too long",
         "descriptionTooLong": "Description too long"
+      },
+      "auth": {
+        "title": "Sign in to create playlists",
+        "description": "Sign in to organize your climbs into custom playlists."
+      },
+      "popover": {
+        "title": "Add to Playlist",
+        "empty": "No playlists yet",
+        "createFirst": "Create Your First Playlist",
+        "createNew": "Create New Playlist",
+        "signInBlurb": "Sign in to create and manage playlists"
+      },
+      "create": {
+        "nameLabel": "Playlist Name",
+        "namePlaceholder": "e.g., Hard Crimps",
+        "descriptionLabel": "Description (optional)",
+        "descriptionPlaceholder": "Optional description...",
+        "colorLabel": "Color (optional)",
+        "submit": "Create"
       }
     },
     "tick": {
       "drawer": {
-        "signInRequired": "Sign In Required",
-        "selectBoard": "Select Board",
-        "logAscent": "Log Ascent",
+        "signInRequired": "Sign in required",
+        "selectBoard": "Select board",
+        "logAscent": "Log ascent",
         "signInToRecord": "Sign in to record ticks",
         "createAccountBlurb": "Create a Boardsesh account to log your climbs and track your progress.",
         "signIn": "Sign In",
@@ -241,7 +260,8 @@
         "alwaysOpenInApp": "Always open in app",
         "authModalTitle": "Sign in to record ticks",
         "authModalDescription": "Create an account to log your climbs and track your progress.",
-        "mirroredTooltip": "Click the tag to toggle whether you completed this climb on the mirrored side"
+        "mirroredTooltip": "Click the tag to toggle whether you completed this climb on the mirrored side",
+        "whichBoard": "Which board did you climb on?"
       }
     },
     "navigation": {
@@ -278,6 +298,62 @@
       }
     }
   },
+  "card": {
+    "title": {
+      "noClimbSelected": "No climb selected",
+      "project": "project",
+      "projectAtAngle": "project @ {{angle}}°",
+      "draftBy": "Draft by {{name}}",
+      "by": "By {{name}}",
+      "byWithSends": "By {{name}} - {{sends}}"
+    },
+    "list": {
+      "moreActions": "More actions",
+      "tickError": "Couldn't save your tick — it's saved as a draft"
+    },
+    "detailHeader": {
+      "project": "project",
+      "unknownSetter": "Unknown setter"
+    }
+  },
+  "detail": {
+    "sections": {
+      "beta": "Beta",
+      "logbook": "Your Logbook",
+      "logbookEmpty": "No ascents",
+      "crewLogbook": "Crew Logbook",
+      "crewLogbookSummary": "See your crew's sends",
+      "community": "Community",
+      "communitySummary": "Votes, comments, proposals",
+      "analytics": "Analytics",
+      "analyticsSummary": "Ascents, quality trends"
+    }
+  },
+  "multiboardList": {
+    "noClimbsFound": "No climbs found",
+    "popular": "Popular",
+    "new": "New",
+    "count_one": "{{count}} climb",
+    "count_other": "{{count}} climbs"
+  },
+  "tick": {
+    "controls": {
+      "selectGrade": "Select logged grade",
+      "userByline": "user",
+      "starsLabel": "stars",
+      "triesLabel": "tries",
+      "starRating": "Star rating",
+      "noRating": "No rating",
+      "gradeOverride": "Grade override",
+      "clearGradeOverride": "Clear grade override",
+      "attemptCount": "Attempt count"
+    },
+    "bar": {
+      "logAscent": "Log ascent",
+      "logAttempt": "Log attempt",
+      "cancel": "Cancel"
+    }
+  },
   "liked": {
     "heroTitle": "Liked Climbs",
     "heroSubtitle": "Your favorite climbs",
@@ -289,6 +365,144 @@
     "noClimbsToAdd": "No climbs to add",
     "addedToQueue_one": "Added {{count}} climb to queue",
     "addedToQueue_other": "Added {{count}} climbs to queue",
-    "addToQueueFailed": "Failed to add climbs to queue"
+    "addToQueueFailed": "Failed to add climbs to queue",
+    "loadFailed": "Failed to load liked climbs",
+    "emptyState": "No liked climbs yet. Heart some climbs to see them here!"
+  },
+  "moonboard": {
+    "invalidLayout": "Invalid MoonBoard layout"
+  },
+  "createClimbForm": {
+    "draftBadge": "Draft",
+    "namePlaceholder": "Climb name",
+    "descriptionPlaceholder": "Add beta or notes about your climb...",
+    "openDrafts": "Open drafts",
+    "processing": "Processing...",
+    "importFromScreenshot": "Import from screenshot",
+    "bulkImport": "Bulk import",
+    "dismiss": "Dismiss",
+    "alerts": {
+      "importFailed": "Import Failed: {{error}}",
+      "importWarnings": "Import Warnings:",
+      "checkingMoonBoardDuplicate": "Checking whether this MoonBoard climb already exists..."
+    },
+    "clear": {
+      "title": "Clear climb",
+      "description": "This will clear all holds and reset the form. Are you sure?",
+      "confirm": "Clear",
+      "tooltip": "Clear all holds"
+    },
+    "settings": {
+      "tooltip": "Climb settings",
+      "title": "Climb Settings"
+    },
+    "fields": {
+      "name": "Name",
+      "holds": "Holds",
+      "angle": "Angle",
+      "grade": "Grade",
+      "gradeNone": "None",
+      "benchmark": "Benchmark",
+      "description": "Description (optional)"
+    },
+    "holds": {
+      "starting": "Starting",
+      "start": "Start",
+      "hand": "Hand",
+      "finish": "Finish",
+      "total": "Total"
+    },
+    "validation": {
+      "needsStartFinish": "A valid climb needs at least 1 start hold and 1 finish hold"
+    }
+  },
+  "draftsDrawer": {
+    "title": "Drafts",
+    "count_one": "{{count}} draft",
+    "count_other": "{{count}} drafts",
+    "loadError": "Couldn't load your drafts. Try again.",
+    "empty": {
+      "title": "No drafts yet",
+      "subtitle": "Save a climb as a draft to pick it up later."
+    }
+  },
+  "holdTypePicker": {
+    "toolbarAriaLabel": "Hold type",
+    "clear": "Clear",
+    "states": {
+      "starting": "Start",
+      "hand": "Mid",
+      "finish": "Finish",
+      "foot": "Foot"
+    }
+  },
+  "directionPicker": {
+    "down": "Down"
+  },
+  "holdClassification": {
+    "drawerTitle": "Hold Classification",
+    "classifyHoldTitle": "Classify Hold",
+    "loadingHolds": "Loading holds...",
+    "emptyState": "No holds found for this board configuration.",
+    "progress": "Hold {{current}} of {{total}} ({{classified}} classified)",
+    "complete": {
+      "title": "Classification Complete!",
+      "subtitle": "You've classified {{classified}} of {{total}} holds. You can run through this wizard again anytime to update your ratings."
+    },
+    "fields": {
+      "holdType": "Hold Type",
+      "handRating": "Hand Rating (1-5)",
+      "footRating": "Foot Rating (1-5)",
+      "pullDirection": "Direction of Pull"
+    },
+    "hints": {
+      "handRating": "5 = Easy to grip, 1 = Very difficult",
+      "footRating": "5 = Easy to stand on, 1 = Very difficult",
+      "pullDirection": "Click or drag to set the best pulling direction"
+    },
+    "actions": {
+      "previous": "Previous",
+      "skip": "Skip",
+      "finish": "Finish"
+    },
+    "toast": {
+      "saveFailed": "Failed to save classification"
+    }
+  },
+  "moonboardImport": {
+    "card": {
+      "skipping": "Skipping",
+      "duplicate": "Skipping: Already Exists",
+      "duplicateNamed": "Skipping: Already Exists as \"{{name}}\"",
+      "removeAction": "Remove",
+      "removeDescription": "This climb will not be imported."
+    },
+    "bulk": {
+      "title": "Import MoonBoard Climbs - {{layoutName}} @ {{angle}}°",
+      "loginRequired": "Please log in to save climbs",
+      "loginRequiredTitle": "Login Required",
+      "loginRequiredBody": "Please log in to save climbs to the database.",
+      "logIn": "Log in",
+      "uploadPrompt": "Click or drag screenshot files to this area",
+      "uploadHelp": "Support for MoonBoard app screenshots. Drop multiple files to bulk import.",
+      "processing": "Processing Screenshots...",
+      "checkingDuplicates": "Checking imported climbs against existing MoonBoard problems...",
+      "reviewBeforeSaving": "Review the climbs below. You can edit or remove any before saving.",
+      "saveAll": "Save All ({{count}})",
+      "clearAndRestart": "Clear & Start Over",
+      "contributeImages": "Contribute images to improve OCR accuracy",
+      "tryAgain": "Try Again",
+      "saveFailed": "Failed to save climbs. Please try again."
+    }
+  },
+  "moonboardEditModal": {
+    "title": "Edit Climb",
+    "nameLabel": "Climb Name",
+    "nameRequired": "Please enter a name",
+    "save": "Save Changes",
+    "setter": "Setter: {{setter}}",
+    "grade": "Grade: {{grade}}",
+    "angle": "Angle: {{angle}}°",
+    "unknown": "Unknown"
   }
 }

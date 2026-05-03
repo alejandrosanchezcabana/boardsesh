@@ -137,38 +137,31 @@ export function TickAction({
   const renderSignInPrompt = () => (
     <Stack spacing={3} sx={{ width: '100%', textAlign: 'center', padding: '24px 0' }}>
       <Typography variant="body2" component="span" fontWeight={600} sx={{ fontSize: 16 }}>
-        {/* i18n-ignore-next-line */}
-        Sign in to record ticks
+        {t('actions.tick.drawer.signInToRecord')}
       </Typography>
       <Typography variant="body1" component="p" color="text.secondary">
-        {/* i18n-ignore-next-line */}
-        Create a Boardsesh account to log your climbs and track your progress.
+        {t('actions.tick.drawer.createAccountBlurb')}
       </Typography>
       <MuiButton
         variant="contained"
         startIcon={<LoginOutlined />}
         onClick={() =>
           openAuthModal({
-            // i18n-ignore-next-line
-            title: 'Sign in to record ticks',
-            // i18n-ignore-next-line
-            description: 'Create an account to log your climbs and track your progress.',
+            title: t('actions.tick.drawer.authModalTitle'),
+            description: t('actions.tick.drawer.authModalDescription'),
           })
         }
         fullWidth
       >
-        {/* i18n-ignore-next-line */}
-        Sign In
+        {t('actions.tick.drawer.signIn')}
       </MuiButton>
       {openInAppUrl && (
         <>
           <Typography variant="body1" component="p" color="text.secondary">
-            {/* i18n-ignore-next-line */}
-            Or log your tick in the official app:
+            {t('actions.tick.drawer.orLogInOfficialApp')}
           </Typography>
           <MuiButton variant="outlined" startIcon={<AppsOutlined />} onClick={handleOpenInApp} fullWidth>
-            {/* i18n-ignore-next-line */}
-            Open in App
+            {t('actions.tick.drawer.openInApp')}
           </MuiButton>
           <MuiButton
             variant="text"
@@ -179,15 +172,14 @@ export function TickAction({
               handleOpenInApp();
             }}
           >
-            {/* i18n-ignore-next-line */}
-            Always open in app
+            {t('actions.tick.drawer.alwaysOpenInApp')}
           </MuiButton>
         </>
       )}
     </Stack>
   );
 
-  const label = 'Log ascent';
+  const label = t('actions.tick.drawer.logAscent');
   const shouldShowLabel = showLabel ?? (viewMode === 'button' || viewMode === 'dropdown');
   let iconSize: number;
   if (size === 'small') {
@@ -233,8 +225,7 @@ export function TickAction({
   const renderBoardSelector = () => (
     <Stack spacing={2} sx={{ py: 2 }}>
       <Typography variant="body2" fontWeight={600} sx={{ fontSize: 16, textAlign: 'center' }}>
-        {/* i18n-ignore-next-line */}
-        Which board did you climb on?
+        {t('actions.tick.drawer.whichBoard')}
       </Typography>
       <BoardScrollSection loading={!boardsReady} size="small">
         {matchingBoards.map((board) => (

@@ -5,6 +5,15 @@ import { render, screen } from '@testing-library/react';
 import React from 'react';
 import type { Climb } from '@/app/lib/types';
 import { LogbookView } from '../logbook-view';
+import { tFromCatalog } from '@/app/__test-helpers__/i18n-mock';
+
+vi.mock('react-i18next', () => ({
+  useTranslation: (ns?: string) => ({
+    t: (key: string, options?: Record<string, unknown>) => tFromCatalog(ns, key, options),
+    i18n: { language: 'en-US' },
+  }),
+  Trans: ({ children }: { children?: React.ReactNode }) => children ?? null,
+}));
 
 const mockUseBoardProvider = vi.fn();
 

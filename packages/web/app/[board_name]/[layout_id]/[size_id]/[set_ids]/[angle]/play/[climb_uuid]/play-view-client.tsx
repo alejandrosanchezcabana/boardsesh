@@ -4,6 +4,7 @@ import React, { useCallback, useEffect, useRef } from 'react';
 import MuiButton from '@mui/material/Button';
 import { useSearchParams } from 'next/navigation';
 import { track } from '@vercel/analytics';
+import { useTranslation } from 'react-i18next';
 import { useLocaleRouter } from '@/app/lib/i18n/use-locale-router';
 import type { Climb, BoardDetails, Angle } from '@/app/lib/types';
 import { useQueueActions, useCurrentClimb, useQueueList } from '@/app/components/graphql-queue';
@@ -23,6 +24,7 @@ type PlayViewClientProps = {
 };
 
 const PlayViewClient: React.FC<PlayViewClientProps> = ({ boardDetails, initialClimb, angle }) => {
+  const { t } = useTranslation('session');
   const router = useLocaleRouter();
   const searchParams = useSearchParams();
   const { currentClimb } = useCurrentClimb();
@@ -135,11 +137,9 @@ const PlayViewClient: React.FC<PlayViewClientProps> = ({ boardDetails, initialCl
     return (
       <div className={styles.pageContainer} style={{ backgroundColor: 'var(--semantic-background)' }}>
         <div className={styles.emptyState} style={{ color: 'var(--neutral-400)' }}>
-          {/* i18n-ignore-next-line */}
-          <EmptyState description="No climb selected" />
+          <EmptyState description={t('playView.noClimbSelected')} />
           <MuiButton variant="contained" onClick={() => router.push(getBackToListUrl())}>
-            {/* i18n-ignore-next-line */}
-            Browse Climbs
+            {t('playView.browseClimbs')}
           </MuiButton>
         </div>
       </div>

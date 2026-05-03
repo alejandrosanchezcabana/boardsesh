@@ -445,8 +445,7 @@ const QueueList = forwardRef<QueueListHandle, QueueListProps>(
                 {row.type === 'suggestion-header' && (
                   <div className={styles.suggestedSectionHeader}>
                     <Typography variant="overline" color="text.secondary">
-                      {/* i18n-ignore-next-line */}
-                      Suggestions
+                      {t('session:queueList.suggestionsHeader')}
                     </Typography>
                   </div>
                 )}
@@ -489,8 +488,7 @@ const QueueList = forwardRef<QueueListHandle, QueueListProps>(
                 {row.type === 'end-message' && (
                   <div className={styles.noMoreSuggestions}>
                     <Typography variant="body2" color="text.disabled">
-                      {/* i18n-ignore-next-line */}
-                      That&apos;s all for now
+                      {t('session:queueList.endMessage')}
                     </Typography>
                   </div>
                 )}

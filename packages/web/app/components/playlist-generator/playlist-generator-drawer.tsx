@@ -375,8 +375,7 @@ const PlaylistGeneratorDrawer: React.FC<PlaylistGeneratorDrawerProps> = ({
             onClick={handleGenerate}
             disabled={plannedSlots.length === 0}
           >
-            {/* i18n-ignore-next-line */}
-            Generate
+            {t('generator.generate')}
           </MuiButton>
         ) : null
       }

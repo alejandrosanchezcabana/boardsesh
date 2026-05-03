@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useId, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import MuiButton from '@mui/material/Button';
 import MuiTypography from '@mui/material/Typography';
 import IconButton from '@mui/material/IconButton';
@@ -33,9 +34,11 @@ export const FeedbackForm: React.FC<FeedbackFormProps> = ({
   onSubmit,
   onCancel,
   title,
-  submitLabel = 'Save',
+  submitLabel,
   titleId,
 }) => {
+  const { t } = useTranslation('settings');
+  const resolvedSubmitLabel = submitLabel ?? t('feedbackForm.saveDefault');
   const generatedId = useId();
   const resolvedTitleId = titleId ?? generatedId;
   const [rating, setRating] = useState<number | null>(null);
@@ -92,7 +95,7 @@ export const FeedbackForm: React.FC<FeedbackFormProps> = ({
     return true;
   })();
 
-  const heading = isPromptComment ? "What's missing?" : title;
+  const heading = isPromptComment ? t('feedbackForm.missingHeading') : title;
 
   if (mode === 'prompt') {
     return (
@@ -105,7 +108,7 @@ export const FeedbackForm: React.FC<FeedbackFormProps> = ({
           <div className={styles.compactRow}>
             <InlineStarPicker quality={rating} onSelect={setRating} />
             <IconButton
-              aria-label={rating !== null && rating < 3 ? 'Next' : submitLabel}
+              aria-label={rating !== null && rating < 3 ? t('feedbackForm.nextAria') : resolvedSubmitLabel}
               onClick={handlePrimary}
               disabled={!canSubmit}
               size="small"
@@ -125,8 +128,7 @@ export const FeedbackForm: React.FC<FeedbackFormProps> = ({
             <TextField
               value={comment}
               onChange={(event) => setComment(event.target.value)}
-              // i18n-ignore-next-line
-              placeholder="Tell us what would help"
+              placeholder={t('feedbackForm.compactPlaceholder')}
               multiline
               minRows={2}
               maxRows={4}
@@ -137,12 +139,10 @@ export const FeedbackForm: React.FC<FeedbackFormProps> = ({
             />
             <div className={styles.compactActions}>
               <MuiButton onClick={handleSecondary} disabled={submitting} size="small">
-                {/* i18n-ignore-next-line */}
-                Skip
+                {t('feedbackForm.skip')}
               </MuiButton>
               <IconButton
-                // i18n-ignore-next-line
-                aria-label="Send"
+                aria-label={t('feedbackForm.sendAria')}
                 onClick={handlePrimary}
                 disabled={!canSubmit}
                 size="small"
@@ -172,7 +172,7 @@ export const FeedbackForm: React.FC<FeedbackFormProps> = ({
       <TextField
         value={comment}
         onChange={(event) => setComment(event.target.value)}
-        placeholder={isBug ? 'What were you doing? What did you expect vs see?' : "What's on your mind?"}
+        placeholder={isBug ? t('feedbackForm.bugPlaceholder') : t('feedbackForm.ratingPlaceholder')}
         multiline
         minRows={isBug ? 4 : 3}
         maxRows={isBug ? 8 : 6}
@@ -182,7 +182,7 @@ export const FeedbackForm: React.FC<FeedbackFormProps> = ({
         helperText={(() => {
           if (!isBug) return undefined;
           const remaining = BUG_COMMENT_MIN - comment.trim().length;
-          return remaining > 0 ? `${remaining} more characters to go` : ' ';
+          return remaining > 0 ? t('feedbackForm.remainingChars', { count: remaining }) : ' ';
         })()}
         slotProps={{ htmlInput: { maxLength: 2000 } }}
         className={styles.comment}
@@ -191,12 +191,11 @@ export const FeedbackForm: React.FC<FeedbackFormProps> = ({
       <div className={styles.actions}>
         {onCancel && (
           <MuiButton onClick={handleSecondary} disabled={submitting} size="small">
-            {/* i18n-ignore-next-line */}
-            Cancel
+            {t('feedbackForm.cancel')}
           </MuiButton>
         )}
         <MuiButton variant="contained" onClick={handlePrimary} disabled={!canSubmit} size="small">
-          {submitLabel}
+          {resolvedSubmitLabel}
         </MuiButton>
       </div>
     </div>

@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import Box from '@mui/material/Box';
 import Chip from '@mui/material/Chip';
 import MuiTypography from '@mui/material/Typography';
@@ -19,6 +20,7 @@ type GymSelectorProps = {
 };
 
 export default function GymSelector({ selectedGymUuid, onSelect }: GymSelectorProps) {
+  const { t } = useTranslation('boards');
   const [showCreateForm, setShowCreateForm] = useState(false);
   const { token } = useWsAuthToken();
   const queryClient = useQueryClient();
@@ -49,8 +51,7 @@ export default function GymSelector({ selectedGymUuid, onSelect }: GymSelectorPr
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, py: 1 }}>
         <CircularProgress size={16} />
         <MuiTypography variant="body2" color="text.secondary">
-          {/* i18n-ignore-next-line */}
-          Loading gyms...
+          {t('gymSelector.loading')}
         </MuiTypography>
       </Box>
     );
@@ -63,13 +64,11 @@ export default function GymSelector({ selectedGymUuid, onSelect }: GymSelectorPr
   return (
     <Box>
       <MuiTypography variant="body2" sx={{ mb: 1 }}>
-        {/* i18n-ignore-next-line */}
-        Link to a gym
+        {t('gymSelector.linkToGym')}
       </MuiTypography>
       <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
         <Chip
-          // i18n-ignore-next-line
-          label="No gym"
+          label={t('gymSelector.noGym')}
           variant={selectedGymUuid === null ? 'filled' : 'outlined'}
           color={selectedGymUuid === null ? 'primary' : 'default'}
           onClick={() => onSelect(null)}
@@ -87,8 +86,7 @@ export default function GymSelector({ selectedGymUuid, onSelect }: GymSelectorPr
         ))}
         <Chip
           icon={<AddOutlined />}
-          // i18n-ignore-next-line
-          label="Create new"
+          label={t('gymSelector.createNew')}
           variant="outlined"
           onClick={() => setShowCreateForm(true)}
           size="small"

@@ -3,6 +3,16 @@ import { renderHook, render, fireEvent, screen } from '@testing-library/react';
 import type { ClimbActionProps } from '../../types';
 import type { BoardDetails, Climb } from '@/app/lib/types';
 import { PlaylistAction } from '../playlist-action';
+import React from 'react';
+import { tFromCatalog } from '@/app/__test-helpers__/i18n-mock';
+
+vi.mock('react-i18next', () => ({
+  useTranslation: (ns?: string) => ({
+    t: (key: string, options?: Record<string, unknown>) => tFromCatalog(ns, key, options),
+    i18n: { language: 'en-US' },
+  }),
+  Trans: ({ children }: { children?: React.ReactNode }) => children ?? null,
+}));
 
 const mockUsePlaylists = vi.fn();
 const mockShowMessage = vi.fn();

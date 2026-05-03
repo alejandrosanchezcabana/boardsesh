@@ -119,7 +119,7 @@ export default function DevelopmentContent({ boardConfigs }: DevelopmentContentP
           {connections.map((conn) => (
             <Tab key={conn.id} value={conn.id} label={conn.label || conn.ip} sx={{ textTransform: 'none' }} />
           ))}
-          {/* i18n-ignore-next-line */}
+          {/* i18n-ignore-next-line -- internal dev tool, English only */}
           <Tab value={ADD_TAB} icon={<AddOutlined />} aria-label="Add ESP32" onClick={openAddDialog} />
         </Tabs>
       </Box>
@@ -128,13 +128,13 @@ export default function DevelopmentContent({ boardConfigs }: DevelopmentContentP
         {connections.length === 0 ? (
           <Box sx={{ p: 4 }}>
             <Typography variant="h6" gutterBottom>
-              {/* i18n-ignore-next-line */}
+              {/* i18n-ignore-next-line -- internal dev tool, English only */}
               No ESP32 emulators yet
             </Typography>
             <Typography color="text.secondary">
-              {/* i18n-ignore-next-line */}
+              {/* i18n-ignore-next-line -- internal dev tool, English only */}
               Click the <strong>+</strong> tab to add one. Flash the firmware from
-              {/* i18n-ignore-next-line */}
+              {/* i18n-ignore-next-line -- internal dev tool, English only */}
               <code> packages/board-controller/esp32/ </code> with <code>pio run -e esp32-emulator -t upload</code> and
               enter the IP it logs at boot.
             </Typography>

@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useMemo, useState, useCallback, useRef, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import Box from '@mui/material/Box';
 import CircularProgress from '@mui/material/CircularProgress';
 import Typography from '@mui/material/Typography';
@@ -62,6 +63,7 @@ type LogbookFeedProps = {
 };
 
 export default function LogbookFeed({ layoutStats, loadingLayoutStats }: LogbookFeedProps) {
+  const { t } = useTranslation('profile');
   const { data: session } = useSession();
   const pathname = usePathnameWithoutLocale();
   const searchParams = useSearchParams();
@@ -210,8 +212,7 @@ export default function LogbookFeed({ layoutStats, loadingLayoutStats }: Logbook
       if (matched.length > 0) {
         setSelectedBoards(matched);
       } else {
-        // i18n-ignore-next-line
-        showMessage("Couldn't find the linked board — showing all your entries.", 'warning');
+        showMessage(t('logbook.feed.snackbar.boardsLinkMissing'), 'warning');
       }
     }
     setBoardsInitialized(true);
@@ -441,8 +442,7 @@ export default function LogbookFeed({ layoutStats, loadingLayoutStats }: Logbook
             uuid: prevUuid,
           })
           .catch(() => {
-            // i18n-ignore-next-line
-            showMessage('Failed to delete tick', 'error');
+            showMessage(t('logbook.feed.snackbar.deleteFailed'), 'error');
           });
       }
 
@@ -477,8 +477,7 @@ export default function LogbookFeed({ layoutStats, loadingLayoutStats }: Logbook
           })
           .catch(() => {
             void queryClient.invalidateQueries({ queryKey: ['logbookFeed'] });
-            // i18n-ignore-next-line
-            showMessage('Failed to delete tick', 'error');
+            showMessage(t('logbook.feed.snackbar.deleteFailed'), 'error');
           });
       }, 5000);
 
@@ -489,11 +488,10 @@ export default function LogbookFeed({ layoutStats, loadingLayoutStats }: Logbook
       };
 
       showMessage(
-        // i18n-ignore-next-line
-        'Tick deleted',
+        t('logbook.feed.snackbar.tickDeleted'),
         'success',
         {
-          label: 'Undo',
+          label: t('logbook.feed.snackbar.undo'),
           onClick: () => {
             if (pendingDeleteRef.current?.uuid === uuid) {
               clearTimeout(pendingDeleteRef.current.timerId);
@@ -505,7 +503,7 @@ export default function LogbookFeed({ layoutStats, loadingLayoutStats }: Logbook
         5000,
       );
     },
-    [queryClient, showMessage, feedQueryKey],
+    [queryClient, showMessage, feedQueryKey, t],
   );
 
   const handleEdit = useCallback((item: AscentFeedItem) => {

@@ -11,5 +11,165 @@
     "sessions": "Sessions",
     "proposals": "Proposals",
     "comments": "Comments"
+  },
+  "activityFeed": {
+    "signInPrompt": "Sign in to see a personalized feed from climbers you follow."
+  },
+  "ascentsFeed": {
+    "attempts": "{{count}} attempts",
+    "deleteAscent": {
+      "title": "Delete ascent",
+      "description": "Are you sure? This cannot be undone."
+    },
+    "mirrored": "Mirrored",
+    "benchmark": "Benchmark",
+    "setBy": "Set by {{name}}",
+    "empty": "No ascents logged yet"
+  },
+  "betaVideos": {
+    "shareBetaFor": "Share beta for {{name}}",
+    "shareBetaVideo": "Share beta video",
+    "shareBeta": "Share beta",
+    "dialogHelper": "Paste a reel or post link so others can see your beta.",
+    "addedToast": "Video added to beta",
+    "addError": "Couldn't add video. Try again.",
+    "urlPlaceholder": "Instagram or TikTok URL",
+    "urlLabel": "Beta video URL",
+    "urlLabelForClimb": "Beta video URL for {{name}}",
+    "defaultHelper": "Paste a public Instagram reel/post or TikTok URL so others can see your beta.",
+    "cancel": "Cancel",
+    "unableToLoad": "Unable to load video",
+    "viewLink": "View",
+    "videoTitle": "Beta video",
+    "videoTitleByUser": "Beta video by {{name}}",
+    "modalTitle": "Beta Video",
+    "modalTitleByUser": "Beta by @{{name}}",
+    "viewOnInstagram": "View on Instagram",
+    "showLess": "Show less",
+    "showMore_one": "Show 1 more video",
+    "showMore_other": "Show {{count}} more videos",
+    "noVideosAvailable": "No beta videos available",
+    "angleSuffix": "{{angle}}°",
+    "unknownUser": "unknown"
+  },
+  "commentFeed": {
+    "empty": "No comments yet",
+    "commentedOn": "commented on {{entity}}"
+  },
+  "emptyStates": {
+    "followClimbers": "Follow some climbers to fill this up",
+    "findClimbers": "Find Climbers",
+    "noRecentActivity": "No recent activity yet"
+  },
+  "errors": {
+    "loadFeed": "Failed to load activity feed. Please try again.",
+    "loadActivity": "Failed to load activity feed",
+    "loadComments": "Failed to load comments. Please try again.",
+    "loadProposals": "Failed to load proposals. Please try again."
+  },
+  "feedCommentButton": {
+    "commentsTitle": "Comments"
+  },
+  "feedItemComment": {
+    "commented": "commented"
+  },
+  "feedItemNewClimb": {
+    "createdClimb": "created a new climb"
+  },
+  "followerCount": {
+    "followingLabel": "following"
+  },
+  "freezeDialog": {
+    "reasonLabel": "Reason (optional)",
+    "reasonPlaceholder": "Why freeze/unfreeze this climb?"
+  },
+  "freezeIndicator": {
+    "frozen": "This climb is frozen from receiving new proposals.",
+    "reasonPrefix": "Reason: {{reason}}"
+  },
+  "newClimbFeed": {
+    "title": "New Climbs",
+    "errorLoad": "Failed to load climbs. Please try again.",
+    "empty": "No climbs yet for this layout. Be the first to set one!"
+  },
+  "proposalCard": {
+    "quotedReason": "“{{reason}}”",
+    "support": "Support",
+    "oppose": "Oppose",
+    "approve": "Approve",
+    "reject": "Reject",
+    "deleteProposal": "Delete Proposal",
+    "deleteDialog": {
+      "title": "Delete Accepted Proposal",
+      "description": "This will revert the effects of this proposal (e.g., grade change, benchmark/classic status) and permanently delete it. This action cannot be undone."
+    }
+  },
+  "proposalFeed": {
+    "empty": "No proposals yet"
+  },
+  "proposalSection": {
+    "title": "Community Proposals",
+    "noOpen": "No open proposals"
+  },
+  "proposalVoteBar": {
+    "approved": "Approved",
+    "rejected": "Rejected",
+    "votesNeeded": "{{current}} / {{required}} votes needed",
+    "opposed": "{{count}} opposed"
+  },
+  "search": {
+    "minCharsHint": "Type at least 2 characters to search",
+    "noBoards": "No boards found for \"{{query}}\"",
+    "noGyms": "No gyms found for \"{{query}}\"",
+    "noPlaylists": "No playlists found for \"{{query}}\"",
+    "noUsers": "No users or setters found for \"{{query}}\"",
+    "climbCountOne": "{{count}} climb",
+    "climbCountMany": "{{count}} climbs"
+  },
+  "sessionFeedCard": {
+    "climbCountOne": "{{count}} climb",
+    "climbCountMany": "{{count}} climbs"
+  },
+  "sessionSummary": {
+    "completed": "Session completed"
+  },
+  "socialFeedItem": {
+    "climbed": "climbed"
+  },
+  "subscribeButton": {
+    "signInPrompt": "Please sign in to manage subscriptions",
+    "subscribed": "Subscribed to new climbs",
+    "unsubscribed": "Unsubscribed from new climbs",
+    "updateFailed": "Couldn't update subscription"
+  },
+  "userDrawer": {
+    "signIn": "Sign in",
+    "signInModalTitle": "Sign in to Boardsesh",
+    "signInModalDescription": "Sign in to save favorites, log ascents, and more.",
+    "changeBoard": "Change board",
+    "devUrl": "Dev URL",
+    "development": "Development",
+    "classifyHolds": "Classify holds",
+    "myPlaylists": "My playlists",
+    "recentSessions": "Recent sessions",
+    "help": "Help",
+    "about": "About",
+    "rateBoardsesh": "Rate Boardsesh",
+    "reportBug": "Report a bug",
+    "logout": "Log out"
+  },
+  "userSearch": {
+    "ascentsThisMonth": "{{count}} ascents this month",
+    "climbsSetOne": "{{count}} climb set",
+    "climbsSetMany": "{{count}} climbs set",
+    "climbCountOne": "{{count}} climb",
+    "climbCountMany": "{{count}} climbs"
+  },
+  "userSmartCard": {
+    "followerOne": "{{count}} follower",
+    "followerMany": "{{count}} followers",
+    "following": "{{count}} following",
+    "distinctClimbOne": "{{count}} distinct climb",
+    "distinctClimbMany": "{{count}} distinct climbs"
   }
 }

@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import Box from '@mui/material/Box';
 import FormControl from '@mui/material/FormControl';
 import InputLabel from '@mui/material/InputLabel';
@@ -41,15 +42,14 @@ export default function BoardConfigSelects({
   onSetsChange,
   onAngleChange,
 }: BoardConfigSelectsProps) {
+  const { t } = useTranslation('boards');
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 1 }}>
       <FormControl fullWidth size="small">
-        {/* i18n-ignore-next-line */}
-        <InputLabel>Board</InputLabel>
+        <InputLabel>{t('boardConfigSelects.board')}</InputLabel>
         <MuiSelect
           value={selectedBoard || ''}
-          // i18n-ignore-next-line
-          label="Board"
+          label={t('boardConfigSelects.board')}
           onChange={(e: SelectChangeEvent) => onBoardChange(e.target.value as BoardName)}
         >
           {SUPPORTED_BOARDS.map((board) => (
@@ -61,12 +61,10 @@ export default function BoardConfigSelects({
       </FormControl>
 
       <FormControl fullWidth size="small">
-        {/* i18n-ignore-next-line */}
-        <InputLabel>Layout</InputLabel>
+        <InputLabel>{t('boardConfigSelects.layout')}</InputLabel>
         <MuiSelect
           value={selectedLayout ?? ''}
-          // i18n-ignore-next-line
-          label="Layout"
+          label={t('boardConfigSelects.layout')}
           onChange={(e: SelectChangeEvent<number | string>) => onLayoutChange(e.target.value as number)}
           disabled={!selectedBoard}
         >
@@ -80,12 +78,10 @@ export default function BoardConfigSelects({
 
       {selectedBoard !== 'moonboard' && (
         <FormControl fullWidth size="small">
-          {/* i18n-ignore-next-line */}
-          <InputLabel>Size</InputLabel>
+          <InputLabel>{t('boardConfigSelects.size')}</InputLabel>
           <MuiSelect
             value={selectedSize ?? ''}
-            // i18n-ignore-next-line
-            label="Size"
+            label={t('boardConfigSelects.size')}
             onChange={(e: SelectChangeEvent<number | string>) => onSizeChange(e.target.value as number)}
             disabled={!selectedLayout}
           >
@@ -97,13 +93,11 @@ export default function BoardConfigSelects({
       )}
 
       <FormControl fullWidth size="small">
-        {/* i18n-ignore-next-line */}
-        <InputLabel>Hold Sets</InputLabel>
+        <InputLabel>{t('boardConfigSelects.holdSets')}</InputLabel>
         <MuiSelect<number[]>
           multiple
           value={selectedSets}
-          // i18n-ignore-next-line
-          label="Hold Sets"
+          label={t('boardConfigSelects.holdSets')}
           onChange={(e) => onSetsChange(e.target.value as number[])}
           disabled={!selectedSize}
         >
@@ -116,12 +110,10 @@ export default function BoardConfigSelects({
       </FormControl>
 
       <FormControl fullWidth size="small">
-        {/* i18n-ignore-next-line */}
-        <InputLabel>Angle</InputLabel>
+        <InputLabel>{t('boardConfigSelects.angle')}</InputLabel>
         <MuiSelect
           value={selectedAngle}
-          // i18n-ignore-next-line
-          label="Angle"
+          label={t('boardConfigSelects.angle')}
           onChange={(e: SelectChangeEvent<number>) => onAngleChange(e.target.value)}
           disabled={!selectedBoard}
         >

@@ -79,7 +79,137 @@
       "createdNamed": "Board \"{{name}}\" created!",
       "namePlaceholder": "e.g., Home Board, Gym Name",
       "locationPlaceholder": "e.g., City, Gym Name"
+    },
+    "fields": {
+      "name": "Board Name",
+      "slug": "URL Slug",
+      "description": "Description",
+      "location": "Location",
+      "serialNumber": "Controller Serial Number",
+      "defaultAngle": "Default Angle",
+      "angleAdjustable": "Angle is adjustable",
+      "isPublic": "Public board",
+      "unlisted": "Unlisted",
+      "hideLocation": "Hide from nearby boards",
+      "isOwned": "I own this board",
+      "layout": "Layout",
+      "size": "Size",
+      "holdSets": "Hold Sets"
+    },
+    "placeholders": {
+      "description": "Optional description",
+      "serialNumber": "e.g. ABC-12345"
+    },
+    "helperText": {
+      "unlisted": "Hidden from search results but accessible via direct link",
+      "hideLocation": "Hidden from nearby board searches unless you follow the searcher"
+    },
+    "alerts": {
+      "configEditable": "You can change the board layout because no climbs have been logged yet."
     }
+  },
+  "editBoard": {
+    "title": "Edit Board",
+    "submitLabel": "Save Changes",
+    "snackbar": {
+      "updated": "Board updated!",
+      "updateFailed": "Failed to update board"
+    }
+  },
+  "editGym": {
+    "title": "Edit Gym",
+    "submitLabel": "Save Changes",
+    "snackbar": {
+      "updated": "Gym updated!",
+      "updateFailed": "Failed to update gym"
+    }
+  },
+  "mapLocationPicker": {
+    "locationDisplay": "Location: {{lat}}, {{lng}}",
+    "setOnMap": "Set location on map",
+    "searchPlaceholder": "Search address or city...",
+    "myLocation": "My location",
+    "helpText": "Click the map to set your board's location, or drag the marker to adjust"
+  },
+  "boardLeaderboard": {
+    "empty": "No activity yet for this period.",
+    "period": {
+      "week": "Week",
+      "month": "Month",
+      "year": "Year",
+      "all": "All Time"
+    },
+    "columns": {
+      "climber": "Climber",
+      "sends": "Sends",
+      "flashes": "Flashes",
+      "hardest": "Hardest"
+    }
+  },
+  "boardHeatmap": {
+    "loading": "Loading heatmap...",
+    "legend": {
+      "low": "Low ({{value}})",
+      "mid": "Mid ({{value}})",
+      "high": "High ({{value}})"
+    }
+  },
+  "boardConfigSelects": {
+    "board": "Board",
+    "layout": "Layout",
+    "size": "Size",
+    "holdSets": "Hold Sets",
+    "angle": "Angle"
+  },
+  "boardFilterStrip": {
+    "all": "All",
+    "allBoards": "All Boards"
+  },
+  "boardSwitchConfirm": {
+    "session": {
+      "title": "Leave your session?",
+      "body": "You're in a session on {{lockedLabel}}. Switching to {{targetLabel}} disconnects your board but keeps the session running."
+    },
+    "connection": {
+      "title": "Disconnect your board?",
+      "body": "Your {{lockedLabel}} is still connected. Switching to {{targetLabel}} disconnects it."
+    },
+    "stay": "Stay",
+    "switch": "Switch boards"
+  },
+  "boardSearchDrawer": {
+    "title": "Find a board",
+    "searchPlaceholder": "Search boards by name or location",
+    "clear": "Clear",
+    "radiusInfo": "Showing boards within {{radiusKm}} km of map center",
+    "empty": "No boards in this area. Pan or zoom out to find more.",
+    "emptyWithQuery": "No boards match \"{{query}}\" here. Try zooming out or searching elsewhere.",
+    "open": "Open"
+  },
+  "boardSearchMap": {
+    "myLocation": "My location"
+  },
+  "zoomableBoard": {
+    "reset": "Reset"
+  },
+  "zoomHint": {
+    "pinchToZoom": "Pinch to zoom"
+  },
+  "gymMemberManagement": {
+    "removeConfirm": "Remove this member from the gym?",
+    "empty": "No members yet",
+    "unknownUser": "Unknown User",
+    "loadMore": "Load more ({{count}} of {{total}})",
+    "snackbar": {
+      "removed": "Member removed",
+      "removeFailed": "Failed to remove member"
+    }
+  },
+  "gymSelector": {
+    "loading": "Loading gyms...",
+    "linkToGym": "Link to a gym",
+    "noGym": "No gym",
+    "createNew": "Create new"
   },
   "selectorDrawer": {
     "customTitle": "Custom Board",
