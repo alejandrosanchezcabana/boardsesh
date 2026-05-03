@@ -5,6 +5,7 @@ import i18next, { type i18n } from 'i18next';
 import resourcesToBackend from 'i18next-resources-to-backend';
 import { I18nextProvider, initReactI18next } from 'react-i18next';
 import { DEFAULT_LOCALE, DEFAULT_NAMESPACE, SUPPORTED_LOCALES, type Locale } from './config';
+import { reportMissingI18nKey } from './missing-key-reporter';
 
 // Module-level singleton. The language switcher routes via `next/link` so the
 // browser navigates to the new locale's URL — that re-runs the server pipeline,
@@ -46,6 +47,10 @@ function getClientInstance(locale: Locale, resources: Record<string, Record<stri
       resources: { [locale]: resources },
       interpolation: { escapeValue: false },
       returnNull: false,
+      saveMissing: true,
+      missingKeyHandler: (lngs, ns, key, fallbackValue) => {
+        reportMissingI18nKey({ lngs, ns, key, fallbackValue });
+      },
     });
   clientInstance = instance;
   return instance;
