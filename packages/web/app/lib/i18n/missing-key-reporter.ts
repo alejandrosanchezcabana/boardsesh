@@ -1,5 +1,9 @@
 import * as Sentry from '@sentry/nextjs';
 
+// Process-global on the server: dedupes across all requests for the lifetime of
+// the Node.js process. A server restart resets the set, so a missing key that
+// fired before a deploy will re-fire once after restart (expect a brief Sentry
+// spike per cold start around deployments).
 const reported = new Set<string>();
 
 export function reportMissingI18nKey(args: {

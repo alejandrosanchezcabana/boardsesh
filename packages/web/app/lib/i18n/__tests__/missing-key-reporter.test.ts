@@ -1,5 +1,6 @@
 import { describe, expect, it, vi, beforeEach, afterEach } from 'vite-plus/test';
-import { reportMissingI18nKey, __resetMissingI18nKeyReporterForTests } from '../missing-key-reporter';
+import { reportMissingI18nKey } from '../missing-key-reporter';
+import { __resetMissingI18nKeyReporterForTests } from '../missing-key-reporter.test-utils';
 
 const captureMessage = vi.hoisted(() => vi.fn());
 
