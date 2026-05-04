@@ -70,7 +70,7 @@
     "title": "Editar lista",
     "fields": {
       "name": "Nombre de la lista",
-      "namePlaceholder": "ej., Crimps duros",
+      "namePlaceholder": "ej., Pedazo de romos!",
       "description": "Descripción",
       "descriptionPlaceholder": "Descripción opcional para tu lista...",
       "color": "Color",
@@ -196,8 +196,8 @@
     "you": "Tú",
     "youSignInTitle": "Inicia sesión para ver tu progreso",
     "youSignInDescription": "Inicia sesión para registrar tus estadísticas, sesiones y logbook.",
-    "selectBoardForPlaylist": "Selecciona un tablero antes de crear una playlist",
-    "boardDetailsMissing": "No se pueden determinar los datos del tablero para crear la playlist",
+    "selectBoardForPlaylist": "Selecciona una tabla de escalada antes de crear una playlist",
+    "boardDetailsMissing": "No se pueden determinar los datos de la tabla de escalada para crear la playlist",
     "createdPlaylistToast": "Playlist «{{name}}» creada",
     "createPlaylistFailed": "No se pudo crear la playlist"
   }

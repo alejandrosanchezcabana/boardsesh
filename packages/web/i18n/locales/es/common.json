@@ -45,7 +45,7 @@
     "toggleDarkMode": "Cambiar modo oscuro"
   },
   "boardSelector": {
-    "title": "Elige un panel"
+    "title": "Elige una tabla de escalada"
   },
   "header": {
     "you": "Tú",
@@ -66,19 +66,19 @@
     "shareFailed": "No se pudo compartir"
   },
   "myBoards": {
-    "title": "Mis tablas",
-    "findBoard": "Buscar tabla",
-    "boardDetail": "Tabla",
+    "title": "Mis tablas de escalada",
+    "findBoard": "Buscar tabla de escalada",
+    "boardDetail": "Tabla de escalada",
     "searchPlaceholder": "Busca por nombre o ubicación...",
-    "ariaFindBoard": "Buscar tabla",
-    "ariaCreateBoard": "Crear tabla",
-    "empty": "Aún no tienes tablas. Crea una desde el selector de tablas."
+    "ariaFindBoard": "Buscar tabla de escalada",
+    "ariaCreateBoard": "Crear tabla de escalada",
+    "empty": "Aún no tienes tablas de escalada. Crea una desde el selector de tablas de escalada."
   },
   "userDrawer": {
     "signIn": "Iniciar sesión",
     "signInModalTitle": "Inicia sesión en Boardsesh",
     "signInModalDescription": "Inicia sesión para guardar favoritos, registrar ascensos y más.",
-    "changeBoard": "Cambiar tabla",
+    "changeBoard": "Cambiar tabla de escalada",
     "devUrl": "URL de dev",
     "development": "Desarrollo",
     "classifyHolds": "Clasificar presas",
@@ -92,13 +92,13 @@
   },
   "loading": {
     "messages": [
-      "Preparando tu tabla...",
+      "Preparando tu tabla de escalada...",
       "Configurando rutas...",
       "Calentando la pared...",
       "Cargando presas...",
       "Casi listos para escalar...",
       "Encendiendo los LEDs...",
-      "Sincronizando la tabla...",
+      "Sincronizando la tabla de escalada...",
       "Calibrando los grados...",
       "Entrando en flow...",
       "Revisando condiciones..."

@@ -44,7 +44,7 @@
       "roleLabel": "Rol",
       "boardTypeLabel": "Tipo de board (opcional)",
       "boardTypeOptions": {
-        "global": "Global (todos los boards)",
+        "global": "Global (all boards)",
         "kilter": "Kilter",
         "tension": "Tension"
       },
@@ -71,7 +71,7 @@
         "board": "Board",
         "climb": "Bloque"
       },
-      "boardTypeLabel": "Tipo de board",
+      "boardTypeLabel": "Tipo de tabla de escalada",
       "boardTypePlaceholder": "kilter, tension",
       "climbUuidLabel": "UUID del bloque",
       "climbUuidPlaceholder": "UUID del bloque"
@@ -87,12 +87,12 @@
         "description": "Votos ponderados para aprobación automática"
       },
       "outlierMinAscents": {
-        "label": "Mínimo de ascensiones (outlier)",
-        "description": "Mínimo de ascensiones para detectar outliers"
+        "label": "Mínimo de ascensiones",
+        "description": "Mínimo de ascensiones para considerar excepcion"
       },
       "outlierGradeDiff": {
         "label": "Diferencia de grado (outlier)",
-        "description": "Umbral de diferencia de grado para outlier"
+        "description": "Umbral de diferencia de grado para excepciones"
       },
       "adminVoteWeight": {
         "label": "Peso del voto admin",

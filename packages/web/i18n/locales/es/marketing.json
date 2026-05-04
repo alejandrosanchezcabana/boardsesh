@@ -2,7 +2,7 @@
   "metadata": {
     "home": {
       "title": "Boardsesh - Entrena mejor en tu tabla de escalada",
-      "description": "Registra tus envíos en Kilter, Tension y MoonBoard. Una sola app para todas tus tablas.",
+      "description": "Registra tus encadenes en Kilter, Tension y MoonBoard. Una sola app para todas tus tablas de escalada.",
       "ogDescription": "Compatible con Kilter, Tension y MoonBoard. Sigue sesiones, controla los LED, escala en grupo."
     },
     "about": {
@@ -28,15 +28,15 @@
   },
   "home": {
     "hero": {
-      "title": "¡A la tabla!",
-      "subtitle": "Registra tus envíos en Kilter, Tension y MoonBoard.",
+      "title": "¡A escalar!",
+      "subtitle": "Registra tus encadenes en Kilter, Tension y MoonBoard.",
       "ctaStart": "Empezar a escalar",
       "ctaContinue": "Seguir escalando"
     },
     "onboardingHeader": "Hazlo tuyo",
     "install": {
       "iosTitle": "Descarga la app de Boardsesh",
-      "iosDescription": "Ilumina las presas de tu tabla directamente desde el móvil",
+      "iosDescription": "Ilumina las presas de tu tabla de escalada directamente desde el móvil",
       "androidLiveTitle": "Descarga la app de Boardsesh",
       "androidLiveDescription": "Ya disponible en Google Play"
     },
@@ -44,7 +44,7 @@
       "tourTitle": "Haz el tour",
       "tourDescription": "Un recorrido de un minuto por la cola, el registro y las sesiones con tu grupo",
       "auroraTitle": "¿Vienes de Kilter?",
-      "auroraDescription": "Trae tu logbook y tu historial en un solo paso",
+      "auroraDescription": "Trae tu historial en un solo paso",
       "crewTitle": "Encuentra tu grupo",
       "crewDescription": "Sigue a amigos y mira qué están escalando",
       "playlistTitle": "Crea una playlist",
@@ -136,8 +136,8 @@
       "auroraBodyEnd": " para sus prácticas de datos."
     },
     "sharing": {
-      "title": "Compartición de datos",
-      "body1": "No vendemos tus datos. No mostramos anuncios. No compartimos tu información con marketers de terceros ni con brokers de datos. Lo único que se comparte externamente es lo descrito arriba (alojamiento/analítica de Vercel, sincronización de Aurora Climbing si la activas).",
+      "title": "Compartir de datos",
+      "body1": "No vendemos tus datos. No mostramos anuncios. No compartimos tu información con empresas de terceros ni con brokers de datos. Lo único que se comparte externamente es lo descrito arriba (alojamiento/analítica de Vercel, sincronización de Aurora Climbing si la activas).",
       "body2": "Otros usuarios de Boardsesh pueden ver tu nombre de usuario, tu perfil y tus problemas registrados si participas en funciones sociales como el Modo Fiesta. Esto se ve en la app y forma parte de cómo funciona el producto."
     },
     "retention": {
