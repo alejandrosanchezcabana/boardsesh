@@ -70,6 +70,14 @@ SHOW wal_level;
 
 Create or use a dedicated Neon role that has `REPLICATION`. Neon roles created through the Neon Console, CLI, or API are members of `neon_superuser`; roles created via SQL cannot be granted this privilege manually.
 
+The Railway connection used for `setup` must be a **superuser** (`CREATE SUBSCRIPTION` requires it). Verify before running:
+
+```bash
+psql "$RAILWAY_DATABASE_URL" -c "SELECT current_user, usesuper FROM pg_user WHERE usename = current_user;"
+```
+
+If `usesuper` is `f`, use the Railway `postgres` superuser connection string for the setup script and switch back to the app role after teardown.
+
 Create a publication for application tables. Do not use `FOR ALL TABLES` here: PostGIS installs extension-owned tables such as `spatial_ref_sys`, and copying those into a Railway database that already has PostGIS installed can cause conflicts.
 
 ```sql
@@ -153,14 +161,17 @@ Logical replication does not replicate sequences. Before cutover, sync sequence 
 ```sql
 -- Generate this on Neon:
 SELECT format(
-  'SELECT setval(%L, %s, true);',
+  'SELECT setval(%L, %s, %L);',
   quote_ident(s.sequence_schema) || '.' || quote_ident(s.sequence_name),
-  ps.last_value
+  ps.last_value,
+  ps.is_called
 )
 FROM information_schema.sequences s
 JOIN pg_sequences ps ON ps.schemaname = s.sequence_schema AND ps.sequencename = s.sequence_name
 WHERE s.sequence_schema NOT IN ('pg_catalog', 'information_schema');
 ```
+
+`is_called` matters: a brand-new sequence has `last_value = 1, is_called = false`, meaning the next `nextval()` returns 1. Hardcoding `true` on a never-used sequence would skip its first ID.
 
 Run the output on Railway.
 
@@ -172,7 +183,10 @@ scripts/neon-to-railway-replication.sh sync-sequences
 
 ## 5. Cutover Steps
 
-1. Verify Railway replication lag is under 1 second.
+1. Run `scripts/neon-to-railway-replication.sh status` and confirm:
+   - `Railway table sync states` shows `srsubstate = 'r'` (ready) for **all** rows. Anything else (`i` initialize, `d` data copy, `s` synchronizing) means initial sync is still running — do not proceed.
+   - `replication_lag` on Railway is well under 1 second.
+   - `Row count comparison` shows matching counts on the listed `CHECK_TABLES` (`boardsesh_ticks`, `board_user_syncs`, `comments`, `votes`, `feed_items`, `users`).
 2. Sync sequences from Neon → Railway (section 4.5).
 3. Set `DATABASE_URL` in Vercel project settings to the Railway app/runtime connection string.
 4. Update the Railway backend service `DATABASE_URL` env var to the Railway app/runtime connection string.
@@ -203,6 +217,34 @@ scripts/neon-to-railway-replication.sh sync-sequences
 - Keep Neon credentials saved. Do not delete the Neon project for at least 30 days after cutover.
 - **Before dropping the subscription** (step 5.6): rollback is instant — just flip `DATABASE_URL` back to Neon and redeploy. Neon still has all the data since it was the primary.
 - **After dropping the subscription**: flip `DATABASE_URL` back to Neon, but any writes that happened on Railway after cutover won't be on Neon. For a quick rollback, set up reverse logical replication (Railway → Neon) before deleting the Neon project. For the volume of writes we get, a few hours of lost data is recoverable from Aurora sync re-import.
+
+### 6.1 Pin Neon as Read-Only After Cutover
+
+Once the app has been running cleanly on Railway for 24 hours, lock down Neon so a stale `.env`, forgotten cron, or rolled-back deploy cannot silently write back to the abandoned primary:
+
+```sql
+-- On Neon, with the role the app uses (substitute the actual app role name):
+REVOKE INSERT, UPDATE, DELETE, TRUNCATE ON ALL TABLES IN SCHEMA public FROM app_user;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public REVOKE INSERT, UPDATE, DELETE, TRUNCATE FROM app_user;
+```
+
+Or rotate the Neon password and replace it nowhere — accidental connections will fail loudly with an auth error rather than corrupting the snapshot you may need to restore from.
+
+### 6.2 Aborted Setup: Manual Cleanup
+
+If `setup` is interrupted after `CREATE SUBSCRIPTION` but before normal teardown completes, Neon retains the logical-replication slot and accumulates WAL until disk fills. Drop the subscription on Railway (this auto-drops the corresponding slot on Neon):
+
+```bash
+psql "$RAILWAY_DATABASE_URL" -c "DROP SUBSCRIPTION IF EXISTS boardsesh_neon_sub;"
+# Verify the slot is gone on Neon:
+psql "$NEON_DATABASE_URL" -c "SELECT slot_name, slot_type FROM pg_replication_slots;"
+```
+
+If the slot persists on Neon (subscription was disconnected before drop), drop it manually:
+
+```bash
+psql "$NEON_DATABASE_URL" -c "SELECT pg_drop_replication_slot('boardsesh_neon_sub');"
+```
 
 ## 7. Homelab Read Replica Setup
 

@@ -5,6 +5,7 @@ PUBLICATION_NAME="${PUBLICATION_NAME:-boardsesh_migration}"
 SUBSCRIPTION_NAME="${SUBSCRIPTION_NAME:-boardsesh_neon_sub}"
 CHECK_TABLES="${CHECK_TABLES:-boardsesh_ticks board_user_syncs comments votes feed_items users}"
 LOAD_SCHEMA="${LOAD_SCHEMA:-true}"
+EXCLUDE_SCHEMAS="${EXCLUDE_SCHEMAS:-neon_auth}"
 
 usage() {
   cat <<'USAGE'
@@ -25,6 +26,10 @@ Environment:
                                     (no schema prefix) for status row counts.
   LOAD_SCHEMA                       Optional setup flag, default true. Set false if Railway
                                     schema was already prepared and target tables are empty.
+  EXCLUDE_SCHEMAS                   Optional space-separated schema names to exclude from
+                                    publication, target-empty check, and sequence sync.
+                                    Default: "neon_auth" (Neon-managed auth integration that
+                                    has no equivalent on a non-Neon target).
 
 Commands:
   setup
@@ -64,6 +69,22 @@ require_identifier() {
   [[ "$value" =~ ^[A-Za-z_][A-Za-z0-9_]*$ ]] || fail "$name must be a simple SQL identifier"
 }
 
+schema_exclude_clause() {
+  local column="$1"
+  local quoted=""
+  local schema
+  for schema in $EXCLUDE_SCHEMAS; do
+    require_identifier EXCLUDE_SCHEMAS "$schema"
+    if [[ -n "$quoted" ]]; then
+      quoted+=", "
+    fi
+    quoted+="'$schema'"
+  done
+  if [[ -n "$quoted" ]]; then
+    printf 'AND %s NOT IN (%s)' "$column" "$quoted"
+  fi
+}
+
 psql_neon() {
   psql "$NEON_DATABASE_URL" -v ON_ERROR_STOP=1 "$@"
 }
@@ -73,7 +94,9 @@ psql_railway() {
 }
 
 publication_table_list() {
-  psql_neon -At <<'SQL'
+  local exclude_clause
+  exclude_clause="$(schema_exclude_clause 'n.nspname')"
+  psql_neon -At <<SQL
 SELECT string_agg(format('%I.%I', n.nspname, c.relname), ', ' ORDER BY n.nspname, c.relname)
 FROM pg_class c
 JOIN pg_namespace n ON n.oid = c.relnamespace
@@ -81,6 +104,7 @@ WHERE c.relkind IN ('r', 'p')
   AND c.relpersistence = 'p'
   AND n.nspname NOT IN ('pg_catalog', 'information_schema')
   AND n.nspname NOT LIKE 'pg_toast%'
+  ${exclude_clause}
   AND NOT EXISTS (
     SELECT 1
     FROM pg_depend d
@@ -92,8 +116,10 @@ SQL
 }
 
 assert_railway_target_tables_empty() {
-  psql_railway <<'SQL'
-DO $$
+  local exclude_clause
+  exclude_clause="$(schema_exclude_clause 'n.nspname')"
+  psql_railway <<SQL
+DO \$\$
 DECLARE
   rel record;
   has_rows boolean;
@@ -106,6 +132,7 @@ BEGIN
       AND c.relpersistence = 'p'
       AND n.nspname NOT IN ('pg_catalog', 'information_schema')
       AND n.nspname NOT LIKE 'pg_toast%'
+      ${exclude_clause}
       AND NOT EXISTS (
         SELECT 1
         FROM pg_depend d
@@ -121,7 +148,7 @@ BEGIN
     END IF;
   END LOOP;
 END
-$$;
+\$\$;
 SQL
 }
 
@@ -156,8 +183,8 @@ SQL
 
   if [[ "$LOAD_SCHEMA" == "true" ]]; then
     local dump_file
-    dump_file="$(mktemp "${TMPDIR:-/tmp}/boardsesh-schema.XXXXXX.dump")"
-    trap 'rm -f "$dump_file"' EXIT
+    dump_file="$(mktemp "${TMPDIR:-/tmp}/boardsesh-schema.XXXXXX")"
+    trap 'rm -f "${dump_file:-}"' EXIT
 
     echo "Dumping Neon schema only..."
     pg_dump --schema-only --no-owner --no-acl --no-publications --no-subscriptions \
@@ -177,7 +204,7 @@ SQL
   [[ -n "$table_list" ]] || fail "no publishable Neon tables found"
 
   local pub_all_tables
-  pub_all_tables="$(psql_neon -Atq -v pub_name="$PUBLICATION_NAME" -c "SELECT puballtables FROM pg_publication WHERE pubname = :'pub_name';")"
+  pub_all_tables="$(psql_neon -Atq -c "SELECT puballtables FROM pg_publication WHERE pubname = '$PUBLICATION_NAME';")"
   if [[ "$pub_all_tables" == "t" ]]; then
     fail "Neon publication '$PUBLICATION_NAME' already exists as FOR ALL TABLES; drop it first so extension tables are not replicated"
   elif [[ "$pub_all_tables" == "f" ]]; then
@@ -193,7 +220,7 @@ SQL
   fi
 
   local subscription_exists
-  subscription_exists="$(psql_railway -Atq -v sub_name="$SUBSCRIPTION_NAME" -c "SELECT 1 FROM pg_subscription WHERE subname = :'sub_name';")"
+  subscription_exists="$(psql_railway -Atq -c "SELECT 1 FROM pg_subscription WHERE subname = '$SUBSCRIPTION_NAME';")"
   if [[ "$subscription_exists" == "1" ]]; then
     echo "Railway subscription '$SUBSCRIPTION_NAME' already exists; leaving it unchanged."
   else
@@ -253,11 +280,13 @@ sync_sequences() {
   check_common_requirements
 
   local sql_file
-  sql_file="$(mktemp "${TMPDIR:-/tmp}/boardsesh-sequences.XXXXXX.sql")"
-  trap 'rm -f "$sql_file"' EXIT
+  sql_file="$(mktemp "${TMPDIR:-/tmp}/boardsesh-sequences.XXXXXX")"
+  trap 'rm -f "${sql_file:-}"' EXIT
 
   echo "Generating sequence setval statements from Neon..."
-  psql_neon -At <<'SQL' >"$sql_file"
+  local exclude_clause
+  exclude_clause="$(schema_exclude_clause 's.sequence_schema')"
+  psql_neon -At <<SQL >"$sql_file"
 SELECT format(
   'SELECT setval(%L, %s, %L);',
   quote_ident(s.sequence_schema) || '.' || quote_ident(s.sequence_name),
@@ -269,6 +298,7 @@ JOIN pg_sequences ps
   ON ps.schemaname = s.sequence_schema
  AND ps.sequencename = s.sequence_name
 WHERE s.sequence_schema NOT IN ('pg_catalog', 'information_schema')
+  ${exclude_clause}
   AND NOT EXISTS (
     SELECT 1
     FROM pg_depend d
@@ -289,7 +319,7 @@ teardown_replication() {
 
   echo "Dropping Railway subscription if present..."
   local subscription_exists
-  subscription_exists="$(psql_railway -Atq -v sub_name="$SUBSCRIPTION_NAME" -c "SELECT 1 FROM pg_subscription WHERE subname = :'sub_name';")"
+  subscription_exists="$(psql_railway -Atq -c "SELECT 1 FROM pg_subscription WHERE subname = '$SUBSCRIPTION_NAME';")"
   if [[ "$subscription_exists" == "1" ]]; then
     psql_railway <<SQL
 ALTER SUBSCRIPTION $SUBSCRIPTION_NAME DISABLE;

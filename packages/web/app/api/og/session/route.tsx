@@ -7,7 +7,7 @@ import { BOULDER_GRADES } from '@/app/lib/board-data';
 import { createOgImageHeaders, OG_IMAGE_HEIGHT, OG_IMAGE_WIDTH } from '@/app/lib/seo/og';
 import { getSessionOgSummary } from '@/app/lib/seo/dynamic-og-data';
 
-export const runtime = 'edge';
+export const runtime = 'nodejs';
 
 const DIFFICULTY_TO_GRADE: Record<number, string> = Object.fromEntries(
   BOULDER_GRADES.map((g) => [g.difficulty_id, g.font_grade]),

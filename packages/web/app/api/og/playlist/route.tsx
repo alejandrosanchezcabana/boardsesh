@@ -6,7 +6,7 @@ import { formatBoardDisplayName } from '@/app/lib/string-utils';
 import { createOgImageHeaders, OG_IMAGE_HEIGHT, OG_IMAGE_WIDTH } from '@/app/lib/seo/og';
 import { getPlaylistOgSummary } from '@/app/lib/seo/dynamic-og-data';
 
-export const runtime = 'edge';
+export const runtime = 'nodejs';
 
 const PLAYLIST_NAME_MAX_LENGTH = 34;
 const PLAYLIST_DESCRIPTION_MAX_LENGTH = 120;

@@ -41,9 +41,8 @@ async function runMigrations() {
   const dbHost = databaseUrl.split('@')[1]?.split('/')[0] || 'unknown';
   console.info(`🔄 Running migrations on: ${dbHost}`);
 
+  const client = postgres(databaseUrl, { max: 1 });
   try {
-    const client = postgres(databaseUrl, { max: 1 });
-
     const db = drizzle(client, {
       logger: {
         logQuery: (query: string) => {
@@ -62,11 +61,11 @@ async function runMigrations() {
     await migrate(db, { migrationsFolder });
 
     console.info('✅ Migrations completed successfully');
-    await client.end();
-    process.exit(0);
   } catch (error) {
     console.error('❌ Migration failed:', error);
-    process.exit(1);
+    process.exitCode = 1;
+  } finally {
+    await client.end().catch(() => {});
   }
 }
 
