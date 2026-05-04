@@ -11,11 +11,11 @@
       "description": "Rejoins une session de grimpe sur Boardsesh",
       "headlineWithLeader": "Rejoins {{name}} sur le mur",
       "headlineDefault": "Rejoins la crew sur le mur",
-      "descriptionDefault": "Saute dans cette session de grimpe sur Boardsesh. Monte sur le mur.",
-      "descriptionLive": "{{sessionName}} est en direct sur Boardsesh. Monte sur le mur.",
-      "descriptionBoardWithSends_one": "{{boardInfo}}. {{count}} enchaînement jusqu'ici{{gradeSummary}}. Monte sur le mur.",
-      "descriptionBoardWithSends_other": "{{boardInfo}}. {{count}} enchaînements jusqu'ici{{gradeSummary}}. Monte sur le mur.",
-      "descriptionBoardNoSends": "{{boardInfo}}. Aucun enchaînement pour l'instant. Monte sur le mur.",
+      "descriptionDefault": "Rejoins cette session sur Boardsesh. Au mur.",
+      "descriptionLive": "{{sessionName}} est en direct sur Boardsesh. Au mur.",
+      "descriptionBoardWithSends_one": "{{boardInfo}}. {{count}} enchaînement pour l'instant{{gradeSummary}}. Au mur.",
+      "descriptionBoardWithSends_other": "{{boardInfo}}. {{count}} enchaînements pour l'instant{{gradeSummary}}. Au mur.",
+      "descriptionBoardNoSends": "{{boardInfo}}. Aucun enchaînement pour l'instant. Au mur.",
       "boardAtAngle": "{{boardLabel}} à {{angle}}°",
       "gradeOn": " en {{grade}}",
       "gradeRange": " de {{first}} à {{last}}"
@@ -29,8 +29,8 @@
     "sessionNameOnBoardsesh": "{{name}} sur Boardsesh",
     "host": "Hôte : {{name}}",
     "participants": "Participants",
-    "climbs": "Voies",
-    "climbsCount": "Voies ({{count}})",
+    "climbs": "Blocs",
+    "climbsCount": "Blocs ({{count}})",
     "duration": "Durée",
     "startedAt": "Démarrée {{time}}",
     "empty": "Aucun enchaînement pour l'instant",
@@ -46,7 +46,7 @@
     "deleteAscentConfirm": "Tu es sûr ? Cette action est irréversible.",
     "delete": "Supprimer",
     "climberFallback": "Grimpeur",
-    "unknownClimb": "Voie inconnue",
+    "unknownClimb": "Bloc inconnu",
     "anonymous": "Anonyme",
     "attemptOnNth": "au {{ordinal}} essai",
     "totalAttempts": "{{count}} au total",
@@ -56,12 +56,12 @@
     "ordinalSecond": "{{n}}e",
     "ordinalThird": "{{n}}e",
     "ordinalDefault": "{{n}}e",
-    "joiningSession": "Connexion à la session…",
+    "joiningSession": "On te connecte…",
     "sessionNotesPlaceholder": "Notes ou objectif de session…",
-    "noClimbsYet": "Aucune voie pour l'instant",
-    "logSomeClimbs": "Enregistre quelques voies pour voir la répartition par cotation",
-    "climbsLogged_one": "{{count}} voie enregistrée",
-    "climbsLogged_other": "{{count}} voies enregistrées",
+    "noClimbsYet": "Aucun bloc pour l'instant",
+    "logSomeClimbs": "Enregistre quelques blocs pour voir la répartition par cotation",
+    "climbsLogged_one": "{{count}} bloc enregistré",
+    "climbsLogged_other": "{{count}} blocs enregistrés",
     "gradesCount_one": "{{count}} cotation",
     "gradesCount_other": "{{count}} cotations",
     "gradeDistribution": "Répartition des cotations",
@@ -80,9 +80,9 @@
     "flashesCount_other": "{{count}} flashs",
     "attemptsCount_one": "{{count}} essai",
     "attemptsCount_other": "{{count}} essais",
-    "climbCount_one": "{{count}} voie",
-    "climbCount_other": "{{count}} voies",
-    "hardestLabel": "Plus dure : {{grade}}",
+    "climbCount_one": "{{count}} bloc",
+    "climbCount_other": "{{count}} blocs",
+    "hardestLabel": "Plus dur : {{grade}}",
     "notFound": {
       "title": "Session introuvable",
       "subtitle": "Cette session est introuvable. Elle a peut-être été supprimée.",
@@ -96,11 +96,11 @@
   },
   "join": {
     "title": "Rejoindre la session",
-    "subtitle": "Monte sur le mur",
-    "description": "Tu as été invité à une session de grimpe.",
+    "subtitle": "Au mur",
+    "description": "On t'invite à grimper.",
     "joinButton": "Rejoindre la session",
-    "joining": "Connexion à la session…",
-    "leaderName": "Animée par {{name}}",
+    "joining": "On te connecte…",
+    "leaderName": "Session de {{name}}",
     "scanQr": "Ou scanne un QR code de l'hôte",
     "enterId": "Ou colle un identifiant de session",
     "errors": {
@@ -113,18 +113,18 @@
     "drawerTitle": "Paramètres de la session",
     "fallbackTitle": "Session",
     "partyMode": {
-      "label": "Mode session",
-      "subtitle": "Partage ta file d'attente avec la crew"
+      "label": "Mode Party",
+      "subtitle": "Partage ta file avec la crew"
     },
     "name": "Nom de la session",
     "namePlaceholder": "Sesh du vendredi soir",
     "color": "Couleur de la session",
-    "leader": "Animateur de la session",
+    "leader": "Leader de la session",
     "leaveSession": "Quitter la session",
     "endSession": "Terminer la session",
     "stopSession": "Arrêter la session",
     "dismiss": "Fermer",
-    "loadFailed": "Impossible de charger tous les détails de la session. Les stats en direct continueront dès que possible.",
+    "loadFailed": "Impossible de charger tous les détails. Les stats en direct reprendront dès que possible.",
     "endSessionConfirm": {
       "title": "Terminer cette session ?",
       "description": "Ta crew sera déconnectée.",
@@ -133,7 +133,7 @@
     },
     "share": {
       "shareTitle": "Rejoins ma session de grimpe",
-      "shareText": "Saute dedans et grimpe avec moi sur Boardsesh",
+      "shareText": "Viens grimper avec moi sur Boardsesh",
       "shareLink": "Partager le lien de la session",
       "shareLinkPreview": "Partager le lien de la session (aperçu)",
       "linkCopied": "Lien copié !",
@@ -157,8 +157,8 @@
     "started": "Session lancée !",
     "selectBoardWarning": "Sélectionne d'abord un board",
     "boardsNearYou": "Boards près de toi",
-    "loggedInBlurb": "Suis tes voies et invite d'autres grimpeurs à rejoindre.",
-    "anonymousBlurb": "Saute dedans sans compte. Connecte-toi plus tard pour sauvegarder ta progression.",
+    "loggedInBlurb": "Suis tes blocs et invite la crew à grimper avec toi.",
+    "anonymousBlurb": "Lance-toi sans compte. Connecte-toi plus tard pour garder ta progression.",
     "signInForMore": "Connecte-toi pour plus de fonctionnalités",
     "signInModalTitle": "Connecte-toi pour sauvegarder ta session",
     "signInModalDescription": "Tes enchaînements ne disparaîtront pas en fermant l'onglet.",
@@ -180,7 +180,7 @@
   "summary": {
     "title": "Résumé de la session",
     "dialogTitle": "Résumé de la session",
-    "totalClimbs": "Total des voies",
+    "totalClimbs": "Total des blocs",
     "sends": "Enchaînements",
     "attempts": "Essais",
     "duration": "Durée",
@@ -205,7 +205,7 @@
   },
   "queueBar": {
     "cancelReconnectConfirm": "Annuler quittera la session. C'est ce que tu veux ?",
-    "shellMessage": "Aucune voie sélectionnée",
+    "shellMessage": "Aucun bloc sélectionné",
     "startSesh": "Lancer la sesh",
     "linkCopied": "Lien copié !",
     "shareFailed": "Échec du partage",
@@ -216,7 +216,7 @@
     "tickCommentAria": "Commentaire du tick",
     "tickAttemptLabel": "essai",
     "reconnect": {
-      "connectionError": "Erreur de connexion – nouvelle tentative…",
+      "connectionError": "Erreur de connexion. Nouvelle tentative…",
       "reconnecting": "Reconnexion…"
     },
     "tickBar": {
@@ -245,25 +245,25 @@
     "removeItems_other": "Retirer {{count}} éléments"
   },
   "queueList": {
-    "editClimb": "Modifier cette voie",
-    "addedViaBluetooth": "Ajoutée via Bluetooth",
+    "editClimb": "Modifier ce bloc",
+    "addedViaBluetooth": "Ajouté via Bluetooth",
     "suggestionsHeader": "Suggestions",
     "endMessage": "C'est tout pour l'instant"
   },
   "queueProvider": {
-    "offlineLimitReached": "Tu as atteint la limite hors ligne de la file d'attente. Reconnecte-toi pour synchroniser tes voies."
+    "offlineLimitReached": "Tu as atteint la limite hors ligne de la file d'attente. Reconnecte-toi pour synchroniser tes blocs."
   },
   "playView": {
     "yourAscents_one": "Ton ascension ({{count}})",
     "yourAscents_other": "Tes ascensions ({{count}})",
     "triesCount_one": "{{count}} essai",
     "triesCount_other": "{{count}} essais",
-    "tickError": "Impossible d'enregistrer ton tick — sauvegardé en brouillon",
+    "tickError": "Impossible d'enregistrer ton tick. Sauvegardé en brouillon.",
     "closeAria": "Fermer",
-    "noClimbSelected": "Aucune voie sélectionnée",
-    "browseClimbs": "Parcourir les voies",
+    "noClimbSelected": "Aucun bloc sélectionné",
+    "browseClimbs": "Parcourir les blocs",
     "actionBar": {
-      "climbActionsAria": "Actions de la voie",
+      "climbActionsAria": "Actions du bloc",
       "openQueueAria": "Ouvrir la file d'attente"
     },
     "tickFab": {

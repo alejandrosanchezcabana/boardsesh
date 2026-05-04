@@ -1,8 +1,8 @@
 {
   "globalError": {
-    "title": "Quelque chose s'est mal passé",
-    "subtitle": "Essayez de recharger pour repartir du bon pied",
-    "reload": "Recharger l'app"
+    "title": "Ça a coincé",
+    "subtitle": "Rechargez pour reprendre la grimpe",
+    "reload": "Recharger"
   },
   "notFound": {
     "title": "Page introuvable",
@@ -10,7 +10,7 @@
     "goHome": "Retour à Boardsesh"
   },
   "boundary": {
-    "title": "Quelque chose a planté",
+    "title": "Ça a cassé",
     "retry": "Réessayer"
   }
 }

@@ -6,11 +6,11 @@
     },
     "logbook": {
       "title": "Carnet",
-      "description": "Votre carnet d'escalade sur Boardsesh"
+      "description": "Votre carnet de croix sur Boardsesh"
     },
     "sessions": {
       "title": "Sessions",
-      "description": "Vos sessions d'escalade sur Boardsesh"
+      "description": "Vos sessions de grimpe sur Boardsesh"
     }
   },
   "tabs": {

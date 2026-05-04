@@ -1,8 +1,8 @@
 {
   "metadata": {
     "library": {
-      "title": "Découvrir des playlists d'escalade",
-      "description": "Découvrez des playlists d'escalade publiques et gérez les vôtres après vous être connecté."
+      "title": "Découvrez des playlists d'escalade",
+      "description": "Parcourez des playlists publiques et gérez les vôtres une fois connecté."
     },
     "detail": {
       "fallbackTitle": "Playlist",
@@ -12,23 +12,23 @@
   "library": {
     "signInBanner": {
       "title": "Connectez-vous pour utiliser votre bibliothèque",
-      "description": "Suivez vos ascensions et gérez vos playlists.",
+      "description": "Suivez vos enchaînements et gérez vos playlists.",
       "cta": "Se connecter",
       "modalTitle": "Se connecter à Boardsesh",
-      "modalDescription": "Connectez-vous pour suivre vos voies et gérer vos playlists."
+      "modalDescription": "Connectez-vous pour suivre vos blocs et gérer vos playlists."
     },
     "sections": {
       "jumpBackIn": "Reprendre",
       "discover": "Découvrir"
     },
     "empty": {
-      "title": "Aucune playlist pour le moment",
-      "description": "Créez votre première playlist en ajoutant des voies depuis la liste."
+      "title": "Aucune playlist pour l'instant",
+      "description": "Créez votre première playlist en ajoutant des blocs depuis la liste."
     },
     "errors": {
       "loadTitle": "Impossible de charger la bibliothèque",
-      "loadDescription": "Une erreur est survenue lors du chargement de votre bibliothèque. Veuillez réessayer.",
-      "loadFailed": "Échec du chargement de votre bibliothèque",
+      "loadDescription": "Erreur lors du chargement de votre bibliothèque. Réessayez.",
+      "loadFailed": "Impossible de charger votre bibliothèque",
       "tryAgain": "Réessayer"
     }
   },
@@ -41,27 +41,27 @@
       "delete": "Supprimer"
     },
     "visibility": {
-      "public": "Public",
-      "private": "Privé"
+      "public": "Publique",
+      "private": "Privée"
     },
-    "shareText": "Découvrez cette playlist d'escalade sur Boardsesh",
+    "shareText": "Jetez un œil à cette playlist d'escalade sur Boardsesh",
     "shareFallbackTitle": "Playlist",
     "shareSuccess": "Lien copié dans le presse-papiers !",
-    "shareError": "Échec du partage",
+    "shareError": "Impossible de partager",
     "deleted": "Playlist supprimée",
-    "deleteFailed": "Échec de la suppression de la playlist",
+    "deleteFailed": "Impossible de supprimer la playlist",
     "discussion": "Discussion",
-    "empty": "Aucune voie dans cette playlist pour le moment",
-    "climbCount_one": "{{count}} voie",
-    "climbCount_other": "{{count}} voies",
+    "empty": "Aucun bloc dans cette playlist pour l'instant",
+    "climbCount_one": "{{count}} bloc",
+    "climbCount_other": "{{count}} blocs",
     "followerCount_one": "{{count}} abonné",
     "followerCount_other": "{{count}} abonnés",
     "errors": {
       "notFoundTitle": "Playlist introuvable",
-      "notFoundDescription": "Cette playlist a peut-être été supprimée ou vous n'avez pas la permission de la consulter.",
+      "notFoundDescription": "Cette playlist a été supprimée ou vous n'avez pas accès.",
       "loadTitle": "Impossible de charger la playlist",
-      "loadDescription": "Une erreur est survenue lors du chargement de cette playlist. Veuillez réessayer.",
-      "loadFailed": "Échec du chargement de la playlist",
+      "loadDescription": "Erreur lors du chargement de cette playlist. Réessayez.",
+      "loadFailed": "Impossible de charger la playlist",
       "notFound": "Playlist introuvable",
       "tryAgain": "Réessayer"
     }
@@ -70,14 +70,14 @@
     "title": "Modifier la playlist",
     "fields": {
       "name": "Nom de la playlist",
-      "namePlaceholder": "ex. : Réglettes dures",
+      "namePlaceholder": "ex. : Réglettes qui piquent",
       "description": "Description",
       "descriptionPlaceholder": "Description facultative pour votre playlist...",
       "color": "Couleur",
       "icon": "Icône",
-      "removeIcon": "Supprimer",
+      "removeIcon": "Retirer",
       "visibility": "Visibilité",
-      "publicHint": "Les playlists publiques sont visibles par toute personne disposant du lien",
+      "publicHint": "Les playlists publiques sont visibles par toute personne ayant le lien",
       "privateHint": "Les playlists privées ne sont visibles que par vous"
     },
     "actions": {
@@ -86,13 +86,13 @@
       "saving": "Enregistrement..."
     },
     "validation": {
-      "nameRequired": "Veuillez saisir un nom de playlist",
+      "nameRequired": "Saisissez un nom de playlist",
       "nameTooLong": "Le nom ne doit pas dépasser 100 caractères",
       "descriptionTooLong": "La description ne doit pas dépasser 500 caractères"
     },
     "messages": {
-      "updated": "Playlist mise à jour avec succès",
-      "updateFailed": "Échec de la mise à jour de la playlist"
+      "updated": "Playlist mise à jour",
+      "updateFailed": "Impossible de mettre à jour la playlist"
     }
   },
   "create": {
@@ -101,7 +101,7 @@
     "submitting": "Création...",
     "fields": {
       "name": "Nom",
-      "namePlaceholder": "ex. : Réglettes dures",
+      "namePlaceholder": "ex. : Réglettes qui piquent",
       "description": "Description (facultative)",
       "descriptionPlaceholder": "Description facultative...",
       "color": "Couleur (facultative)"
@@ -111,29 +111,29 @@
     "drawerTitle": "Générer une playlist",
     "generatingTitle": "Génération...",
     "optionsTitle": "Options",
-    "generatingProgress": "Ajout des voies... {{current}} / {{total}}",
+    "generatingProgress": "Ajout des blocs... {{current}} / {{total}}",
     "generate": "Générer",
     "reset": "Réinitialiser",
     "totals": {
       "total": "Total",
-      "climbs_one": "{{count}} voie",
-      "climbs_other": "{{count}} voies"
+      "climbs_one": "{{count}} bloc",
+      "climbs_other": "{{count}} blocs"
     },
-    "summaryRow_one": "{{count}} voie ({{range}})",
-    "summaryRow_other": "{{count}} voies ({{range}})",
+    "summaryRow_one": "{{count}} bloc ({{range}})",
+    "summaryRow_other": "{{count}} blocs ({{range}})",
     "options": {
       "warmUp": "Échauffement",
       "targetGrade": "Cotation cible",
-      "minAscents": "Ascensions min.",
+      "minAscents": "Enchaînements min.",
       "minRating": "Note min.",
-      "climbBias": "Préférence de voie",
-      "tallClimbsLabel": "Voies hautes uniquement",
-      "tallClimbsTooltip": "Afficher uniquement les voies qui utilisent les prises des 8 rangées du bas (disponible uniquement sur les boards 10x12)",
-      "mainSetClimbs": "Voies de la série principale",
+      "climbBias": "Préférence de blocs",
+      "tallClimbsLabel": "Blocs hauts uniquement",
+      "tallClimbsTooltip": "Affiche uniquement les blocs qui utilisent les prises des 8 rangées du bas (uniquement sur les boards 10x12)",
+      "mainSetClimbs": "Blocs de la série principale",
       "mainSetVariability": "Variabilité de la série principale",
       "numberOfSteps": "Nombre de paliers",
-      "climbsPerStep": "Voies par palier",
-      "numberOfClimbs": "Nombre de voies"
+      "climbsPerStep": "Blocs par palier",
+      "numberOfClimbs": "Nombre de blocs"
     },
     "warmUpOptions": {
       "standard": "Standard",
@@ -141,28 +141,28 @@
       "none": "Aucun"
     },
     "climbBiasOptions": {
-      "unfamiliar": "Inconnues",
-      "attempted": "Essayées",
-      "any": "Toutes"
+      "unfamiliar": "Jamais essayés",
+      "attempted": "Déjà essayés",
+      "any": "Tous"
     },
     "effortLevels": {
       "moderate": "Modéré",
-      "challenging": "Difficile",
+      "challenging": "Exigeant",
       "veryDifficult": "Très difficile",
-      "maxEffort": "Effort maximal"
+      "maxEffort": "Effort max"
     },
     "workoutTypes": {
       "volume": {
         "name": "Volume",
-        "description": "Générer un entraînement à fort volume."
+        "description": "Une séance à fort volume."
       },
       "pyramid": {
         "name": "Pyramide",
-        "description": "Monter jusqu'à une cotation max puis redescendre."
+        "description": "Montez jusqu'à votre cotation max, puis redescendez."
       },
       "ladder": {
         "name": "Échelle",
-        "description": "Progresser dans les cotations par paliers."
+        "description": "Progressez dans les cotations par paliers."
       },
       "gradeFocus": {
         "name": "Cotation ciblée",
@@ -181,24 +181,24 @@
       "configurePrompt": "Configurez les options pour prévisualiser"
     },
     "messages": {
-      "noClimbs": "Aucune voie à générer",
-      "addedAll": "{{count}} voies ajoutées à la playlist",
-      "addedPartial": "{{added}} voies ajoutées. {{failed}} emplacements n'ont pas pu être remplis.",
-      "failed": "Échec de la génération de la playlist. Aucune voie appropriée trouvée."
+      "noClimbs": "Aucun bloc à générer",
+      "addedAll": "{{count}} blocs ajoutés à la playlist",
+      "addedPartial": "{{added}} blocs ajoutés. {{failed}} emplacements n'ont pas pu être remplis.",
+      "failed": "Impossible de générer la playlist. Aucun bloc adapté trouvé."
     }
   },
   "bottomTabBar": {
     "home": "Accueil",
-    "climb": "Grimper",
+    "climb": "Blocs",
     "discover": "Découvrir",
     "feed": "Fil",
     "create": "Créer",
     "you": "Vous",
     "youSignInTitle": "Connectez-vous pour voir votre progression",
-    "youSignInDescription": "Connectez-vous pour suivre vos statistiques d'escalade, vos sessions et votre carnet.",
-    "selectBoardForPlaylist": "Sélectionnez un board avant de créer une playlist",
+    "youSignInDescription": "Connectez-vous pour suivre vos stats, vos sessions et votre carnet.",
+    "selectBoardForPlaylist": "Choisissez un board avant de créer une playlist",
     "boardDetailsMissing": "Impossible de déterminer les détails du board pour créer la playlist",
     "createdPlaylistToast": "Playlist « {{name}} » créée",
-    "createPlaylistFailed": "Échec de la création de la playlist"
+    "createPlaylistFailed": "Impossible de créer la playlist"
   }
 }

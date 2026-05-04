@@ -1,11 +1,11 @@
 {
   "metadata": {
     "feed": {
-      "title": "Fil d'actualité",
-      "description": "Consultez l'activité d'escalade des grimpeurs que vous suivez."
+      "title": "Fil d'activité",
+      "description": "Voyez ce que grimpent les personnes que vous suivez."
     }
   },
-  "title": "Fil d'actualité",
+  "title": "Fil d'activité",
   "tabs": {
     "label": "Onglets du fil",
     "sessions": "Sessions",
@@ -13,30 +13,30 @@
     "comments": "Commentaires"
   },
   "activityFeed": {
-    "signInPrompt": "Connectez-vous pour voir un fil personnalisé des grimpeurs que vous suivez."
+    "signInPrompt": "Connectez-vous pour suivre les grimpeurs de votre crew."
   },
   "ascentsFeed": {
     "attempts": "{{count}} essais",
     "deleteAscent": {
       "title": "Supprimer l'ascension",
-      "description": "Êtes-vous sûr ? Cette action est irréversible."
+      "description": "Sûr ? C'est définitif."
     },
-    "mirrored": "Inversée",
+    "mirrored": "Miroir",
     "benchmark": "Référence",
-    "setBy": "Ouverte par {{name}}",
-    "empty": "Aucune ascension enregistrée pour le moment"
+    "setBy": "Ouvert par {{name}}",
+    "empty": "Aucune ascension pour le moment"
   },
   "betaVideos": {
-    "shareBetaFor": "Partager la beta pour {{name}}",
+    "shareBetaFor": "Partager la beta de {{name}}",
     "shareBetaVideo": "Partager une vidéo beta",
     "shareBeta": "Partager la beta",
-    "dialogHelper": "Collez le lien d'un reel ou d'une publication pour montrer votre beta aux autres.",
+    "dialogHelper": "Collez le lien d'un reel ou d'un post pour partager votre beta.",
     "addedToast": "Vidéo ajoutée à la beta",
     "addError": "Impossible d'ajouter la vidéo. Réessayez.",
     "urlPlaceholder": "URL Instagram ou TikTok",
     "urlLabel": "URL de la vidéo beta",
     "urlLabelForClimb": "URL de la vidéo beta pour {{name}}",
-    "defaultHelper": "Collez l'URL d'un reel/post Instagram public ou d'une vidéo TikTok pour montrer votre beta.",
+    "defaultHelper": "Collez l'URL d'un reel/post Instagram public ou d'une vidéo TikTok pour partager votre beta.",
     "cancel": "Annuler",
     "unableToLoad": "Impossible de charger la vidéo",
     "viewLink": "Voir",
@@ -45,27 +45,27 @@
     "modalTitle": "Vidéo beta",
     "modalTitleByUser": "Beta par @{{name}}",
     "viewOnInstagram": "Voir sur Instagram",
-    "showLess": "Afficher moins",
-    "showMore_one": "Afficher 1 vidéo de plus",
-    "showMore_other": "Afficher {{count}} vidéos de plus",
+    "showLess": "Voir moins",
+    "showMore_one": "Voir 1 vidéo de plus",
+    "showMore_other": "Voir {{count}} vidéos de plus",
     "noVideosAvailable": "Aucune vidéo beta disponible",
     "angleSuffix": "{{angle}}°",
     "unknownUser": "inconnu"
   },
   "commentFeed": {
-    "empty": "Aucun commentaire pour le moment",
+    "empty": "Aucun commentaire pour l'instant",
     "commentedOn": "a commenté {{entity}}"
   },
   "emptyStates": {
-    "followClimbers": "Suivez des grimpeurs pour remplir cette section",
+    "followClimbers": "Suivez des grimpeurs pour remplir votre fil",
     "findClimbers": "Trouver des grimpeurs",
-    "noRecentActivity": "Aucune activité récente"
+    "noRecentActivity": "Pas d'activité récente"
   },
   "errors": {
-    "loadFeed": "Échec du chargement du fil d'actualité. Veuillez réessayer.",
-    "loadActivity": "Échec du chargement du fil d'actualité",
-    "loadComments": "Échec du chargement des commentaires. Veuillez réessayer.",
-    "loadProposals": "Échec du chargement des propositions. Veuillez réessayer."
+    "loadFeed": "Impossible de charger le fil. Réessayez.",
+    "loadActivity": "Impossible de charger le fil",
+    "loadComments": "Impossible de charger les commentaires. Réessayez.",
+    "loadProposals": "Impossible de charger les propositions. Réessayez."
   },
   "feedCommentButton": {
     "commentsTitle": "Commentaires"
@@ -74,23 +74,23 @@
     "commented": "a commenté"
   },
   "feedItemNewClimb": {
-    "createdClimb": "a créé une nouvelle voie"
+    "createdClimb": "a ouvert un nouveau bloc"
   },
   "followerCount": {
     "followingLabel": "abonnements"
   },
   "freezeDialog": {
     "reasonLabel": "Raison (facultative)",
-    "reasonPlaceholder": "Pourquoi geler/dégeler cette voie ?"
+    "reasonPlaceholder": "Pourquoi geler/dégeler ce bloc ?"
   },
   "freezeIndicator": {
-    "frozen": "Cette voie est gelée et ne reçoit plus de nouvelles propositions.",
+    "frozen": "Ce bloc est gelé : aucune nouvelle proposition acceptée.",
     "reasonPrefix": "Raison : {{reason}}"
   },
   "newClimbFeed": {
-    "title": "Nouvelles voies",
-    "errorLoad": "Échec du chargement des voies. Veuillez réessayer.",
-    "empty": "Aucune voie pour ce layout. Soyez le premier à en ouvrir une !"
+    "title": "Nouveaux blocs",
+    "errorLoad": "Impossible de charger les blocs. Réessayez.",
+    "empty": "Aucun bloc sur ce layout. Soyez le premier à en ouvrir un !"
   },
   "proposalCard": {
     "quotedReason": "« {{reason}} »",
@@ -101,11 +101,11 @@
     "deleteProposal": "Supprimer la proposition",
     "deleteDialog": {
       "title": "Supprimer la proposition acceptée",
-      "description": "Cela annulera les effets de cette proposition (par ex. changement de cotation, statut référence/classique) et la supprimera définitivement. Cette action est irréversible."
+      "description": "Cela annulera les effets de cette proposition (changement de cotation, statut référence/classique) et la supprimera définitivement. C'est irréversible."
     }
   },
   "proposalFeed": {
-    "empty": "Aucune proposition pour le moment"
+    "empty": "Aucune proposition pour l'instant"
   },
   "proposalSection": {
     "title": "Propositions de la communauté",
@@ -119,41 +119,41 @@
   },
   "search": {
     "minCharsHint": "Tapez au moins 2 caractères pour rechercher",
-    "noBoards": "Aucun board trouvé pour « {{query}} »",
-    "noGyms": "Aucune salle trouvée pour « {{query}} »",
-    "noPlaylists": "Aucune playlist trouvée pour « {{query}} »",
-    "noUsers": "Aucun utilisateur ou ouvreur trouvé pour « {{query}} »",
-    "climbCount_one": "{{count}} voie",
-    "climbCount_other": "{{count}} voies"
+    "noBoards": "Aucun board pour « {{query}} »",
+    "noGyms": "Aucune salle pour « {{query}} »",
+    "noPlaylists": "Aucune playlist pour « {{query}} »",
+    "noUsers": "Aucun grimpeur ni ouvreur pour « {{query}} »",
+    "climbCount_one": "{{count}} bloc",
+    "climbCount_other": "{{count}} blocs"
   },
   "sessionFeedCard": {
-    "climbCount_one": "{{count}} voie",
-    "climbCount_other": "{{count}} voies"
+    "climbCount_one": "{{count}} bloc",
+    "climbCount_other": "{{count}} blocs"
   },
   "sessionSummary": {
     "completed": "Session terminée"
   },
   "socialFeedItem": {
-    "climbed": "a grimpé"
+    "climbed": "a enchaîné"
   },
   "subscribeButton": {
-    "signInPrompt": "Veuillez vous connecter pour gérer les abonnements",
-    "subscribed": "Abonné aux nouvelles voies",
-    "unsubscribed": "Désabonné des nouvelles voies",
+    "signInPrompt": "Connectez-vous pour gérer vos abonnements",
+    "subscribed": "Abonné aux nouveaux blocs",
+    "unsubscribed": "Désabonné des nouveaux blocs",
     "updateFailed": "Impossible de mettre à jour l'abonnement"
   },
   "userSearch": {
     "ascentsThisMonth": "{{count}} ascensions ce mois-ci",
-    "climbsSet_one": "{{count}} voie ouverte",
-    "climbsSet_other": "{{count}} voies ouvertes",
-    "climbCount_one": "{{count}} voie",
-    "climbCount_other": "{{count}} voies"
+    "climbsSet_one": "{{count}} bloc ouvert",
+    "climbsSet_other": "{{count}} blocs ouverts",
+    "climbCount_one": "{{count}} bloc",
+    "climbCount_other": "{{count}} blocs"
   },
   "userSmartCard": {
     "follower_one": "{{count}} abonné",
     "follower_other": "{{count}} abonnés",
     "following": "{{count}} abonnements",
-    "distinctClimb_one": "{{count}} voie distincte",
-    "distinctClimb_other": "{{count}} voies distinctes"
+    "distinctClimb_one": "{{count}} bloc différent",
+    "distinctClimb_other": "{{count}} blocs différents"
   }
 }
