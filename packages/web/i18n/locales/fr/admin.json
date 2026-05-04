@@ -7,8 +7,8 @@
   },
   "title": "Panneau d'administration",
   "auth": {
-    "signInRequired": "Veuillez vous connecter pour accéder au panneau d'administration.",
-    "noAccess": "Vous n'avez pas accès à l'administration."
+    "signInRequired": "Connectez-vous pour accéder au panneau d'administration.",
+    "noAccess": "Vous n'avez pas les droits d'administration."
   },
   "tabs": {
     "roles": "Rôles",
@@ -20,14 +20,14 @@
     "table": {
       "user": "Utilisateur",
       "role": "Rôle",
-      "board": "Mur",
+      "board": "Board",
       "grantedBy": "Attribué par",
       "date": "Date",
       "actions": "Actions"
     },
     "labels": {
       "admin": "Admin",
-      "leader": "Responsable",
+      "leader": "Référent",
       "global": "Global",
       "fallbackUserInitial": "U",
       "fallbackEmpty": "-"
@@ -37,19 +37,19 @@
       "title": "Attribuer un rôle",
       "search": {
         "label": "Rechercher un utilisateur",
-        "placeholder": "Saisissez un nom pour rechercher..."
+        "placeholder": "Saisissez un nom..."
       },
       "fallbackUserInitial": "U",
       "change": "Modifier",
       "roleLabel": "Rôle",
-      "boardTypeLabel": "Type de mur (facultatif)",
+      "boardTypeLabel": "Type de board (facultatif)",
       "boardTypeOptions": {
-        "global": "Global (tous les murs)",
+        "global": "Global (tous les boards)",
         "kilter": "Kilter",
         "tension": "Tension"
       },
       "roleOptions": {
-        "communityLeader": "Responsable de communauté",
+        "communityLeader": "Référent communauté",
         "admin": "Admin"
       },
       "cancel": "Annuler",
@@ -57,9 +57,9 @@
     },
     "snackbar": {
       "granted": "Rôle attribué",
-      "grantFailed": "Échec de l'attribution du rôle",
+      "grantFailed": "Impossible d'attribuer le rôle",
       "revoked": "Rôle révoqué",
-      "revokeFailed": "Échec de la révocation du rôle"
+      "revokeFailed": "Impossible de révoquer le rôle"
     }
   },
   "settings": {
@@ -68,13 +68,13 @@
       "label": "Portée",
       "options": {
         "global": "Global",
-        "board": "Mur",
-        "climb": "Voie"
+        "board": "Board",
+        "climb": "Bloc"
       },
-      "boardTypeLabel": "Type de mur",
+      "boardTypeLabel": "Type de board",
       "boardTypePlaceholder": "kilter, tension",
-      "climbUuidLabel": "UUID de la voie",
-      "climbUuidPlaceholder": "UUID de la voie"
+      "climbUuidLabel": "UUID du bloc",
+      "climbUuidPlaceholder": "UUID du bloc"
     },
     "table": {
       "setting": "Paramètre",
@@ -99,8 +99,8 @@
         "description": "Multiplicateur de poids du vote pour les admins"
       },
       "leaderVoteWeight": {
-        "label": "Poids du vote responsable",
-        "description": "Multiplicateur de poids du vote pour les responsables"
+        "label": "Poids du vote référent",
+        "description": "Multiplicateur de poids du vote pour les référents"
       }
     },
     "save": "Tout enregistrer",
@@ -108,7 +108,7 @@
     "snackbar": {
       "saved_one": "{{count}} paramètre enregistré",
       "saved_other": "{{count}} paramètres enregistrés",
-      "saveFailed": "Échec de l'enregistrement des paramètres"
+      "saveFailed": "Impossible d'enregistrer les paramètres"
     }
   }
 }

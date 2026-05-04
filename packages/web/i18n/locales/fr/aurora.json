@@ -45,8 +45,8 @@
       }
     },
     "getHelp": {
-      "title": "Demander de l'aide",
-      "body": "Boardsesh est open source. Signalez des bugs, proposez des fonctionnalités, ou demandez juste un coup de main.",
+      "title": "Besoin d'aide ?",
+      "body": "Boardsesh est open source. Signalez des bugs, proposez des fonctionnalités, ou venez juste demander un coup de main.",
       "discord": "Discord - Rejoignez-nous pour discuter et obtenir de l'aide",
       "github": "GitHub - github.com/boardsesh/boardsesh"
     }
