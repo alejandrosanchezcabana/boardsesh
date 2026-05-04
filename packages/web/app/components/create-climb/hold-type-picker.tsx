@@ -7,52 +7,35 @@ import Box from '@mui/material/Box';
 import ButtonBase from '@mui/material/ButtonBase';
 import Typography from '@mui/material/Typography';
 import CloseIcon from '@mui/icons-material/Close';
+import NotInterestedIcon from '@mui/icons-material/NotInterested';
 import { HOLD_STATE_MAP, type HoldState } from '../board-renderer/types';
 import { themeTokens } from '@/app/theme/theme-config';
-import type { BoardName } from '@/app/lib/types';
+import type { BoardName, HoldFilterEntry, HoldFilterMode, HoldFilterType } from '@/app/lib/types';
 
 type SelectableState = HoldState | 'OFF';
 
-type HoldTypePickerProps = {
-  boardName: BoardName;
-  anchorEl: Element | null;
-  currentState: SelectableState;
-  startingCount: number;
-  finishCount: number;
-  onSelect: (state: SelectableState) => void;
-  onClose: () => void;
-};
+// Hold types the picker can show, in display order. The setter-mode list is
+// fixed to climb-setting roles. Search mode adds a wildcard "ANY" swatch on
+// the end that matches any hold-state in the climb.
+type SetterHoldState = 'STARTING' | 'HAND' | 'FINISH' | 'FOOT';
 
-// Hold types the picker can show, in display order. Search-only states like
-// ANY/NOT and the MoonBoard above-marker AUX state are intentionally excluded
-// — the picker is for setting climbs, not searching them.
-type PickerHoldState = 'STARTING' | 'HAND' | 'FINISH' | 'FOOT';
-
-const STATE_ORDER: readonly PickerHoldState[] = ['STARTING', 'HAND', 'FINISH', 'FOOT'];
-
-const STATE_LABELS: Record<PickerHoldState, string> = {
-  STARTING: 'Start',
-  HAND: 'Mid',
-  FINISH: 'Finish',
-  FOOT: 'Foot',
-};
+const SETTER_STATE_ORDER: readonly SetterHoldState[] = ['STARTING', 'HAND', 'FINISH', 'FOOT'];
 
 // Per-board allowlist of selectable states. MoonBoard climbs are STARTING /
 // HAND / FINISH only — its HOLD_STATE_MAP entries 45-48 exist to render live
 // BLE preview frames from the dev firmware, not to set climbs, so we filter
 // them out here so they never appear in the picker.
-const PICKER_STATES_BY_BOARD: Record<BoardName, readonly PickerHoldState[]> = {
-  kilter: STATE_ORDER,
-  tension: STATE_ORDER,
-  decoy: STATE_ORDER,
-  touchstone: STATE_ORDER,
-  grasshopper: STATE_ORDER,
+const PICKER_STATES_BY_BOARD: Record<BoardName, readonly SetterHoldState[]> = {
+  kilter: SETTER_STATE_ORDER,
+  tension: SETTER_STATE_ORDER,
+  decoy: SETTER_STATE_ORDER,
+  touchstone: SETTER_STATE_ORDER,
+  grasshopper: SETTER_STATE_ORDER,
   moonboard: ['STARTING', 'HAND', 'FINISH'],
 };
 
 type PickerOption = {
-  state: PickerHoldState;
-  label: string;
+  state: SetterHoldState;
   color: string;
 };
 
@@ -76,30 +59,49 @@ export function buildOptions(boardName: BoardName): PickerOption[] {
   for (const state of PICKER_STATES_BY_BOARD[boardName]) {
     const color = colorByState.get(state);
     if (!color) continue;
-    options.push({ state, label: STATE_LABELS[state], color });
+    options.push({ state, color });
   }
   return options;
 }
 
 const SWATCH_SIZE = 25;
 
-export default function HoldTypePicker({
-  boardName,
-  anchorEl,
-  currentState,
-  startingCount,
-  finishCount,
-  onSelect,
-  onClose,
-}: HoldTypePickerProps) {
-  const { t } = useTranslation('climbs');
-  const options = useMemo(() => buildOptions(boardName), [boardName]);
-  const localizedLabel = (state: PickerHoldState) =>
-    t(`holdTypePicker.states.${state.toLowerCase() as Lowercase<PickerHoldState>}`);
+type CommonProps = {
+  anchorEl: Element | null;
+  boardName: BoardName;
+  onClose: () => void;
+};
 
-  const handleSelect = (state: SelectableState, disabled: boolean) => {
-    if (disabled) return;
-    onSelect(state);
+export type SetterPickerProps = CommonProps & {
+  mode?: 'setter';
+  currentState: SelectableState;
+  startingCount: number;
+  finishCount: number;
+  onSelect: (state: SelectableState) => void;
+};
+
+export type SearchPickerProps = CommonProps & {
+  mode: 'search';
+  currentEntry: HoldFilterEntry;
+  // Cycle a single type's mode for the active hold. `nextMode === undefined`
+  // means the type was unset (i.e. removed from the entry).
+  onFilterChange: (type: HoldFilterType, nextMode: HoldFilterMode | undefined) => void;
+  onClearAll: () => void;
+};
+
+type HoldTypePickerProps = SetterPickerProps | SearchPickerProps;
+
+export default function HoldTypePicker(props: HoldTypePickerProps) {
+  const { t } = useTranslation('climbs');
+  const { anchorEl, boardName, onClose } = props;
+  const setterOptions = useMemo(() => buildOptions(boardName), [boardName]);
+
+  const localizedLabel = (state: SetterHoldState | 'ANY') =>
+    t(`holdTypePicker.states.${state.toLowerCase() as Lowercase<SetterHoldState | 'ANY'>}`);
+
+  const renderToolbar = () => {
+    if (props.mode === 'search') return renderSearchToolbar(props, setterOptions, localizedLabel, t);
+    return renderSetterToolbar(props, setterOptions, localizedLabel, t);
   };
 
   return (
@@ -107,6 +109,11 @@ export default function HoldTypePicker({
       open={Boolean(anchorEl)}
       anchorEl={anchorEl}
       onClose={onClose}
+      // Search mode keeps the picker open so the user can stack multiple
+      // filters on one hold without re-tapping. Setter mode closes on outside
+      // click only (selections close the popover via parent's onSelect).
+      disableAutoFocus={props.mode === 'search'}
+      disableEnforceFocus={props.mode === 'search'}
       anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
       transformOrigin={{ vertical: 'bottom', horizontal: 'center' }}
       slotProps={{
@@ -129,60 +136,178 @@ export default function HoldTypePicker({
           padding: `${themeTokens.spacing[2]}px ${themeTokens.spacing[3]}px`,
         }}
       >
-        {options.map((option) => {
-          const isActive = option.state === currentState;
-          const isDisabled =
-            (option.state === 'STARTING' && startingCount >= 2 && !isActive) ||
-            (option.state === 'FINISH' && finishCount >= 2 && !isActive);
-
-          return (
-            <Swatch
-              key={option.state}
-              label={localizedLabel(option.state)}
-              color={option.color}
-              isActive={isActive}
-              isDisabled={isDisabled}
-              onClick={() => handleSelect(option.state, isDisabled)}
-            />
-          );
-        })}
-        <Swatch
-          key="clear"
-          label={t('holdTypePicker.clear')}
-          isClear
-          isActive={currentState === 'OFF'}
-          isDisabled={currentState === 'OFF'}
-          onClick={() => handleSelect('OFF', currentState === 'OFF')}
-        />
+        {renderToolbar()}
       </Box>
     </Popover>
   );
 }
 
+function renderSetterToolbar(
+  props: SetterPickerProps,
+  options: PickerOption[],
+  localizedLabel: (state: SetterHoldState | 'ANY') => string,
+  t: (key: string) => string,
+) {
+  const { currentState, startingCount, finishCount, onSelect } = props;
+  return (
+    <>
+      {options.map((option) => {
+        const isActive = option.state === currentState;
+        const isDisabled =
+          (option.state === 'STARTING' && startingCount >= 2 && !isActive) ||
+          (option.state === 'FINISH' && finishCount >= 2 && !isActive);
+        return (
+          <Swatch
+            key={option.state}
+            label={localizedLabel(option.state)}
+            color={option.color}
+            isActive={isActive}
+            isDisabled={isDisabled}
+            onClick={() => {
+              if (isDisabled) return;
+              onSelect(option.state);
+            }}
+          />
+        );
+      })}
+      <Swatch
+        key="clear"
+        label={t('holdTypePicker.clear')}
+        isClear
+        isActive={currentState === 'OFF'}
+        isDisabled={currentState === 'OFF'}
+        onClick={() => {
+          if (currentState !== 'OFF') onSelect('OFF');
+        }}
+      />
+    </>
+  );
+}
+
+function renderSearchToolbar(
+  props: SearchPickerProps,
+  setterOptions: PickerOption[],
+  localizedLabel: (state: SetterHoldState | 'ANY') => string,
+  t: (key: string) => string,
+) {
+  const { currentEntry, onFilterChange, onClearAll } = props;
+  // Cycle: unset → include → exclude → unset. Each tap moves one step. Same
+  // type can never simultaneously be include + exclude — that's the cycle's
+  // whole point.
+  const handleCycle = (type: HoldFilterType) => {
+    const current = currentEntry[type];
+    if (current === undefined) {
+      onFilterChange(type, 'include');
+    } else if (current === 'include') {
+      onFilterChange(type, 'exclude');
+    } else {
+      onFilterChange(type, undefined);
+    }
+  };
+
+  const swatchForType = (type: SetterHoldState | 'ANY', color: string | string[]) => {
+    const mode = currentEntry[type];
+    const ariaSuffix =
+      mode === 'include'
+        ? t('holdTypePicker.includeAriaSuffix')
+        : mode === 'exclude'
+          ? t('holdTypePicker.excludeAriaSuffix')
+          : '';
+    return (
+      <Swatch
+        key={type}
+        label={localizedLabel(type)}
+        color={typeof color === 'string' ? color : undefined}
+        ringColors={Array.isArray(color) ? color : undefined}
+        isActive={mode !== undefined}
+        excluded={mode === 'exclude'}
+        ariaLabel={ariaSuffix ? `${localizedLabel(type)}, ${ariaSuffix}` : localizedLabel(type)}
+        onClick={() => handleCycle(type)}
+      />
+    );
+  };
+
+  // ANY swatch shows one ring per board hold-type so the visual matches
+  // the semantics ("matches any of these states"). MoonBoard has fewer types,
+  // so the ring count varies per board.
+  const anyColors = setterOptions.map((opt) => opt.color);
+
+  const isEmpty = Object.keys(currentEntry).length === 0;
+
+  return (
+    <>
+      {setterOptions.map((option) => swatchForType(option.state, option.color))}
+      {swatchForType('ANY', anyColors.length > 0 ? anyColors : themeTokens.neutral[400])}
+      <Swatch
+        key="clear"
+        label={t('holdTypePicker.clear')}
+        isClear
+        isActive={isEmpty}
+        isDisabled={isEmpty}
+        onClick={() => {
+          if (!isEmpty) onClearAll();
+        }}
+      />
+    </>
+  );
+}
+
 type SwatchProps = {
   label: string;
+  // Single solid color. Used for setter mode and for individual type swatches in search mode.
   color?: string;
+  // Multiple ring colors. Used by the ANY swatch to render concentric rings.
+  ringColors?: string[];
   isActive: boolean;
-  isDisabled: boolean;
+  isDisabled?: boolean;
   isClear?: boolean;
+  excluded?: boolean;
+  ariaLabel?: string;
   onClick: () => void;
 };
 
-function Swatch({ label, color, isActive, isDisabled, isClear, onClick }: SwatchProps) {
+function Swatch({
+  label,
+  color,
+  ringColors,
+  isActive,
+  isDisabled = false,
+  isClear,
+  excluded,
+  ariaLabel,
+  onClick,
+}: SwatchProps) {
   const ring = isClear ? themeTokens.neutral[400] : (color ?? themeTokens.neutral[400]);
 
+  // Choose icon color: clear uses ring color; an active solid swatch uses
+  // white-on-fill for contrast; excluded shows the X icon in white over the
+  // dim fill.
   let swatchIconColor = 'transparent';
   if (isClear) {
     swatchIconColor = ring;
+  } else if (excluded) {
+    swatchIconColor = '#FFFFFF';
   } else if (isActive) {
     swatchIconColor = '#FFFFFF';
+  }
+
+  // Background fill. Excluded gets a dim fill regardless of color so the
+  // exclude state is unmistakable. Active include gets the type's ring color
+  // as a solid fill.
+  let backgroundColor: string | undefined;
+  if (excluded) {
+    backgroundColor = 'rgba(0, 0, 0, 0.55)';
+  } else if (isActive && !isClear) {
+    backgroundColor = ring;
+  } else {
+    backgroundColor = 'transparent';
   }
 
   return (
     <ButtonBase
       onClick={onClick}
       disabled={isDisabled}
-      aria-label={label}
+      aria-label={ariaLabel ?? label}
       aria-pressed={isActive}
       sx={{
         display: 'flex',
@@ -201,16 +326,23 @@ function Swatch({ label, color, isActive, isDisabled, isClear, onClick }: Swatch
           width: SWATCH_SIZE,
           height: SWATCH_SIZE,
           borderRadius: '50%',
-          border: `2px solid ${ring}`,
-          backgroundColor: isActive && !isClear ? ring : 'transparent',
+          // For multi-ring (ANY) swatches we use SVG concentric rings instead
+          // of a single CSS border. The outer wrapper still draws a faint
+          // outline so the swatch silhouette is preserved when no rings are
+          // showing.
+          border: ringColors ? 'none' : `2px solid ${ring}`,
+          backgroundColor,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
           color: swatchIconColor,
           boxSizing: 'border-box',
+          position: 'relative',
         }}
       >
+        {ringColors && <ConcentricRings colors={ringColors} size={SWATCH_SIZE} excluded={excluded} active={isActive} />}
         {isClear && <CloseIcon sx={{ fontSize: 13 }} />}
+        {excluded && <NotInterestedIcon sx={{ fontSize: 14, position: 'relative', zIndex: 1 }} />}
       </Box>
       <Typography
         variant="caption"
@@ -224,5 +356,50 @@ function Swatch({ label, color, isActive, isDisabled, isClear, onClick }: Swatch
         {label}
       </Typography>
     </ButtonBase>
+  );
+}
+
+function ConcentricRings({
+  colors,
+  size,
+  excluded,
+  active,
+}: {
+  colors: string[];
+  size: number;
+  excluded?: boolean;
+  active?: boolean;
+}) {
+  // Draw nested rings: outermost first using the first color, each successive
+  // ring slightly smaller. When excluded, render a dim disc behind the rings
+  // to match the on-board treatment.
+  const cx = size / 2;
+  const cy = size / 2;
+  const ringWidth = 2;
+  return (
+    <svg
+      width={size}
+      height={size}
+      style={{ position: 'absolute', top: 0, left: 0, pointerEvents: 'none' }}
+      viewBox={`0 0 ${size} ${size}`}
+    >
+      {excluded && <circle cx={cx} cy={cy} r={size / 2 - 1} fill="rgba(0, 0, 0, 0.55)" />}
+      {colors.map((color, index) => {
+        const r = size / 2 - 1 - index * (ringWidth + 1);
+        if (r <= 1) return null;
+        return (
+          <circle
+            key={`${color}-${index}`}
+            cx={cx}
+            cy={cy}
+            r={r}
+            stroke={color}
+            strokeWidth={ringWidth}
+            fill={active && !excluded && index === 0 ? color : 'none'}
+            fillOpacity={active && !excluded && index === 0 ? 0.15 : undefined}
+          />
+        );
+      })}
+    </svg>
   );
 }

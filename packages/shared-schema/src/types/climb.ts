@@ -5,6 +5,14 @@ export type HoldState = 'OFF' | 'STARTING' | 'FINISH' | 'HAND' | 'FOOT' | 'ANY' 
 export type LitupHold = { state: HoldState; color: string; displayColor: string };
 export type LitUpHoldsMap = Record<number, LitupHold>;
 
+// Search filter shape: each hold can carry a partial map of type→mode filters,
+// e.g. { STARTING: 'include', FOOT: 'exclude' }. ANY means "hold present in any
+// state". A hold with an empty entry should be removed from the filter.
+export type HoldFilterType = 'STARTING' | 'HAND' | 'FINISH' | 'FOOT' | 'ANY';
+export type HoldFilterMode = 'include' | 'exclude';
+export type HoldFilterEntry = Partial<Record<HoldFilterType, HoldFilterMode>>;
+export type HoldsFilter = Record<string, HoldFilterEntry>;
+
 export type Climb = {
   uuid: string;
   layoutId?: number | null; // GraphQL nullable Int - layout the climb belongs to
@@ -84,8 +92,8 @@ export type ClimbSearchInput = {
   setterId?: number;
   onlyBenchmarks?: boolean;
   onlyTallClimbs?: boolean;
-  // Hold filters - accepts any HoldState for filtering climbs by hold usage
-  holdsFilter?: Record<string, HoldState>;
+  // Hold filters: per-hold partial type→mode map (see HoldFilterEntry).
+  holdsFilter?: HoldsFilter;
   // Personal progress filters
   hideAttempted?: boolean;
   hideCompleted?: boolean;

@@ -1,4 +1,4 @@
-import type { HoldRenderData, LitUpHoldsMap } from '../components/board-renderer/types';
+import type { HoldRenderData } from '../components/board-renderer/types';
 import type { BoardName as SharedBoardName } from '@boardsesh/shared-schema';
 import type { SetIdList } from './board-data';
 
@@ -86,7 +86,13 @@ export type HoldStateWithColor = {
   displayColor: string;
 };
 
-export type HoldsFilter = Partial<Record<number, HoldStateWithColor>>;
+// Search filter types: each hold can carry a partial map of type→mode filters,
+// e.g. { STARTING: 'include', FOOT: 'exclude' }. ANY means "hold present in any
+// state" (matches today's wildcard behaviour).
+export type HoldFilterType = 'STARTING' | 'HAND' | 'FINISH' | 'FOOT' | 'ANY';
+export type HoldFilterMode = 'include' | 'exclude';
+export type HoldFilterEntry = Partial<Record<HoldFilterType, HoldFilterMode>>;
+export type HoldsFilter = Record<number, HoldFilterEntry>;
 
 export type SearchRequest = {
   gradeAccuracy: number;
@@ -101,7 +107,7 @@ export type SearchRequest = {
   onlyTallClimbs: boolean;
   settername: string[];
   setternameSuggestion: string;
-  holdsFilter: LitUpHoldsMap;
+  holdsFilter: HoldsFilter;
   hideAttempted: boolean;
   hideCompleted: boolean;
   showOnlyAttempted: boolean;

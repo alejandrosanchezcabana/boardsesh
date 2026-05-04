@@ -53,14 +53,11 @@ async function _executeClimbSearch(
       name: searchParams.name || undefined,
       settername: searchParams.settername && searchParams.settername.length > 0 ? searchParams.settername : undefined,
       onlyTallClimbs: searchParams.onlyTallClimbs || undefined,
+      // Pass the holds filter straight through — `createClimbFilters` walks
+      // the new {holdId: {TYPE: 'include' | 'exclude'}} shape directly.
       holdsFilter:
         searchParams.holdsFilter && Object.keys(searchParams.holdsFilter).length > 0
-          ? Object.fromEntries(
-              Object.entries(searchParams.holdsFilter).map(([key, value]) => [
-                key.replace('hold_', ''),
-                typeof value === 'object' && value !== null ? (value as { state: string }).state : value,
-              ]),
-            )
+          ? searchParams.holdsFilter
           : undefined,
       hideAttempted: searchParams.hideAttempted || undefined,
       hideCompleted: searchParams.hideCompleted || undefined,

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useMemo, useState, useEffect } from 'react';
-import type { BoardDetails, SearchRequestPagination } from '@/app/lib/types';
+import type { BoardDetails, HoldFilterType, HoldsFilter, SearchRequestPagination } from '@/app/lib/types';
 import type { HeatmapData, LitUpHoldsMap, HoldState } from '../board-renderer/types';
 import { scaleLog } from 'd3-scale';
 import useHeatmapData from '../search-drawer/use-heatmap';
@@ -32,6 +32,10 @@ type CreateClimbHeatmapOverlayProps = {
   opacity: number;
   enabled: boolean;
   onLoadingChange?: (loading: boolean) => void;
+  // When provided, the heatmap query uses these filters directly instead of
+  // deriving them from `litUpHoldsMap`. The search form passes its own
+  // `uiSearchParams` so the heatmap reflects the active filter set.
+  filtersOverride?: SearchRequestPagination;
 };
 
 const CreateClimbHeatmapOverlay: React.FC<CreateClimbHeatmapOverlayProps> = ({
@@ -41,6 +45,7 @@ const CreateClimbHeatmapOverlay: React.FC<CreateClimbHeatmapOverlayProps> = ({
   opacity,
   enabled,
   onLoadingChange,
+  filtersOverride,
 }) => {
   const { boardWidth, boardHeight, holdsData } = boardDetails;
 
@@ -67,14 +72,27 @@ const CreateClimbHeatmapOverlay: React.FC<CreateClimbHeatmapOverlayProps> = ({
     return types;
   }, [debouncedHoldsMap]);
 
-  // Create filters that include the selected holds - uses debounced value to limit API calls
-  const filters: SearchRequestPagination = useMemo(
-    () => ({
+  // Create filters that include the selected holds. Each lit-up hold becomes
+  // an `include` filter on its current state. The search form bypasses this
+  // derivation by passing `filtersOverride` instead.
+  const filters: SearchRequestPagination = useMemo(() => {
+    if (filtersOverride) return filtersOverride;
+    const holdsFilter: HoldsFilter = {};
+    for (const [holdIdRaw, hold] of Object.entries(debouncedHoldsMap)) {
+      if (hold.state === 'OFF' || hold.state === 'AUX') continue;
+      const type =
+        hold.state === 'ANY' || hold.state === 'NOT'
+          ? 'ANY'
+          : (hold.state as Exclude<HoldState, 'OFF' | 'ANY' | 'NOT' | 'AUX'>);
+      holdsFilter[Number(holdIdRaw)] = {
+        [type as HoldFilterType]: hold.state === 'NOT' ? 'exclude' : 'include',
+      };
+    }
+    return {
       ...DEFAULT_SEARCH_PARAMS,
-      holdsFilter: debouncedHoldsMap,
-    }),
-    [debouncedHoldsMap],
-  );
+      holdsFilter,
+    };
+  }, [debouncedHoldsMap, filtersOverride]);
 
   // Fetch heatmap data with holds filter
   const { data: heatmapData, loading } = useHeatmapData({

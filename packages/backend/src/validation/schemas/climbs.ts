@@ -116,7 +116,12 @@ export const ClimbSearchInputSchema = z.object({
   setterId: z.number().int().optional(),
   onlyBenchmarks: z.boolean().optional(),
   onlyTallClimbs: z.boolean().optional(),
-  holdsFilter: z.record(z.string(), z.enum(['OFF', 'STARTING', 'FINISH', 'HAND', 'FOOT', 'ANY', 'NOT'])).optional(),
+  // Per-hold map of type→mode filters. Each hold can carry filters for
+  // multiple types (e.g. STARTING:include + FOOT:exclude). ANY means "hold
+  // present in any state" (the wildcard, was the legacy `ANY`/`NOT` value).
+  holdsFilter: z
+    .record(z.string(), z.record(z.enum(['STARTING', 'HAND', 'FINISH', 'FOOT', 'ANY']), z.enum(['include', 'exclude'])))
+    .optional(),
   hideAttempted: z.boolean().optional(),
   hideCompleted: z.boolean().optional(),
   showOnlyAttempted: z.boolean().optional(),

@@ -38,7 +38,7 @@ describe('hasActiveNonNameFilters', () => {
     expect(
       hasActiveNonNameFilters(
         makeParams({
-          holdsFilter: { 1: { state: 'HAND' as const, color: '#ff0000', displayColor: '#ff0000' } },
+          holdsFilter: { 1: { HAND: 'include' as const } },
         }),
       ),
     ).toBe(true);
@@ -86,7 +86,7 @@ describe('hasActiveFilters', () => {
     expect(
       hasActiveFilters(
         makeParams({
-          holdsFilter: { 1: { state: 'HAND' as const, color: '#ff0000', displayColor: '#ff0000' } },
+          holdsFilter: { 1: { HAND: 'include' as const } },
         }),
       ),
     ).toBe(true);
