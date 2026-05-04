@@ -38,9 +38,7 @@
       "iosTitle": "Descarga la app de Boardsesh",
       "iosDescription": "Ilumina las presas de tu tabla directamente desde el móvil",
       "androidLiveTitle": "Descarga la app de Boardsesh",
-      "androidLiveDescription": "Ya disponible en Google Play",
-      "androidPreLaunchTitle": "La app de Android está al caer",
-      "androidPreLaunchDescription": "Llega en {{days}}d {{hours}}h {{minutes}}m {{seconds}}s. Toca para instalar la beta."
+      "androidLiveDescription": "Ya disponible en Google Play"
     },
     "cards": {
       "tourTitle": "Haz el tour",

@@ -238,15 +238,9 @@ describe('HomePageContent', () => {
       mockIsNativeApp.mockReturnValue(false);
       mockIsCapacitorWebView.mockReturnValue(false);
       mockWaitForCapacitor.mockResolvedValue(false);
-      // Freeze Date so pre-/post-launch assertions don't drift once real
-      // time passes ANDROID_LAUNCH_DATE. `toFake: ['Date']` keeps
-      // setTimeout/setInterval real so waitFor still works.
-      vi.useFakeTimers({ toFake: ['Date'] });
-      vi.setSystemTime(new Date('2026-04-17T00:00:00Z'));
     });
 
     afterEach(() => {
-      vi.useRealTimers();
       if (originalUA) {
         Object.defineProperty(window.navigator, 'userAgent', originalUA);
       }
@@ -261,24 +255,13 @@ describe('HomePageContent', () => {
       expect(screen.getByText(/Lights up holds on your board straight from your phone/i)).toBeTruthy();
     });
 
-    it('shows the Android pre-launch sideload CTA on Android UA', async () => {
-      setUserAgent(ANDROID_UA);
-      render(<HomePageContent {...defaultProps} />);
-      await waitFor(() => {
-        expect(screen.getByText(/Android app is almost here/i)).toBeTruthy();
-      });
-      expect(screen.getByText(/Tap to sideload the preview build/i)).toBeTruthy();
-    });
-
-    it('switches to the Google Play CTA on Android once the launch date has passed', async () => {
-      vi.setSystemTime(new Date('2026-05-05T00:00:00Z'));
+    it('shows the Google Play CTA on Android UA', async () => {
       setUserAgent(ANDROID_UA);
       render(<HomePageContent {...defaultProps} />);
       await waitFor(() => {
         expect(screen.getByText(/Now on Google Play/i)).toBeTruthy();
       });
-      expect(screen.queryByText(/Android app is almost here/i)).toBeNull();
-      expect(screen.queryByText(/Tap to sideload the preview build/i)).toBeNull();
+      expect(screen.getByText(/Get the Boardsesh app/i)).toBeTruthy();
     });
 
     it('hides the install card once running in the native Capacitor app', async () => {
@@ -286,7 +269,7 @@ describe('HomePageContent', () => {
       render(<HomePageContent {...defaultProps} />);
       await waitFor(() => {
         expect(screen.queryByText(/Get the Boardsesh app/i)).toBeNull();
-        expect(screen.queryByText(/Android app is almost here/i)).toBeNull();
+        expect(screen.queryByText(/Now on Google Play/i)).toBeNull();
       });
     });
 
@@ -305,7 +288,7 @@ describe('HomePageContent', () => {
       render(<HomePageContent {...defaultProps} />);
       await waitFor(() => {
         // Card must not render since we now know we're native.
-        expect(screen.queryByText(/Android app is almost here/i)).toBeNull();
+        expect(screen.queryByText(/Now on Google Play/i)).toBeNull();
       });
       expect(mockWaitForCapacitor).toHaveBeenCalledTimes(1);
     });

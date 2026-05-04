@@ -1,6 +1,5 @@
 export const IOS_APP_STORE_URL = 'https://apps.apple.com/app/boardsesh/id6761350784';
 export const ANDROID_PLAY_STORE_URL = 'https://play.google.com/store/apps/details?id=com.boardsesh.app';
-export const ANDROID_SIDELOAD_URL = 'https://github.com/boardsesh/boardsesh/releases/latest';
 
 // Native scheme URLs — open the App Store / Play Store app directly and land on
 // the rate section, which https:// URLs cannot reliably do when surfaced via
