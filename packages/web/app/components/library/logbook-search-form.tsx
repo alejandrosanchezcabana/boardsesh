@@ -356,7 +356,7 @@ const LogbookSearchForm: React.FC<LogbookSearchFormProps> = ({
                   },
                 }}
               />
-              <div className={headerStyles.filterButton}>
+              <div className={headerStyles.iconButtonWrapper}>
                 <IconButton onClick={openDrawer} aria-label={t('logbook.search.openFilters')} size="small">
                   <FilterListOutlined />
                 </IconButton>
