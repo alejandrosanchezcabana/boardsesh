@@ -27,11 +27,11 @@ export async function analyzeGradeOutlier(
       ORDER BY angle
     `);
 
-    const rows = (
-      stats as unknown as {
-        rows: Array<{ angle: number; display_difficulty: number; ascensionist_count: number }>;
-      }
-    ).rows;
+    const rows = stats as unknown as Array<{
+      angle: number;
+      display_difficulty: number;
+      ascensionist_count: number;
+    }>;
     if (!rows || rows.length < 2) return null;
 
     // Find the current angle's data

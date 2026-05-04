@@ -336,7 +336,7 @@ export class NotificationWorker {
         AND created_at > NOW() - make_interval(mins => ${intervalMinutes})
       LIMIT 1
     `);
-    const rows = (result as unknown as { rows: unknown[] }).rows;
+    const rows = result as unknown as unknown[];
     return rows.length > 0;
   }
 

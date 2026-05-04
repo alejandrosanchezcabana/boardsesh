@@ -91,11 +91,10 @@ export const socialNotificationQueries = {
       OFFSET ${offset}
     `);
 
-    const rows = (
-      rawResult as unknown as {
-        rows: (NotificationRow & { totalCount: string; unreadCount: string })[];
-      }
-    ).rows;
+    const rows = rawResult as unknown as (NotificationRow & {
+      totalCount: string;
+      unreadCount: string;
+    })[];
     const notifications = rows.map(mapNotificationRow);
     const totalCount = rows.length > 0 ? Number(rows[0].totalCount) : 0;
     const unreadCount = rows.length > 0 ? Number(rows[0].unreadCount) : 0;
@@ -177,7 +176,7 @@ export const socialNotificationQueries = {
       FROM paged p
     `);
 
-    const rows = (rawResult as unknown as { rows: GroupedRow[] }).rows;
+    const rows = rawResult as unknown as GroupedRow[];
 
     // Total group count from window function (same value on every row)
     const totalCount = rows.length > 0 ? Number(rows[0].totalGroupCount) : 0;

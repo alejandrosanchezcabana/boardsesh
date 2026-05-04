@@ -191,8 +191,7 @@ export const socialCommentQueries = {
       OFFSET ${offset}
     `);
 
-    // db.execute() returns result with .rows property
-    const rawRows = (rawResult as unknown as { rows: CommentRow[] }).rows;
+    const rawRows = rawResult as unknown as CommentRow[];
     const comments = rawRows.map(mapCommentRow);
 
     return {
@@ -304,7 +303,7 @@ export const socialCommentQueries = {
       OFFSET ${offset}
     `);
 
-    const rawRows = (rawResult as unknown as { rows: CommentRow[] }).rows;
+    const rawRows = rawResult as unknown as CommentRow[];
     const hasMore = rawRows.length > limit;
     const resultRows = hasMore ? rawRows.slice(0, limit) : rawRows;
     const comments = resultRows.map(mapCommentRow);

@@ -71,7 +71,7 @@ export const socialProposalMutations = {
               AND cs.board_type = ${boardType}
             LIMIT 1
           `);
-          const rows = (result as unknown as { rows: Array<{ difficulty_id: number | null }> }).rows;
+          const rows = result as unknown as Array<{ difficulty_id: number | null }>;
           currentValue = getGradeLabel(rows[0]?.difficulty_id ?? null) || 'Unknown';
         } catch {
           currentValue = 'Unknown';

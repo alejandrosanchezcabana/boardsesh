@@ -115,7 +115,7 @@ async function recalculateSessionStats(sessionId: string, conn: ReturnType<typeo
     WHERE inferred_session_id = ${sessionId}
   `);
 
-  const rawRows = (result as unknown as { rows: unknown[] }).rows;
+  const rawRows = result as unknown as unknown[];
   const parsed = rawRows.length > 0 ? SessionStatsRowSchema.safeParse(rawRows[0]) : null;
 
   if (!parsed || !parsed.success || parsed.data.first_tick_at === null) {

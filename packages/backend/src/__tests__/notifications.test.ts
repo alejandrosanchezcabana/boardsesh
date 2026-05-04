@@ -140,7 +140,7 @@ describe('groupedNotifications resolver', () => {
 
   it('should return empty groups when no notifications', async () => {
     const ctx = makeCtx();
-    mockExecute.mockResolvedValueOnce({ rows: [] });
+    mockExecute.mockResolvedValueOnce([]);
     mockFrom.mockReturnValueOnce({ where: vi.fn().mockResolvedValueOnce([{ count: 0 }]) });
 
     const result = await socialNotificationQueries.groupedNotifications(null, {}, ctx);
@@ -153,24 +153,22 @@ describe('groupedNotifications resolver', () => {
     const ctx = makeCtx();
     const now = new Date('2024-01-15T12:00:00Z');
 
-    mockExecute.mockResolvedValueOnce({
-      rows: [
-        {
-          type: 'vote',
-          entityType: 'climb',
-          entityId: 'climb-1',
-          actorCount: '3',
-          latestUuid: 'notif-uuid-1',
-          latestCreatedAt: now,
-          allRead: false,
-          commentBody: null,
-          actorIds: ['user-a', 'user-b', 'user-c'],
-          actorDisplayNames: ['Alice', 'Bob', 'Charlie'],
-          actorAvatarUrls: ['https://example.com/a.png', null, 'https://example.com/c.png'],
-          totalGroupCount: '1',
-        },
-      ],
-    });
+    mockExecute.mockResolvedValueOnce([
+      {
+        type: 'vote',
+        entityType: 'climb',
+        entityId: 'climb-1',
+        actorCount: '3',
+        latestUuid: 'notif-uuid-1',
+        latestCreatedAt: now,
+        allRead: false,
+        commentBody: null,
+        actorIds: ['user-a', 'user-b', 'user-c'],
+        actorDisplayNames: ['Alice', 'Bob', 'Charlie'],
+        actorAvatarUrls: ['https://example.com/a.png', null, 'https://example.com/c.png'],
+        totalGroupCount: '1',
+      },
+    ]);
     mockFrom.mockReturnValueOnce({ where: vi.fn().mockResolvedValueOnce([{ count: 2 }]) });
 
     const result = await socialNotificationQueries.groupedNotifications(null, {}, ctx);
@@ -196,24 +194,22 @@ describe('groupedNotifications resolver', () => {
     const ctx = makeCtx();
     const longComment = 'A'.repeat(150);
 
-    mockExecute.mockResolvedValueOnce({
-      rows: [
-        {
-          type: 'comment',
-          entityType: 'climb',
-          entityId: 'climb-2',
-          actorCount: '1',
-          latestUuid: 'notif-uuid-2',
-          latestCreatedAt: new Date('2024-01-15T12:00:00Z'),
-          allRead: true,
-          commentBody: longComment,
-          actorIds: ['user-a'],
-          actorDisplayNames: ['Alice'],
-          actorAvatarUrls: [null],
-          totalGroupCount: '1',
-        },
-      ],
-    });
+    mockExecute.mockResolvedValueOnce([
+      {
+        type: 'comment',
+        entityType: 'climb',
+        entityId: 'climb-2',
+        actorCount: '1',
+        latestUuid: 'notif-uuid-2',
+        latestCreatedAt: new Date('2024-01-15T12:00:00Z'),
+        allRead: true,
+        commentBody: longComment,
+        actorIds: ['user-a'],
+        actorDisplayNames: ['Alice'],
+        actorAvatarUrls: [null],
+        totalGroupCount: '1',
+      },
+    ]);
     mockFrom.mockReturnValueOnce({ where: vi.fn().mockResolvedValueOnce([{ count: 0 }]) });
 
     const result = await socialNotificationQueries.groupedNotifications(null, {}, ctx);
@@ -240,7 +236,7 @@ describe('groupedNotifications resolver', () => {
       totalGroupCount: '25',
     }));
 
-    mockExecute.mockResolvedValueOnce({ rows });
+    mockExecute.mockResolvedValueOnce(rows);
     mockFrom.mockReturnValueOnce({ where: vi.fn().mockResolvedValueOnce([{ count: 0 }]) });
 
     const result = await socialNotificationQueries.groupedNotifications(null, {}, ctx);
@@ -253,24 +249,22 @@ describe('groupedNotifications resolver', () => {
   it('should filter null actor ids', async () => {
     const ctx = makeCtx();
 
-    mockExecute.mockResolvedValueOnce({
-      rows: [
-        {
-          type: 'vote',
-          entityType: 'climb',
-          entityId: 'climb-1',
-          actorCount: '2',
-          latestUuid: 'uuid-1',
-          latestCreatedAt: new Date(),
-          allRead: false,
-          commentBody: null,
-          actorIds: ['user-a', null],
-          actorDisplayNames: ['Alice', null],
-          actorAvatarUrls: [null, null],
-          totalGroupCount: '1',
-        },
-      ],
-    });
+    mockExecute.mockResolvedValueOnce([
+      {
+        type: 'vote',
+        entityType: 'climb',
+        entityId: 'climb-1',
+        actorCount: '2',
+        latestUuid: 'uuid-1',
+        latestCreatedAt: new Date(),
+        allRead: false,
+        commentBody: null,
+        actorIds: ['user-a', null],
+        actorDisplayNames: ['Alice', null],
+        actorAvatarUrls: [null, null],
+        totalGroupCount: '1',
+      },
+    ]);
     mockFrom.mockReturnValueOnce({ where: vi.fn().mockResolvedValueOnce([{ count: 1 }]) });
 
     const result = await socialNotificationQueries.groupedNotifications(null, {}, ctx);

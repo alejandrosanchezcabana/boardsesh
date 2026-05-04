@@ -154,25 +154,20 @@ export const sessionFeedQueries = {
       throw err;
     }
 
-    // db.execute() returns result with .rows property
-    const rows = (
-      sessionRows as unknown as {
-        rows: Array<{
-          session_id: string;
-          session_type: string;
-          session_first_tick: string;
-          session_last_tick: string;
-          tick_count: number;
-          total_sends: number;
-          total_flashes: number;
-          total_attempts: number;
-          vote_score: number;
-          vote_up: number;
-          vote_down: number;
-          comment_count: number;
-        }>;
-      }
-    ).rows;
+    const rows = sessionRows as unknown as Array<{
+      session_id: string;
+      session_type: string;
+      session_first_tick: string;
+      session_last_tick: string;
+      tick_count: number;
+      total_sends: number;
+      total_flashes: number;
+      total_attempts: number;
+      vote_score: number;
+      vote_up: number;
+      vote_down: number;
+      comment_count: number;
+    }>;
 
     const hasMore = rows.length > limit;
     const resultRows = hasMore ? rows.slice(0, limit) : rows;
@@ -425,17 +420,13 @@ export const sessionFeedQueries = {
         SELECT * FROM attempts_since
       `);
 
-      const attemptsRows = (
-        totalAttemptsResult as unknown as {
-          rows: Array<{
-            user_id: string;
-            climb_uuid: string;
-            board_type: string;
-            angle: number;
-            total: number;
-          }>;
-        }
-      ).rows;
+      const attemptsRows = totalAttemptsResult as unknown as Array<{
+        user_id: string;
+        climb_uuid: string;
+        board_type: string;
+        angle: number;
+        total: number;
+      }>;
 
       // Build lookup map
       const attemptsMap = new Map<string, number>();
@@ -575,19 +566,15 @@ async function fetchParticipants(
     ORDER BY sends DESC
   `);
 
-  // db.execute() returns QueryResult with .rows property
-  return (
-    participantRows as unknown as {
-      rows: Array<{
-        userId: string;
-        displayName: string | null;
-        avatarUrl: string | null;
-        sends: number;
-        flashes: number;
-        attempts: number;
-      }>;
-    }
-  ).rows.map((r) => ({
+  const participantArray = participantRows as unknown as Array<{
+    userId: string;
+    displayName: string | null;
+    avatarUrl: string | null;
+    sends: number;
+    flashes: number;
+    attempts: number;
+  }>;
+  return participantArray.map((r) => ({
     userId: r.userId,
     displayName: r.displayName,
     avatarUrl: r.avatarUrl,
@@ -646,19 +633,15 @@ async function fetchParticipantsBatch(
     ORDER BY sends DESC
   `);
 
-  const rows = (
-    result as unknown as {
-      rows: Array<{
-        effective_session_id: string;
-        userId: string;
-        displayName: string | null;
-        avatarUrl: string | null;
-        sends: number;
-        flashes: number;
-        attempts: number;
-      }>;
-    }
-  ).rows;
+  const rows = result as unknown as Array<{
+    effective_session_id: string;
+    userId: string;
+    displayName: string | null;
+    avatarUrl: string | null;
+    sends: number;
+    flashes: number;
+    attempts: number;
+  }>;
 
   const map = new Map<string, SessionFeedParticipant[]>();
   for (const r of rows) {
@@ -717,17 +700,13 @@ async function fetchGradeDistributionBatch(
     ORDER BY diff_num DESC
   `);
 
-  const rows = (
-    result as unknown as {
-      rows: Array<{
-        effective_session_id: string;
-        diff_num: number;
-        flash: number;
-        send: number;
-        attempt: number;
-      }>;
-    }
-  ).rows;
+  const rows = result as unknown as Array<{
+    effective_session_id: string;
+    diff_num: number;
+    flash: number;
+    send: number;
+    attempt: number;
+  }>;
 
   const map = new Map<string, SessionGradeDistributionItem[]>();
   for (const r of rows) {
@@ -824,14 +803,10 @@ async function fetchBoardTypesBatch(
     GROUP BY effective_session_id
   `);
 
-  const rows = (
-    result as unknown as {
-      rows: Array<{
-        effective_session_id: string;
-        board_types: string[];
-      }>;
-    }
-  ).rows;
+  const rows = result as unknown as Array<{
+    effective_session_id: string;
+    board_types: string[];
+  }>;
 
   const map = new Map<string, string[]>();
   for (const r of rows) {
