@@ -1,7 +1,7 @@
-import 'dotenv/config';
-// Load .env.development.local (gitignored) on top of .env.development for secrets
-import dotenv from 'dotenv';
-dotenv.config({ path: '.env.development.local', override: true });
+// MUST be the first import: initializes Sentry + loads dotenv before any
+// instrumented module (HTTP, Postgres, Redis) is required.
+import './instrument';
+import * as Sentry from '@sentry/node';
 import { startServer } from './server';
 import { redisClientManager } from './redis/client';
 import { closePool, closeReadPool } from '@boardsesh/db/client';
@@ -20,7 +20,7 @@ async function main() {
     // Force exit after 10 seconds if graceful shutdown stalls
     const forceTimer = setTimeout(() => {
       console.info('Forcing shutdown...');
-      process.exit(1);
+      void Sentry.flush(2000).finally(() => process.exit(1));
     }, 10000);
     forceTimer.unref();
 
@@ -62,6 +62,7 @@ async function main() {
       console.warn('Error closing database pools:', error);
     }
 
+    await Sentry.flush(2000);
     console.info('Shutdown complete');
     process.exit(0);
   }
@@ -70,7 +71,9 @@ async function main() {
   process.on('SIGTERM', shutdown);
 }
 
-main().catch((error) => {
+main().catch(async (error) => {
   console.error('Failed to start server:', error);
+  Sentry.captureException(error);
+  await Sentry.flush(2000);
   process.exit(1);
 });

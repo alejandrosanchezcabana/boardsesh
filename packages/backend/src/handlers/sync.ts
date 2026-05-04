@@ -1,4 +1,5 @@
 import type { IncomingMessage, ServerResponse } from 'http';
+import * as Sentry from '@sentry/node';
 import { SyncRunner } from '@boardsesh/aurora-sync/runner';
 import { applyCorsHeaders } from './cors';
 
@@ -34,6 +35,10 @@ export async function handleSyncCron(req: IncomingMessage, res: ServerResponse):
     onLog: (msg: string) => console.info(`[Sync] ${msg}`),
     onError: (error: Error, context: { userId?: string; board?: string }) => {
       console.error(`[Sync] Error for ${context.userId}/${context.board}:`, error.message);
+      Sentry.captureException(error, {
+        tags: { source: 'aurora-sync', board: context.board },
+        extra: { userId: context.userId },
+      });
     },
   });
 
@@ -57,6 +62,7 @@ export async function handleSyncCron(req: IncomingMessage, res: ServerResponse):
     console.info(`[Sync] Completed: ${result.successful}/${result.total} user synced`);
   } catch (error) {
     console.error('[Sync] Cron job failed:', error);
+    Sentry.captureException(error, { tags: { source: 'sync-cron' } });
     res.writeHead(500, { 'Content-Type': 'application/json' });
     res.end(
       JSON.stringify({

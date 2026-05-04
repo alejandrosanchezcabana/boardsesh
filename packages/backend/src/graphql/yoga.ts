@@ -1,5 +1,7 @@
 import { createYoga } from 'graphql-yoga';
 import { v4 as uuidv4 } from 'uuid';
+import { GraphQLError } from 'graphql';
+import * as Sentry from '@sentry/node';
 import { schema } from './index';
 import { validateNextAuthToken } from '../middleware/auth';
 import type { ConnectionContext } from '@boardsesh/shared-schema';
@@ -68,7 +70,16 @@ export function createYogaInstance() {
       debug: () => {},
       info: (...args: unknown[]) => console.info('[Yoga]', ...args),
       warn: (...args: unknown[]) => console.warn('[Yoga]', ...args),
-      error: (...args: unknown[]) => console.error('[Yoga]', ...args),
+      error: (...args: unknown[]) => {
+        console.error('[Yoga]', ...args);
+        // Skip GraphQLErrors triggered purely by client input (no originalError):
+        // validation, parse, depth/cost limit, auth — high volume, low signal.
+        for (const arg of args) {
+          if (!(arg instanceof Error)) continue;
+          if (arg instanceof GraphQLError && !arg.originalError) continue;
+          Sentry.captureException(arg, { tags: { source: 'graphql-yoga' } });
+        }
+      },
     },
     // In development/test, show all errors
     // In production, errors will be masked by default
