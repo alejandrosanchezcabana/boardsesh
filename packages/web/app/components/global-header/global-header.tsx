@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useCallback, useRef } from 'react';
+import dynamic from 'next/dynamic';
 import Box from '@mui/material/Box';
 import IconButton from '@mui/material/IconButton';
 import TextField from '@mui/material/TextField';
@@ -8,6 +9,7 @@ import InputAdornment from '@mui/material/InputAdornment';
 import SearchOutlined from '@mui/icons-material/SearchOutlined';
 import ClearOutlined from '@mui/icons-material/ClearOutlined';
 import FilterListOutlined from '@mui/icons-material/FilterListOutlined';
+import FormatListBulletedOutlined from '@mui/icons-material/FormatListBulletedOutlined';
 import SettingsOutlined from '@mui/icons-material/SettingsOutlined';
 import IosShareOutlined from '@mui/icons-material/IosShare';
 import NotificationsOutlined from '@mui/icons-material/NotificationsOutlined';
@@ -21,7 +23,7 @@ import { useSearchDrawerBridge } from '@/app/components/search-drawer/search-dra
 import UserDrawer from '@/app/components/user-drawer/user-drawer';
 import { useIsOnBoardRoute } from '@/app/components/persistent-session/persistent-session-context';
 import type { BoardConfigData } from '@/app/lib/server-board-configs';
-import { isBoardCreatePath } from '@/app/lib/board-route-paths';
+import { isBoardCreatePath, isBoardListPath } from '@/app/lib/board-route-paths';
 
 import TuneOutlined from '@mui/icons-material/TuneOutlined';
 import { usePathnameWithoutLocale } from '@/app/lib/i18n/use-locale-router';
@@ -31,7 +33,11 @@ import { useTranslation } from 'react-i18next';
 import { useStatsFilterBridge } from '@/app/components/stats-filter-bridge/stats-filter-bridge-context';
 import { useProfileHeaderShare } from '@/app/components/profile-header-bridge/profile-header-bridge-context';
 import { useSnackbar } from '@/app/components/providers/snackbar-provider';
+import { useQueueBridgeBoardInfo } from '@/app/components/queue-control/queue-bridge-board-info-context';
+import { useQueueList } from '@/app/components/graphql-queue';
 import styles from './global-header.module.css';
+
+const QueueDrawer = dynamic(() => import('@/app/components/play-view/queue-drawer'), { ssr: false });
 
 /** Route prefix → translation key for pages that show a simple title header instead of the default search/sesh header */
 const TITLE_HEADER_PAGES: Record<string, string> = {
@@ -159,6 +165,8 @@ export default function GlobalHeader({ boardConfigs }: GlobalHeaderProps) {
   const { t } = useTranslation('common');
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchRendered, setSearchRendered] = useState(false);
+  const [isQueueOpen, setIsQueueOpen] = useState(false);
+  const [isQueueRendered, setIsQueueRendered] = useState(false);
   const { data: session } = useSession();
   const { showMessage } = useSnackbar();
 
@@ -172,6 +180,8 @@ export default function GlobalHeader({ boardConfigs }: GlobalHeaderProps) {
   } = useSearchDrawerBridge();
   const statsFilterBridge = useStatsFilterBridge();
   const profileHeaderShare = useProfileHeaderShare();
+  const { boardDetails } = useQueueBridgeBoardInfo();
+  const { queue } = useQueueList();
   const pathname = usePathnameWithoutLocale();
   const inputRef = useRef<HTMLInputElement>(null);
   const profileHeaderConfig = getProfileHeaderConfig(pathname, t);
@@ -180,6 +190,19 @@ export default function GlobalHeader({ boardConfigs }: GlobalHeaderProps) {
   // MUI Modal/Portal/FocusTrap infrastructure on every parent re-render.
   const handleSearchTransitionEnd = useCallback((open: boolean) => {
     if (!open) setSearchRendered(false);
+  }, []);
+
+  const handleOpenQueue = useCallback(() => {
+    setIsQueueRendered(true);
+    setIsQueueOpen(true);
+  }, []);
+
+  const handleCloseQueue = useCallback(() => {
+    setIsQueueOpen(false);
+  }, []);
+
+  const handleQueueTransitionEnd = useCallback((open: boolean) => {
+    if (!open) setIsQueueRendered(false);
   }, []);
 
   const handleShareOwnProfile = useCallback(() => {
@@ -353,12 +376,19 @@ export default function GlobalHeader({ boardConfigs }: GlobalHeaderProps) {
   // Check if current page wants a simple title header
   const titleHeaderPage = Object.entries(TITLE_HEADER_PAGES).find(([prefix]) => pathname.startsWith(prefix));
 
+  // Pathname-derived gate: lets us SSR the filter and queue buttons before the
+  // board-route bridge injectors run on the client. The bridge callbacks
+  // (`openClimbSearchDrawer`, `boardDetails`) are still null on the server, so
+  // the click handlers no-op until hydration — but the icons themselves render
+  // in the initial HTML and don't pop in.
+  const isClimbListPage = isBoardListPath(pathname);
+
   // When the bridge is active (on a board list page), delegate to the board route's drawer
   const useClimbSearchBridge = openClimbSearchDrawer !== null;
 
   const handleSearchFocus = () => {
     // On non-list pages, the input acts as a fake search trigger
-    if (!useClimbSearchBridge) {
+    if (!isClimbListPage) {
       inputRef.current?.blur();
       setSearchRendered(true);
       setSearchOpen(true);
@@ -371,7 +401,7 @@ export default function GlobalHeader({ boardConfigs }: GlobalHeaderProps) {
     }
   };
 
-  const searchPlaceholder = useClimbSearchBridge ? t('header.searchClimbsPlaceholder') : t('header.searchPlaceholder');
+  const searchPlaceholder = isClimbListPage ? t('header.searchClimbsPlaceholder') : t('header.searchPlaceholder');
 
   // Simple title header for specific pages (back button + title, no search/sesh)
   if (titleHeaderPage) {
@@ -383,20 +413,20 @@ export default function GlobalHeader({ boardConfigs }: GlobalHeaderProps) {
       <header className={styles.header}>
         <UserDrawer boardConfigs={boardConfigs} />
 
-        <div id={useClimbSearchBridge ? 'onboarding-search-button' : undefined} className={styles.searchInput}>
+        <div id={isClimbListPage ? 'onboarding-search-button' : undefined} className={styles.searchInput}>
           <TextField
             inputRef={inputRef}
             placeholder={searchPlaceholder}
             variant="outlined"
             size="small"
             fullWidth
-            value={useClimbSearchBridge ? nameFilter : ''}
+            value={isClimbListPage ? nameFilter : ''}
             onChange={(e) => setNameFilter?.(e.target.value)}
             onFocus={handleSearchFocus}
             aria-label={t('ariaLabels.searchClimbsByName')}
             slotProps={{
               input: {
-                readOnly: !useClimbSearchBridge,
+                readOnly: !isClimbListPage,
                 startAdornment: (
                   <InputAdornment position="start">
                     <SearchOutlined sx={{ fontSize: 18 }} />
@@ -421,12 +451,28 @@ export default function GlobalHeader({ boardConfigs }: GlobalHeaderProps) {
           />
         </div>
 
-        {useClimbSearchBridge && (
+        {isClimbListPage && (
           <div className={styles.filterButton}>
             <IconButton onClick={handleFilterClick} aria-label={t('ariaLabels.openFilters')} size="small">
               <FilterListOutlined />
             </IconButton>
             {nonNameFiltersActive && <span className={styles.filterActiveIndicator} />}
+          </div>
+        )}
+
+        {isClimbListPage && (
+          <div className={styles.filterButton}>
+            <IconButton onClick={handleOpenQueue} aria-label={t('ariaLabels.openQueue')} size="small">
+              <Badge
+                badgeContent={queue.length}
+                max={99}
+                color="primary"
+                invisible={queue.length === 0}
+                sx={{ '& .MuiBadge-badge': { fontSize: 10, height: 16, minWidth: 16 } }}
+              >
+                <FormatListBulletedOutlined />
+              </Badge>
+            </IconButton>
           </div>
         )}
       </header>
@@ -437,6 +483,15 @@ export default function GlobalHeader({ boardConfigs }: GlobalHeaderProps) {
           onClose={() => setSearchOpen(false)}
           onTransitionEnd={handleSearchTransitionEnd}
           defaultCategory={isOnBoardRoute ? 'climbs' : 'boards'}
+        />
+      )}
+
+      {isQueueRendered && boardDetails && (
+        <QueueDrawer
+          open={isQueueOpen}
+          onClose={handleCloseQueue}
+          onTransitionEnd={handleQueueTransitionEnd}
+          boardDetails={boardDetails}
         />
       )}
     </>
