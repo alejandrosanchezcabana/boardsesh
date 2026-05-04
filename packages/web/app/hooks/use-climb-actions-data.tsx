@@ -230,45 +230,122 @@ export function useClimbActionsData({ boardName, layoutId, angle, climbUuids }: 
     layoutId,
   };
 
+  // Optimistic updates run inside onMutate so the second of two rapid taps
+  // sees the cache state from the first — the count delta is gated on whether
+  // membership actually transitioned, so redundant requests are no-ops on the count.
+  type AddPlaylistVars = { playlistId: string; climbUuid: string; climbAngle: number };
+  type RemovePlaylistVars = { playlistId: string; climbUuid: string };
+  type PlaylistMutationContext = {
+    prevMem: Map<string, Set<string>> | undefined;
+    prevPlaylists: Playlist[] | undefined;
+    membershipChanged: boolean;
+  };
+
+  const addPlaylistMutation = useMutation<unknown, Error, AddPlaylistVars, PlaylistMutationContext>({
+    mutationKey: ['addToPlaylist'],
+    mutationFn: async ({ playlistId, climbUuid, climbAngle }) => {
+      const r = playlistRef.current;
+      if (!r.token) throw new Error('Not authenticated');
+      const client = createGraphQLHttpClient(r.token);
+      return client.request<AddClimbToPlaylistMutationResponse>(ADD_CLIMB_TO_PLAYLIST, {
+        input: { playlistId, climbUuid, angle: climbAngle },
+      });
+    },
+    onMutate: async ({ playlistId, climbUuid }) => {
+      const r = playlistRef.current;
+      await r.cancelMemFetches();
+      const prevMem = r.queryClient.getQueryData<Map<string, Set<string>>>(r.memAccKey);
+      const prevPlaylists = r.queryClient.getQueryData<Playlist[]>(r.playlistsQueryKey);
+      const currentSet = prevMem?.get(climbUuid) ?? EMPTY_SET;
+      const alreadyMember = currentSet.has(playlistId);
+      if (!alreadyMember) {
+        const updatedMem = new Map(prevMem ?? new Map());
+        const nextSet = new Set(currentSet);
+        nextSet.add(playlistId);
+        updatedMem.set(climbUuid, nextSet);
+        r.queryClient.setQueryData(r.memAccKey, updatedMem);
+        r.queryClient.setQueryData<Playlist[]>(r.playlistsQueryKey, (prev) =>
+          prev?.map((p) => (p.uuid === playlistId ? { ...p, climbCount: p.climbCount + 1 } : p)),
+        );
+      }
+      return { prevMem, prevPlaylists, membershipChanged: !alreadyMember };
+    },
+    onError: (_err, _vars, context) => {
+      if (!context?.membershipChanged) return;
+      const r = playlistRef.current;
+      // setQueryData treats undefined as a no-op, so use removeQueries to roll back
+      // to a "no data" state when the snapshot was undefined.
+      if (context.prevMem === undefined) {
+        r.queryClient.removeQueries({ queryKey: r.memAccKey, exact: true });
+      } else {
+        r.queryClient.setQueryData(r.memAccKey, context.prevMem);
+      }
+      if (context.prevPlaylists === undefined) {
+        r.queryClient.removeQueries({ queryKey: r.playlistsQueryKey, exact: true });
+      } else {
+        r.queryClient.setQueryData(r.playlistsQueryKey, context.prevPlaylists);
+      }
+    },
+  });
+
+  const removePlaylistMutation = useMutation<unknown, Error, RemovePlaylistVars, PlaylistMutationContext>({
+    mutationKey: ['removeFromPlaylist'],
+    mutationFn: async ({ playlistId, climbUuid }) => {
+      const r = playlistRef.current;
+      if (!r.token) throw new Error('Not authenticated');
+      const client = createGraphQLHttpClient(r.token);
+      return client.request<RemoveClimbFromPlaylistMutationResponse>(REMOVE_CLIMB_FROM_PLAYLIST, {
+        input: { playlistId, climbUuid },
+      });
+    },
+    onMutate: async ({ playlistId, climbUuid }) => {
+      const r = playlistRef.current;
+      await r.cancelMemFetches();
+      const prevMem = r.queryClient.getQueryData<Map<string, Set<string>>>(r.memAccKey);
+      const prevPlaylists = r.queryClient.getQueryData<Playlist[]>(r.playlistsQueryKey);
+      const currentSet = prevMem?.get(climbUuid);
+      const wasMember = currentSet?.has(playlistId) ?? false;
+      if (wasMember) {
+        const updatedMem = new Map(prevMem ?? new Map());
+        const nextSet = new Set(currentSet);
+        nextSet.delete(playlistId);
+        updatedMem.set(climbUuid, nextSet);
+        r.queryClient.setQueryData(r.memAccKey, updatedMem);
+        r.queryClient.setQueryData<Playlist[]>(r.playlistsQueryKey, (prev) =>
+          prev?.map((p) => (p.uuid === playlistId ? { ...p, climbCount: p.climbCount - 1 } : p)),
+        );
+      }
+      return { prevMem, prevPlaylists, membershipChanged: wasMember };
+    },
+    onError: (_err, _vars, context) => {
+      if (!context?.membershipChanged) return;
+      const r = playlistRef.current;
+      // setQueryData treats undefined as a no-op, so use removeQueries to roll back
+      // to a "no data" state when the snapshot was undefined.
+      if (context.prevMem === undefined) {
+        r.queryClient.removeQueries({ queryKey: r.memAccKey, exact: true });
+      } else {
+        r.queryClient.setQueryData(r.memAccKey, context.prevMem);
+      }
+      if (context.prevPlaylists === undefined) {
+        r.queryClient.removeQueries({ queryKey: r.playlistsQueryKey, exact: true });
+      } else {
+        r.queryClient.setQueryData(r.playlistsQueryKey, context.prevPlaylists);
+      }
+    },
+  });
+
+  const addPlaylistMutateRef = useRef(addPlaylistMutation.mutateAsync);
+  addPlaylistMutateRef.current = addPlaylistMutation.mutateAsync;
+  const removePlaylistMutateRef = useRef(removePlaylistMutation.mutateAsync);
+  removePlaylistMutateRef.current = removePlaylistMutation.mutateAsync;
+
   const addToPlaylist = useCallback(async (playlistId: string, climbUuid: string, climbAngle: number) => {
-    const r = playlistRef.current;
-    if (!r.token) throw new Error('Not authenticated');
-    const client = createGraphQLHttpClient(r.token);
-    await client.request<AddClimbToPlaylistMutationResponse>(ADD_CLIMB_TO_PLAYLIST, {
-      input: { playlistId, climbUuid, angle: climbAngle },
-    });
-    await r.cancelMemFetches();
-    const prevMem = r.queryClient.getQueryData<Map<string, Set<string>>>(r.memAccKey) ?? new Map();
-    const updatedMem = new Map(prevMem);
-    const currentSet = new Set(updatedMem.get(climbUuid) || []);
-    currentSet.add(playlistId);
-    updatedMem.set(climbUuid, currentSet);
-    r.queryClient.setQueryData(r.memAccKey, updatedMem);
-    r.queryClient.setQueryData<Playlist[]>(r.playlistsQueryKey, (prev) =>
-      prev?.map((p) => (p.uuid === playlistId ? { ...p, climbCount: p.climbCount + 1 } : p)),
-    );
+    await addPlaylistMutateRef.current({ playlistId, climbUuid, climbAngle });
   }, []);
 
   const removeFromPlaylist = useCallback(async (playlistId: string, climbUuid: string) => {
-    const r = playlistRef.current;
-    if (!r.token) throw new Error('Not authenticated');
-    const client = createGraphQLHttpClient(r.token);
-    await client.request<RemoveClimbFromPlaylistMutationResponse>(REMOVE_CLIMB_FROM_PLAYLIST, {
-      input: { playlistId, climbUuid },
-    });
-    await r.cancelMemFetches();
-    const prevMem = r.queryClient.getQueryData<Map<string, Set<string>>>(r.memAccKey) ?? new Map();
-    const updatedMem = new Map(prevMem);
-    const currentPlaylists = updatedMem.get(climbUuid);
-    if (currentPlaylists) {
-      const next = new Set(currentPlaylists);
-      next.delete(playlistId);
-      updatedMem.set(climbUuid, next);
-    }
-    r.queryClient.setQueryData(r.memAccKey, updatedMem);
-    r.queryClient.setQueryData<Playlist[]>(r.playlistsQueryKey, (prev) =>
-      prev?.map((p) => (p.uuid === playlistId ? { ...p, climbCount: Math.max(0, p.climbCount - 1) } : p)),
-    );
+    await removePlaylistMutateRef.current({ playlistId, climbUuid });
   }, []);
 
   const createPlaylist = useCallback(
