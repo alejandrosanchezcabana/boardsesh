@@ -409,6 +409,35 @@ describe('useClimbActionsData', () => {
     expect(result.current.playlistsProviderProps.playlistMemberships.get('climb-1')?.has('pl-1') ?? false).toBe(false);
   });
 
+  it('removeFromPlaylist rolls back membership and climbCount when the request fails', async () => {
+    mockRequest.mockResolvedValueOnce({ favorites: [] });
+    mockRequest.mockResolvedValueOnce({
+      allUserPlaylists: [{ uuid: 'pl-1', name: 'Test', climbCount: 5 }],
+    });
+    mockRequest.mockResolvedValueOnce({
+      playlistsForClimbs: [{ climbUuid: 'climb-1', playlistUuids: ['pl-1'] }],
+    });
+
+    const wrapper = createQueryWrapper();
+    const { result } = renderHook(() => useClimbActionsData(defaultOptions), { wrapper });
+
+    await waitFor(() => {
+      expect(result.current.playlistsProviderProps.playlistMemberships.get('climb-1')?.has('pl-1')).toBe(true);
+    });
+
+    mockRequest.mockRejectedValueOnce(new Error('network down'));
+
+    await act(async () => {
+      await expect(result.current.playlistsProviderProps.removeFromPlaylist('pl-1', 'climb-1')).rejects.toThrow(
+        'network down',
+      );
+    });
+
+    const playlist = result.current.playlistsProviderProps.playlists.find((p) => p.uuid === 'pl-1');
+    expect(playlist?.climbCount).toBe(5);
+    expect(result.current.playlistsProviderProps.playlistMemberships.get('climb-1')?.has('pl-1')).toBe(true);
+  });
+
   it('createPlaylist sends mutation and updates cache', async () => {
     mockRequest.mockResolvedValueOnce({ favorites: [] });
     mockRequest.mockResolvedValueOnce({ allUserPlaylists: [] });

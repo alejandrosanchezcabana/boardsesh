@@ -312,7 +312,7 @@ export function useClimbActionsData({ boardName, layoutId, angle, climbUuids }: 
         updatedMem.set(climbUuid, nextSet);
         r.queryClient.setQueryData(r.memAccKey, updatedMem);
         r.queryClient.setQueryData<Playlist[]>(r.playlistsQueryKey, (prev) =>
-          prev?.map((p) => (p.uuid === playlistId ? { ...p, climbCount: p.climbCount - 1 } : p)),
+          prev?.map((p) => (p.uuid === playlistId ? { ...p, climbCount: Math.max(0, p.climbCount - 1) } : p)),
         );
       }
       return { prevMem, prevPlaylists, membershipChanged: wasMember };
