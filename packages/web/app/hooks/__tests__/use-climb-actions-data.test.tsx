@@ -344,9 +344,10 @@ describe('useClimbActionsData', () => {
       ]);
     });
 
-    // climbCount must end at 3, not 5 — the optimistic update is gated on actual transition.
-    const playlist = result.current.playlistsProviderProps.playlists.find((p) => p.uuid === 'pl-1');
-    expect(playlist?.climbCount).toBe(3);
+    // Starting count is 2; only the first tap performs an effective add (2 + 1 = 3).
+    // Without the membership gate, all three taps would each apply +1 (2 + 3 = 5).
+    const addedPlaylist = result.current.playlistsProviderProps.playlists.find((p) => p.uuid === 'pl-1');
+    expect(addedPlaylist?.climbCount).toBe(3);
     expect(result.current.playlistsProviderProps.playlistMemberships.get('climb-1')?.has('pl-1')).toBe(true);
   });
 
@@ -376,9 +377,10 @@ describe('useClimbActionsData', () => {
       ]);
     });
 
-    // climbCount must end at 4, not 2 — the second and third tap see membership already removed.
-    const playlist = result.current.playlistsProviderProps.playlists.find((p) => p.uuid === 'pl-1');
-    expect(playlist?.climbCount).toBe(4);
+    // Starting count is 5; only the first tap performs an effective remove (5 - 1 = 4).
+    // Without the membership gate, all three taps would each apply -1 (5 - 3 = 2).
+    const removedPlaylist = result.current.playlistsProviderProps.playlists.find((p) => p.uuid === 'pl-1');
+    expect(removedPlaylist?.climbCount).toBe(4);
     expect(result.current.playlistsProviderProps.playlistMemberships.get('climb-1')?.has('pl-1')).toBe(false);
   });
 
