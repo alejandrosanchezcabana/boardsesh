@@ -41,22 +41,21 @@ const ClimbHoldSearchForm: React.FC<ClimbHoldSearchFormProps> = ({ boardDetails 
   const pathname = usePathname();
   const angle = useMemo(() => getAngleFromPath(pathname), [pathname]);
 
-  // The board's full holdsData includes positions outside the climbable area
-  // for the current size (kickboard / out-of-edge holds). Those positions
-  // still render transparent click-targets, so tapping in the apparently-
-  // empty area above/around the wall image would land on a phantom hold and
-  // commit a filter on a hold the climb can't actually use.
-  // Restrict to holds inside the size's edge bounds before handing to the
-  // renderer + overlay.
-  const filteredBoardDetails = useMemo(() => {
-    const { edge_left, edge_right, edge_top, edge_bottom, holdsData } = boardDetails;
-    return {
+  // BoardLitupHolds renders a transparent click circle at each hold's
+  // (cx, cy, r). The radius `r` comes from board-constants.ts as
+  // `xSpacing * 4`, which is generous on purpose so the visible stroke
+  // stands out for setters — but for search mode that means taps several
+  // SVG units away from the visible hold image still land on its hidden
+  // click target, so the user sees a filter circle "in empty space".
+  // Shrink each hold's click radius for search mode so the tap target sits
+  // closer to the visible hold image. Setter mode is unaffected.
+  const tightenedBoardDetails = useMemo(
+    () => ({
       ...boardDetails,
-      holdsData: holdsData.filter(
-        (h) => h.cx >= edge_left && h.cx <= edge_right && h.cy >= edge_top && h.cy <= edge_bottom,
-      ),
-    };
-  }, [boardDetails]);
+      holdsData: boardDetails.holdsData.map((h) => ({ ...h, r: h.r * 0.5 })),
+    }),
+    [boardDetails],
+  );
 
   const holdsFilter: HoldsFilter = uiSearchParams.holdsFilter || {};
 
@@ -159,7 +158,7 @@ const ClimbHoldSearchForm: React.FC<ClimbHoldSearchFormProps> = ({ boardDetails 
 
       <div className={styles.boardContainer}>
         <BoardRenderer
-          boardDetails={filteredBoardDetails}
+          boardDetails={tightenedBoardDetails}
           // Pass empty map — the search overlay handles its own rendering on
           // top, and BoardRenderer will still draw transparent click-target
           // circles because onHoldClick is wired.
@@ -169,7 +168,7 @@ const ClimbHoldSearchForm: React.FC<ClimbHoldSearchFormProps> = ({ boardDetails 
         />
         <SearchHoldFilterOverlay boardDetails={boardDetails} holdsFilter={holdsFilter} />
         <CreateClimbHeatmapOverlay
-          boardDetails={filteredBoardDetails}
+          boardDetails={tightenedBoardDetails}
           angle={angle}
           litUpHoldsMap={{}}
           opacity={0.7}
