@@ -38,9 +38,7 @@
       "iosTitle": "Installer l'app Boardsesh",
       "iosDescription": "Allume les prises de votre board directement depuis votre téléphone",
       "androidLiveTitle": "Installer l'app Boardsesh",
-      "androidLiveDescription": "Disponible sur Google Play",
-      "androidPreLaunchTitle": "L'app Android arrive bientôt",
-      "androidPreLaunchDescription": "Sortie dans {{days}}j {{hours}}h {{minutes}}m {{seconds}}s. Touchez pour installer la version preview."
+      "androidLiveDescription": "Disponible sur Google Play"
     },
     "cards": {
       "tourTitle": "Faites le tour",

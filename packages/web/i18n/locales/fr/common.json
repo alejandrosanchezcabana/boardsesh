@@ -10,10 +10,13 @@
   },
   "lightControl": {
     "title": "Lumières",
-    "turnOffAll": "Éteindre toutes les lumières",
+    "turnOffAll": "Tout éteindre",
     "partyMode": "Mode soirée",
     "stopParty": "Arrêter la soirée",
-    "partyUnsupported": "Le mode soirée n'est pas disponible sur ce board",
+    "partyUnsupported": "Le mode soirée n'est pas dispo sur ce board",
+    "discoMode": "Disco sur le bloc",
+    "stopDisco": "Arrêter le disco",
+    "discoNeedsClimb": "Chargez un bloc pour lancer le disco",
     "clearFailed": "Impossible d'éteindre le board"
   },
   "actions": {
@@ -48,7 +51,7 @@
     "shareProfile": "Partager le profil",
     "settings": "Paramètres",
     "notifications": "Notifications",
-    "searchClimbsByName": "Rechercher des voies par nom",
+    "searchClimbsByName": "Rechercher des blocs par nom",
     "userMenu": "Menu utilisateur",
     "toggleDarkMode": "Activer/désactiver le mode sombre"
   },
@@ -60,17 +63,17 @@
     "profile": "Profil",
     "statistics": "Statistiques",
     "sessions": "Sessions",
-    "createdClimbs": "Voies créées",
+    "createdClimbs": "Blocs créés",
     "auroraMigration": "Migration Aurora",
-    "searchPlaceholder": "Que voulez-vous grimper ?",
-    "searchClimbsPlaceholder": "Rechercher des voies..."
+    "searchPlaceholder": "Qu'est-ce qu'on grimpe ?",
+    "searchClimbsPlaceholder": "Rechercher des blocs..."
   },
   "share": {
     "profileTitle": "Profil de grimpeur de {{name}}",
-    "profileText": "Découvrez le profil de grimpeur de {{name}} sur Boardsesh",
+    "profileText": "Le profil de grimpeur de {{name}} sur Boardsesh",
     "fallbackName": "Mon",
     "viewedFallbackName": "Grimpeur",
-    "linkCopied": "Lien copié dans le presse-papiers !",
+    "linkCopied": "Lien copié !",
     "shareFailed": "Échec du partage"
   },
   "myBoards": {
@@ -80,12 +83,12 @@
     "searchPlaceholder": "Rechercher par nom ou emplacement...",
     "ariaFindBoard": "Trouver un board",
     "ariaCreateBoard": "Créer un board",
-    "empty": "Aucun board pour le moment. Créez-en un depuis le sélecteur de board pour commencer."
+    "empty": "Aucun board pour le moment. Créez-en un depuis le sélecteur."
   },
   "userDrawer": {
     "signIn": "Se connecter",
     "signInModalTitle": "Se connecter à Boardsesh",
-    "signInModalDescription": "Connectez-vous pour enregistrer vos favoris, journaliser vos ascensions et plus encore.",
+    "signInModalDescription": "Connectez-vous pour suivre vos favoris, vos ascensions et bien plus.",
     "changeBoard": "Changer de board",
     "devUrl": "URL de dev",
     "development": "Développement",
@@ -100,16 +103,16 @@
   },
   "loading": {
     "messages": [
-      "Préparation de votre board...",
-      "Configuration des voies...",
-      "Préparation du mur...",
-      "Chargement des jeux de prises...",
-      "Presque prêt à grimper...",
+      "Préparation du board...",
+      "Configuration des blocs...",
+      "On chauffe le mur...",
+      "Chargement des prises...",
+      "Bientôt prêt à grimper...",
       "Allumage des LED...",
-      "Synchronisation de la configuration du board...",
+      "Synchronisation du board...",
       "Calibrage des cotations...",
       "Mise en jambes...",
-      "Vérification de l'état des voies..."
+      "Check des conditions..."
     ]
   },
   "emptyState": {
@@ -125,7 +128,7 @@
     "cancel": "Annuler",
     "signInPrompt": "Connectez-vous pour laisser un commentaire.",
     "discussionTitle": "Discussion",
-    "empty": "Aucun commentaire pour le moment. Lancez la conversation.",
+    "empty": "Pas encore de commentaire. Lancez-vous.",
     "deleted": "[supprimé]",
     "edited": "(modifié)",
     "userFallback": "Utilisateur",
@@ -142,17 +145,17 @@
     },
     "delete": {
       "title": "Supprimer le commentaire",
-      "description": "Voulez-vous vraiment supprimer ce commentaire ? Cette action est irréversible.",
+      "description": "Supprimer ce commentaire ? Cette action est irréversible.",
       "confirm": "Supprimer",
       "editAria": "Modifier le commentaire",
       "deleteAria": "Supprimer le commentaire"
     },
     "errors": {
-      "post": "Échec de la publication du commentaire",
-      "update": "Échec de la mise à jour du commentaire",
-      "delete": "Échec de la suppression du commentaire",
-      "reply": "Échec de la publication de la réponse",
-      "loadReplies": "Échec du chargement des réponses"
+      "post": "Impossible de publier le commentaire",
+      "update": "Impossible de modifier le commentaire",
+      "delete": "Impossible de supprimer le commentaire",
+      "reply": "Impossible de publier la réponse",
+      "loadReplies": "Impossible de charger les réponses"
     }
   },
   "vote": {
@@ -161,7 +164,7 @@
     "like": "J'aime",
     "unlike": "Je n'aime plus",
     "signInPrompt": "Connectez-vous pour voter",
-    "failed": "Échec du vote"
+    "failed": "Impossible de voter"
   },
   "proposal": {
     "trigger": "Proposer une modification",
@@ -179,7 +182,7 @@
       "proposedGrade": "Cotation proposée",
       "proposedStatus": "Statut proposé",
       "reasonLabel": "Motif (facultatif)",
-      "reasonPlaceholder": "Pourquoi pensez-vous que cette modification est nécessaire ?",
+      "reasonPlaceholder": "Pourquoi cette modification ?",
       "yes": "Oui",
       "no": "Non"
     },
@@ -187,44 +190,44 @@
       "classic": "Les propositions classiques s'appliquent à toutes les inclinaisons.",
       "benchmark": "Les propositions de référence sont par inclinaison."
     },
-    "outlierWarning": "La cotation à cette inclinaison semble aberrante par rapport aux inclinaisons voisines. Cette proposition pourra être approuvée automatiquement si elle correspond aux données voisines.",
+    "outlierWarning": "La cotation à cette inclinaison détonne par rapport aux inclinaisons voisines. La proposition peut être approuvée automatiquement si elle colle aux données voisines.",
     "validation": {
-      "signIn": "Connectez-vous pour créer des propositions",
+      "signIn": "Connectez-vous pour proposer une modification",
       "signInToVote": "Connectez-vous pour voter sur les propositions",
-      "missingValue": "Veuillez saisir une valeur proposée",
-      "sameGrade": "La cotation proposée est identique à la cotation actuelle",
-      "noData": "Échec de la création de la proposition : aucune donnée renvoyée",
-      "failed": "Échec de la création de la proposition",
-      "failedToVote": "Échec du vote",
-      "failedToResolve": "Échec de la résolution de la proposition",
-      "failedToDelete": "Échec de la suppression de la proposition"
+      "missingValue": "Saisissez une valeur proposée",
+      "sameGrade": "La cotation proposée est identique à l'actuelle",
+      "noData": "Impossible de créer la proposition : aucune donnée renvoyée",
+      "failed": "Impossible de créer la proposition",
+      "failedToVote": "Impossible de voter",
+      "failedToResolve": "Impossible de résoudre la proposition",
+      "failedToDelete": "Impossible de supprimer la proposition"
     },
     "created": "Proposition créée"
   },
   "follow": {
     "follow": "Suivre",
-    "following": "Suivi",
-    "unfollow": "Ne plus suivre"
+    "following": "Abonné",
+    "unfollow": "Se désabonner"
   },
   "feedback": {
-    "title": "Vous aimez Boardsesh ?"
+    "title": "Boardsesh vous plaît ?"
   },
   "betaVideos": {
-    "empty": "Aucune vidéo de beta pour le moment"
+    "empty": "Pas encore de vidéo de beta"
   },
   "moonboardImport": {
-    "removeConfirmTitle": "Retirer cette voie ?"
+    "removeConfirmTitle": "Retirer ce bloc ?"
   },
   "ascents": {
     "deleteTitle": "Supprimer l'ascension",
-    "deleteDescription": "Êtes-vous sûr ? Cette action est irréversible.",
+    "deleteDescription": "Vraiment ? Cette action est irréversible.",
     "statusFlash": "flash",
-    "statusSend": "réussite",
+    "statusSend": "enchaînement",
     "statusAttempt": "essai",
-    "flashed_one": "Flashée",
+    "flashed_one": "Flashé",
     "flashed_other": "{{count}} flashs",
-    "sent_one": "Réussie",
-    "sent_other": "{{count}} réussites",
+    "sent_one": "Enchaîné",
+    "sent_other": "{{count}} enchaînements",
     "attempts_one": "1 essai",
     "attempts_other": "{{count}} essais"
   },
