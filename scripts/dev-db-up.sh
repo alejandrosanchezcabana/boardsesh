@@ -18,6 +18,21 @@ HBA_FILE="/var/lib/postgresql/pgdata/pg_hba.conf"
 REPO_ROOT=$(CDPATH= cd -- "$(dirname "$0")/.." && pwd)
 DRIZZLE_DIR="$REPO_ROOT/packages/db/drizzle"
 
+ensure_docker_daemon() {
+  if ! command -v docker >/dev/null 2>&1; then
+    echo "ERROR: Docker CLI is not installed or not on PATH."
+    echo "       Install Docker Desktop or Docker Engine and retry."
+    exit 1
+  fi
+
+  if ! docker info >/dev/null 2>&1; then
+    echo "ERROR: Docker daemon is not running or cannot be reached."
+    echo "       Start Docker Desktop (macOS/Windows) or the Docker service and retry."
+    echo "       On Linux, try 'sudo systemctl start docker' or 'dockerd'."
+    exit 1
+  fi
+}
+
 run_pending_drizzle_sql_migrations() {
   last_migration_created_at=$(docker exec -u postgres "$PG_CONTAINER" psql -U postgres -d main -t -A -c \
     "SELECT COALESCE((SELECT created_at FROM drizzle.\"__drizzle_migrations\" ORDER BY created_at DESC LIMIT 1), 0);")
@@ -60,6 +75,8 @@ run_pending_drizzle_sql_migrations() {
     } | docker exec -i -u postgres "$PG_CONTAINER" psql -v ON_ERROR_STOP=1 -U postgres -d main > /dev/null
   done
 }
+
+ensure_docker_daemon
 
 # ── Fast path: if everything is already running, just check migrations ─
 # This makes multi-worktree setups fast — the second worktree skips all
