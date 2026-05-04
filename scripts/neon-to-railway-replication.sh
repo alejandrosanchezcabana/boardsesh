@@ -17,11 +17,12 @@ Usage:
 Environment:
   NEON_DATABASE_URL                 Neon admin/source connection string.
   RAILWAY_DATABASE_URL              Railway direct Postgres connection string.
-  NEON_REPLICATION_DATABASE_URL     Optional publisher conninfo for the subscription.
-                                    Defaults to NEON_DATABASE_URL.
+  NEON_REPLICATION_DATABASE_URL     Required for setup. Publisher conninfo for the
+                                    subscription; must use a role with REPLICATION.
   PUBLICATION_NAME                  Optional, default boardsesh_migration.
   SUBSCRIPTION_NAME                 Optional, default boardsesh_neon_sub.
-  CHECK_TABLES                      Optional space-separated tables for status row counts.
+  CHECK_TABLES                      Optional space-separated unqualified table names
+                                    (no schema prefix) for status row counts.
   LOAD_SCHEMA                       Optional setup flag, default true. Set false if Railway
                                     schema was already prepared and target tables are empty.
 
@@ -29,7 +30,8 @@ Commands:
   setup
     Verifies Neon logical replication, creates Railway extensions, loads Neon
     schema only, creates/updates the Neon app-table publication, and creates
-    the Railway subscription with copy_data=true.
+    the Railway subscription with copy_data=true. Re-run with LOAD_SCHEMA=false
+    if the schema was already loaded on a previous attempt.
 
   status
     Shows replication status and compares row counts for CHECK_TABLES.
@@ -113,7 +115,7 @@ BEGIN
       )
     ORDER BY n.nspname, c.relname
   LOOP
-    EXECUTE 'SELECT EXISTS (SELECT 1 FROM ' || rel.relation_name || ' LIMIT 1)' INTO has_rows;
+    EXECUTE 'SELECT EXISTS (SELECT 1 FROM ' || rel.relation_name || ')' INTO has_rows;
     IF has_rows THEN
       RAISE EXCEPTION 'Railway target table % is not empty; copy_data=true requires empty target tables', rel.relation_name;
     END IF;
@@ -133,10 +135,11 @@ check_common_requirements() {
 
 setup_replication() {
   check_common_requirements
+  require_env NEON_REPLICATION_DATABASE_URL
   require_command pg_dump
   require_command pg_restore
 
-  local publisher_conninfo="${NEON_REPLICATION_DATABASE_URL:-$NEON_DATABASE_URL}"
+  local publisher_conninfo="$NEON_REPLICATION_DATABASE_URL"
   local wal_level
   wal_level="$(psql_neon -Atqc 'SHOW wal_level;')"
   [[ "$wal_level" == "logical" ]] || fail "Neon wal_level is '$wal_level'; enable logical replication first"
@@ -154,7 +157,7 @@ SQL
   if [[ "$LOAD_SCHEMA" == "true" ]]; then
     local dump_file
     dump_file="$(mktemp "${TMPDIR:-/tmp}/boardsesh-schema.XXXXXX.dump")"
-    trap 'rm -f "$dump_file"' RETURN
+    trap 'rm -f "$dump_file"' EXIT
 
     echo "Dumping Neon schema only..."
     pg_dump --schema-only --no-owner --no-acl --no-publications --no-subscriptions \
@@ -174,7 +177,7 @@ SQL
   [[ -n "$table_list" ]] || fail "no publishable Neon tables found"
 
   local pub_all_tables
-  pub_all_tables="$(psql_neon -Atqc "SELECT puballtables FROM pg_publication WHERE pubname = '$PUBLICATION_NAME';")"
+  pub_all_tables="$(psql_neon -Atq -v pub_name="$PUBLICATION_NAME" -c "SELECT puballtables FROM pg_publication WHERE pubname = :'pub_name';")"
   if [[ "$pub_all_tables" == "t" ]]; then
     fail "Neon publication '$PUBLICATION_NAME' already exists as FOR ALL TABLES; drop it first so extension tables are not replicated"
   elif [[ "$pub_all_tables" == "f" ]]; then
@@ -190,7 +193,7 @@ SQL
   fi
 
   local subscription_exists
-  subscription_exists="$(psql_railway -Atqc "SELECT 1 FROM pg_subscription WHERE subname = '$SUBSCRIPTION_NAME';")"
+  subscription_exists="$(psql_railway -Atq -v sub_name="$SUBSCRIPTION_NAME" -c "SELECT 1 FROM pg_subscription WHERE subname = :'sub_name';")"
   if [[ "$subscription_exists" == "1" ]]; then
     echo "Railway subscription '$SUBSCRIPTION_NAME' already exists; leaving it unchanged."
   else
@@ -210,28 +213,27 @@ status_replication() {
   check_common_requirements
 
   echo "Neon publisher connections:"
-  psql_neon -x <<SQL
+  psql_neon -x -v sub_name="$SUBSCRIPTION_NAME" <<'SQL'
 SELECT application_name, state, sent_lsn, write_lsn, flush_lsn, replay_lsn, sync_state
 FROM pg_stat_replication
-WHERE application_name = '$SUBSCRIPTION_NAME'
-   OR application_name != 'walproposer';
+WHERE application_name = :'sub_name';
 SQL
 
   echo
   echo "Railway subscription status:"
-  psql_railway -x <<SQL
+  psql_railway -x -v sub_name="$SUBSCRIPTION_NAME" <<'SQL'
 SELECT subname, pid, received_lsn, latest_end_lsn, latest_end_time,
        now() - latest_end_time AS replication_lag
 FROM pg_stat_subscription
-WHERE subname = '$SUBSCRIPTION_NAME';
+WHERE subname = :'sub_name';
 SQL
 
   echo
   echo "Railway table sync states:"
-  psql_railway <<SQL
+  psql_railway -v sub_name="$SUBSCRIPTION_NAME" <<'SQL'
 SELECT srsubstate, count(*) AS table_count
 FROM pg_subscription_rel
-WHERE srsubid = (SELECT oid FROM pg_subscription WHERE subname = '$SUBSCRIPTION_NAME')
+WHERE srsubid = (SELECT oid FROM pg_subscription WHERE subname = :'sub_name')
 GROUP BY srsubstate
 ORDER BY srsubstate;
 SQL
@@ -252,20 +254,28 @@ sync_sequences() {
 
   local sql_file
   sql_file="$(mktemp "${TMPDIR:-/tmp}/boardsesh-sequences.XXXXXX.sql")"
-  trap 'rm -f "$sql_file"' RETURN
+  trap 'rm -f "$sql_file"' EXIT
 
   echo "Generating sequence setval statements from Neon..."
   psql_neon -At <<'SQL' >"$sql_file"
 SELECT format(
-  'SELECT setval(%L, %s, true);',
+  'SELECT setval(%L, %s, %L);',
   quote_ident(s.sequence_schema) || '.' || quote_ident(s.sequence_name),
-  ps.last_value
+  ps.last_value,
+  ps.is_called
 )
 FROM information_schema.sequences s
 JOIN pg_sequences ps
   ON ps.schemaname = s.sequence_schema
  AND ps.sequencename = s.sequence_name
 WHERE s.sequence_schema NOT IN ('pg_catalog', 'information_schema')
+  AND NOT EXISTS (
+    SELECT 1
+    FROM pg_depend d
+    WHERE d.classid = 'pg_class'::regclass
+      AND d.objid = format('%I.%I', s.sequence_schema, s.sequence_name)::regclass
+      AND d.deptype = 'e'
+  )
 ORDER BY s.sequence_schema, s.sequence_name;
 SQL
 
@@ -279,7 +289,7 @@ teardown_replication() {
 
   echo "Dropping Railway subscription if present..."
   local subscription_exists
-  subscription_exists="$(psql_railway -Atqc "SELECT 1 FROM pg_subscription WHERE subname = '$SUBSCRIPTION_NAME';")"
+  subscription_exists="$(psql_railway -Atq -v sub_name="$SUBSCRIPTION_NAME" -c "SELECT 1 FROM pg_subscription WHERE subname = :'sub_name';")"
   if [[ "$subscription_exists" == "1" ]]; then
     psql_railway <<SQL
 ALTER SUBSCRIPTION $SUBSCRIPTION_NAME DISABLE;
