@@ -1,4 +1,5 @@
 import { eq, and, sql } from 'drizzle-orm';
+import { executeRows } from '@boardsesh/db/client';
 import { db } from '../../../../db/client';
 import * as dbSchema from '@boardsesh/db/schema';
 import { resolveCommunitySetting } from '../community-settings';
@@ -19,19 +20,17 @@ export async function analyzeGradeOutlier(
 } | null> {
   try {
     // Query climb stats across all angles for this climb (unified table)
-    const stats = await db.execute(sql`
+    const rows = await executeRows<{
+      angle: number;
+      display_difficulty: number;
+      ascensionist_count: number;
+    }>(db, sql`
       SELECT angle, display_difficulty, ascensionist_count
       FROM board_climb_stats
       WHERE climb_uuid = ${climbUuid}
         AND board_type = ${boardType}
       ORDER BY angle
     `);
-
-    const rows = stats as unknown as Array<{
-      angle: number;
-      display_difficulty: number;
-      ascensionist_count: number;
-    }>;
     if (!rows || rows.length < 2) return null;
 
     // Find the current angle's data

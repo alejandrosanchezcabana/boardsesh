@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { sql } from 'drizzle-orm';
+import { executeRows } from '@/app/lib/db/db';
 import { AURORA_BOARD_NAMES, getBoardSelectorOptions, isAuroraBoardName } from '@/app/lib/board-constants';
 import type { AuroraBoardName } from '@boardsesh/shared-schema';
 import { dbzRead as db } from '@/app/lib/db/db';
@@ -29,7 +30,7 @@ type WarmTarget = {
 
 async function getAnglesForLayout(boardName: AuroraBoardName, layoutId: number): Promise<number[]> {
   // Same query used by packages/backend/src/graphql/resolvers/board/queries.ts:44-50
-  const result = await db.execute<{ angle: number }>(sql`
+  const result = await executeRows<{ angle: number }>(db, sql`
     SELECT DISTINCT pa.angle
     FROM board_products_angles pa
     JOIN board_layouts l

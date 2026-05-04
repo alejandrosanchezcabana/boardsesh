@@ -8,7 +8,7 @@ import { getBoardDetailsForBoard } from '@/app/lib/board-utils';
 // All queries in this module are reads driving public OG image generation.
 // Route them through the replica seam — falls back to primary when
 // READ_REPLICA_URL is unset, so this is safe before a replica exists.
-import { dbzRead as dbz, getReadPool } from '@/app/lib/db/db';
+import { dbzRead as dbz, executeRows, getReadPool, rowsFromResult } from '@/app/lib/db/db';
 import { formatBoardDisplayName } from '@/app/lib/string-utils';
 import type { BoardDetails, BoardName, ParsedBoardRouteParameters } from '@/app/lib/types';
 import { parseBoardRouteParamsWithSlugs } from '@/app/lib/url-utils.server';
@@ -23,7 +23,13 @@ export type ProfileOgSummary = {
 
 export const getProfileOgSummary = cache(async (userId: string): Promise<ProfileOgSummary | null> => {
   const rawSql = getReadPool();
-  const rows = (await rawSql`
+  const rows = rowsFromResult<{
+    name: string | null;
+    image: string | null;
+    display_name: string | null;
+    avatar_url: string | null;
+    version_at: string | Date | null;
+  }>(await rawSql`
     SELECT
       u.name,
       u.image,
@@ -38,13 +44,7 @@ export const getProfileOgSummary = cache(async (userId: string): Promise<Profile
     LEFT JOIN user_profiles p ON p.user_id = u.id
     WHERE u.id = ${userId}
     LIMIT 1
-  `) as Array<{
-    name: string | null;
-    image: string | null;
-    display_name: string | null;
-    avatar_url: string | null;
-    version_at: string | Date | null;
-  }>;
+  `);
 
   const row = rows[0];
   if (!row) {
@@ -66,12 +66,12 @@ export type SetterOgSummary = {
 };
 
 export const getSetterOgSummary = cache(async (username: string): Promise<SetterOgSummary> => {
-  const result = await dbz.execute<{
+  const result = await executeRows<{
     name: string | null;
     display_name: string | null;
     avatar_url: string | null;
     version_at: string | Date | null;
-  }>(drizzleSql`
+  }>(dbz, drizzleSql`
     SELECT
       profile.name,
       profile.display_name,
@@ -301,7 +301,7 @@ export const getSessionOgSummary = cache(async (sessionId: string): Promise<Sess
       }
     | undefined;
 
-  const partySessionResult = await dbz.execute<{
+  const partySessionResult = await executeRows<{
     name: string | null;
     leader_name: string | null;
     version_at: string | Date | null;
@@ -312,7 +312,7 @@ export const getSessionOgSummary = cache(async (sessionId: string): Promise<Sess
     layout_id: number | null;
     size_id: number | null;
     set_ids: string | null;
-  }>(drizzleSql`
+  }>(dbz, drizzleSql`
     SELECT
       bs.name,
       COALESCE(
@@ -353,7 +353,7 @@ export const getSessionOgSummary = cache(async (sessionId: string): Promise<Sess
     sessionType = 'party';
     sessionRow = partySessionResult[0];
   } else {
-    const inferredSessionResult = await dbz.execute<{
+    const inferredSessionResult = await executeRows<{
       name: string | null;
       leader_name: string | null;
       version_at: string | Date | null;
@@ -364,7 +364,7 @@ export const getSessionOgSummary = cache(async (sessionId: string): Promise<Sess
       layout_id: number | null;
       size_id: number | null;
       set_ids: string | null;
-    }>(drizzleSql`
+    }>(dbz, drizzleSql`
       SELECT
         s.name,
         COALESCE(
@@ -419,16 +419,16 @@ export const getSessionOgSummary = cache(async (sessionId: string): Promise<Sess
       : drizzleSql`bt.inferred_session_id = ${sessionId}`;
 
   const [participantCountResult, participantResult, totalSendsResult, gradeResult, boardInfo] = await Promise.all([
-    dbz.execute<{
+    executeRows<{
       participant_count: number;
-    }>(drizzleSql`
+    }>(dbz, drizzleSql`
       SELECT COUNT(DISTINCT bt.user_id)::int as participant_count
       FROM boardsesh_ticks bt
       WHERE ${tickWhereClause}
     `),
-    dbz.execute<{
+    executeRows<{
       display_name: string;
-    }>(drizzleSql`
+    }>(dbz, drizzleSql`
       SELECT DISTINCT
         COALESCE(up.display_name, u.name, 'Climber') as display_name
       FROM boardsesh_ticks bt
@@ -437,18 +437,18 @@ export const getSessionOgSummary = cache(async (sessionId: string): Promise<Sess
       WHERE ${tickWhereClause}
       LIMIT 6
     `),
-    dbz.execute<{
+    executeRows<{
       total_sends: number;
-    }>(drizzleSql`
+    }>(dbz, drizzleSql`
       SELECT COUNT(*)::int as total_sends
       FROM boardsesh_ticks bt
       WHERE ${tickWhereClause}
         AND bt.status IN ('flash', 'send')
     `),
-    dbz.execute<{
+    executeRows<{
       difficulty: number;
       cnt: number;
-    }>(drizzleSql`
+    }>(dbz, drizzleSql`
       SELECT
         COALESCE(bt.difficulty, ROUND(bcs.display_difficulty)::int) as difficulty,
         COUNT(*) as cnt
@@ -508,7 +508,16 @@ export type PlaylistOgSummary = {
 
 export const getPlaylistOgSummary = cache(async (playlistUuid: string): Promise<PlaylistOgSummary | null> => {
   const rawSql = getReadPool();
-  const rows = (await rawSql`
+  const rows = rowsFromResult<{
+    name: string | null;
+    description: string | null;
+    color: string | null;
+    icon: string | null;
+    is_public: boolean;
+    board_type: string;
+    climb_count: number;
+    version_at: string | Date | null;
+  }>(await rawSql`
     SELECT
       p.name,
       p.description,
@@ -521,16 +530,7 @@ export const getPlaylistOgSummary = cache(async (playlistUuid: string): Promise<
     FROM playlists p
     WHERE p.uuid = ${playlistUuid}
     LIMIT 1
-  `) as Array<{
-    name: string | null;
-    description: string | null;
-    color: string | null;
-    icon: string | null;
-    is_public: boolean;
-    board_type: string;
-    climb_count: number;
-    version_at: string | Date | null;
-  }>;
+  `);
 
   const row = rows[0];
   if (!row) {

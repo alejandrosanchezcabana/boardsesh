@@ -1,7 +1,7 @@
 import React from 'react';
 import { ImageResponse } from '@vercel/og';
 import type { NextRequest } from 'next/server';
-import { dbz } from '@/app/lib/db/db';
+import { dbz, executeRows } from '@/app/lib/db/db';
 import { sql } from 'drizzle-orm';
 import { themeTokens } from '@/app/theme/theme-config';
 import { FONT_GRADE_COLORS, getGradeColorWithOpacity } from '@/app/lib/grade-colors';
@@ -35,10 +35,10 @@ export async function GET(request: NextRequest) {
     const dbT0 = performance.now();
     const [summary, gradeResult] = await Promise.all([
       getSetterOgSummary(username),
-      dbz.execute<{
+      executeRows<{
         difficulty: number;
         cnt: number;
-      }>(sql`
+      }>(dbz, sql`
         SELECT bt.difficulty, COUNT(*) as cnt
         FROM boardsesh_ticks bt
         JOIN board_climbs bc ON bc.uuid = bt.climb_uuid

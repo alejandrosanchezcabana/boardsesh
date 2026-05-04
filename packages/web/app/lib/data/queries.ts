@@ -7,7 +7,7 @@
 import 'server-only';
 import { cache } from 'react';
 // oxlint-disable-next-line no-restricted-imports -- legacy raw Neon sql usage; migrate to drizzle
-import { sql } from '@/app/lib/db/db';
+import { rowsFromResult, sql } from '@/app/lib/db/db';
 import { getGradeLabel } from '@boardsesh/db/queries';
 
 import type { Climb, ParsedBoardRouteParametersWithUuid, BoardName, LayoutId, Size } from '../types';
@@ -15,7 +15,7 @@ import { getSizesForLayoutId, getAllLayouts, getSetsForLayoutAndSize } from '@/a
 import { isNoMatchClimb } from '@/app/lib/no-match-climb';
 
 export const getClimb = cache(async (params: ParsedBoardRouteParametersWithUuid): Promise<Climb> => {
-  const result = await sql`
+  const result = rowsFromResult<Climb & { difficulty_id: number | null }>(await sql`
         SELECT climbs.uuid, climbs.setter_username, climbs.user_id as "userId", climbs.name, climbs.description,
         climbs.frames, COALESCE(climb_stats.angle, ${params.angle}) as angle, COALESCE(climb_stats.ascensionist_count, 0) as ascensionist_count,
         ROUND(climb_stats.display_difficulty::numeric, 0) as difficulty_id,
@@ -33,8 +33,8 @@ export const getClimb = cache(async (params: ParsedBoardRouteParametersWithUuid)
         AND climbs.uuid = ${params.climb_uuid}
         AND climbs.frames_count = 1
         limit 1
-      `;
-  const row = result[0] as Climb & { difficulty_id: number | null };
+      `);
+  const row = result[0];
   return {
     ...row,
     difficulty: getGradeLabel(row.difficulty_id),
@@ -56,7 +56,7 @@ export type ClimbStatsForAngle = {
 export const getClimbStatsForAllAngles = async (
   params: ParsedBoardRouteParametersWithUuid,
 ): Promise<ClimbStatsForAngle[]> => {
-  const result = await sql`
+  const result = rowsFromResult<ClimbStatsForAngle & { difficulty_id: number | null }>(await sql`
     SELECT
       climb_stats.angle,
       COALESCE(climb_stats.ascensionist_count, 0) as ascensionist_count,
@@ -70,8 +70,8 @@ export const getClimbStatsForAllAngles = async (
     WHERE climb_stats.board_type = ${params.board_name}
     AND climb_stats.climb_uuid = ${params.climb_uuid}
     ORDER BY climb_stats.angle ASC
-  `;
-  return (result as unknown as Array<ClimbStatsForAngle & { difficulty_id: number | null }>).map((row) => ({
+  `);
+  return result.map((row) => ({
     ...row,
     difficulty: getGradeLabel(row.difficulty_id),
   })) as ClimbStatsForAngle[];

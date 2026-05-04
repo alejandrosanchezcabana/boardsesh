@@ -1,6 +1,7 @@
 import { eq, sql } from 'drizzle-orm';
 import { z } from 'zod';
 import * as dbSchema from '@boardsesh/db/schema';
+import { rowsFromResult } from '@boardsesh/db/client';
 import { db } from '../../../db/client';
 
 const SessionStatsRowSchema = z.object({
@@ -33,7 +34,7 @@ export async function recalculateSessionStats(
     WHERE inferred_session_id = ${sessionId}
   `);
 
-  const rawRows = result as unknown as unknown[];
+  const rawRows = rowsFromResult<unknown>(result);
   const parsed = rawRows.length > 0 ? SessionStatsRowSchema.safeParse(rawRows[0]) : null;
 
   if (!parsed || !parsed.success || parsed.data.first_tick_at === null) {

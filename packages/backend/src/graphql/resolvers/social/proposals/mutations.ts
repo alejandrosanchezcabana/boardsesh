@@ -1,5 +1,6 @@
 import { eq, and, sql, isNull } from 'drizzle-orm';
 import type { ConnectionContext, ProposalStatus } from '@boardsesh/shared-schema';
+import { executeRows } from '@boardsesh/db/client';
 import { db } from '../../../../db/client';
 import * as dbSchema from '@boardsesh/db/schema';
 import { getGradeLabel } from '@boardsesh/db/queries';
@@ -63,7 +64,7 @@ export const socialProposalMutations = {
       } else {
         try {
           // Look up display_difficulty from stats, then resolve grade name in-memory
-          const result = await db.execute(sql`
+          const rows = await executeRows<{ difficulty_id: number | null }>(db, sql`
             SELECT ROUND(cs.display_difficulty::numeric, 0) as difficulty_id
             FROM board_climb_stats cs
             WHERE cs.climb_uuid = ${climbUuid}
@@ -71,7 +72,6 @@ export const socialProposalMutations = {
               AND cs.board_type = ${boardType}
             LIMIT 1
           `);
-          const rows = result as unknown as Array<{ difficulty_id: number | null }>;
           currentValue = getGradeLabel(rows[0]?.difficulty_id ?? null) || 'Unknown';
         } catch {
           currentValue = 'Unknown';

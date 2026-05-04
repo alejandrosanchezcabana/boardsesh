@@ -15,11 +15,8 @@
 
 import { sql } from 'drizzle-orm';
 import { createScriptDb } from './db-connection.js';
+import { executeRows } from '../src/client/index.js';
 import { LED_PLACEMENTS } from '../../board-constants/src/generated/led-placements-data.js';
-
-function rows<T>(result: unknown): T[] {
-  return result as T[];
-}
 
 type ClimbRow = {
   uuid: string;
@@ -80,19 +77,19 @@ async function main() {
         );
 
     // Get product sizes from DB for display
-    const sizesResult = await db.execute(sql`
+    const sizeRows = await executeRows<{ id: number; name: string }>(db, sql`
       SELECT id, name FROM board_product_sizes ORDER BY board_type, id
     `);
-    const sizeNames = new Map(rows<{ id: number; name: string }>(sizesResult).map((s) => [s.id, s.name]));
+    const sizeNames = new Map(sizeRows.map((s) => [s.id, s.name]));
 
     // Get set-to-layout-size mappings
-    const setsResult = await db.execute(sql`
+    const setRows = await executeRows<SetRow>(db, sql`
       SELECT layout_id, product_size_id, set_id
       FROM board_product_sizes_layouts_sets
       ORDER BY layout_id, product_size_id, set_id
     `);
     const setsForConfig = new Map<string, number[]>();
-    for (const row of rows<SetRow>(setsResult)) {
+    for (const row of setRows) {
       const key = `${row.layout_id}-${row.product_size_id}`;
       const existing = setsForConfig.get(key) || [];
       existing.push(row.set_id);
@@ -123,7 +120,7 @@ async function main() {
         const sizeKeys = layoutSizeKeys.filter((k) => k.startsWith(`${layoutId}-`)).map((k) => Number(k.split('-')[1]));
 
         // Fetch ALL climbs for this board/layout once (reused across sizes)
-        const climbsResult = await db.execute(sql`
+        const climbs = await executeRows<ClimbRow>(db, sql`
           SELECT uuid, board_type, layout_id, name, setter_username, frames,
                  is_listed, required_set_ids, compatible_size_ids,
                  edge_left, edge_right, edge_bottom, edge_top
@@ -133,16 +130,15 @@ async function main() {
             AND frames IS NOT NULL
             AND frames != ''
         `);
-        const climbs = rows<ClimbRow>(climbsResult);
 
         // Fetch ascensionist counts
-        const statsResult = await db.execute(sql`
+        const statsRows = await executeRows<StatsRow>(db, sql`
           SELECT climb_uuid, COALESCE(SUM(ascensionist_count), 0) as total_ascents
           FROM board_climb_stats
           WHERE board_type = ${boardName}
           GROUP BY climb_uuid
         `);
-        const statsMap = new Map(rows<StatsRow>(statsResult).map((s) => [s.climb_uuid, Number(s.total_ascents)]));
+        const statsMap = new Map(statsRows.map((s) => [s.climb_uuid, Number(s.total_ascents)]));
 
         for (const sizeId of sizeKeys) {
           if (sizeFilter !== undefined && sizeId !== sizeFilter) continue;
@@ -288,7 +284,9 @@ async function main() {
       console.info(`\n--- ${boardName}: Layouts without LED data ---`);
       const ledLayoutIds = [...new Set(Object.keys(boardLedData).map((k) => Number(k.split('-')[0])))];
 
-      const unmappedLayoutResult = await db.execute(sql`
+      const unmappedLayoutRows = await executeRows<{ layout_id: number; climb_count: string; listed_count: string }>(
+        db,
+        sql`
         SELECT layout_id, COUNT(*) as climb_count,
                COUNT(*) FILTER (WHERE is_listed = true) as listed_count
         FROM board_climbs
@@ -297,10 +295,11 @@ async function main() {
           AND layout_id IS NOT NULL
         GROUP BY layout_id
         ORDER BY layout_id
-      `);
+      `,
+      );
 
       let anyUnmapped = false;
-      for (const row of rows<{ layout_id: number; climb_count: string; listed_count: string }>(unmappedLayoutResult)) {
+      for (const row of unmappedLayoutRows) {
         if (!ledLayoutIds.includes(row.layout_id)) {
           console.info(
             `    Layout ${row.layout_id}: ${Number(row.climb_count).toLocaleString()} climbs (${Number(row.listed_count).toLocaleString()} listed) — NO LED DATA`,

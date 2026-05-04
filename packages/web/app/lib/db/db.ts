@@ -9,6 +9,12 @@ export {
   createReadPool as getReadPool,
   closeReadPool,
   getConnectionConfig,
+  rowsFromResult,
+  firstRowFromResult,
+  executeRows,
+  executeFirstRow,
+  commandCountFromResult,
+  executeCommandCount,
 } from '@boardsesh/db/client';
 
 // Shared singletons. Both `sql` (postgres-js tagged template) and `dbz`

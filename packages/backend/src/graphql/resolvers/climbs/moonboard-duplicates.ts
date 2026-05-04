@@ -5,6 +5,7 @@ import type {
   MoonBoardHoldsInput,
 } from '@boardsesh/shared-schema';
 import * as dbSchema from '@boardsesh/db/schema';
+import { executeRows } from '@boardsesh/db/client';
 import { db } from '../../../db/client';
 import { convertLitUpHoldsStringToMap } from '../../../db/queries/util/hold-state';
 
@@ -152,7 +153,7 @@ export async function findMoonBoardDuplicateMatches(
       uniqueSignatures.map((signature) => sql`${signature}`),
       sql`, `,
     );
-    const exactMatchResult = await db.execute(sql`
+    const exactMatchRows = await executeRows<DuplicateLookupRow>(db, sql`
       SELECT
         ${dbSchema.boardClimbs.uuid} AS uuid,
         ${dbSchema.boardClimbs.name} AS name,
@@ -185,7 +186,6 @@ export async function findMoonBoardDuplicateMatches(
       ORDER BY COALESCE(${dbSchema.boardClimbStats.ascensionistCount}, 0) DESC, ${dbSchema.boardClimbs.uuid} ASC
     `);
 
-    const exactMatchRows = exactMatchResult as unknown as DuplicateLookupRow[];
     for (const row of exactMatchRows) {
       const next = {
         uuid: row.uuid,
@@ -198,7 +198,7 @@ export async function findMoonBoardDuplicateMatches(
       }
     }
 
-    const legacyResult = await db.execute(sql`
+    const legacyRows = await executeRows<LegacyDuplicateLookupRow>(db, sql`
       SELECT
         ${dbSchema.boardClimbs.uuid} AS uuid,
         ${dbSchema.boardClimbs.name} AS name,
@@ -223,7 +223,6 @@ export async function findMoonBoardDuplicateMatches(
       ORDER BY COALESCE(${dbSchema.boardClimbStats.ascensionistCount}, 0) DESC, ${dbSchema.boardClimbs.uuid} ASC
     `);
 
-    const legacyRows = legacyResult as unknown as LegacyDuplicateLookupRow[];
     for (const row of legacyRows) {
       const signature = buildMoonBoardHoldSignatureFromFrames(row.frames);
       if (!signature || !uniqueSignatures.includes(signature)) continue;

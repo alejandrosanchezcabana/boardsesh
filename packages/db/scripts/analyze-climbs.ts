@@ -14,10 +14,7 @@
 
 import { sql } from 'drizzle-orm';
 import { createScriptDb } from './db-connection.js';
-
-function rows<T>(result: unknown): T[] {
-  return result as T[];
-}
+import { executeRows } from '../src/client/index.js';
 
 // Simplified local copy of HOLD_STATE_MAP (role code → role name only, no colors).
 // The canonical version lives in @boardsesh/board-constants/hold-states but the db
@@ -215,20 +212,20 @@ async function main() {
     // First, check for any role codes in the DB that aren't in our map
     console.info('=== Checking for unmapped role codes in board_placement_roles ===\n');
 
-    const dbRoles = await db.execute(sql`
+    const dbRoles = await executeRows<{
+      board_type: string;
+      id: number;
+      name: string;
+      full_name: string;
+      product_id: number;
+    }>(db, sql`
       SELECT board_type, id, name, full_name, product_id
       FROM board_placement_roles
       ORDER BY board_type, id
     `);
 
     let unmappedCount = 0;
-    for (const role of rows<{
-      board_type: string;
-      id: number;
-      name: string;
-      full_name: string;
-      product_id: number;
-    }>(dbRoles)) {
+    for (const role of dbRoles) {
       const boardMap = HOLD_STATE_MAP[role.board_type];
       if (boardMap && !(role.id in boardMap)) {
         console.info(`  UNMAPPED: ${role.board_type} role ${role.id} "${role.full_name}" (product ${role.product_id})`);
@@ -247,22 +244,21 @@ async function main() {
     for (const board of boards) {
       console.info(`\n=== Analyzing ${board} climbs ===\n`);
 
-      const climbsResult = await db.execute(sql`
+      const climbs = await executeRows<ClimbRow>(db, sql`
         SELECT uuid, board_type, name, setter_username, frames, is_listed
         FROM board_climbs
         WHERE board_type = ${board}
       `);
-      const climbs = rows<ClimbRow>(climbsResult);
 
       // Gather ascensionist counts for affected climbs
-      const statsResult = await db.execute(sql`
+      const statsRows = await executeRows<StatsRow>(db, sql`
         SELECT climb_uuid, COALESCE(SUM(ascensionist_count), 0) as total_ascents
         FROM board_climb_stats
         WHERE board_type = ${board}
         GROUP BY climb_uuid
       `);
 
-      const statsMap = new Map(rows<StatsRow>(statsResult).map((s) => [s.climb_uuid, Number(s.total_ascents)]));
+      const statsMap = new Map(statsRows.map((s) => [s.climb_uuid, Number(s.total_ascents)]));
 
       const problemCounts: Record<string, number> = {
         unknown_role: 0,
@@ -325,7 +321,7 @@ async function main() {
 
     // Summary of all unknown role codes across all climbs
     console.info('\n=== Unknown role codes summary ===\n');
-    const allUnknown = await db.execute(sql`
+    const allUnknown = await executeRows<{ board_type: string; role_code: number; climb_count: string }>(db, sql`
       SELECT board_type,
         (regexp_matches(frames, 'r(-?\d+)', 'g'))[1]::int as role_code,
         count(*) as climb_count
@@ -336,7 +332,7 @@ async function main() {
     `);
 
     let anyUnknown = false;
-    for (const row of rows<{ board_type: string; role_code: number; climb_count: string }>(allUnknown)) {
+    for (const row of allUnknown) {
       const boardMap = HOLD_STATE_MAP[row.board_type];
       if (boardMap && !(row.role_code in boardMap)) {
         console.info(`  ${row.board_type} role ${row.role_code}: ${Number(row.climb_count).toLocaleString()} climbs`);

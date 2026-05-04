@@ -11,11 +11,8 @@
 
 import { sql } from 'drizzle-orm';
 import { createScriptDb } from './db-connection.js';
+import { executeRows } from '../src/client/index.js';
 import { populateDenormalizedColumns } from '../src/queries/climbs/populate-denormalized-columns.js';
-
-function rows<T>(result: unknown): T[] {
-  return result as T[];
-}
 
 const args = process.argv.slice(2);
 const boardFilter = args.includes('--board') ? args[args.indexOf('--board') + 1] : undefined;
@@ -27,7 +24,7 @@ async function main() {
 
   try {
     // Find board types that have NULL denormalized columns
-    const boardTypesResult = await db.execute(sql`
+    const boardTypes = await executeRows<{ board_type: string; null_count: string }>(db, sql`
       SELECT board_type, COUNT(*) as null_count
       FROM board_climbs
       WHERE (required_set_ids IS NULL OR compatible_size_ids IS NULL)
@@ -37,8 +34,6 @@ async function main() {
       GROUP BY board_type
       ORDER BY board_type
     `);
-
-    const boardTypes = rows<{ board_type: string; null_count: string }>(boardTypesResult);
 
     if (boardTypes.length === 0) {
       console.info('No climbs with NULL denormalized columns found. Nothing to do.');
@@ -66,7 +61,7 @@ async function main() {
 
       while (true) {
         // Fetch a batch of UUIDs with NULL denormalized columns
-        const batchResult = await db.execute(sql`
+        const batchRows = await executeRows<{ uuid: string }>(db, sql`
           SELECT uuid
           FROM board_climbs
           WHERE board_type = ${bt.board_type}
@@ -76,7 +71,7 @@ async function main() {
           LIMIT ${batchSize}
         `);
 
-        const uuids = rows<{ uuid: string }>(batchResult).map((r) => r.uuid);
+        const uuids = batchRows.map((r) => r.uuid);
         if (uuids.length === 0) break;
 
         await populateDenormalizedColumns(db, bt.board_type, uuids);
@@ -91,7 +86,7 @@ async function main() {
 
     // Verify
     console.info('\nVerification:');
-    const remainingResult = await db.execute(sql`
+    const remaining = await executeRows<{ board_type: string; remaining: string }>(db, sql`
       SELECT board_type, COUNT(*) as remaining
       FROM board_climbs
       WHERE (required_set_ids IS NULL OR compatible_size_ids IS NULL)
@@ -102,7 +97,6 @@ async function main() {
       ORDER BY board_type
     `);
 
-    const remaining = rows<{ board_type: string; remaining: string }>(remainingResult);
     if (remaining.length === 0) {
       console.info('  All denormalized columns populated.');
     } else {

@@ -1,5 +1,6 @@
 import { eq, and, count, sql, ilike, inArray } from 'drizzle-orm';
 import { type ConnectionContext, type Climb, type BoardName, SUPPORTED_BOARDS } from '@boardsesh/shared-schema';
+import { executeRows } from '@boardsesh/db/client';
 import { db } from '../../../db/client';
 import * as dbSchema from '@boardsesh/db/schema';
 import { getGradeLabel } from '@boardsesh/db/queries';
@@ -478,7 +479,23 @@ export const setterFollowQueries = {
         ? sql`COALESCE(best.ascensionist_count, 0) DESC`
         : sql`owned_climbs.created_at DESC NULLS LAST`;
 
-    const rawResult = await db.execute(sql`
+    type RawRow = {
+      uuid: string;
+      layout_id: number | null;
+      board_type: string;
+      setter_username: string | null;
+      name: string | null;
+      description: string | null;
+      frames: string | null;
+      stats_angle: number | null;
+      ascensionist_count: number | null;
+      difficulty_id: number | null;
+      quality_average: number | null;
+      difficulty_error: number | null;
+      benchmark_difficulty: number | null;
+    };
+
+    const rawRows = await executeRows<RawRow>(db, sql`
       WITH owned_climbs AS (
         SELECT
           c.uuid,
@@ -530,24 +547,6 @@ export const setterFollowQueries = {
       LIMIT ${limit + 1}
       OFFSET ${offset}
     `);
-
-    type RawRow = {
-      uuid: string;
-      layout_id: number | null;
-      board_type: string;
-      setter_username: string | null;
-      name: string | null;
-      description: string | null;
-      frames: string | null;
-      stats_angle: number | null;
-      ascensionist_count: number | null;
-      difficulty_id: number | null;
-      quality_average: number | null;
-      difficulty_error: number | null;
-      benchmark_difficulty: number | null;
-    };
-
-    const rawRows = rawResult as unknown as RawRow[];
 
     const hasMore = rawRows.length > limit;
     const trimmedResults = hasMore ? rawRows.slice(0, limit) : rawRows;

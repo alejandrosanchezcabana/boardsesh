@@ -2,6 +2,7 @@ import { eq, and, desc, sql, count as drizzleCount, isNull, inArray } from 'driz
 import { dbRead as db } from '../../../db/client';
 import * as dbSchema from '@boardsesh/db/schema';
 import { getGradeLabel } from '@boardsesh/db/queries';
+import { rowsFromResult } from '@boardsesh/db/client';
 import { validateInput, isNoMatchClimb } from '../shared/helpers';
 import { ActivityFeedInputSchema } from '../../../validation/schemas';
 import { encodeOffsetCursor, decodeOffsetCursor } from '../../../utils/feed-cursor';
@@ -154,7 +155,7 @@ export const sessionFeedQueries = {
       throw err;
     }
 
-    const rows = sessionRows as unknown as Array<{
+    const rows = rowsFromResult<{
       session_id: string;
       session_type: string;
       session_first_tick: string;
@@ -167,7 +168,7 @@ export const sessionFeedQueries = {
       vote_up: number;
       vote_down: number;
       comment_count: number;
-    }>;
+    }>(sessionRows);
 
     const hasMore = rows.length > limit;
     const resultRows = hasMore ? rows.slice(0, limit) : rows;
@@ -420,13 +421,13 @@ export const sessionFeedQueries = {
         SELECT * FROM attempts_since
       `);
 
-      const attemptsRows = totalAttemptsResult as unknown as Array<{
+      const attemptsRows = rowsFromResult<{
         user_id: string;
         climb_uuid: string;
         board_type: string;
         angle: number;
         total: number;
-      }>;
+      }>(totalAttemptsResult);
 
       // Build lookup map
       const attemptsMap = new Map<string, number>();
@@ -566,14 +567,14 @@ async function fetchParticipants(
     ORDER BY sends DESC
   `);
 
-  const participantArray = participantRows as unknown as Array<{
+  const participantArray = rowsFromResult<{
     userId: string;
     displayName: string | null;
     avatarUrl: string | null;
     sends: number;
     flashes: number;
     attempts: number;
-  }>;
+  }>(participantRows);
   return participantArray.map((r) => ({
     userId: r.userId,
     displayName: r.displayName,
@@ -633,7 +634,7 @@ async function fetchParticipantsBatch(
     ORDER BY sends DESC
   `);
 
-  const rows = result as unknown as Array<{
+  const rows = rowsFromResult<{
     effective_session_id: string;
     userId: string;
     displayName: string | null;
@@ -641,7 +642,7 @@ async function fetchParticipantsBatch(
     sends: number;
     flashes: number;
     attempts: number;
-  }>;
+  }>(result);
 
   const map = new Map<string, SessionFeedParticipant[]>();
   for (const r of rows) {
@@ -700,13 +701,13 @@ async function fetchGradeDistributionBatch(
     ORDER BY diff_num DESC
   `);
 
-  const rows = result as unknown as Array<{
+  const rows = rowsFromResult<{
     effective_session_id: string;
     diff_num: number;
     flash: number;
     send: number;
     attempt: number;
-  }>;
+  }>(result);
 
   const map = new Map<string, SessionGradeDistributionItem[]>();
   for (const r of rows) {
@@ -803,10 +804,10 @@ async function fetchBoardTypesBatch(
     GROUP BY effective_session_id
   `);
 
-  const rows = result as unknown as Array<{
+  const rows = rowsFromResult<{
     effective_session_id: string;
     board_types: string[];
-  }>;
+  }>(result);
 
   const map = new Map<string, string[]>();
   for (const r of rows) {

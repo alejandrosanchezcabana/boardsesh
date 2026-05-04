@@ -9,17 +9,19 @@
 import 'dotenv/config';
 import { db } from '../db/client';
 import { sql } from 'drizzle-orm';
+import { executeFirstRow } from '@boardsesh/db/client';
 import { runInferredSessionBuilderBatched } from '../jobs/inferred-session-builder';
 
 async function main() {
   console.info('=== Backfill Inferred Sessions ===');
 
   // Check how many unassigned ticks exist
-  const [{ count: unassignedCount }] = (await db.execute(sql`
+  const { count: unassignedCount = 0 } =
+    (await executeFirstRow<{ count: number }>(db, sql`
     SELECT COUNT(*) AS count
     FROM boardsesh_ticks
     WHERE session_id IS NULL AND inferred_session_id IS NULL
-  `)) as unknown as Array<{ count: number }>;
+  `)) ?? {};
 
   console.info(`Found ${unassignedCount} unassigned ticks`);
 
@@ -48,15 +50,17 @@ async function main() {
   // Migrate orphaned votes/comments with "ug:" entity IDs
   console.info('\n=== Migrating orphaned ug: entity references ===');
 
-  const [voteResult] = (await db.execute(sql`
+  const voteResult =
+    (await executeFirstRow<{ count: number }>(db, sql`
     SELECT COUNT(*) AS count FROM vote_counts
     WHERE entity_type = 'session' AND entity_id LIKE 'ug:%'
-  `)) as unknown as Array<{ count: number }>;
+  `)) ?? { count: 0 };
 
-  const [commentResult] = (await db.execute(sql`
+  const commentResult =
+    (await executeFirstRow<{ count: number }>(db, sql`
     SELECT COUNT(*) AS count FROM comments
     WHERE entity_type = 'session' AND entity_id LIKE 'ug:%'
-  `)) as unknown as Array<{ count: number }>;
+  `)) ?? { count: 0 };
 
   console.info(`Found ${voteResult.count} orphaned vote_counts, ${commentResult.count} orphaned comments`);
 
@@ -67,11 +71,12 @@ async function main() {
   }
 
   // Verify final state
-  const [{ count: remaining }] = (await db.execute(sql`
+  const { count: remaining = 0 } =
+    (await executeFirstRow<{ count: number }>(db, sql`
     SELECT COUNT(*) AS count
     FROM boardsesh_ticks
     WHERE session_id IS NULL AND inferred_session_id IS NULL
-  `)) as unknown as Array<{ count: number }>;
+  `)) ?? {};
 
   console.info(`\n=== Final state: ${remaining} unassigned ticks remaining ===`);
 

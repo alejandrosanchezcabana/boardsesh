@@ -53,7 +53,7 @@ vi.mock('../db/client', () => ({
         select: mockTxSelect,
         update: mockTxUpdate,
         delete: mockTxDelete,
-        execute: vi.fn(() => Promise.resolve({ rows: [] })),
+        execute: vi.fn(() => Promise.resolve([])),
       };
       return fn(tx);
     }),

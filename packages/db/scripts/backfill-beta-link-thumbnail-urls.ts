@@ -27,6 +27,7 @@
 
 import { sql } from 'drizzle-orm';
 import { createScriptDb } from './db-connection.js';
+import { executeCommandCount, executeRows } from '../src/client/index.js';
 
 const dryRun = process.argv.includes('--dry-run');
 
@@ -50,7 +51,8 @@ async function main(): Promise<void> {
       );
     }
 
-    const previewResult = await db.execute(
+    const previewRows = await executeRows<{ thumbnail: string; n: number }>(
+      db,
       legacyPrefix
         ? sql`
             SELECT thumbnail, COUNT(*)::int AS n
@@ -70,7 +72,6 @@ async function main(): Promise<void> {
             LIMIT 10
           `,
     );
-    const previewRows = previewResult as unknown as Array<{ thumbnail: string; n: number }>;
     console.info(`[backfill] Sample of rows that would be rewritten (up to 10):`);
     for (const r of previewRows) {
       console.info(`  ${r.thumbnail} (×${r.n})`);
@@ -81,24 +82,22 @@ async function main(): Promise<void> {
       return;
     }
 
-    const updateResult = legacyPrefix
-      ? await db.execute(sql`
+    const rewritten = await executeCommandCount(
+      db,
+      legacyPrefix
+        ? sql`
           UPDATE board_beta_links
           SET thumbnail = REPLACE(thumbnail, ${legacyPrefix}, '/static/')
           WHERE thumbnail LIKE ${legacyPrefix + 'beta-link-thumbnails/%'}
-        `)
-      : await db.execute(sql`
+        `
+        : sql`
           UPDATE board_beta_links
           SET thumbnail = '/static/' || SUBSTRING(thumbnail FROM POSITION('/beta-link-thumbnails/' IN thumbnail) + 1)
           WHERE thumbnail LIKE 'http%/beta-link-thumbnails/%'
             AND thumbnail NOT LIKE '/static/%'
-        `);
+        `,
+    );
 
-    // Drizzle exposes the raw driver result here; postgres-js uses `count`,
-    // node-postgres uses `rowCount`. Read both so the script reports a real
-    // number regardless of which driver `createScriptDb` picked.
-    const raw = updateResult as unknown as { rowCount?: number; count?: number };
-    const rewritten = raw.rowCount ?? raw.count;
     if (rewritten === undefined) {
       console.warn(
         '[backfill] update succeeded but driver returned no row count — verify with a SELECT against `board_beta_links`',

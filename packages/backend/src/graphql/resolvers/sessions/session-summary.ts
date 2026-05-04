@@ -3,6 +3,7 @@ import { sessions } from '../../../db/schema';
 import * as dbSchema from '@boardsesh/db/schema';
 import { eq, and, inArray, sql, count, desc, isNotNull } from 'drizzle-orm';
 import type { SessionSummary } from '@boardsesh/shared-schema';
+import { rowsFromResult } from '@boardsesh/db/client';
 
 /**
  * Generate a summary for a session including grade distribution,
@@ -92,13 +93,13 @@ export async function generateSessionSummary(sessionId: string): Promise<Session
     `),
   ]);
 
-  const participantCastRows = participantRows as unknown as Array<{
+  const participantCastRows = rowsFromResult<{
     userId: string;
     displayName: string | null;
     avatarUrl: string | null;
     sends: number;
     attempts: number;
-  }>;
+  }>(participantRows);
 
   // Build grade distribution (filter out null grades using type guard)
   const gradeDistribution = gradeDistRows
