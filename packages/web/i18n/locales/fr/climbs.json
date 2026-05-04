@@ -177,7 +177,6 @@
       "noSetters": "Aucun ouvreur trouvé"
     },
     "holds": {
-      "tapTo": "Appuyez pour :",
       "tapToToggle": "Touchez une prise pour l'inclure ou l'exclure",
       "include": "Inclure",
       "exclude": "Exclure",

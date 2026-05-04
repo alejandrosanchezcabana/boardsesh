@@ -25,7 +25,7 @@ export const createClimbFilters = (params: BoardRouteParams, searchParams: Climb
 
   for (const [keyRaw, entry] of Object.entries(searchParams.holdsFilter || {})) {
     const holdId = Number(keyRaw.replace('hold_', ''));
-    if (!Number.isFinite(holdId) || !entry || typeof entry !== 'object') continue;
+    if (!Number.isInteger(holdId) || holdId <= 0 || !entry || typeof entry !== 'object') continue;
     for (const [type, mode] of Object.entries(entry as Record<string, unknown>)) {
       if (mode !== 'include' && mode !== 'exclude') continue;
       if (type === 'ANY') {

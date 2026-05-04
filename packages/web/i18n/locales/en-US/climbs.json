@@ -177,7 +177,6 @@
       "noSetters": "No setters found"
     },
     "holds": {
-      "tapTo": "Tap to:",
       "tapToToggle": "Tap a hold to include or exclude it",
       "include": "Include",
       "exclude": "Exclude",

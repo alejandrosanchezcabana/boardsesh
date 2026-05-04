@@ -119,8 +119,23 @@ export const ClimbSearchInputSchema = z.object({
   // Per-hold map of type→mode filters. Each hold can carry filters for
   // multiple types (e.g. STARTING:include + FOOT:exclude). ANY means "hold
   // present in any state" (the wildcard, was the legacy `ANY`/`NOT` value).
+  // Uses an explicit z.object instead of nested z.record because Zod 4's
+  // two-arg z.record(keyEnum, valueEnum) emits one "expected include|exclude"
+  // error per outer key when the inner record uses an enum key — the explicit
+  // object form sidesteps that and is clearer about which keys are allowed.
   holdsFilter: z
-    .record(z.string(), z.record(z.enum(['STARTING', 'HAND', 'FINISH', 'FOOT', 'ANY']), z.enum(['include', 'exclude'])))
+    .record(
+      z.string(),
+      z
+        .object({
+          STARTING: z.enum(['include', 'exclude']).optional(),
+          HAND: z.enum(['include', 'exclude']).optional(),
+          FINISH: z.enum(['include', 'exclude']).optional(),
+          FOOT: z.enum(['include', 'exclude']).optional(),
+          ANY: z.enum(['include', 'exclude']).optional(),
+        })
+        .strict(),
+    )
     .optional(),
   hideAttempted: z.boolean().optional(),
   hideCompleted: z.boolean().optional(),

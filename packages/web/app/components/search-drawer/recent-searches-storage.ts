@@ -42,7 +42,7 @@ function migrateLegacyHoldsFilter(raw: SearchRequestPagination['holdsFilter'] | 
   const out: HoldsFilter = {};
   for (const [holdIdRaw, value] of Object.entries(raw as Record<string, unknown>)) {
     const holdId = Number(holdIdRaw);
-    if (!Number.isFinite(holdId) || holdId <= 0 || !value || typeof value !== 'object') continue;
+    if (!Number.isInteger(holdId) || holdId <= 0 || !value || typeof value !== 'object') continue;
     const values = Object.values(value as Record<string, unknown>);
     // `[].every()` is vacuously true, so an empty entry would pass the
     // "new shape" check and stick around as noise. Require at least one
