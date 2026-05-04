@@ -23,6 +23,11 @@ import { useWsAuthToken } from '@/app/hooks/use-ws-auth-token';
 type CreatePlaylistDrawerProps = {
   open: boolean;
   onClose: () => void;
+  /**
+   * Forwarded to SwipeableDrawer so callers can keep the component mounted
+   * through the slide-out animation (rendered/open dual-flag pattern).
+   */
+  onTransitionEnd?: (open: boolean) => void;
   boardName: string;
   layoutId: number;
   source: string;
@@ -34,6 +39,7 @@ const INITIAL_FORM = { name: '', description: '', color: '' };
 export default function CreatePlaylistDrawer({
   open,
   onClose,
+  onTransitionEnd,
   boardName,
   layoutId,
   source,
@@ -119,6 +125,7 @@ export default function CreatePlaylistDrawer({
       placement="bottom"
       open={open}
       onClose={handleClose}
+      onTransitionEnd={onTransitionEnd}
       styles={{
         wrapper: { height: 'auto' },
         body: { padding: themeTokens.spacing[4] },

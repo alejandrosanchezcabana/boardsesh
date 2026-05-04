@@ -32,8 +32,12 @@ import PlaylistScrollSection from '@/app/components/library/playlist-scroll-sect
 import PlaylistCard from '@/app/components/library/playlist-card';
 import CreatePlaylistDrawer from '@/app/components/library/create-playlist-drawer';
 import BoardDiscoveryScroll from '@/app/components/board-scroll/board-discovery-scroll';
+import BoardSelectorDrawer from '@/app/components/board-selector-drawer/board-selector-drawer';
 import SwipeableDrawer from '@/app/components/swipeable-drawer/swipeable-drawer';
 import BoardFilterStrip from '@/app/components/board-scroll/board-filter-strip';
+import { themeTokens } from '@/app/theme/theme-config';
+import type { BoardConfigData } from '@/app/lib/server-board-configs';
+import type { StoredBoardConfig } from '@/app/lib/saved-boards-db';
 import styles from '@/app/components/library/library.module.css';
 
 type SelectedBoardForCreate = { boardType: string; layoutId: number };
@@ -52,6 +56,8 @@ type LibraryPageContentProps = {
     popular: DiscoverablePlaylist[];
     recent: DiscoverablePlaylist[];
   } | null;
+  /** Board configuration data for the custom-board picker path. */
+  boardConfigs?: BoardConfigData;
 };
 
 export default function LibraryPageContent({
@@ -60,6 +66,7 @@ export default function LibraryPageContent({
   initialMyBoards,
   initialPlaylists,
   initialDiscoverPlaylists,
+  boardConfigs,
 }: LibraryPageContentProps) {
   const { data: session, status: sessionStatus } = useSession();
   const { token, isLoading: tokenLoading } = useWsAuthToken();
@@ -258,31 +265,74 @@ export default function LibraryPageContent({
     [boardSlug, playlistsBasePath, router],
   );
 
-  // Create-playlist flow state
+  // Create-playlist flow state. The *Rendered flags keep each drawer mounted
+  // through its slide-out animation; the *Open flags drive the visible state.
   const [isCreateDrawerOpen, setIsCreateDrawerOpen] = useState(false);
+  const [isCreateDrawerRendered, setIsCreateDrawerRendered] = useState(false);
   const [isBoardPickerOpen, setIsBoardPickerOpen] = useState(false);
+  const [isBoardPickerRendered, setIsBoardPickerRendered] = useState(false);
+  const [isCustomBoardOpen, setIsCustomBoardOpen] = useState(false);
+  const [isCustomBoardRendered, setIsCustomBoardRendered] = useState(false);
   const [createBoardContext, setCreateBoardContext] = useState<SelectedBoardForCreate | null>(null);
+
+  const handleCreateDrawerTransitionEnd = useCallback((open: boolean) => {
+    if (!open) setIsCreateDrawerRendered(false);
+  }, []);
+  const handleBoardPickerTransitionEnd = useCallback((open: boolean) => {
+    if (!open) setIsBoardPickerRendered(false);
+  }, []);
+  const handleCustomBoardTransitionEnd = useCallback((open: boolean) => {
+    if (!open) setIsCustomBoardRendered(false);
+  }, []);
+
+  const openCreateDrawerFor = useCallback((boardType: string, layoutId: number) => {
+    setCreateBoardContext({ boardType, layoutId });
+    setIsCreateDrawerRendered(true);
+    setIsCreateDrawerOpen(true);
+  }, []);
 
   const handleCreateClick = useCallback(() => {
     if (selectedBoard) {
-      setCreateBoardContext({ boardType: selectedBoard.boardType, layoutId: selectedBoard.layoutId });
-      setIsCreateDrawerOpen(true);
+      openCreateDrawerFor(selectedBoard.boardType, selectedBoard.layoutId);
       return;
     }
+    setIsBoardPickerRendered(true);
     setIsBoardPickerOpen(true);
-  }, [selectedBoard]);
+  }, [selectedBoard, openCreateDrawerFor]);
 
-  const handlePickerBoardClick = useCallback((board: UserBoard) => {
-    setCreateBoardContext({ boardType: board.boardType, layoutId: board.layoutId });
-    setIsBoardPickerOpen(false);
-    setIsCreateDrawerOpen(true);
-  }, []);
+  const handlePickerBoardClick = useCallback(
+    (board: UserBoard) => {
+      setIsBoardPickerOpen(false);
+      openCreateDrawerFor(board.boardType, board.layoutId);
+    },
+    [openCreateDrawerFor],
+  );
 
-  const handlePickerConfigClick = useCallback((config: PopularBoardConfig) => {
-    setCreateBoardContext({ boardType: config.boardType, layoutId: config.layoutId });
+  const handlePickerConfigClick = useCallback(
+    (config: PopularBoardConfig) => {
+      setIsBoardPickerOpen(false);
+      openCreateDrawerFor(config.boardType, config.layoutId);
+    },
+    [openCreateDrawerFor],
+  );
+
+  const handlePickerCustomClick = useCallback(() => {
     setIsBoardPickerOpen(false);
-    setIsCreateDrawerOpen(true);
-  }, []);
+    if (boardConfigs) {
+      setIsCustomBoardRendered(true);
+      setIsCustomBoardOpen(true);
+    }
+  }, [boardConfigs]);
+
+  const handleCustomBoardSelected = useCallback(
+    (_url: string, config?: StoredBoardConfig) => {
+      setIsCustomBoardOpen(false);
+      if (config && config.layoutId > 0) {
+        openCreateDrawerFor(config.board, config.layoutId);
+      }
+    },
+    [openCreateDrawerFor],
+  );
 
   const handlePlaylistCreated = useCallback(
     (created: Playlist) => {
@@ -426,9 +476,9 @@ export default function LibraryPageContent({
           aria-label={t('library.createFab.ariaLabel')}
           sx={{
             position: 'fixed',
-            right: 16,
-            bottom: 'calc(var(--bottom-bar-height, 145px) + 16px)',
-            zIndex: 1100,
+            right: `${themeTokens.spacing[4]}px`,
+            bottom: `calc(var(--bottom-bar-height, 145px) + ${themeTokens.spacing[4]}px)`,
+            zIndex: themeTokens.zIndex.fixed,
           }}
         >
           <AddOutlined />
@@ -436,27 +486,41 @@ export default function LibraryPageContent({
       )}
 
       {/* Board picker shown when no board is currently selected */}
-      {isBoardPickerOpen && (
+      {isBoardPickerRendered && (
         <SwipeableDrawer
           title={t('common:boardSelector.title')}
           placement="bottom"
           open={isBoardPickerOpen}
           onClose={() => setIsBoardPickerOpen(false)}
+          onTransitionEnd={handleBoardPickerTransitionEnd}
         >
           <BoardDiscoveryScroll
             onBoardClick={handlePickerBoardClick}
             onConfigClick={handlePickerConfigClick}
-            onCustomClick={() => setIsBoardPickerOpen(false)}
+            onCustomClick={handlePickerCustomClick}
             myBoards={myBoards}
           />
         </SwipeableDrawer>
       )}
 
+      {/* Custom board configuration drawer (mounted only when boardConfigs is provided) */}
+      {boardConfigs && isCustomBoardRendered && (
+        <BoardSelectorDrawer
+          open={isCustomBoardOpen}
+          onClose={() => setIsCustomBoardOpen(false)}
+          onTransitionEnd={handleCustomBoardTransitionEnd}
+          boardConfigs={boardConfigs}
+          placement="bottom"
+          onBoardSelected={handleCustomBoardSelected}
+        />
+      )}
+
       {/* Create-playlist drawer */}
-      {createBoardContext && (
+      {isCreateDrawerRendered && createBoardContext && (
         <CreatePlaylistDrawer
           open={isCreateDrawerOpen}
           onClose={() => setIsCreateDrawerOpen(false)}
+          onTransitionEnd={handleCreateDrawerTransitionEnd}
           boardName={createBoardContext.boardType}
           layoutId={createBoardContext.layoutId}
           source="discover-fab"

@@ -23,7 +23,10 @@
     },
     "empty": {
       "title": "Aucune playlist pour l'instant",
-      "description": "Créez votre première playlist en ajoutant des blocs depuis la liste."
+      "description": "Appuyez sur le bouton + pour créer votre première playlist."
+    },
+    "createFab": {
+      "ariaLabel": "Créer une playlist"
     },
     "errors": {
       "loadTitle": "Impossible de charger la bibliothèque",
