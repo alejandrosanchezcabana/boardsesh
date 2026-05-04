@@ -112,7 +112,7 @@
       "Synchronisation du board...",
       "Calibrage des cotations...",
       "Mise en jambes...",
-      "Check des conditions..."
+      "Vérification des conditions..."
     ]
   },
   "emptyState": {
@@ -206,7 +206,7 @@
   },
   "follow": {
     "follow": "Suivre",
-    "following": "Abonné",
+    "following": "Abonnement",
     "unfollow": "Se désabonner"
   },
   "feedback": {
