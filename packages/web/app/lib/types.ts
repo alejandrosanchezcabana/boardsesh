@@ -77,9 +77,6 @@ export type HoldStateFilter = {
   stateCode: HoldCode;
 };
 
-export type HoldFilterKey = `hold_${number}`;
-export type HoldFilterValue = HoldState | null;
-
 export type HoldStateWithColor = {
   state: HoldState;
   color: string;
@@ -114,7 +111,6 @@ export type SearchRequest = {
   showOnlyCompleted: boolean;
   onlyDrafts: boolean;
   projectsOnly: boolean;
-  [key: `hold_${number}`]: HoldFilterValue; // Allow dynamic hold keys directly in the search params
 };
 
 export type SearchRequestPagination = SearchRequest & {

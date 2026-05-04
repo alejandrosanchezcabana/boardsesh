@@ -105,10 +105,10 @@ type HoldFilterMarkerProps = {
 };
 
 function HoldFilterMarker({ cx, cy, baseRadius, filters, colorByType }: HoldFilterMarkerProps) {
-  // Each successive filter ring sits 25% further out than the previous one.
-  // Stroke width is ~10% of base radius so it scales with hold size; capped
-  // at 4 to keep dense boards readable.
-  const strokeWidth = Math.min(4, Math.max(2, baseRadius * 0.18));
+  // Each successive filter ring sits 28% further out than the previous one.
+  // Stroke width scales with hold size — wider so the rings read clearly on
+  // the board image; capped at 7 to keep dense boards readable.
+  const strokeWidth = Math.min(7, Math.max(4, baseRadius * 0.32));
 
   // If any filter is "exclude", we render a single dim disc behind all the
   // rings so the entire hold reads as excluded (matches the picker swatch).

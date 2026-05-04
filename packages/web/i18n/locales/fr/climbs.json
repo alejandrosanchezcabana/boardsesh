@@ -431,6 +431,7 @@
   },
   "holdTypePicker": {
     "toolbarAriaLabel": "Type de prise",
+    "applyModeAriaLabel": "Appliquer comme inclure ou exclure",
     "clear": "Effacer",
     "includeAriaSuffix": "inclure",
     "excludeAriaSuffix": "exclure",

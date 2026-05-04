@@ -245,4 +245,81 @@ describe('recent-searches-storage', () => {
       vi.doUnmock('idb');
     });
   });
+
+  describe('legacy holdsFilter migration', () => {
+    // Pre-#1841 entries persisted holds as { state, color, displayColor }.
+    // The new shape is { TYPE: 'include' | 'exclude' }. Legacy entries must
+    // round-trip into the new shape on read so the search input passes Zod
+    // validation when a stale recent-search pill is tapped.
+    async function seedLegacy(filters: object) {
+      const db = await openDB(DB_NAME, 1, {
+        upgrade(db) {
+          if (!db.objectStoreNames.contains(STORE_NAME)) db.createObjectStore(STORE_NAME);
+        },
+      });
+      const entry: RecentSearch = { id: 'x', label: 'legacy', filters, timestamp: 1 };
+      await db.put(STORE_NAME, [entry], 'recent');
+      db.close();
+    }
+
+    it('migrates legacy single-state hold entries to {TYPE: include}', async () => {
+      await seedLegacy({
+        holdsFilter: {
+          142: { state: 'STARTING', color: '#abc', displayColor: '#abc' },
+          205: { state: 'HAND', color: '#def', displayColor: '#def' },
+        },
+      });
+
+      const results = await getRecentSearches();
+      expect(results[0].filters.holdsFilter).toEqual({
+        142: { STARTING: 'include' },
+        205: { HAND: 'include' },
+      });
+    });
+
+    it('migrates legacy NOT to {ANY: exclude} and ANY to {ANY: include}', async () => {
+      await seedLegacy({
+        holdsFilter: {
+          10: { state: 'NOT', color: '#000', displayColor: '#000' },
+          11: { state: 'ANY', color: '#fff', displayColor: '#fff' },
+        },
+      });
+
+      const results = await getRecentSearches();
+      expect(results[0].filters.holdsFilter).toEqual({
+        10: { ANY: 'exclude' },
+        11: { ANY: 'include' },
+      });
+    });
+
+    it('passes through new-shape entries unchanged', async () => {
+      const newShape = { 142: { STARTING: 'include', FOOT: 'exclude' } };
+      await seedLegacy({ holdsFilter: newShape });
+
+      const results = await getRecentSearches();
+      expect(results[0].filters.holdsFilter).toEqual(newShape);
+    });
+
+    it('drops legacy entries with unrecognized state', async () => {
+      await seedLegacy({
+        holdsFilter: {
+          1: { state: 'GIBBERISH', color: '#000', displayColor: '#000' },
+          2: { state: 'STARTING', color: '#abc', displayColor: '#abc' },
+        },
+      });
+
+      const results = await getRecentSearches();
+      expect(results[0].filters.holdsFilter).toEqual({ 2: { STARTING: 'include' } });
+    });
+
+    it('drops empty {} entries instead of treating them as new-shape', async () => {
+      // Vacuous-truth bug guard: `[].every(fn)` is true, so an empty entry
+      // could slip through the new-shape check without this explicit length>0
+      // guard in `migrateLegacyHoldsFilter`.
+      await seedLegacy({ holdsFilter: { 1: {}, 2: { ANY: 'include' } } });
+
+      const results = await getRecentSearches();
+      expect(results[0].filters.holdsFilter).toEqual({ 2: { ANY: 'include' } });
+    });
+  });
 });

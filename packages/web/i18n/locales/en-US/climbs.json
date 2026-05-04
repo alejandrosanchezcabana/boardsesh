@@ -431,6 +431,7 @@
   },
   "holdTypePicker": {
     "toolbarAriaLabel": "Hold type",
+    "applyModeAriaLabel": "Apply as include or exclude",
     "clear": "Clear",
     "includeAriaSuffix": "include",
     "excludeAriaSuffix": "exclude",

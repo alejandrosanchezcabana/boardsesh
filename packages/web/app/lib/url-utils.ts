@@ -240,8 +240,11 @@ function parseHoldsFilterFromUrl(urlParams: URLSearchParams): HoldsFilter {
   const result: HoldsFilter = {};
   for (const [key, value] of urlParams.entries()) {
     if (!key.startsWith('hold_')) continue;
+    // Hold IDs in board_climb_holds are positive integers, so reject 0 and
+    // negatives — `Number.isFinite(0)` is true but `hold_0` is not a real
+    // hold and would silently match nothing in the SQL.
     const holdId = Number(key.slice('hold_'.length));
-    if (!Number.isFinite(holdId)) continue;
+    if (!Number.isFinite(holdId) || holdId <= 0) continue;
     const entry = parseSingleEntry(value);
     if (Object.keys(entry).length > 0) {
       result[holdId] = entry;

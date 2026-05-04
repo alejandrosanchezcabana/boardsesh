@@ -1,13 +1,16 @@
 'use client';
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import Popover from '@mui/material/Popover';
 import Box from '@mui/material/Box';
 import ButtonBase from '@mui/material/ButtonBase';
 import Typography from '@mui/material/Typography';
+import ToggleButton from '@mui/material/ToggleButton';
+import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
 import CloseIcon from '@mui/icons-material/Close';
 import NotInterestedIcon from '@mui/icons-material/NotInterested';
+import CheckIcon from '@mui/icons-material/Check';
 import { HOLD_STATE_MAP, type HoldState } from '../board-renderer/types';
 import { themeTokens } from '@/app/theme/theme-config';
 import type { BoardName, HoldFilterEntry, HoldFilterMode, HoldFilterType } from '@/app/lib/types';
@@ -95,12 +98,18 @@ export default function HoldTypePicker(props: HoldTypePickerProps) {
   const { t } = useTranslation('climbs');
   const { anchorEl, boardName, onClose } = props;
   const setterOptions = useMemo(() => buildOptions(boardName), [boardName]);
+  // Global apply-mode for search-mode swatch taps. Persisted across hold taps
+  // (the picker component itself stays mounted between popover opens) so the
+  // user can flip to "exclude" once and keep stacking exclude filters.
+  const [searchApplyMode, setSearchApplyMode] = useState<HoldFilterMode>('include');
 
   const localizedLabel = (state: SetterHoldState | 'ANY') =>
     t(`holdTypePicker.states.${state.toLowerCase() as Lowercase<SetterHoldState | 'ANY'>}`);
 
   const renderToolbar = () => {
-    if (props.mode === 'search') return renderSearchToolbar(props, setterOptions, localizedLabel, t);
+    if (props.mode === 'search') {
+      return renderSearchToolbar(props, setterOptions, localizedLabel, t, searchApplyMode, setSearchApplyMode);
+    }
     return renderSetterToolbar(props, setterOptions, localizedLabel, t);
   };
 
@@ -131,7 +140,8 @@ export default function HoldTypePicker(props: HoldTypePickerProps) {
         aria-label={t('holdTypePicker.toolbarAriaLabel')}
         sx={{
           display: 'flex',
-          alignItems: 'flex-start',
+          flexDirection: props.mode === 'search' ? 'column' : 'row',
+          alignItems: props.mode === 'search' ? 'stretch' : 'flex-start',
           gap: `${themeTokens.spacing[1]}px`,
           padding: `${themeTokens.spacing[2]}px ${themeTokens.spacing[3]}px`,
         }}
@@ -189,19 +199,23 @@ function renderSearchToolbar(
   setterOptions: PickerOption[],
   localizedLabel: (state: SetterHoldState | 'ANY') => string,
   t: (key: string) => string,
+  applyMode: HoldFilterMode,
+  setApplyMode: (mode: HoldFilterMode) => void,
 ) {
   const { currentEntry, onFilterChange, onClearAll } = props;
-  // Cycle: unset → include → exclude → unset. Each tap moves one step. Same
-  // type can never simultaneously be include + exclude — that's the cycle's
-  // whole point.
-  const handleCycle = (type: HoldFilterType) => {
+
+  // Tap behaviour, given the global apply-mode toggle at the top:
+  //   - swatch unset → set to apply-mode
+  //   - swatch already at apply-mode → unset
+  //   - swatch at the other mode → flip to apply-mode
+  // This makes "switch a hold from include to exclude" a two-step gesture
+  // (toggle Exclude, tap the swatch) rather than a multi-tap cycle.
+  const handleSwatch = (type: HoldFilterType) => {
     const current = currentEntry[type];
-    if (current === undefined) {
-      onFilterChange(type, 'include');
-    } else if (current === 'include') {
-      onFilterChange(type, 'exclude');
-    } else {
+    if (current === applyMode) {
       onFilterChange(type, undefined);
+    } else {
+      onFilterChange(type, applyMode);
     }
   };
 
@@ -222,7 +236,7 @@ function renderSearchToolbar(
         isActive={mode !== undefined}
         excluded={mode === 'exclude'}
         ariaLabel={ariaSuffix ? `${localizedLabel(type)}, ${ariaSuffix}` : localizedLabel(type)}
-        onClick={() => handleCycle(type)}
+        onClick={() => handleSwatch(type)}
       />
     );
   };
@@ -236,18 +250,59 @@ function renderSearchToolbar(
 
   return (
     <>
-      {setterOptions.map((option) => swatchForType(option.state, option.color))}
-      {swatchForType('ANY', anyColors.length > 0 ? anyColors : themeTokens.neutral[400])}
-      <Swatch
-        key="clear"
-        label={t('holdTypePicker.clear')}
-        isClear
-        isActive={isEmpty}
-        isDisabled={isEmpty}
-        onClick={() => {
-          if (!isEmpty) onClearAll();
+      <ToggleButtonGroup
+        value={applyMode}
+        exclusive
+        size="small"
+        onChange={(_, value) => {
+          if (value === 'include' || value === 'exclude') setApplyMode(value);
         }}
-      />
+        aria-label={t('holdTypePicker.applyModeAriaLabel')}
+        sx={{
+          alignSelf: 'center',
+          '& .MuiToggleButton-root': {
+            textTransform: 'none',
+            fontSize: 12,
+            paddingY: '2px',
+            paddingX: `${themeTokens.spacing[2]}px`,
+            lineHeight: 1.2,
+          },
+          '& .MuiToggleButton-root.Mui-selected': {
+            color: 'common.white',
+          },
+          '& .MuiToggleButton-root[value="include"].Mui-selected': {
+            backgroundColor: themeTokens.colors.success,
+            '&:hover': { backgroundColor: themeTokens.colors.successHover },
+          },
+          '& .MuiToggleButton-root[value="exclude"].Mui-selected': {
+            backgroundColor: themeTokens.colors.error,
+            '&:hover': { backgroundColor: themeTokens.colors.error },
+          },
+        }}
+      >
+        <ToggleButton value="include" aria-label={t('holdTypePicker.includeAriaSuffix')}>
+          <CheckIcon sx={{ fontSize: 14, marginRight: '4px' }} />
+          {t('search.holds.include')}
+        </ToggleButton>
+        <ToggleButton value="exclude" aria-label={t('holdTypePicker.excludeAriaSuffix')}>
+          <NotInterestedIcon sx={{ fontSize: 14, marginRight: '4px' }} />
+          {t('search.holds.exclude')}
+        </ToggleButton>
+      </ToggleButtonGroup>
+      <Box sx={{ display: 'flex', gap: `${themeTokens.spacing[1]}px`, alignItems: 'flex-start' }}>
+        {setterOptions.map((option) => swatchForType(option.state, option.color))}
+        {swatchForType('ANY', anyColors.length > 0 ? anyColors : themeTokens.neutral[400])}
+        <Swatch
+          key="clear"
+          label={t('holdTypePicker.clear')}
+          isClear
+          isActive={isEmpty}
+          isDisabled={isEmpty}
+          onClick={() => {
+            if (!isEmpty) onClearAll();
+          }}
+        />
+      </Box>
     </>
   );
 }

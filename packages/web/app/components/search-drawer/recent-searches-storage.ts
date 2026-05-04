@@ -32,19 +32,22 @@ const LEGACY_HOLD_TYPES: ReadonlySet<HoldFilterType> = new Set(['STARTING', 'HAN
  * Returns `{entry, migrated}` so the caller knows whether to write the
  * cleaned shape back to IndexedDB.
  */
-function migrateLegacyHoldsFilter(
-  raw: SearchRequestPagination['holdsFilter'] | undefined,
-): { holdsFilter: HoldsFilter | undefined; migrated: boolean } {
+function migrateLegacyHoldsFilter(raw: SearchRequestPagination['holdsFilter'] | undefined): {
+  holdsFilter: HoldsFilter | undefined;
+  migrated: boolean;
+} {
   if (!raw || typeof raw !== 'object') return { holdsFilter: raw as HoldsFilter | undefined, migrated: false };
+  const sourceKeyCount = Object.keys(raw).length;
   let migrated = false;
   const out: HoldsFilter = {};
   for (const [holdIdRaw, value] of Object.entries(raw as Record<string, unknown>)) {
     const holdId = Number(holdIdRaw);
-    if (!Number.isFinite(holdId) || !value || typeof value !== 'object') continue;
-    // Already in the new shape if every value is 'include' / 'exclude'.
-    const valuesAreNewShape = Object.values(value as Record<string, unknown>).every(
-      (v) => v === 'include' || v === 'exclude',
-    );
+    if (!Number.isFinite(holdId) || holdId <= 0 || !value || typeof value !== 'object') continue;
+    const values = Object.values(value as Record<string, unknown>);
+    // `[].every()` is vacuously true, so an empty entry would pass the
+    // "new shape" check and stick around as noise. Require at least one
+    // include/exclude value before keeping it.
+    const valuesAreNewShape = values.length > 0 && values.every((v) => v === 'include' || v === 'exclude');
     if (valuesAreNewShape) {
       out[holdId] = value as HoldFilterEntry;
       continue;
@@ -63,6 +66,9 @@ function migrateLegacyHoldsFilter(
     out[holdId] = entry;
     migrated = true;
   }
+  // Treat dropped entries (empties / invalid IDs / unknown states) as a
+  // migration too — otherwise the caller keeps the original noisy shape.
+  if (Object.keys(out).length !== sourceKeyCount) migrated = true;
   return { holdsFilter: out, migrated };
 }
 
