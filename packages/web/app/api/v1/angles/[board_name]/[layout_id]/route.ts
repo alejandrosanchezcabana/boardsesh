@@ -1,4 +1,4 @@
-// oxlint-disable-next-line no-restricted-imports -- legacy raw Neon sql usage; migrate to drizzle
+// oxlint-disable-next-line no-restricted-imports -- raw postgres-js sql usage; migrate to drizzle
 import { rowsFromResult, sql } from '@/app/lib/db/db';
 import { NextResponse } from 'next/server';
 

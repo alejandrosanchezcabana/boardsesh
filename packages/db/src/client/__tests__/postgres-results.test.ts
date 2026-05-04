@@ -17,12 +17,9 @@ void describe('postgres result helpers', () => {
     assert.deepEqual(firstRowFromResult<{ id: number }>(rows), { id: 1 });
   });
 
-  void it('accepts legacy rows wrappers during migration', () => {
-    assert.deepEqual(rowsFromResult<{ id: number }>({ rows: [{ id: 1 }] }), [{ id: 1 }]);
-  });
-
   void it('throws on unknown result shapes', () => {
     assert.throws(() => rowsFromResult<{ id: number }>({ result: [{ id: 1 }] }), TypeError);
+    assert.throws(() => rowsFromResult<{ id: number }>({ rows: [{ id: 1 }] }), TypeError);
   });
 
   void it('executes queries and normalizes rows', async () => {

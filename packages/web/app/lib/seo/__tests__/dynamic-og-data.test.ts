@@ -29,11 +29,7 @@ vi.mock('@/app/lib/board-utils', () => ({
 const mockSqlTag = vi.fn();
 const rowsFromResultMock = <T,>(result: unknown): T[] => {
   if (Array.isArray(result)) return result as T[];
-  if (result && typeof result === 'object' && 'rows' in result) {
-    const rows = (result as { rows?: unknown }).rows;
-    if (Array.isArray(rows)) return rows as T[];
-  }
-  throw new TypeError('Expected database query result to be a row array');
+  throw new TypeError('Expected postgres-js query result to be a row array');
 };
 vi.mock('@/app/lib/db/db', () => ({
   dbz: { execute: executeMock },
