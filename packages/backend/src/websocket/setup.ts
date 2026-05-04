@@ -213,7 +213,11 @@ export function setupWebSocketServer(httpServer: HttpServer): {
       },
       onError: (_ctx: ServerContext, _id: string, _payload, errors) => {
         console.error('GraphQL error:', errors);
+        // Only report errors that wrap an internal exception. GraphQLError
+        // instances without `originalError` are validation/parse/auth/depth
+        // errors triggered by malformed client input — noisy, not actionable.
         for (const err of errors) {
+          if (err instanceof GraphQLError && !err.originalError) continue;
           Sentry.captureException(err, { tags: { source: 'graphql-ws' } });
         }
       },

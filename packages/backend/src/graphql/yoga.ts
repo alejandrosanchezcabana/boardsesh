@@ -1,5 +1,6 @@
 import { createYoga } from 'graphql-yoga';
 import { v4 as uuidv4 } from 'uuid';
+import { GraphQLError } from 'graphql';
 import * as Sentry from '@sentry/node';
 import { schema } from './index';
 import { validateNextAuthToken } from '../middleware/auth';
@@ -71,10 +72,12 @@ export function createYogaInstance() {
       warn: (...args: unknown[]) => console.warn('[Yoga]', ...args),
       error: (...args: unknown[]) => {
         console.error('[Yoga]', ...args);
+        // Skip GraphQLErrors triggered purely by client input (no originalError):
+        // validation, parse, depth/cost limit, auth — high volume, low signal.
         for (const arg of args) {
-          if (arg instanceof Error) {
-            Sentry.captureException(arg, { tags: { source: 'graphql-yoga' } });
-          }
+          if (!(arg instanceof Error)) continue;
+          if (arg instanceof GraphQLError && !arg.originalError) continue;
+          Sentry.captureException(arg, { tags: { source: 'graphql-yoga' } });
         }
       },
     },
