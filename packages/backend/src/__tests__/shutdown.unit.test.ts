@@ -97,13 +97,13 @@ describe('closePool implementation', () => {
     expect(source).toContain('export async function closePool()');
   });
 
-  it('ends the client and resets to null', () => {
-    expect(source).toContain('await client.end()');
-    expect(source).toContain('client = null');
+  it('ends the client and clears the cached pool', () => {
+    expect(source).toContain('await cache.client.end()');
+    expect(source).toContain('cache.client = undefined');
   });
 
-  it('resets db singleton to null', () => {
-    expect(source).toContain('db = null');
+  it('clears the cached drizzle singleton', () => {
+    expect(source).toContain('cache.db = undefined');
   });
 
   it('uses try/finally to ensure singletons are nulled even if .end() throws', () => {
