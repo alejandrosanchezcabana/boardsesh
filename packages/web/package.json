@@ -70,6 +70,7 @@
     "i18next": "^23.16.8",
     "i18next-resources-to-backend": "^1.2.1",
     "idb": "^8.0.3",
+    "intl-pluralrules": "^2.0.1",
     "iron-session": "^8.0.4",
     "leaflet": "^1.9.4",
     "next": "^16.1.6",

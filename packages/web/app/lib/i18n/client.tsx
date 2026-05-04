@@ -1,5 +1,10 @@
 'use client';
 
+// Polyfill `Intl.PluralRules` for older browsers / WebViews (e.g. iOS 12,
+// older Bluefy builds). i18next v23 uses CLDR plural rules via
+// `Intl.PluralRules` — without this, environments that lack the API silently
+// fall through to the base key (issue #1852).
+import 'intl-pluralrules';
 import React, { useMemo } from 'react';
 import i18next, { type i18n } from 'i18next';
 import resourcesToBackend from 'i18next-resources-to-backend';
