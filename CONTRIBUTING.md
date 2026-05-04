@@ -2,6 +2,14 @@
 
 [Join us on Discord](https://discord.gg/YXA8GsXfQK)
 
+# Where work is tracked
+
+The live roadmap lives on a single public GitHub project: [Boardsesh Roadmap](https://github.com/orgs/boardsesh/projects/3). Every issue sits in **Now**, **Next**, **Later**, or **Done**, and big multi-issue features carry an `Initiative` tag you can filter on. New issues you open land in **Later** by default — we'll triage from there.
+
+Big features also get a **tracking issue** that lists their sub-issues in the order they should land. See [#1773 (Recently Climbed & Display Mode)](https://github.com/boardsesh/boardsesh/issues/1773) for the canonical pattern; copy the shape if you're proposing a similarly-sized change.
+
+See [ROADMAP.md](./ROADMAP.md) for the full picture.
+
 # Getting Started
 
 ## How to get everything going
