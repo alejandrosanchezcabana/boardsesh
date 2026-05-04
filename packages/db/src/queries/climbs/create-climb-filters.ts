@@ -170,15 +170,20 @@ export const createClimbFilters = (params: BoardRouteParams, searchParams: Climb
   // Zone filter — keep only climbs whose entire bounding box sits inside
   // the user-defined zone (in board_holes/board_climbs grid coordinates).
   // The denormalized edge columns on board_climbs make this a simple range
-  // check; no extra join needed.
-  const zoneConditions: SQL[] = searchParams.zoneBox
-    ? [
-        sql`${boardClimbs.edgeLeft} >= ${searchParams.zoneBox.edgeLeft}`,
-        sql`${boardClimbs.edgeRight} <= ${searchParams.zoneBox.edgeRight}`,
-        sql`${boardClimbs.edgeBottom} >= ${searchParams.zoneBox.edgeBottom}`,
-        sql`${boardClimbs.edgeTop} <= ${searchParams.zoneBox.edgeTop}`,
-      ]
-    : [];
+  // check; no extra join needed. We defensively re-check the box is valid
+  // even though the GraphQL Zod schema rejects degenerate boxes — direct
+  // db-layer callers (REST proxies, scripts) bypass that guard.
+  const zoneConditions: SQL[] =
+    searchParams.zoneBox &&
+    searchParams.zoneBox.edgeRight > searchParams.zoneBox.edgeLeft &&
+    searchParams.zoneBox.edgeTop > searchParams.zoneBox.edgeBottom
+      ? [
+          sql`${boardClimbs.edgeLeft} >= ${searchParams.zoneBox.edgeLeft}`,
+          sql`${boardClimbs.edgeRight} <= ${searchParams.zoneBox.edgeRight}`,
+          sql`${boardClimbs.edgeBottom} >= ${searchParams.zoneBox.edgeBottom}`,
+          sql`${boardClimbs.edgeTop} <= ${searchParams.zoneBox.edgeTop}`,
+        ]
+      : [];
 
   // Tall climbs filter condition
   const tallClimbsConditions: SQL[] = [];
