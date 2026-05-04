@@ -8,7 +8,7 @@
  * MoonBoard-specific data stays in handwritten helpers because it is not sourced
  * from the Aurora database tables used by this generator.
  *
- * Generated at: 2026-04-09T01:29:55.490Z
+ * Generated at: 2026-05-04T22:22:50.534Z
  */
 
 import type { BoardName } from '@boardsesh/shared-schema';
@@ -328,6 +328,16 @@ export const AURORA_PRODUCT_SIZES: Record<BoardName, Record<number, ProductSizeD
       edgeTop: 120,
       productId: 5,
     },
+    10: {
+      id: 10,
+      name: '12 high x 16 wide',
+      description: '',
+      edgeLeft: -92,
+      edgeRight: 92,
+      edgeBottom: 0,
+      edgeTop: 144,
+      productId: 5,
+    },
   },
   decoy: {
     1: {
@@ -575,6 +585,10 @@ export const SETS: Record<BoardName, Record<string, SetData[]>> = {
       { id: 12, name: 'Wood' },
       { id: 13, name: 'Plastic' },
     ],
+    '10-10': [
+      { id: 12, name: 'Wood' },
+      { id: 13, name: 'Plastic' },
+    ],
     '11-6': [
       { id: 12, name: 'Wood' },
       { id: 13, name: 'Plastic' },
@@ -588,6 +602,10 @@ export const SETS: Record<BoardName, Record<string, SetData[]>> = {
       { id: 13, name: 'Plastic' },
     ],
     '11-9': [
+      { id: 12, name: 'Wood' },
+      { id: 13, name: 'Plastic' },
+    ],
+    '11-10': [
       { id: 12, name: 'Wood' },
       { id: 13, name: 'Plastic' },
     ],
@@ -764,6 +782,8 @@ export const IMAGE_FILENAMES: Record<BoardName, Record<string, string>> = {
     '10-8-13': 'product_sizes_layouts_sets/26.png',
     '10-9-12': 'product_sizes_layouts_sets/27.png',
     '10-9-13': 'product_sizes_layouts_sets/28.png',
+    '10-10-12': 'product_sizes_layouts_sets/37.png',
+    '10-10-13': 'product_sizes_layouts_sets/38.png',
     '11-6-12': 'product_sizes_layouts_sets/12x12-tb2-wood.png',
     '11-6-13': 'product_sizes_layouts_sets/12x12-tb2-plastic.png',
     '11-7-12': 'product_sizes_layouts_sets/12x10-tb2-wood.png',
@@ -772,6 +792,8 @@ export const IMAGE_FILENAMES: Record<BoardName, Record<string, string>> = {
     '11-8-13': 'product_sizes_layouts_sets/8x12-tb2-plastic.png',
     '11-9-12': 'product_sizes_layouts_sets/8x10-tb2-wood.png',
     '11-9-13': 'product_sizes_layouts_sets/8x10-tb2-plastic.png',
+    '11-10-12': 'product_sizes_layouts_sets/39.png',
+    '11-10-13': 'product_sizes_layouts_sets/40.png',
   },
   decoy: {
     '1-1-1': 'product_sizes_layouts_sets/1.png',

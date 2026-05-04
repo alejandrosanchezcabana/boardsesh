@@ -85,6 +85,16 @@ tension_images=(
 "product_sizes_layouts_sets/21-2.png"
 "product_sizes_layouts_sets/22-2.png"
 "product_sizes_layouts_sets/24-2.png"
+"product_sizes_layouts_sets/37.png"
+"product_sizes_layouts_sets/38.png"
+"product_sizes_layouts_sets/39.png"
+"product_sizes_layouts_sets/40.png"
+# Set 14/15 (Wood/Plastic Expansion) for size 10 are intentionally omitted —
+# Aurora has not published hole_placements for those sets, so the generator
+# drops them from SETS/IMAGE_FILENAMES (see HAS_PLACEMENTS_CLAUSE in
+# packages/board-constants/scripts/generate-board-constants.ts). If Aurora
+# ever publishes those placements, regenerating constants will re-introduce
+# the references — re-add 41.png and 42.png here at that point.
 )
 
 # Loop through the array and download each image
