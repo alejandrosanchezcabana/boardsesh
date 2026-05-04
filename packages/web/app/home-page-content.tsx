@@ -19,8 +19,7 @@ import AndroidOutlined from '@mui/icons-material/AndroidOutlined';
 import Skeleton from '@mui/material/Skeleton';
 import SvgIcon from '@mui/material/SvgIcon';
 import { isNativeApp, isCapacitorWebView, waitForCapacitor } from '@/app/lib/ble/capacitor-utils';
-import { IOS_APP_STORE_URL, ANDROID_PLAY_STORE_URL, ANDROID_SIDELOAD_URL } from '@/app/lib/store-urls';
-import { useCountdown } from '@/app/lib/hooks/use-countdown';
+import { IOS_APP_STORE_URL, ANDROID_PLAY_STORE_URL } from '@/app/lib/store-urls';
 import { useSession } from 'next-auth/react';
 import { useLocaleRouter } from '@/app/lib/i18n/use-locale-router';
 import { useTranslation } from 'react-i18next';
@@ -161,8 +160,6 @@ function OnboardingCard({ icon, title, description, onClick, accent = 'action' }
   );
 }
 
-const ANDROID_LAUNCH_DATE = new Date('2026-05-03T00:00:00Z');
-
 type InstallPlatform = 'unknown' | 'native' | 'android-web' | 'other-web';
 
 function InstallAppShadowCard() {
@@ -194,34 +191,19 @@ function InstallAppShadowCard() {
 
 function InstallAppCard({ platform }: { platform: InstallPlatform }) {
   const { t } = useTranslation('marketing');
-  const isAndroid = platform === 'android-web';
-  const { days, hours, minutes, seconds, done } = useCountdown(ANDROID_LAUNCH_DATE, isAndroid);
 
   if (platform === 'unknown') return <InstallAppShadowCard />;
   if (platform === 'native') return null;
 
-  if (isAndroid) {
-    if (done) {
-      return (
-        <OnboardingCard
-          icon={<AndroidOutlined />}
-          title={t('home.install.androidLiveTitle')}
-          description={t('home.install.androidLiveDescription')}
-          onClick={() => {
-            track('App Install Click', { platform: 'android', source: 'google-play' });
-            window.open(ANDROID_PLAY_STORE_URL, '_blank', 'noopener,noreferrer');
-          }}
-        />
-      );
-    }
+  if (platform === 'android-web') {
     return (
       <OnboardingCard
         icon={<AndroidOutlined />}
-        title={t('home.install.androidPreLaunchTitle')}
-        description={t('home.install.androidPreLaunchDescription', { days, hours, minutes, seconds })}
+        title={t('home.install.androidLiveTitle')}
+        description={t('home.install.androidLiveDescription')}
         onClick={() => {
-          track('App Install Click', { platform: 'android', source: 'github-sideload' });
-          window.open(ANDROID_SIDELOAD_URL, '_blank', 'noopener,noreferrer');
+          track('App Install Click', { platform: 'android', source: 'google-play' });
+          window.open(ANDROID_PLAY_STORE_URL, '_blank', 'noopener,noreferrer');
         }}
       />
     );

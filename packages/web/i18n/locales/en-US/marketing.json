@@ -38,9 +38,7 @@
       "iosTitle": "Get the Boardsesh app",
       "iosDescription": "Lights up holds on your board straight from your phone",
       "androidLiveTitle": "Get the Boardsesh app",
-      "androidLiveDescription": "Now on Google Play",
-      "androidPreLaunchTitle": "Android app is almost here",
-      "androidPreLaunchDescription": "Landing in {{days}}d {{hours}}h {{minutes}}m {{seconds}}s. Tap to sideload the preview build."
+      "androidLiveDescription": "Now on Google Play"
     },
     "cards": {
       "tourTitle": "Take the tour",
