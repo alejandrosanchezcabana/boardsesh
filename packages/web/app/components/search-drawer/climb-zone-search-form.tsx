@@ -243,7 +243,7 @@ const ClimbZoneSearchForm: React.FC<ClimbZoneSearchFormProps> = ({ boardDetails 
           onPointerMove={handlePointerMove}
           onPointerUp={endDrag}
           onPointerCancel={endDrag}
-          style={{ width: '100%', height: 'auto', maxHeight: '55vh', touchAction: 'none' }}
+          className={styles.zoneSvg}
         >
           {Object.keys(boardDetails.images_to_holds).map((imageUrl) => (
             <image
@@ -255,7 +255,7 @@ const ClimbZoneSearchForm: React.FC<ClimbZoneSearchFormProps> = ({ boardDetails 
             />
           ))}
 
-          {rectSvg && (
+          {rectSvg && localZone && (
             <g>
               <rect
                 x={rectSvg.x}
@@ -268,17 +268,13 @@ const ClimbZoneSearchForm: React.FC<ClimbZoneSearchFormProps> = ({ boardDetails 
                 strokeOpacity={RECT_STROKE_OPACITY}
                 strokeWidth={Math.max(boardWidth, boardHeight) * 0.005}
                 onPointerDown={beginDrag('move')}
-                style={{ cursor: 'move' }}
+                cursor="move"
               />
               {(['nw', 'ne', 'sw', 'se'] as const).map((corner) => {
                 const cx =
-                  corner === 'nw' || corner === 'sw'
-                    ? gridToSvgX(localZone!.edgeLeft)
-                    : gridToSvgX(localZone!.edgeRight);
+                  corner === 'nw' || corner === 'sw' ? gridToSvgX(localZone.edgeLeft) : gridToSvgX(localZone.edgeRight);
                 const cy =
-                  corner === 'nw' || corner === 'ne'
-                    ? gridToSvgY(localZone!.edgeTop)
-                    : gridToSvgY(localZone!.edgeBottom);
+                  corner === 'nw' || corner === 'ne' ? gridToSvgY(localZone.edgeTop) : gridToSvgY(localZone.edgeBottom);
                 const cursor = corner === 'nw' || corner === 'se' ? 'nwse-resize' : 'nesw-resize';
                 return (
                   <circle
@@ -288,10 +284,10 @@ const ClimbZoneSearchForm: React.FC<ClimbZoneSearchFormProps> = ({ boardDetails 
                     r={handleRadius}
                     fill={themeTokens.colors.primary}
                     fillOpacity={HANDLE_OPACITY}
-                    stroke="#fff"
+                    stroke={themeTokens.neutral[50]}
                     strokeWidth={handleRadius * 0.25}
                     onPointerDown={beginDrag(corner)}
-                    style={{ cursor }}
+                    cursor={cursor}
                   />
                 );
               })}

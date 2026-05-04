@@ -501,7 +501,7 @@ const AccordionSearchForm: React.FC<AccordionSearchFormProps> = ({ boardDetails,
       label: t('search.panels.zone'),
       title: t('search.panels.zone'),
       defaultSummary: t('search.panels.anyDefault'),
-      getSummary: () => getZonePanelSummary(uiSearchParams),
+      getSummary: () => getZonePanelSummary(uiSearchParams, t('search.panels.zone')),
       lazy: true,
       content: (
         <div className={styles.holdSearchContainer}>
