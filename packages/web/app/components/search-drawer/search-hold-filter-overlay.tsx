@@ -105,10 +105,15 @@ type HoldFilterMarkerProps = {
 };
 
 function HoldFilterMarker({ cx, cy, baseRadius, filters, colorByType }: HoldFilterMarkerProps) {
-  // Each successive filter ring sits 28% further out than the previous one.
   // Stroke width scales with hold size — wider so the rings read clearly on
   // the board image; capped at 7 to keep dense boards readable.
   const strokeWidth = Math.min(7, Math.max(4, baseRadius * 0.32));
+  // Pack concentric rings *inside* the hold radius instead of bulging outward.
+  // The outer ring sits at the hold's edge; each subsequent ring nests
+  // inward by ~22% of baseRadius. With 5 types (Start/Mid/Finish/Foot/Any)
+  // the innermost ring still has positive radius and rings never spill onto
+  // neighbouring holds.
+  const ringStep = baseRadius * 0.22;
 
   // If any filter is "exclude", we render a single dim disc behind all the
   // rings so the entire hold reads as excluded (matches the picker swatch).
@@ -118,7 +123,7 @@ function HoldFilterMarker({ cx, cy, baseRadius, filters, colorByType }: HoldFilt
     <g pointerEvents="none">
       {hasExclude && <circle cx={cx} cy={cy} r={baseRadius} fill="rgba(0, 0, 0, 0.55)" />}
       {filters.map((filter, index) => {
-        const ringRadius = baseRadius * (1 + index * 0.28);
+        const ringRadius = Math.max(strokeWidth, baseRadius - index * ringStep);
         const color = colorByType.get(filter.type) ?? '#FFFFFF';
         return (
           <circle
