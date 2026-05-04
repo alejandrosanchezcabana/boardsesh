@@ -27,11 +27,22 @@ vi.mock('@/app/lib/board-utils', () => ({
 // tagged template) for replica-tolerant reads. Mock both onto the existing
 // `executeMock` and a fresh tagged-template fake.
 const mockSqlTag = vi.fn();
+const rowsFromResultMock = <T,>(result: unknown): T[] => {
+  if (Array.isArray(result)) return result as T[];
+  if (result && typeof result === 'object' && 'rows' in result) {
+    const rows = (result as { rows?: unknown }).rows;
+    if (Array.isArray(rows)) return rows as T[];
+  }
+  throw new TypeError('Expected database query result to be a row array');
+};
 vi.mock('@/app/lib/db/db', () => ({
   dbz: { execute: executeMock },
   sql: mockSqlTag,
   dbzRead: { execute: executeMock },
   getReadPool: () => mockSqlTag,
+  rowsFromResult: rowsFromResultMock,
+  executeRows: async <T,>(conn: { execute: (query: unknown) => Promise<unknown> }, query: unknown) =>
+    rowsFromResultMock<T>(await conn.execute(query)),
 }));
 
 vi.mock('@/app/lib/string-utils', () => ({
