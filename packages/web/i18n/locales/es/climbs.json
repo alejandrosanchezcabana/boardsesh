@@ -3,7 +3,7 @@
     "boardHome": {
       "title": "{{boardName}} en Boardsesh",
       "description": "Explora bloques y sesiones en {{boardName}}",
-      "fallbackTitle": "Tabla no encontrada"
+      "fallbackTitle": "Tabla de escalada no encontrada"
     },
     "list": {
       "title": "Bloques de {{boardName}} a {{angle}}°",
@@ -22,11 +22,11 @@
       "title": "{{climbName}} - {{grade}} | Modo Jugar",
       "description": "{{climbName}} - {{grade}} de {{setter}}. Calidad: {{quality}}/5. Encadenes: {{ascents}}",
       "fallbackTitle": "Jugar",
-      "fallbackDescription": "Juega un bloque en tu tabla"
+      "fallbackDescription": "Juega un bloque en tu tabla de escalada"
     },
     "create": {
       "title": "Crear un bloque",
-      "description": "Apertura un nuevo bloque en tu tabla"
+      "description": "Apertura un nuevo bloque en tu tabla de escalada"
     },
     "import": {
       "title": "Importar bloques",
@@ -37,14 +37,14 @@
       "description": "Bloques que has marcado como favoritos"
     },
     "logbook": {
-      "title": "Bitácora",
+      "title": "Historial",
       "description": "Tu historial de escalada para esta tabla"
     }
   },
   "list": {
     "empty": {
       "title": "Ningún bloque coincide con tus filtros",
-      "subtitle": "Afloja los filtros e inténtalo otra vez"
+      "subtitle": "Edita los filtros e inténtalo otra vez"
     },
     "loading": "Cargando bloques...",
     "loadMore": "Ver más",
@@ -54,7 +54,7 @@
       "grid": "Vista de cuadrícula"
     },
     "biggerBoard": {
-      "title": "No cabe en tu tabla",
+      "title": "No cabe en tu tabla de escalada",
       "description": "Este se sale del borde de tu pared. Necesitas un tamaño mayor para encadenarlo."
     },
     "sort": {
@@ -82,12 +82,12 @@
     "shareFailed": "No se pudo compartir"
   },
   "board": {
-    "connect": "Conectar con la tabla",
-    "disconnect": "Desconectar de la tabla",
-    "connectError": "No se pudo conectar con la tabla. Asegúrate de que el Bluetooth está encendido y la tabla está cerca.",
-    "lightingUnavailable": "Iluminación de la tabla no disponible",
-    "lightingUnavailableIos": "Safari no soporta Bluetooth. Usa la app de Boardsesh para iluminar las presas de tu tabla.",
-    "lightingUnavailableBrowser": "Este navegador no soporta Bluetooth. Cambia a Chrome para iluminar las presas de tu tabla.",
+    "connect": "Conectar con la tabla de escalada",
+    "disconnect": "Desconectar de la tabla de escalada",
+    "connectError": "No se pudo conectar con la tabla de escalada. Asegúrate de que el Bluetooth está encendido y la tabla está cerca.",
+    "lightingUnavailable": "Iluminación de la tabla de escalada no disponible",
+    "lightingUnavailableIos": "Safari no soporta Bluetooth. Usa la app de Boardsesh para iluminar las presas de tu tabla de escalada.",
+    "lightingUnavailableBrowser": "Este navegador no soporta Bluetooth. Cambia a Chrome para iluminar las presas de tu tabla de escalada.",
     "dismiss": "Descartar",
     "getApp": "Obtener la app"
   },
@@ -245,15 +245,15 @@
     "tick": {
       "drawer": {
         "signInRequired": "Inicia sesión",
-        "selectBoard": "Selecciona una tabla",
+        "selectBoard": "Selecciona una tabla de escalada",
         "logAscent": "Registrar encadene",
-        "signInToRecord": "Inicia sesión para registrar marcas",
+        "signInToRecord": "Inicia sesión para registrar tu progreso",
         "createAccountBlurb": "Crea una cuenta de Boardsesh para registrar tus bloques y seguir tu progreso.",
         "signIn": "Iniciar sesión",
         "orLogInOfficialApp": "O registra tu marca en la app oficial:",
         "openInApp": "Abrir en la app",
         "alwaysOpenInApp": "Abrir siempre en la app",
-        "authModalTitle": "Inicia sesión para registrar marcas",
+        "authModalTitle": "Inicia sesión para registrar tu progreso",
         "authModalDescription": "Crea una cuenta para registrar tus bloques y seguir tu progreso.",
         "mirroredTooltip": "Pulsa la etiqueta para indicar si completaste este bloque en el lado espejo.",
         "whichBoard": "¿En qué tabla escalaste?"
@@ -314,10 +314,10 @@
   "detail": {
     "sections": {
       "beta": "Beta",
-      "logbook": "Tu bitácora",
+      "logbook": "Tu historial",
       "logbookEmpty": "Sin encadenes",
-      "crewLogbook": "Bitácora del crew",
-      "crewLogbookSummary": "Mira los encadenes de tu crew",
+      "crewLogbook": "Historial del equipo",
+      "crewLogbookSummary": "Mira los encadenes de tu equipo",
       "community": "Comunidad",
       "communitySummary": "Votos, comentarios, propuestas",
       "analytics": "Analíticas",
@@ -382,10 +382,10 @@
       "checkingMoonBoardDuplicate": "Comprobando si este bloque de MoonBoard ya existe..."
     },
     "clear": {
-      "title": "Limpiar bloque",
+      "title": "Borrar bloque",
       "description": "Esto borrará todas las presas y reiniciará el formulario. ¿Seguro?",
-      "confirm": "Limpiar",
-      "tooltip": "Limpiar todas las presas"
+      "confirm": "Borrar",
+      "tooltip": "Borrar todas las presas"
     },
     "settings": {
       "tooltip": "Ajustes del bloque",

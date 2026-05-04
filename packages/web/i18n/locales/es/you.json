@@ -2,11 +2,11 @@
   "metadata": {
     "dashboard": {
       "title": "Tú",
-      "description": "Tu panel de escalada en Boardsesh"
+      "description": "Tu tabla de escalada en Boardsesh"
     },
     "logbook": {
-      "title": "Bitácora",
-      "description": "Tu bitácora de escalada en Boardsesh"
+      "title": "Historial",
+      "description": "Tu historial de escalada en Boardsesh"
     },
     "sessions": {
       "title": "Sesiones",
@@ -16,7 +16,7 @@
   "tabs": {
     "progress": "Progreso",
     "sessions": "Sesiones",
-    "logbook": "Bitácora"
+    "logbook": "Historial"
   },
   "progress": {
     "title": "Progreso"

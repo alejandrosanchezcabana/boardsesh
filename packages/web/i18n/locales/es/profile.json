@@ -59,7 +59,7 @@
     "flashVsRedpoint": "Flash vs Trabajado",
     "vPoints": "V-Points",
     "vPointsTotal": "{{value}} en total",
-    "gradeDistributionAria": "Distribución por grados en todas las tablas",
+    "gradeDistributionAria": "Distribución por grados en todas las tablas de escalada",
     "weeklyAttemptsAria": "Intentos semanales por dificultad",
     "flashRedpointAria": "Flash vs trabajado por grado",
     "layoutTooltip": "{{name}}: {{count}} bloques ({{percentage}}%)"
@@ -89,9 +89,9 @@
       "noAscentsLogged": "Sin encadenes registrados para este bloque"
     },
     "crew": {
-      "signInPrompt": "Inicia sesión para ver la bitácora de tu crew para este bloque",
-      "loadError": "No se pudo cargar la bitácora de tu crew. Inténtalo de nuevo en un rato.",
-      "noneYet": "Nadie de tu crew ha registrado este bloque todavía"
+      "signInPrompt": "Inicia sesión para ver el historial de tu equipo para este bloque",
+      "loadError": "No se pudo cargar el historial de tu equipo. Inténtalo de nuevo en un rato.",
+      "noneYet": "Nadie de tu equipo ha registrado este bloque todavía"
     },
     "entry": {
       "mirroredTag": "Reflejado",

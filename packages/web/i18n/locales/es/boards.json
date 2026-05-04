@@ -1,36 +1,36 @@
 {
   "discovery": {
     "section": {
-      "nearby": "Tableros cerca de ti"
+      "nearby": "Boards cerca de ti"
     },
     "findNearby": {
-      "loading": "Buscando tableros…",
+      "loading": "Buscando tablas de escalada...",
       "geoDenied": "Ubicación no disponible",
-      "error": "Error al cargar tableros cercanos",
-      "noResults": "No se encontraron tableros cercanos",
+      "error": "Error al cargar tablas de escalada cercanas",
+      "noResults": "No se encontraron tablas de escalada cercanas",
       "idle": "Buscar cerca"
     },
     "search": {
-      "ariaLabel": "Buscar un tablero",
+      "ariaLabel": "Buscar una tabla de escalada",
       "label": "Buscar"
     },
     "custom": {
-      "ariaLabel": "Crear un tablero personalizado",
-      "label": "Tablero personalizado"
+      "ariaLabel": "Crear una tabla personalizada",
+      "label": "Tabla de escalada personalizada"
     },
     "create": {
-      "defaultLabel": "Nuevo tablero"
+      "defaultLabel": "Nueva tabla de escalada"
     },
     "bluetooth": {
       "scanning": "Escaneando…",
-      "boardsFound": "Tableros encontrados",
-      "noBoardsFound": "No se encontraron tableros",
+      "boardsFound": "Tablas de escalada encontradas",
+      "noBoardsFound": "No se encontraron tablas de escalada",
       "unavailable": "Bluetooth no disponible",
       "idle": "Inicio rápido"
     }
   },
   "boardEntity": {
-    "notFound": "Tablero no encontrado",
+    "notFound": "Tabla de escalada no encontrada",
     "chips": {
       "unlisted": "No listado",
       "locationHidden": "Ubicación oculta"
@@ -51,47 +51,47 @@
       "comments": "comentarios"
     },
     "delete": {
-      "title": "Eliminar tablero",
+      "title": "Eliminar tabla de escalada",
       "confirm": "¿Eliminar \"{{name}}\"? No se puede deshacer.",
       "cancel": "Cancelar",
       "delete": "Eliminar"
     },
     "snackbar": {
-      "deleted": "Tablero eliminado",
-      "deleteFailed": "Error al eliminar el tablero",
-      "linkedToGym": "Tablero vinculado al gimnasio",
-      "unlinkedFromGym": "Tablero desvinculado del gimnasio",
-      "linkFailed": "Error al vincular el tablero al gimnasio"
+      "deleted": "Tabla de escalada eliminada",
+      "deleteFailed": "Error al eliminar la tabla de escalada",
+      "linkedToGym": "Tabla de escalada vinculada al gimnasio",
+      "unlinkedFromGym": "Tabla de escalada desvinculada del gimnasio",
+      "linkFailed": "Error al vincular la tabla de escalada al gimnasio"
     },
     "comments": {
-      "title": "Discusión del tablero"
+      "title": "Discusión de la tabla de escalada"
     },
     "follow": {
-      "entityLabel": "tablero"
+      "entityLabel": "tabla de escalada"
     }
   },
   "boardForm": {
     "create": {
-      "submit": "Crear tablero",
-      "authRequired": "Debes iniciar sesión para crear un tablero",
-      "errorMessage": "Error al crear el tablero. Puede que ya exista para esta configuración.",
-      "nameRequired": "Se requiere el nombre del tablero",
-      "createdNamed": "¡Tablero \"{{name}}\" creado!",
-      "namePlaceholder": "p. ej., Tablero de casa, Nombre del gimnasio",
+      "submit": "Crear tabla de escalada",
+      "authRequired": "Debes iniciar sesión para crear una tabla de escalada",
+      "errorMessage": "Error al crear la tabla de escalada. Puede que ya exista para esta configuración.",
+      "nameRequired": "Se requiere el nombre de la tabla de escalada",
+      "createdNamed": "¡Tabla de escalada \"{{name}}\" creada!",
+      "namePlaceholder": "p. ej., Tabla de casa, Nombre del gimnasio",
       "locationPlaceholder": "p. ej., Ciudad, Nombre del gimnasio"
     },
     "fields": {
-      "name": "Nombre del tablero",
+      "name": "Nombre de la tabla de escalada",
       "slug": "URL personalizada",
       "description": "Descripción",
       "location": "Ubicación",
       "serialNumber": "Número de serie del controlador",
       "defaultAngle": "Ángulo por defecto",
       "angleAdjustable": "Ángulo ajustable",
-      "isPublic": "Tablero público",
+      "isPublic": "Tabla de escalada pública",
       "unlisted": "No listado",
-      "hideLocation": "Ocultar de tableros cercanos",
-      "isOwned": "Soy dueño de este tablero",
+      "hideLocation": "Ocultar de tablas de escalada cercanas",
+      "isOwned": "Soy dueño de esta tabla de escalada",
       "layout": "Disposición",
       "size": "Tamaño",
       "holdSets": "Conjuntos de presas"
@@ -102,18 +102,18 @@
     },
     "helperText": {
       "unlisted": "Oculto de los resultados de búsqueda pero accesible por enlace directo",
-      "hideLocation": "Oculto de las búsquedas de tableros cercanos a menos que sigas al buscador"
+      "hideLocation": "Oculto de las búsquedas de tablas de escalada cercanas a menos que sigas al buscador"
     },
     "alerts": {
-      "configEditable": "Puedes cambiar la disposición del tablero porque aún no se han registrado bloques."
+      "configEditable": "Puedes cambiar la disposición de la tabla de escalada porque aún no se han registrado bloques."
     }
   },
   "editBoard": {
-    "title": "Editar tablero",
+    "title": "Editar tabla de escalada",
     "submitLabel": "Guardar cambios",
     "snackbar": {
-      "updated": "¡Tablero actualizado!",
-      "updateFailed": "Error al actualizar el tablero"
+      "updated": "¡Tabla de escalada actualizada!",
+      "updateFailed": "Error al actualizar la tabla de escalada"
     }
   },
   "editGym": {
@@ -129,7 +129,7 @@
     "setOnMap": "Marca la ubicación en el mapa",
     "searchPlaceholder": "Busca una dirección o ciudad...",
     "myLocation": "Mi ubicación",
-    "helpText": "Haz clic en el mapa para fijar la ubicación del tablero, o arrastra el marcador para ajustar"
+    "helpText": "Haz clic en el mapa para fijar la ubicación de la tabla de escalada, o arrastra el marcador para ajustar"
   },
   "boardLeaderboard": {
     "empty": "Aún no hay actividad en este periodo.",
@@ -155,7 +155,7 @@
     }
   },
   "boardConfigSelects": {
-    "board": "Tablero",
+    "board": "Tabla de escalada",
     "layout": "Disposición",
     "size": "Tamaño",
     "holdSets": "Conjuntos de presas",
@@ -163,27 +163,27 @@
   },
   "boardFilterStrip": {
     "all": "Todos",
-    "allBoards": "Todos los tableros"
+    "allBoards": "Todas las tablas de escalada"
   },
   "boardSwitchConfirm": {
     "session": {
       "title": "¿Salir de tu sesión?",
-      "body": "Estás en una sesión en {{lockedLabel}}. Cambiar a {{targetLabel}} desconecta tu tablero pero mantiene la sesión activa."
+      "body": "Estás en una sesión en {{lockedLabel}}. Cambiar a {{targetLabel}} desconecta tu tabla de escalada pero mantiene la sesión activa."
     },
     "connection": {
-      "title": "¿Desconectar tu tablero?",
+      "title": "¿Desconectar tu tabla de escalada?",
       "body": "Tu {{lockedLabel}} sigue conectado. Cambiar a {{targetLabel}} lo desconecta."
     },
     "stay": "Quedarse",
-    "switch": "Cambiar de tablero"
+    "switch": "Cambiar de tabla de escalada"
   },
   "boardSearchDrawer": {
-    "title": "Buscar un tablero",
-    "searchPlaceholder": "Busca tableros por nombre o ubicación",
+    "title": "Buscar una tabla de escalada",
+    "searchPlaceholder": "Busca tablas de escalada por nombre o ubicación",
     "clear": "Limpiar",
-    "radiusInfo": "Mostrando tableros en un radio de {{radiusKm}} km del centro del mapa",
-    "empty": "No hay tableros en esta zona. Mueve el mapa o aleja el zoom para encontrar más.",
-    "emptyWithQuery": "No hay tableros que coincidan con \"{{query}}\" aquí. Aleja el zoom o busca en otra zona.",
+    "radiusInfo": "Mostrando tablas de escalada en un radio de {{radiusKm}} km del centro del mapa",
+    "empty": "No hay tablas de escalada en esta zona. Mueve el mapa o aleja el zoom para encontrar más.",
+    "emptyWithQuery": "No hay tablas de escalada que coincidan con \"{{query}}\" aquí. Aleja el zoom o busca en otra zona.",
     "open": "Abrir"
   },
   "boardSearchMap": {
@@ -212,14 +212,14 @@
     "createNew": "Crear nuevo"
   },
   "selectorDrawer": {
-    "customTitle": "Tablero personalizado",
-    "createTitle": "Crear tablero",
-    "createButton": "Crear tablero",
+    "customTitle": "Tabla de escalada personalizada",
+    "createTitle": "Crear tabla de escalada",
+    "createButton": "Crear tabla de escalada",
     "quickSession": "Sesión rápida",
     "configSection": {
-      "label": "Configuración del tablero",
-      "title": "Configuración del tablero",
-      "defaultSummary": "Selecciona un tablero"
+      "label": "Configuración de la tabla de escalada",
+      "title": "Configuración de la tabla de escalada",
+      "defaultSummary": "Selecciona una tabla de escalada"
     }
   },
   "gymEntity": {
@@ -233,7 +233,7 @@
       "delete": "Eliminar"
     },
     "stats": {
-      "boards": "tableros",
+      "boards": "tablas de escalada",
       "members": "miembros",
       "followers": "seguidores",
       "comments": "comentarios"
