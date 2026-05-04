@@ -369,7 +369,7 @@ export default function StartSeshDrawer({ open, onClose, onTransitionEnd, boardC
             paddingLeft: `${themeTokens.spacing[3]}px`,
             paddingRight: `${themeTokens.spacing[3]}px`,
           },
-          body: { padding: `${themeTokens.spacing[2]}px 0` },
+          body: { padding: `${themeTokens.spacing[2]}px ${themeTokens.spacing[3]}px` },
         }}
         footer={
           <Button
