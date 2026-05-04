@@ -82,6 +82,12 @@ const ClimbHoldSearchForm: React.FC<ClimbHoldSearchFormProps> = ({ boardDetails 
     holdsFilter,
     setHoldFilter,
     clearHold,
+    // Don't auto-assign on first tap — the click-target circles around each
+    // hold extend slightly beyond the visible hold image, so accidental taps
+    // on apparent empty space would otherwise commit unintended filters. The
+    // popover opens with no commitment; the user explicitly picks a swatch
+    // to add a filter, or dismisses the popover to back out.
+    autoAssignOnFirstTap: false,
   });
 
   // Tally include / exclude across all (hold, type) pairs so the chip count
