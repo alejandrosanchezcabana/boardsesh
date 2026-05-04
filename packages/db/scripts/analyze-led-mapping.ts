@@ -18,8 +18,7 @@ import { createScriptDb } from './db-connection.js';
 import { LED_PLACEMENTS } from '../../board-constants/src/generated/led-placements-data.js';
 
 function rows<T>(result: unknown): T[] {
-  const r = result as { rows?: T[] };
-  return Array.isArray(r) ? r : (r.rows ?? []);
+  return result as T[];
 }
 
 type ClimbRow = {

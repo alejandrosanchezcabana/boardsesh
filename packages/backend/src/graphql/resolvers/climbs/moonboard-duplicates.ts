@@ -48,10 +48,6 @@ const MOONBOARD_COORDINATE_GROUPS: Array<{
 
 export const MOONBOARD_DUPLICATE_ERROR_PREFIX = 'A MoonBoard climb with the same holds already exists';
 
-function getExecuteRows<T extends Record<string, unknown>>(result: unknown): T[] {
-  return Array.isArray(result) ? (result as T[]) : ((result as { rows?: T[] }).rows ?? []);
-}
-
 function coordinateToHoldId(coord: string): number {
   const colIndex = coord[0].toUpperCase().charCodeAt(0) - 'A'.charCodeAt(0);
   const row = parseInt(coord.slice(1), 10);
@@ -189,7 +185,7 @@ export async function findMoonBoardDuplicateMatches(
       ORDER BY COALESCE(${dbSchema.boardClimbStats.ascensionistCount}, 0) DESC, ${dbSchema.boardClimbs.uuid} ASC
     `);
 
-    const exactMatchRows = getExecuteRows<DuplicateLookupRow>(exactMatchResult);
+    const exactMatchRows = exactMatchResult as unknown as DuplicateLookupRow[];
     for (const row of exactMatchRows) {
       const next = {
         uuid: row.uuid,
@@ -227,7 +223,7 @@ export async function findMoonBoardDuplicateMatches(
       ORDER BY COALESCE(${dbSchema.boardClimbStats.ascensionistCount}, 0) DESC, ${dbSchema.boardClimbs.uuid} ASC
     `);
 
-    const legacyRows = getExecuteRows<LegacyDuplicateLookupRow>(legacyResult);
+    const legacyRows = legacyResult as unknown as LegacyDuplicateLookupRow[];
     for (const row of legacyRows) {
       const signature = buildMoonBoardHoldSignatureFromFrames(row.frames);
       if (!signature || !uniqueSignatures.includes(signature)) continue;

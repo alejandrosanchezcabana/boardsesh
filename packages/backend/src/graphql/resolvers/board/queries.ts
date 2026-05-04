@@ -38,7 +38,6 @@ export const boardQueries: Pick<QueryResolvers, 'grades' | 'angles'> = {
       ORDER BY pa.angle ASC
     `);
 
-    const rows = Array.isArray(result) ? result : (result as { rows: { angle: number }[] }).rows;
-    return rows.map((r) => ({ angle: r.angle }));
+    return result.map((r) => ({ angle: r.angle }));
   },
 };

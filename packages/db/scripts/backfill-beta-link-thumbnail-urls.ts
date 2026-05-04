@@ -70,7 +70,7 @@ async function main(): Promise<void> {
             LIMIT 10
           `,
     );
-    const previewRows = (previewResult as unknown as { rows?: Array<{ thumbnail: string; n: number }> }).rows ?? [];
+    const previewRows = previewResult as unknown as Array<{ thumbnail: string; n: number }>;
     console.info(`[backfill] Sample of rows that would be rewritten (up to 10):`);
     for (const r of previewRows) {
       console.info(`  ${r.thumbnail} (×${r.n})`);

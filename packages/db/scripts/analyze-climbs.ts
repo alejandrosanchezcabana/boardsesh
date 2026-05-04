@@ -15,10 +15,8 @@
 import { sql } from 'drizzle-orm';
 import { createScriptDb } from './db-connection.js';
 
-// Helper to extract rows from drizzle execute result (shape varies by driver)
 function rows<T>(result: unknown): T[] {
-  const r = result as { rows?: T[] };
-  return Array.isArray(r) ? r : (r.rows ?? []);
+  return result as T[];
 }
 
 // Simplified local copy of HOLD_STATE_MAP (role code → role name only, no colors).

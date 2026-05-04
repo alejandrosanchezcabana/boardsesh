@@ -14,8 +14,7 @@ import { createScriptDb } from './db-connection.js';
 import { populateDenormalizedColumns } from '../src/queries/climbs/populate-denormalized-columns.js';
 
 function rows<T>(result: unknown): T[] {
-  const r = result as { rows?: T[] };
-  return Array.isArray(r) ? r : (r.rows ?? []);
+  return result as T[];
 }
 
 const args = process.argv.slice(2);

@@ -547,10 +547,7 @@ export const setterFollowQueries = {
       benchmark_difficulty: number | null;
     };
 
-    // db.execute() returns an array of rows with postgres-js
-    const rawRows = Array.isArray(rawResult)
-      ? (rawResult as unknown as RawRow[])
-      : ((rawResult as unknown as { rows?: RawRow[] }).rows ?? []);
+    const rawRows = rawResult as unknown as RawRow[];
 
     const hasMore = rawRows.length > limit;
     const trimmedResults = hasMore ? rawRows.slice(0, limit) : rawRows;
