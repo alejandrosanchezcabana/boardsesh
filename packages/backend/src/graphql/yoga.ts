@@ -1,5 +1,6 @@
 import { createYoga } from 'graphql-yoga';
 import { v4 as uuidv4 } from 'uuid';
+import * as Sentry from '@sentry/node';
 import { schema } from './index';
 import { validateNextAuthToken } from '../middleware/auth';
 import type { ConnectionContext } from '@boardsesh/shared-schema';
@@ -68,7 +69,14 @@ export function createYogaInstance() {
       debug: () => {},
       info: (...args: unknown[]) => console.info('[Yoga]', ...args),
       warn: (...args: unknown[]) => console.warn('[Yoga]', ...args),
-      error: (...args: unknown[]) => console.error('[Yoga]', ...args),
+      error: (...args: unknown[]) => {
+        console.error('[Yoga]', ...args);
+        for (const arg of args) {
+          if (arg instanceof Error) {
+            Sentry.captureException(arg, { tags: { source: 'graphql-yoga' } });
+          }
+        }
+      },
     },
     // In development/test, show all errors
     // In production, errors will be masked by default

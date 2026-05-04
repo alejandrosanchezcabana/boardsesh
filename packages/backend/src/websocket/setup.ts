@@ -3,6 +3,7 @@ import type { Server as HttpServer, IncomingMessage } from 'http';
 import { useServer, type Extra as WsExtra } from 'graphql-ws/use/ws';
 import type { Context as GqlWsContext } from 'graphql-ws';
 import { GraphQLError, parse } from 'graphql';
+import * as Sentry from '@sentry/node';
 import { schema } from '../graphql/index';
 import { createContext, removeContext, getContext } from '../graphql/context';
 import { validateQueryDepth } from '../graphql/query-depth';
@@ -212,6 +213,9 @@ export function setupWebSocketServer(httpServer: HttpServer): {
       },
       onError: (_ctx: ServerContext, _id: string, _payload, errors) => {
         console.error('GraphQL error:', errors);
+        for (const err of errors) {
+          Sentry.captureException(err, { tags: { source: 'graphql-ws' } });
+        }
       },
       onComplete: (_ctx: ServerContext, _id: string, payload) => {
         if (DEBUG) {
