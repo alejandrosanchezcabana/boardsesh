@@ -15,18 +15,18 @@ A user opens Boardsesh in airplane mode at the gym. They launch the app, browse 
 
 ## Current state (verified against `main`)
 
-| Area | Status |
-|---|---|
-| Capacitor shell at `mobile/` | Capacitor 8. iOS + Android projects, `capacitor.config.ts`, `BoardseshWidgets` LiveActivity extension. Loads `https://www.boardsesh.com` in hosted mode today. |
-| iOS app-bound domains | `boardsesh.com`, `*.boardsesh.com`, `*.ts.net` declared in `WKAppBoundDomains`. `limitsNavigationsToAppBoundDomains: true`. |
-| BLE adapter | `packages/web/app/lib/ble/{capacitor-adapter,web-adapter,adapter-factory,types,...}.ts` with tests. |
-| Native plugins installed | `@capacitor-community/{bluetooth-le, in-app-review, keep-awake, safe-area}`, `@capacitor/{app, browser, core, geolocation, motion}`. |
-| Native plugins not installed | `@capacitor-community/sqlite`, `@capacitor/{push-notifications, network, haptics, keyboard, status-bar, splash-screen}`. |
-| Backend GraphQL | 14 resolver domains under `packages/backend/src/graphql/resolvers/` (board, ticks, users, social, queue, sessions, playlists, favorites, controller, climbs, ...). |
-| Web framework | Next.js 16.1.6 + NextAuth 4.24.13. 47 `page.tsx` files. 68 dynamic route files. 102 files importing from `next/{link,navigation,image}`. 21 files using `generateMetadata` / `generateStaticParams`. `middleware.ts` for PHP-block, board-name validation, list-page caching, climb-session cookies. |
-| REST routes in `packages/web/app/api/` | 44 `route.ts` files. |
-| Hosting | Vercel (web) + Neon (Postgres) + backend on its current host. |
-| TanStack already in use | `@tanstack/react-query`, `@tanstack/react-virtual`. Adding `@tanstack/react-router` + `@tanstack/start` is incremental. |
+| Area                                   | Status                                                                                                                                                                                                                                                                                               |
+| -------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Capacitor shell at `mobile/`           | Capacitor 8. iOS + Android projects, `capacitor.config.ts`, `BoardseshWidgets` LiveActivity extension. Loads `https://www.boardsesh.com` in hosted mode today.                                                                                                                                       |
+| iOS app-bound domains                  | `boardsesh.com`, `*.boardsesh.com`, `*.ts.net` declared in `WKAppBoundDomains`. `limitsNavigationsToAppBoundDomains: true`.                                                                                                                                                                          |
+| BLE adapter                            | `packages/web/app/lib/ble/{capacitor-adapter,web-adapter,adapter-factory,types,...}.ts` with tests.                                                                                                                                                                                                  |
+| Native plugins installed               | `@capacitor-community/{bluetooth-le, in-app-review, keep-awake, safe-area}`, `@capacitor/{app, browser, core, geolocation, motion}`.                                                                                                                                                                 |
+| Native plugins not installed           | `@capacitor-community/sqlite`, `@capacitor/{push-notifications, network, haptics, keyboard, status-bar, splash-screen}`.                                                                                                                                                                             |
+| Backend GraphQL                        | 14 resolver domains under `packages/backend/src/graphql/resolvers/` (board, ticks, users, social, queue, sessions, playlists, favorites, controller, climbs, ...).                                                                                                                                   |
+| Web framework                          | Next.js 16.1.6 + NextAuth 4.24.13. 47 `page.tsx` files. 68 dynamic route files. 102 files importing from `next/{link,navigation,image}`. 21 files using `generateMetadata` / `generateStaticParams`. `middleware.ts` for PHP-block, board-name validation, list-page caching, climb-session cookies. |
+| REST routes in `packages/web/app/api/` | 44 `route.ts` files.                                                                                                                                                                                                                                                                                 |
+| Hosting                                | Vercel (web) + Neon (Postgres) + backend on its current host.                                                                                                                                                                                                                                        |
+| TanStack already in use                | `@tanstack/react-query`, `@tanstack/react-virtual`. Adding `@tanstack/react-router` + `@tanstack/start` is incremental.                                                                                                                                                                              |
 
 The Next.js surface is large but tractable: ~47 route files to port, ~100 import sites to swap. The existing TanStack Query usage means data-fetching patterns transfer with little change.
 
@@ -111,15 +111,15 @@ The maturity risk on TanStack Start is real (1.x, evolving fast). Mitigation: pi
 
 Railway is a thin PaaS. It runs Docker containers, Node services, scheduled jobs, and a managed Postgres / Redis. It does not impose a deployment shape, runtime, or SDK. Compared with Vercel:
 
-| Concern | Vercel | Railway (chosen) |
-|---|---|---|
-| Compute model | Serverless functions, edge runtime | Long-lived Node containers |
-| Image optimization | Built-in `next/image` endpoint | We provide our own (`@image-optim/sharp` route or Cloudflare Images) |
-| Cron | Vercel Cron triggers HTTP endpoints | `packages/scheduler` runs node-cron in a long-lived container |
-| Edge cache | Automatic for static assets | Cloudflare in front of Railway origin |
-| OG image rendering | Edge runtime with `@vercel/og` | Hono route in `packages/backend` with `satori` + `@resvg/resvg-js` |
-| Logs / metrics | Vercel-native | Railway logs piped to OpenTelemetry collector → ClickHouse / Axiom (or stay with Sentry / PostHog) |
-| Deploy | `vercel deploy` or git-push | Railway git integration or GitHub Actions → `railway up` |
+| Concern            | Vercel                              | Railway (chosen)                                                                                   |
+| ------------------ | ----------------------------------- | -------------------------------------------------------------------------------------------------- |
+| Compute model      | Serverless functions, edge runtime  | Long-lived Node containers                                                                         |
+| Image optimization | Built-in `next/image` endpoint      | We provide our own (`@image-optim/sharp` route or Cloudflare Images)                               |
+| Cron               | Vercel Cron triggers HTTP endpoints | `packages/scheduler` runs node-cron in a long-lived container                                      |
+| Edge cache         | Automatic for static assets         | Cloudflare in front of Railway origin                                                              |
+| OG image rendering | Edge runtime with `@vercel/og`      | Hono route in `packages/backend` with `satori` + `@resvg/resvg-js`                                 |
+| Logs / metrics     | Vercel-native                       | Railway logs piped to OpenTelemetry collector → ClickHouse / Axiom (or stay with Sentry / PostHog) |
+| Deploy             | `vercel deploy` or git-push         | Railway git integration or GitHub Actions → `railway up`                                           |
 
 What we lose: instant-rollback button, framework-aware build optimization, free DDoS protection (kept via Cloudflare), some preview-deployment ergonomics.
 
@@ -139,12 +139,12 @@ These are tractable and well-understood operational items. The plan budgets expl
 
 Today the WebView loads `https://www.boardsesh.com` (hosted mode). After the migration + offline-first work, it loads `dist/client/` from `capacitor://localhost` (bundled mode). The same Vite client bundle ships to both. The differences:
 
-| | Hosted (today) | Bundled (Phase 2+) |
-|---|---|---|
-| Initial load | Network round-trip on every cold start | Local files, no network |
-| Update cadence | Every Railway deploy ships to all users | OTA bundle swap (preferred) OR app store update |
-| Auth | Cookie inside same-origin WebView | Bearer token (no cross-origin cookie reliance) |
-| App Store "wrapper" risk | Higher | Lower (clear native value: bundled assets + offline + BLE + LiveActivity) |
+|                          | Hosted (today)                          | Bundled (Phase 2+)                                                        |
+| ------------------------ | --------------------------------------- | ------------------------------------------------------------------------- |
+| Initial load             | Network round-trip on every cold start  | Local files, no network                                                   |
+| Update cadence           | Every Railway deploy ships to all users | OTA bundle swap (preferred) OR app store update                           |
+| Auth                     | Cookie inside same-origin WebView       | Bearer token (no cross-origin cookie reliance)                            |
+| App Store "wrapper" risk | Higher                                  | Lower (clear native value: bundled assets + offline + BLE + LiveActivity) |
 
 ## Build mechanism (drops out)
 
@@ -254,35 +254,35 @@ Unchanged from v8.0.
 
 ## Hosting migration to Railway (Phase 0a)
 
-| Component | From | To | Notes |
-|---|---|---|---|
-| Postgres | Neon | Railway Postgres + PostGIS 3.4+ | Verify `ST_HexagonGrid` for heatmap |
-| DB driver | `drizzle-orm/neon-serverless` | `drizzle-orm/postgres-js` | Local dev already on this driver |
-| Backend | Existing host | Railway, co-located with DB | Subscription reconnect during cutover |
-| Web (Next.js, then Vite) | Vercel | Railway long-lived Node container | See Phase 1 for the framework swap |
-| OG images | Vercel Edge | Backend Hono with `satori` + `@resvg/resvg-js` | Same URL shape preserved |
-| Image optimization | Vercel | Cloudflare Images OR self-hosted `sharp` route | Decide during Phase 0a, not assumed |
-| Cron | Vercel Cron | `packages/scheduler` (new), node-cron, shared-secret `CRON_TOKEN` | Targets existing internal endpoints |
-| Aurora sync | Vercel-triggered runner | Same `packages/aurora-sync` runner, deployed as Railway service | `DATABASE_URL` re-pointed only |
-| Web analytics | `@vercel/analytics`, `@vercel/speed-insights` | PostHog (`posthog-js` + `posthog-node`) | See "Analytics and observability"; ~60 call-site rewrite. 14-day dual-write before decommission. |
-| Feature flags | `@flags-sdk/vercel` (empty today) | PostHog feature flags | Hook signature unchanged; provider impl swaps. |
-| Dev toolbar | `@vercel/toolbar` | Delete | No replacement needed. |
-| CDN cache header name | `Vercel-CDN-Cache-Control` (37 sites incl. `middleware.ts:82-91`, OG routes, board grades, slugs) | `CDN-Cache-Control` (Cloudflare-honoured) plus `Cache-Control` for browser | Single grep-and-replace; verify Cloudflare cache rules pick up the new header. |
-| Sentry cron monitors | `automaticVercelMonitors: true` in `next.config.mjs:135` | Manual `Sentry.withMonitor()` wrapping each job in `packages/scheduler` | Auto-instrumentation only works on Vercel deploy metadata; will silently stop on Railway. |
-| Route timeouts | `export const maxDuration = 300` on 7 long-running cron / sync routes | Delete the export — long-lived Node has no per-request timeout | Routes: `user-sync-cron`, `profile-percentiles`, `inferred-sessions-backfill`, `prewarm-heatmap/[board_name]`, `shared-sync/[board_name]`, `aurora-import`, `cleanup`. |
-| Env-var audit | `VERCEL_ENV`, `VERCEL_URL` reads in 13 files | New `BOARDSESH_ENV` (production / preview / development) and `BOARDSESH_BASE_URL` | Files: `sentry.{edge,server}.config.ts`, `app/api/og/setter/route.tsx:56`, `app/lib/auth/auth-options.ts:142`, `app/lib/warm-overlay-cache.ts:5`, `app/lib/api-docs/generate-openapi.ts:91-92`, `packages/backend/src/handlers/cors.ts:18-20`, `packages/db/drizzle.config.ts:23`, `packages/db/src/client/config.ts:10`, `packages/crypto/src/env.ts:21`, `vercel.json:3`, `.github/workflows/branch-deploy.yml:183`. |
-| Preview-deploy CORS regex | `^https://boardsesh-[a-z0-9]+-marcodejonghs-projects\.vercel\.app$` in `packages/backend/src/handlers/cors.ts:18-20` | Railway preview hostname pattern (or Cloudflare-routed `*.preview.boardsesh.com`) | Same regex shape; new domain. |
-| Rate limiter | In-memory map in `packages/web/app/lib/auth/rate-limiter.ts` | Redis-backed (Railway-managed Redis already used by `packages/backend`) | In-memory was tolerable on Vercel because each cold-start was a fresh process. Multi-instance Railway makes it both wrong (cross-instance bypass) and right (single instance won't lose counter on restart) — choose Redis for multi-instance correctness. |
-| OG cache warming | `warm-overlay-cache.ts:5` derives URL from `VERCEL_URL` | `BOARDSESH_BASE_URL` env var | Same logic, new source. |
-| CI preview env signal | `.github/workflows/branch-deploy.yml:183` sets `VERCEL_ENV=preview` | `BOARDSESH_ENV=preview` (or Railway's native env discrimination) | Cascade with the env-var audit. |
-| `vercel.json` | Cron block (8 jobs), build command, framework | Delete file | Crons move to `packages/scheduler`; build command moves to `Dockerfile`. |
-| Sleeper cron | `user-sync-cron` (`maxDuration = 300`, dev-mode auth bypass) is **not** listed in `vercel.json` — triggered some other way today | Decide intent before migration: keep as on-demand via `packages/scheduler` API, or schedule it explicitly | Without resolving this, the route silently disappears from the schedule on Railway. |
-| Next.js standalone build | `output: 'standalone'` in `next.config.mjs:9` | Delete with Next.js | Vercel-specific lambda packaging; irrelevant once Vite SSR runs in a container. |
-| Next.js data cache | `unstable_cache()` (5 sites: `server-cached-client.ts:67,112`, `holds-heatmap-cache.ts:55`, `search-climbs.ts:109`) + `revalidateTag()` (2 sites: `profile-percentiles/route.ts:78`, `climb-search-cache.server.ts:25`) | Backend-side cache layer (Redis with explicit TTLs) or Cloudflare cache-tag purge headers | Phase 1 work, called out here so the cache-tag semantics aren't silently lost. |
-| Next.js redirects / headers / transpilePackages | `next.config.mjs:74-103` (5 permanent redirects), `:57-73` (apple-app-site-association + 4 security headers), `:15-21` (5 monorepo packages) | TanStack Start route-level redirects, Hono pre-request middleware for headers, native Vite TS support for monorepo | Phase 1 work; explicit list ensures none are dropped. |
-| WASM bundling | `outputFileTracingIncludes` in `next.config.mjs:50-56` ships `@boardsesh/board-renderer-wasm/pkg/*.wasm` and `./public/images/**` for `/api/internal/board-render` | Vite asset handling (verify WASM is bundled into `dist/server` or copied at build) | Verify on first Phase 1 board-render build; failure mode is silent (route 500s in production). |
-| Sentry tunnel | `tunnelRoute: '/monitoring'` in `next.config.mjs:128`, excluded from middleware in `middleware.ts:101` | Hono route in `packages/backend` proxying to Sentry | Phase 1 work; without it, Sentry events are blocked by ad-blockers. |
-| SWC GraphQL codegen plugin | `@swc-contrib/plugin-graphql-codegen-client-preset` in `next.config.mjs:35-42` | Vite plugin equivalent or build-time codegen step | Phase 1 work. |
+| Component                                       | From                                                                                                                                                                                                                    | To                                                                                                                 | Notes                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| ----------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Postgres                                        | Neon                                                                                                                                                                                                                    | Railway Postgres + PostGIS 3.4+                                                                                    | Verify `ST_HexagonGrid` for heatmap                                                                                                                                                                                                                                                                                                                                                                                    |
+| DB driver                                       | `drizzle-orm/neon-serverless`                                                                                                                                                                                           | `drizzle-orm/postgres-js`                                                                                          | Local dev already on this driver                                                                                                                                                                                                                                                                                                                                                                                       |
+| Backend                                         | Existing host                                                                                                                                                                                                           | Railway, co-located with DB                                                                                        | Subscription reconnect during cutover                                                                                                                                                                                                                                                                                                                                                                                  |
+| Web (Next.js, then Vite)                        | Vercel                                                                                                                                                                                                                  | Railway long-lived Node container                                                                                  | See Phase 1 for the framework swap                                                                                                                                                                                                                                                                                                                                                                                     |
+| OG images                                       | Vercel Edge                                                                                                                                                                                                             | Backend Hono with `satori` + `@resvg/resvg-js`                                                                     | Same URL shape preserved                                                                                                                                                                                                                                                                                                                                                                                               |
+| Image optimization                              | Vercel                                                                                                                                                                                                                  | Cloudflare Images OR self-hosted `sharp` route                                                                     | Decide during Phase 0a, not assumed                                                                                                                                                                                                                                                                                                                                                                                    |
+| Cron                                            | Vercel Cron                                                                                                                                                                                                             | `packages/scheduler` (new), node-cron, shared-secret `CRON_TOKEN`                                                  | Targets existing internal endpoints                                                                                                                                                                                                                                                                                                                                                                                    |
+| Aurora sync                                     | Vercel-triggered runner                                                                                                                                                                                                 | Same `packages/aurora-sync` runner, deployed as Railway service                                                    | `DATABASE_URL` re-pointed only                                                                                                                                                                                                                                                                                                                                                                                         |
+| Web analytics                                   | `@vercel/analytics`, `@vercel/speed-insights`                                                                                                                                                                           | PostHog (`posthog-js` + `posthog-node`)                                                                            | See "Analytics and observability"; ~60 call-site rewrite. 14-day dual-write before decommission.                                                                                                                                                                                                                                                                                                                       |
+| Feature flags                                   | `@flags-sdk/vercel` (empty today)                                                                                                                                                                                       | PostHog feature flags                                                                                              | Hook signature unchanged; provider impl swaps.                                                                                                                                                                                                                                                                                                                                                                         |
+| Dev toolbar                                     | `@vercel/toolbar`                                                                                                                                                                                                       | Delete                                                                                                             | No replacement needed.                                                                                                                                                                                                                                                                                                                                                                                                 |
+| CDN cache header name                           | `Vercel-CDN-Cache-Control` (37 sites incl. `middleware.ts:82-91`, OG routes, board grades, slugs)                                                                                                                       | `CDN-Cache-Control` (Cloudflare-honoured) plus `Cache-Control` for browser                                         | Single grep-and-replace; verify Cloudflare cache rules pick up the new header.                                                                                                                                                                                                                                                                                                                                         |
+| Sentry cron monitors                            | `automaticVercelMonitors: true` in `next.config.mjs:135`                                                                                                                                                                | Manual `Sentry.withMonitor()` wrapping each job in `packages/scheduler`                                            | Auto-instrumentation only works on Vercel deploy metadata; will silently stop on Railway.                                                                                                                                                                                                                                                                                                                              |
+| Route timeouts                                  | `export const maxDuration = 300` on 7 long-running cron / sync routes                                                                                                                                                   | Delete the export — long-lived Node has no per-request timeout                                                     | Routes: `user-sync-cron`, `profile-percentiles`, `inferred-sessions-backfill`, `prewarm-heatmap/[board_name]`, `shared-sync/[board_name]`, `aurora-import`, `cleanup`.                                                                                                                                                                                                                                                 |
+| Env-var audit                                   | `VERCEL_ENV`, `VERCEL_URL` reads in 13 files                                                                                                                                                                            | New `BOARDSESH_ENV` (production / preview / development) and `BOARDSESH_BASE_URL`                                  | Files: `sentry.{edge,server}.config.ts`, `app/api/og/setter/route.tsx:56`, `app/lib/auth/auth-options.ts:142`, `app/lib/warm-overlay-cache.ts:5`, `app/lib/api-docs/generate-openapi.ts:91-92`, `packages/backend/src/handlers/cors.ts:18-20`, `packages/db/drizzle.config.ts:23`, `packages/db/src/client/config.ts:10`, `packages/crypto/src/env.ts:21`, `vercel.json:3`, `.github/workflows/branch-deploy.yml:183`. |
+| Preview-deploy CORS regex                       | `^https://boardsesh-[a-z0-9]+-marcodejonghs-projects\.vercel\.app$` in `packages/backend/src/handlers/cors.ts:18-20`                                                                                                    | Railway preview hostname pattern (or Cloudflare-routed `*.preview.boardsesh.com`)                                  | Same regex shape; new domain.                                                                                                                                                                                                                                                                                                                                                                                          |
+| Rate limiter                                    | In-memory map in `packages/web/app/lib/auth/rate-limiter.ts`                                                                                                                                                            | Redis-backed (Railway-managed Redis already used by `packages/backend`)                                            | In-memory was tolerable on Vercel because each cold-start was a fresh process. Multi-instance Railway makes it both wrong (cross-instance bypass) and right (single instance won't lose counter on restart) — choose Redis for multi-instance correctness.                                                                                                                                                             |
+| OG cache warming                                | `warm-overlay-cache.ts:5` derives URL from `VERCEL_URL`                                                                                                                                                                 | `BOARDSESH_BASE_URL` env var                                                                                       | Same logic, new source.                                                                                                                                                                                                                                                                                                                                                                                                |
+| CI preview env signal                           | `.github/workflows/branch-deploy.yml:183` sets `VERCEL_ENV=preview`                                                                                                                                                     | `BOARDSESH_ENV=preview` (or Railway's native env discrimination)                                                   | Cascade with the env-var audit.                                                                                                                                                                                                                                                                                                                                                                                        |
+| `vercel.json`                                   | Cron block (8 jobs), build command, framework                                                                                                                                                                           | Delete file                                                                                                        | Crons move to `packages/scheduler`; build command moves to `Dockerfile`.                                                                                                                                                                                                                                                                                                                                               |
+| Sleeper cron                                    | `user-sync-cron` (`maxDuration = 300`, dev-mode auth bypass) is **not** listed in `vercel.json` — triggered some other way today                                                                                        | Decide intent before migration: keep as on-demand via `packages/scheduler` API, or schedule it explicitly          | Without resolving this, the route silently disappears from the schedule on Railway.                                                                                                                                                                                                                                                                                                                                    |
+| Next.js standalone build                        | `output: 'standalone'` in `next.config.mjs:9`                                                                                                                                                                           | Delete with Next.js                                                                                                | Vercel-specific lambda packaging; irrelevant once Vite SSR runs in a container.                                                                                                                                                                                                                                                                                                                                        |
+| Next.js data cache                              | `unstable_cache()` (5 sites: `server-cached-client.ts:67,112`, `holds-heatmap-cache.ts:55`, `search-climbs.ts:109`) + `revalidateTag()` (2 sites: `profile-percentiles/route.ts:78`, `climb-search-cache.server.ts:25`) | Backend-side cache layer (Redis with explicit TTLs) or Cloudflare cache-tag purge headers                          | Phase 1 work, called out here so the cache-tag semantics aren't silently lost.                                                                                                                                                                                                                                                                                                                                         |
+| Next.js redirects / headers / transpilePackages | `next.config.mjs:74-103` (5 permanent redirects), `:57-73` (apple-app-site-association + 4 security headers), `:15-21` (5 monorepo packages)                                                                            | TanStack Start route-level redirects, Hono pre-request middleware for headers, native Vite TS support for monorepo | Phase 1 work; explicit list ensures none are dropped.                                                                                                                                                                                                                                                                                                                                                                  |
+| WASM bundling                                   | `outputFileTracingIncludes` in `next.config.mjs:50-56` ships `@boardsesh/board-renderer-wasm/pkg/*.wasm` and `./public/images/**` for `/api/internal/board-render`                                                      | Vite asset handling (verify WASM is bundled into `dist/server` or copied at build)                                 | Verify on first Phase 1 board-render build; failure mode is silent (route 500s in production).                                                                                                                                                                                                                                                                                                                         |
+| Sentry tunnel                                   | `tunnelRoute: '/monitoring'` in `next.config.mjs:128`, excluded from middleware in `middleware.ts:101`                                                                                                                  | Hono route in `packages/backend` proxying to Sentry                                                                | Phase 1 work; without it, Sentry events are blocked by ad-blockers.                                                                                                                                                                                                                                                                                                                                                    |
+| SWC GraphQL codegen plugin                      | `@swc-contrib/plugin-graphql-codegen-client-preset` in `next.config.mjs:35-42`                                                                                                                                          | Vite plugin equivalent or build-time codegen step                                                                  | Phase 1 work.                                                                                                                                                                                                                                                                                                                                                                                                          |
 
 ### Cutover sequence
 
@@ -320,17 +320,17 @@ The iOS apps in users' hands today load `https://www.boardsesh.com` in hosted mo
 
 Inventory of native bridges the Vite app must implement before cutover:
 
-| Bridge | Current Next.js code | Port target |
-|---|---|---|
-| `isCapacitor()` / `isNativeApp()` / `getPlatform()` | `packages/web/app/lib/capacitor.ts` | 1:1 port; same `window.Capacitor` detection |
-| BLE plugin | `packages/web/app/lib/ble/capacitor-adapter.ts` | 1:1 — `BleClient` import works through Vite's bundler unchanged |
-| LiveActivity bridge | Custom event dispatch (`window.dispatchEvent`) and listeners | Same event names; subscribe in TanStack Query mutation hooks or React effects |
-| Deep link handling | `App.addListener('appUrlOpen', ...)` calling Next.js `router.push()` | Same listener; calls TanStack Router `router.navigate()` |
-| `@capacitor/preferences` (token storage) | Used during native OAuth | 1:1 |
-| `@capacitor-community/safe-area` insets | CSS variables already set by the plugin | No change |
-| Bluefy banner suppression | Gated on `isNativeApp()` | 1:1 |
-| Native tab bar (PR #1509, if it ships before cutover) | `window.Capacitor.Plugins.NativeTabBar` events | Same plugin API; bind in the Vite app shell |
-| In-app review prompt (`@capacitor-community/in-app-review`) | Triggered after N session completions | 1:1 |
+| Bridge                                                      | Current Next.js code                                                 | Port target                                                                   |
+| ----------------------------------------------------------- | -------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
+| `isCapacitor()` / `isNativeApp()` / `getPlatform()`         | `packages/web/app/lib/capacitor.ts`                                  | 1:1 port; same `window.Capacitor` detection                                   |
+| BLE plugin                                                  | `packages/web/app/lib/ble/capacitor-adapter.ts`                      | 1:1 — `BleClient` import works through Vite's bundler unchanged               |
+| LiveActivity bridge                                         | Custom event dispatch (`window.dispatchEvent`) and listeners         | Same event names; subscribe in TanStack Query mutation hooks or React effects |
+| Deep link handling                                          | `App.addListener('appUrlOpen', ...)` calling Next.js `router.push()` | Same listener; calls TanStack Router `router.navigate()`                      |
+| `@capacitor/preferences` (token storage)                    | Used during native OAuth                                             | 1:1                                                                           |
+| `@capacitor-community/safe-area` insets                     | CSS variables already set by the plugin                              | No change                                                                     |
+| Bluefy banner suppression                                   | Gated on `isNativeApp()`                                             | 1:1                                                                           |
+| Native tab bar (PR #1509, if it ships before cutover)       | `window.Capacitor.Plugins.NativeTabBar` events                       | Same plugin API; bind in the Vite app shell                                   |
+| In-app review prompt (`@capacitor-community/in-app-review`) | Triggered after N session completions                                | 1:1                                                                           |
 
 A **hosted-mode integration test suite** runs against `beta.boardsesh.com` from a real iOS Simulator (and an Android emulator) using the existing Capacitor shell pointed at the beta URL. This runs nightly during Phase 1 and gates every batch's beta promotion. Tests cover:
 
@@ -384,15 +384,15 @@ After all routes are on beta and burn-in is clean, the team executes the DNS fli
 
 ### Migration batches (approximate)
 
-| Batch | Routes | Notes |
-|---|---|---|
-| Skeleton | `/`, `/about`, `/legal`, `/privacy`, `/help`, `/docs`, `/development`, `/aurora-migration` | Static-ish, low risk. Shakes out build + deploy + Railway pipeline. Bridges (BLE, LiveActivity, deep link) ported in this batch even though the static pages don't use them, so the integration tests can run from batch 1. |
-| Auth | `/auth/login`, `/auth/native-start`, `/auth/error`, `/auth/verify-request` | Lands with the arctic + lucia rollout from Phase 0c. Cookie shim verified end-to-end here. |
-| In-app — board | `/b/[board_slug]`, `/b/[board_slug]/[angle]/{list,liked,playlists,logbook,create,import}`, `/b/[board_slug]/[angle]/view/[climb_uuid]`, `/b/[board_slug]/[angle]/play/[climb_uuid]`, `/b/[board_slug]/[angle]/playlists/[playlist_uuid]` | The largest batch. Mostly client-rendered with TanStack Query. |
-| In-app — full board path | `/[board_name]/[layout_id]/[size_id]/[set_ids]/[angle]/...` | Long path, deep dynamic routes; same conversion pattern. |
-| Profile / setter / playlist | `/profile/[user_id]`, `/profile/[user_id]/{statistics,sessions,climbs}`, `/setter/[setter_username]`, `/playlists`, `/playlists/[playlist_uuid]` | SEO surfaces — SSR routes in TanStack Start with Cloudflare cache headers. |
-| Session / party | `/session/[sessionId]`, `/join/[sessionId]`, `/notifications`, `/feed` | Real-time-heavy, mostly SPA. |
-| Settings | `/settings`, `/you`, `/you/{sessions,logbook}` | Auth-gated SPA. Includes the IndexedDB compatibility verification pass. |
+| Batch                       | Routes                                                                                                                                                                                                                                   | Notes                                                                                                                                                                                                                       |
+| --------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Skeleton                    | `/`, `/about`, `/legal`, `/privacy`, `/help`, `/docs`, `/development`, `/aurora-migration`                                                                                                                                               | Static-ish, low risk. Shakes out build + deploy + Railway pipeline. Bridges (BLE, LiveActivity, deep link) ported in this batch even though the static pages don't use them, so the integration tests can run from batch 1. |
+| Auth                        | `/auth/login`, `/auth/native-start`, `/auth/error`, `/auth/verify-request`                                                                                                                                                               | Lands with the arctic + lucia rollout from Phase 0c. Cookie shim verified end-to-end here.                                                                                                                                  |
+| In-app — board              | `/b/[board_slug]`, `/b/[board_slug]/[angle]/{list,liked,playlists,logbook,create,import}`, `/b/[board_slug]/[angle]/view/[climb_uuid]`, `/b/[board_slug]/[angle]/play/[climb_uuid]`, `/b/[board_slug]/[angle]/playlists/[playlist_uuid]` | The largest batch. Mostly client-rendered with TanStack Query.                                                                                                                                                              |
+| In-app — full board path    | `/[board_name]/[layout_id]/[size_id]/[set_ids]/[angle]/...`                                                                                                                                                                              | Long path, deep dynamic routes; same conversion pattern.                                                                                                                                                                    |
+| Profile / setter / playlist | `/profile/[user_id]`, `/profile/[user_id]/{statistics,sessions,climbs}`, `/setter/[setter_username]`, `/playlists`, `/playlists/[playlist_uuid]`                                                                                         | SEO surfaces — SSR routes in TanStack Start with Cloudflare cache headers.                                                                                                                                                  |
+| Session / party             | `/session/[sessionId]`, `/join/[sessionId]`, `/notifications`, `/feed`                                                                                                                                                                   | Real-time-heavy, mostly SPA.                                                                                                                                                                                                |
+| Settings                    | `/settings`, `/you`, `/you/{sessions,logbook}`                                                                                                                                                                                           | Auth-gated SPA. Includes the IndexedDB compatibility verification pass.                                                                                                                                                     |
 
 ### Things deleted with NextAuth and Next.js
 
@@ -506,17 +506,17 @@ Cross-cutting; the PostHog migration is sequenced inside Phase 0a, the rest is n
 0c Auth (arctic) ───┘                                          4 User-data cache ─┴─→ 5 Mutation queue ─→ 6 Connectivity polish
 ```
 
-| Phase | Estimate | Hard deps | Done when |
-|---|---|---|---|
-| 0a Hosting → Railway | 4w | none | Postgres + backend + Next.js web all on Railway. Vercel + Neon decommissioned. |
-| 0b GraphQL completion | 6w | none | Non-auth REST routes have GraphQL equivalents. |
-| 0c Auth: NextAuth → arctic + lucia | 4w | 0b largely done | Backend issues bearer tokens for native + cookie sessions for web. Existing user sessions migrated. |
-| 1 Vite + TanStack Start migration | 14w | 0c (auth must be portable) | All routes ported, Next.js decommissioned, `packages/web` is Vite. SSR for SEO surfaces, SPA for in-app. |
-| 2 Capacitor bundle switch | 3w | 1 | App launches in airplane mode, bearer auth works, kill-switch verified. The bundle is just `dist/client/`. |
-| 3 Refdata SQLite | 4w (incl. measurement spike) | 2 | Search and climb detail render from local DB offline. |
-| 4 User-data cache | 5w | 2 | Profile, ticks, playlists render offline after one online session. |
-| 5 Mutation queue | 5w | 4 | Pinned user story end-to-end. `mutation_dedup` server-side. "Needs attention" UI ships. |
-| 6 Connectivity polish | 2w | 5 | Online/offline banner, sync count, retry UI, onboarding. |
+| Phase                              | Estimate                     | Hard deps                  | Done when                                                                                                  |
+| ---------------------------------- | ---------------------------- | -------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| 0a Hosting → Railway               | 4w                           | none                       | Postgres + backend + Next.js web all on Railway. Vercel + Neon decommissioned.                             |
+| 0b GraphQL completion              | 6w                           | none                       | Non-auth REST routes have GraphQL equivalents.                                                             |
+| 0c Auth: NextAuth → arctic + lucia | 4w                           | 0b largely done            | Backend issues bearer tokens for native + cookie sessions for web. Existing user sessions migrated.        |
+| 1 Vite + TanStack Start migration  | 14w                          | 0c (auth must be portable) | All routes ported, Next.js decommissioned, `packages/web` is Vite. SSR for SEO surfaces, SPA for in-app.   |
+| 2 Capacitor bundle switch          | 3w                           | 1                          | App launches in airplane mode, bearer auth works, kill-switch verified. The bundle is just `dist/client/`. |
+| 3 Refdata SQLite                   | 4w (incl. measurement spike) | 2                          | Search and climb detail render from local DB offline.                                                      |
+| 4 User-data cache                  | 5w                           | 2                          | Profile, ticks, playlists render offline after one online session.                                         |
+| 5 Mutation queue                   | 5w                           | 4                          | Pinned user story end-to-end. `mutation_dedup` server-side. "Needs attention" UI ships.                    |
+| 6 Connectivity polish              | 2w                           | 5                          | Online/offline banner, sync count, retry UI, onboarding.                                                   |
 
 Critical path for the pinned user story: 0a / 0b / 0c (parallel) → 1 → 2 → 3 → 4 → 5. With one full-time engineer and reasonable parallelism on 0a–0c, the chain is roughly: 6w (longest of 0a/0b/0c) + 14w + 3w + 4w + 5w + 5w = 37 weeks ≈ **9 months calendar**.
 
@@ -524,26 +524,26 @@ The realistic range is **9–14 months** depending on shared engineering capacit
 
 ## Risks (the ones that change behavior)
 
-| Risk | Likelihood | Impact | Mitigation |
-|---|---|---|---|
-| TanStack Start API churn during 14-week migration | Medium | Medium | Pin minor versions; budget 1w/quarter for upgrade churn; subscribe to TanStack release notes. |
-| arctic + lucia migration loses existing sessions | Medium | High | Migration script copies `accounts` / `sessions` schema; run against a Neon snapshot in staging; users may re-auth on cutover but should not lose accounts. |
-| OAuth flows differ subtly between NextAuth and arctic (Apple, Google specifics) | High | Medium | Each provider gets a paired Playwright e2e + manual smoke before its cutover batch. |
-| SSR cache invalidation for climb-view pages misbehaves | Medium | Medium | Use ETag + short `s-maxage` (60s) at Cloudflare; backend emits `Cache-Tag` headers and purges on climb edit. |
-| Self-hosted image optimization adds latency | Medium | Low | Cloudflare Images is the default; `sharp` self-host is fallback only. Decide in Phase 0a. |
-| `packages/scheduler` cron drift / missed jobs | Medium | Medium | Each cron logs a heartbeat to Sentry; alert if absent for >2× expected interval. |
-| Phase 1 page-conversion velocity is below estimate | Medium | High | First two batches (skeleton + auth) timeboxed; reassess Phase 1 schedule after they ship. |
-| Bearer-token refresh edge cases | Medium | High | Refresh logic gets its own test suite; failed refresh triggers re-auth via Browser plugin, not silent failure. |
-| Refdata SQLite > 200 MB compressed | Medium | Medium | Phase 3 measurement spike. Fallback: per-layout split or `frames` lazy-fetch. |
-| `mutation_dedup` table grows unbounded | Low | Medium | Server expires entries >30d; client never replays mutations >30d. |
-| OTA solutions all unacceptable; bundle regressions stuck on app store cycle | Medium | High | Remote-config kill switch flips to hosted mode without an app store update. |
-| Apple 4.2 rejection | Medium | High | Plan B above. |
-| Railway region outage | Low | High | Postgres backups daily; backend stateless; one-day RTO with manual restore. Consider warm replica in Phase 6+ if outages prove material. |
-| PostHog event volume / cost surprise | Medium | Low | Start with sampled capture on the chattiest events (`Heatmap Hold Clicked`, `Climb List Row Clicked`, `Queue Operation`); tune after 30 days of real volume. |
-| PostHog reverse-proxy blocked by Cloudflare WAF | Medium | Medium | Add an explicit Cloudflare rule allowlisting `/ingest/*`; verify in staging before cutover. |
-| Removing `automaticVercelMonitors` leaves crons silently untracked | Medium | Medium | Each `packages/scheduler` job wraps execution in `Sentry.withMonitor(slug, ...)` and emits a heartbeat; alert if absent for >2× expected interval. (Strengthens the existing `packages/scheduler` cron-drift mitigation by tying cron monitoring to manual instrumentation rather than Vercel deploy metadata.) |
-| Vercel Analytics historical data lost at cutover | Medium | Low | 14-day dual-write; export Vercel Analytics raw events to CSV before decommissioning. |
-| In-memory rate-limiter behaviour change once on Redis | Low | Medium | Redis-backed limiter has stricter bounds than in-memory; surface a `429`-rate dashboard during the first 7 days post-cutover. |
+| Risk                                                                            | Likelihood | Impact | Mitigation                                                                                                                                                                                                                                                                                                      |
+| ------------------------------------------------------------------------------- | ---------- | ------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| TanStack Start API churn during 14-week migration                               | Medium     | Medium | Pin minor versions; budget 1w/quarter for upgrade churn; subscribe to TanStack release notes.                                                                                                                                                                                                                   |
+| arctic + lucia migration loses existing sessions                                | Medium     | High   | Migration script copies `accounts` / `sessions` schema; run against a Neon snapshot in staging; users may re-auth on cutover but should not lose accounts.                                                                                                                                                      |
+| OAuth flows differ subtly between NextAuth and arctic (Apple, Google specifics) | High       | Medium | Each provider gets a paired Playwright e2e + manual smoke before its cutover batch.                                                                                                                                                                                                                             |
+| SSR cache invalidation for climb-view pages misbehaves                          | Medium     | Medium | Use ETag + short `s-maxage` (60s) at Cloudflare; backend emits `Cache-Tag` headers and purges on climb edit.                                                                                                                                                                                                    |
+| Self-hosted image optimization adds latency                                     | Medium     | Low    | Cloudflare Images is the default; `sharp` self-host is fallback only. Decide in Phase 0a.                                                                                                                                                                                                                       |
+| `packages/scheduler` cron drift / missed jobs                                   | Medium     | Medium | Each cron logs a heartbeat to Sentry; alert if absent for >2× expected interval.                                                                                                                                                                                                                                |
+| Phase 1 page-conversion velocity is below estimate                              | Medium     | High   | First two batches (skeleton + auth) timeboxed; reassess Phase 1 schedule after they ship.                                                                                                                                                                                                                       |
+| Bearer-token refresh edge cases                                                 | Medium     | High   | Refresh logic gets its own test suite; failed refresh triggers re-auth via Browser plugin, not silent failure.                                                                                                                                                                                                  |
+| Refdata SQLite > 200 MB compressed                                              | Medium     | Medium | Phase 3 measurement spike. Fallback: per-layout split or `frames` lazy-fetch.                                                                                                                                                                                                                                   |
+| `mutation_dedup` table grows unbounded                                          | Low        | Medium | Server expires entries >30d; client never replays mutations >30d.                                                                                                                                                                                                                                               |
+| OTA solutions all unacceptable; bundle regressions stuck on app store cycle     | Medium     | High   | Remote-config kill switch flips to hosted mode without an app store update.                                                                                                                                                                                                                                     |
+| Apple 4.2 rejection                                                             | Medium     | High   | Plan B above.                                                                                                                                                                                                                                                                                                   |
+| Railway region outage                                                           | Low        | High   | Postgres backups daily; backend stateless; one-day RTO with manual restore. Consider warm replica in Phase 6+ if outages prove material.                                                                                                                                                                        |
+| PostHog event volume / cost surprise                                            | Medium     | Low    | Start with sampled capture on the chattiest events (`Heatmap Hold Clicked`, `Climb List Row Clicked`, `Queue Operation`); tune after 30 days of real volume.                                                                                                                                                    |
+| PostHog reverse-proxy blocked by Cloudflare WAF                                 | Medium     | Medium | Add an explicit Cloudflare rule allowlisting `/ingest/*`; verify in staging before cutover.                                                                                                                                                                                                                     |
+| Removing `automaticVercelMonitors` leaves crons silently untracked              | Medium     | Medium | Each `packages/scheduler` job wraps execution in `Sentry.withMonitor(slug, ...)` and emits a heartbeat; alert if absent for >2× expected interval. (Strengthens the existing `packages/scheduler` cron-drift mitigation by tying cron monitoring to manual instrumentation rather than Vercel deploy metadata.) |
+| Vercel Analytics historical data lost at cutover                                | Medium     | Low    | 14-day dual-write; export Vercel Analytics raw events to CSV before decommissioning.                                                                                                                                                                                                                            |
+| In-memory rate-limiter behaviour change once on Redis                           | Low        | Medium | Redis-backed limiter has stricter bounds than in-memory; surface a `429`-rate dashboard during the first 7 days post-cutover.                                                                                                                                                                                   |
 
 ## Tab bar
 
@@ -551,36 +551,36 @@ The plan does not ship per-tab WKWebView. A single WebView with TanStack Router 
 
 ## Success criteria
 
-| Layer | Done when |
-|---|---|
-| Hosting | `boardsesh.com`, backend, Postgres, scheduler all on Railway. Vercel + Neon shut down. |
-| GraphQL | Non-auth REST routes have GraphQL equivalents. |
-| Auth | arctic + lucia in backend. NextAuth code deleted. Bearer tokens for native, cookies for web. |
-| Framework | Vite + TanStack Start. Next.js code deleted. Both SSR (SEO) and SPA modes ship from one source tree. |
-| Bundle switch | Bundled iOS + Android launch in airplane mode, complete bearer-token auth from a fresh install, kill-switch verified. |
-| Refdata | Search and climb detail render from local SQLite. Stat deltas apply on next online launch. |
-| User data | Ticks, playlists, profile render offline after one online session. SWR refresh < 2s on online transition. |
+| Layer          | Done when                                                                                                               |
+| -------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| Hosting        | `boardsesh.com`, backend, Postgres, scheduler all on Railway. Vercel + Neon shut down.                                  |
+| GraphQL        | Non-auth REST routes have GraphQL equivalents.                                                                          |
+| Auth           | arctic + lucia in backend. NextAuth code deleted. Bearer tokens for native, cookies for web.                            |
+| Framework      | Vite + TanStack Start. Next.js code deleted. Both SSR (SEO) and SPA modes ship from one source tree.                    |
+| Bundle switch  | Bundled iOS + Android launch in airplane mode, complete bearer-token auth from a fresh install, kill-switch verified.   |
+| Refdata        | Search and climb detail render from local SQLite. Stat deltas apply on next online launch.                              |
+| User data      | Ticks, playlists, profile render offline after one online session. SWR refresh < 2s on online transition.               |
 | Mutation queue | Pinned user story passes in CI on Capacitor simulator with network simulation. No duplicate ticks under failure replay. |
-| Polish | Online/offline banner, sync count, retry UI, onboarding line about offline. |
+| Polish         | Online/offline banner, sync count, retry UI, onboarding line about offline.                                             |
 
 ### Performance targets
 
-| Metric | Target |
-|---|---|
-| Cold start to interactive (bundled) | < 1.5s on a 2022 mid-tier Android |
-| Climb search latency (local SQLite) | < 100ms p95 |
-| BLE connection | < 5s |
-| BLE LED send | < 1s after connect |
-| Native shell binary | < 15 MB without refdata |
-| Refdata per-board download | target < 200 MB compressed (gating) |
-| SSR page TTFB at edge cache hit | < 100ms p95 |
-| Vite dev cold start | < 5s |
+| Metric                              | Target                              |
+| ----------------------------------- | ----------------------------------- |
+| Cold start to interactive (bundled) | < 1.5s on a 2022 mid-tier Android   |
+| Climb search latency (local SQLite) | < 100ms p95                         |
+| BLE connection                      | < 5s                                |
+| BLE LED send                        | < 1s after connect                  |
+| Native shell binary                 | < 15 MB without refdata             |
+| Refdata per-board download          | target < 200 MB compressed (gating) |
+| SSR page TTFB at edge cache hit     | < 100ms p95                         |
+| Vite dev cold start                 | < 5s                                |
 
 ### Platform requirements
 
-| | Minimum |
-|---|---|
-| iOS | 14.0 (Capacitor 8 minimum) |
+|         | Minimum                                      |
+| ------- | -------------------------------------------- |
+| iOS     | 14.0 (Capacitor 8 minimum)                   |
 | Android | API 23 (Capacitor 8 minimum); target API 34+ |
 
 ## Considered alternatives (one paragraph each)
@@ -657,28 +657,30 @@ Universal / App Links: scoped paths only (`/party/*`, `/invite/*`). Not the enti
 
 ### Capacitor vs web feature matrix (post-Phase 2)
 
-| Feature | Web (Chrome) | Web (Safari iOS) | Capacitor (bundled) |
-|---|---|---|---|
-| BLE | Web Bluetooth | Not supported | Native plugin |
-| Offline climb search | Not available | Not available | Local SQLite |
-| Offline user data | Not available | Not available | Local SQLite cache |
-| Offline writes | Not available | Not available | Mutation queue |
-| Push notifications | Web Push | Limited | APNs / FCM (when shipped) |
-| Haptics | Not available | Not available | Native (when added) |
-| Wake lock | Screen Wake Lock API | Not supported | KeepAwake plugin |
-| Cold start to interactive | < 2s cached | < 2s cached | < 1.5s (bundled) |
+| Feature                   | Web (Chrome)         | Web (Safari iOS) | Capacitor (bundled)       |
+| ------------------------- | -------------------- | ---------------- | ------------------------- |
+| BLE                       | Web Bluetooth        | Not supported    | Native plugin             |
+| Offline climb search      | Not available        | Not available    | Local SQLite              |
+| Offline user data         | Not available        | Not available    | Local SQLite cache        |
+| Offline writes            | Not available        | Not available    | Mutation queue            |
+| Push notifications        | Web Push             | Limited          | APNs / FCM (when shipped) |
+| Haptics                   | Not available        | Not available    | Native (when added)       |
+| Wake lock                 | Screen Wake Lock API | Not supported    | KeepAwake plugin          |
+| Cold start to interactive | < 2s cached          | < 2s cached      | < 1.5s (bundled)          |
 
 ---
 
 ## Changelog
 
 **v9.2 — current.** Closes Vercel-platform inventory gaps in Phase 0a:
+
 - PostHog migration sub-plan replaces the one-paragraph mention. Covers Vercel Analytics retirement, `@flags-sdk/vercel` swap, `/ingest/*` reverse proxy, IDB-only `distinct_id`, `posthog-node` server capture, identify/alias lifecycle tied to Phase 0c lucia auth, ~60 `track()` call-site rewrite, 14-day dual-write before decommission.
 - Hosting cutover table extended with rows for `Vercel-CDN-Cache-Control` rename, `automaticVercelMonitors` Sentry rewiring, `maxDuration` route-export deletion, `VERCEL_ENV`/`VERCEL_URL` audit (13 files → `BOARDSESH_ENV` / `BOARDSESH_BASE_URL`), preview CORS regex update, rate-limiter Redis backing, OG cache-warming URL source, CI preview env signal, `vercel.json` deletion, sleeper `user-sync-cron` resolution, `output: 'standalone'` removal, `unstable_cache`/`revalidateTag` replacement, redirects/headers/transpilePackages port, WASM bundling verification, Sentry tunnel route port, SWC GraphQL codegen plugin replacement.
 - Five new risk rows: PostHog cost, ingest WAF, cron monitor regression, analytics historical data loss, rate-limiter step change.
 - Phase 0a reframed as "4-week hosting cutover + parallel ~2-week analytics/platform sub-track on the same wall-clock."
 
 **v9.1.** Adds the migration cutover strategy and explicit hosted-mode Capacitor compatibility:
+
 - Migration runs through `beta.boardsesh.com` rather than Cloudflare path-based traffic splitting. Single atomic DNS flip at the end of Phase 1, not a gradual route-by-route move.
 - Hosted-mode Capacitor compatibility is now a formal Phase 1 deliverable, with a per-bridge inventory and a nightly integration test suite at `mobile/integration-tests/` that runs the existing Capacitor shell against the beta URL on iOS Simulator + Android emulator.
 - Auth cookie shim added to Phase 0c: lucia accepts NextAuth cookies for a 90-day overlap and upgrades them in place, so existing logged-in web users (and hosted-mode native users) don't get logged out at cutover.

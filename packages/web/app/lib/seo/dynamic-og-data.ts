@@ -5,8 +5,10 @@ import { sql as drizzleSql } from 'drizzle-orm';
 import { buildBoardRenderUrl } from '@/app/components/board-renderer/util';
 import { boardToRouteParams, resolveBoardBySlug } from '@/app/lib/board-slug-utils';
 import { getBoardDetailsForBoard } from '@/app/lib/board-utils';
-// oxlint-disable-next-line no-restricted-imports -- legacy raw Neon sql usage; migrate to drizzle
-import { dbz, sql as rawSql } from '@/app/lib/db/db';
+// All queries in this module are reads driving public OG image generation.
+// Route them through the replica seam — falls back to primary when
+// READ_REPLICA_URL is unset, so this is safe before a replica exists.
+import { dbzRead as dbz, getReadPool } from '@/app/lib/db/db';
 import { formatBoardDisplayName } from '@/app/lib/string-utils';
 import type { BoardDetails, BoardName, ParsedBoardRouteParameters } from '@/app/lib/types';
 import { parseBoardRouteParamsWithSlugs } from '@/app/lib/url-utils.server';
@@ -20,6 +22,7 @@ export type ProfileOgSummary = {
 };
 
 export const getProfileOgSummary = cache(async (userId: string): Promise<ProfileOgSummary | null> => {
+  const rawSql = getReadPool();
   const rows = (await rawSql`
     SELECT
       u.name,
@@ -504,6 +507,7 @@ export type PlaylistOgSummary = {
 };
 
 export const getPlaylistOgSummary = cache(async (playlistUuid: string): Promise<PlaylistOgSummary | null> => {
+  const rawSql = getReadPool();
   const rows = (await rawSql`
     SELECT
       p.name,

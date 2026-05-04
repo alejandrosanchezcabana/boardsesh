@@ -1,7 +1,11 @@
 // Re-export db client from @boardsesh/db
-import { createDb } from '@boardsesh/db/client';
+import { createDb, createReadDb } from '@boardsesh/db/client';
 
-// Create singleton db instance for backend
+// Singleton primary client for the backend (writes + auth + party-mode reads).
 export const db = createDb();
+
+// Singleton replica-aware client for read-heavy paths (search, feed,
+// analytics). Falls back to the primary when READ_REPLICA_URL is unset.
+export const dbRead = createReadDb();
 
 export type Database = typeof db;

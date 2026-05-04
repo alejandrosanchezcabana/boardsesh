@@ -1,5 +1,6 @@
 export type ConnectionConfig = {
   connectionString: string;
+  readReplicaUrl: string | null;
   isLocal: boolean;
   isTest: boolean;
 };
@@ -14,12 +15,14 @@ export function isTestEnvironment(): boolean {
 
 export function getConnectionConfig(): ConnectionConfig {
   const connectionString = process.env.DATABASE_URL;
+  const readReplicaUrl = process.env.READ_REPLICA_URL || null;
   const isLocal = isLocalDevelopment();
   const isTest = isTestEnvironment();
 
   if (!connectionString && isLocal && !isTest) {
     return {
       connectionString: 'postgres://postgres:password@localhost:5432/main',
+      readReplicaUrl,
       isLocal,
       isTest,
     };
@@ -29,5 +32,5 @@ export function getConnectionConfig(): ConnectionConfig {
     throw new Error('DATABASE_URL environment variable is required');
   }
 
-  return { connectionString, isLocal, isTest };
+  return { connectionString, readReplicaUrl, isLocal, isTest };
 }

@@ -23,11 +23,15 @@ vi.mock('@/app/lib/board-utils', () => ({
   getBoardDetailsForBoard: getBoardDetailsForBoardMock,
 }));
 
+// dynamic-og-data uses `dbzRead` (drizzle) and `getReadPool()` (postgres-js
+// tagged template) for replica-tolerant reads. Mock both onto the existing
+// `executeMock` and a fresh tagged-template fake.
+const mockSqlTag = vi.fn();
 vi.mock('@/app/lib/db/db', () => ({
-  dbz: {
-    execute: executeMock,
-  },
-  sql: vi.fn(),
+  dbz: { execute: executeMock },
+  sql: mockSqlTag,
+  dbzRead: { execute: executeMock },
+  getReadPool: () => mockSqlTag,
 }));
 
 vi.mock('@/app/lib/string-utils', () => ({

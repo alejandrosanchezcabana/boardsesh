@@ -1,6 +1,6 @@
 import 'server-only';
 import { unstable_cache } from 'next/cache';
-import { getDb } from '@/app/lib/db/db';
+import { getReadDb } from '@/app/lib/db/db';
 import { searchClimbs as sharedSearchClimbs } from '@boardsesh/db/queries';
 import { getBoardClimbSearchTag } from '@/app/lib/climb-search-cache';
 import type { ParsedBoardRouteParameters, SearchRequestPagination, BoardName, Climb } from '@/app/lib/types';
@@ -36,7 +36,7 @@ async function _executeClimbSearch(
   };
   const searchParams = JSON.parse(searchParamsJson) as SearchRequestPagination;
 
-  const db = getDb();
+  const db = getReadDb();
   const result = await sharedSearchClimbs(
     db,
     params,

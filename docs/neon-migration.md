@@ -23,8 +23,8 @@ Local Dev → neon-proxy Docker → Local PostgreSQL
 ### After
 
 ```
-Vercel Functions → TCP → Railway PgBouncer → Railway PostgreSQL (primary)
-Backend → TCP → Railway PgBouncer → Railway PostgreSQL
+Vercel Functions → TCP → Railway PostgreSQL (primary)
+Backend → TCP → Railway PostgreSQL
 Local Dev → TCP → Local PostgreSQL (direct, no proxy)
                                       │
                            async streaming replication
@@ -34,51 +34,87 @@ Local Dev → TCP → Local PostgreSQL (direct, no proxy)
 
 ## 3. Railway PostgreSQL Setup
 
-1. Create a PostgreSQL instance on Railway in the same project as the backend service.
+1. Create a PostgreSQL instance on Railway. Pick the region closest to where Vercel runs the project's serverless functions — Vercel defaults to `iad1` (US East), and every extra ~30 ms of RTT shows up on every query.
+   - **TODO before cutover:** confirm Railway region matches Vercel's `iad1` (or the project's selected region).
 2. Enable required extensions:
    ```sql
    CREATE EXTENSION IF NOT EXISTS postgis;
    CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
    CREATE EXTENSION IF NOT EXISTS pg_trgm;
    ```
-3. Railway includes PgBouncer. Use the **pooled** connection string for Vercel and the backend service.
-4. Use the **direct** (non-pooled) connection string for migrations and long-running scripts.
+   If `postgis` is unavailable on the plain Railway image, switch to a Railway PostGIS-capable template/image before continuing. The app schema has `geography(Point, 4326)` columns.
+3. Use the Railway **direct** Postgres connection string for schema restore, subscription creation, migrations (`packages/db/scripts/migrate.ts`), and one-shot CLI scripts (`packages/db/scripts/db-connection.ts`). Direct URL = no pooler in front, prepared statements work normally.
+4. For application traffic (Vercel functions + the backend service), use a **pooled** URL backed by PgBouncer in transaction-pooling mode. The application's `postgres-js` clients are configured with `prepare: false` (see `packages/db/src/client/postgres.ts`) — this is required for transaction-pool mode. Without it you get intermittent `prepared statement "X" already exists` errors when PgBouncer reuses backend connections across transactions. The flag is a safe no-op against direct PostgreSQL.
+   - **TODO before cutover:** confirm whether the Railway plan exposes a managed pooled URL out of the box, or whether you need to deploy the `bitnami/pgbouncer` template alongside the database. Either way, verify the pooler is in **transaction-pooling** mode (this is what the application is configured for).
+5. Lock down access:
+   - **TODO before cutover:** add IP allowlist entries for Vercel egress IPs (or move to a Railway private network).
+   - Confirm `sslmode=require` is enforced on the connection string the app receives.
 
 ## 4. Data Migration: Railway as Temporary Read Replica of Neon
 
 Instead of a one-shot `pg_dump`/`pg_restore` (which creates a gap where writes are lost), we run Railway as a **logical replica of Neon** during the transition. Every write to Neon streams to Railway in near-real-time. When we're confident Railway is caught up, we promote it and cut over with zero data loss.
 
-### 4.1 Initial Bulk Load
-
-Take a consistent dump from Neon and restore it to Railway. This gives Railway a baseline to start replication from.
-
-```bash
-pg_dump --no-owner --no-acl -Fc "$NEON_DATABASE_URL" > boardsesh.dump
-pg_restore --no-owner --no-acl -d "$RAILWAY_DATABASE_URL" boardsesh.dump
-```
-
-### 4.2 Set Up Logical Replication (Neon → Railway)
+### 4.1 Set Up Logical Replication (Neon -> Railway)
 
 Neon supports logical replication as a publisher. Railway PostgreSQL acts as the subscriber.
 
+Use Postgres' initial table synchronization (`copy_data = true`) instead of a full data dump followed by `copy_data = false`. A full data dump taken before the replication slot exists can miss writes that commit between the dump snapshot and subscription creation.
+
 **On Neon (publisher):**
 
-Neon already has `wal_level = logical`. Create a publication for all tables:
+Enable logical replication in the Neon console if it is not already enabled, then verify:
 
 ```sql
-CREATE PUBLICATION boardsesh_migration FOR ALL TABLES;
+SHOW wal_level;
 ```
+
+Create or use a dedicated Neon role that has `REPLICATION`. Neon roles created through the Neon Console, CLI, or API are members of `neon_superuser`; roles created via SQL cannot be granted this privilege manually.
+
+Create a publication for application tables. Do not use `FOR ALL TABLES` here: PostGIS installs extension-owned tables such as `spatial_ref_sys`, and copying those into a Railway database that already has PostGIS installed can cause conflicts.
+
+```sql
+-- Example shape only; use the operator script to generate the complete list.
+CREATE PUBLICATION boardsesh_migration FOR TABLE
+  public.boardsesh_ticks,
+  public.board_user_syncs;
+```
+
+The operator script generates the full table list from Neon, excluding system schemas and extension-owned tables.
 
 **On Railway (subscriber):**
 
-Create a subscription pointing back at Neon. Use `copy_data = false` since we already restored the dump:
+Load schema only before creating the subscription. The subscriber tables must exist and should be empty:
+
+```bash
+pg_dump --schema-only --no-owner --no-acl --no-publications --no-subscriptions --format=custom \
+  --file boardsesh-schema.dump "$NEON_DATABASE_URL"
+pg_restore --schema-only --no-owner --no-acl \
+  --dbname "$RAILWAY_DATABASE_URL" boardsesh-schema.dump
+```
+
+Create a subscription pointing back at Neon. Use the Neon replication role connection string for `CONNECTION`:
 
 ```sql
 CREATE SUBSCRIPTION boardsesh_neon_sub
   CONNECTION 'postgresql://user:pass@neon-host/dbname?sslmode=require'
   PUBLICATION boardsesh_migration
-  WITH (copy_data = false);
+  WITH (copy_data = true);
 ```
+
+### 4.2 Operator Script
+
+The repo includes a guarded helper for the setup and verification flow:
+
+```bash
+export NEON_DATABASE_URL='postgresql://...'
+export RAILWAY_DATABASE_URL='postgresql://...'
+export NEON_REPLICATION_DATABASE_URL='postgresql://replication-user:...'
+
+scripts/neon-to-railway-replication.sh setup
+scripts/neon-to-railway-replication.sh status
+```
+
+The `setup` command verifies `wal_level = logical`, creates Railway extensions, loads Neon schema only, verifies target app tables are empty, creates/updates the Neon publication with app tables only, and creates the Railway subscription with `copy_data = true`. It does not update application environment variables.
 
 ### 4.3 Verify Replication Is Streaming
 
@@ -95,7 +131,7 @@ SELECT subname, received_lsn, latest_end_lsn, latest_end_time
 FROM pg_stat_subscription;
 ```
 
-Confirm the `received_lsn` is advancing. Also compare row counts on a few high-write tables (e.g., `boardsesh_ticks`, `user_syncs`) to make sure they match.
+Confirm the `received_lsn` is advancing. Also compare row counts on a few high-write tables (for example `boardsesh_ticks`, `board_user_syncs`, `comments`, `votes`, and `feed_items`) to make sure they match once initial sync finishes.
 
 ### 4.4 Monitor During Transition Window
 
@@ -116,20 +152,30 @@ Logical replication does not replicate sequences. Before cutover, sync sequence 
 
 ```sql
 -- Generate this on Neon:
-SELECT format('SELECT setval(''%s'', %s);', sequence_name, last_value)
+SELECT format(
+  'SELECT setval(%L, %s, true);',
+  quote_ident(s.sequence_schema) || '.' || quote_ident(s.sequence_name),
+  ps.last_value
+)
 FROM information_schema.sequences s
 JOIN pg_sequences ps ON ps.schemaname = s.sequence_schema AND ps.sequencename = s.sequence_name
-WHERE s.sequence_schema = 'public';
+WHERE s.sequence_schema NOT IN ('pg_catalog', 'information_schema');
 ```
 
 Run the output on Railway.
+
+The helper script can do this directly:
+
+```bash
+scripts/neon-to-railway-replication.sh sync-sequences
+```
 
 ## 5. Cutover Steps
 
 1. Verify Railway replication lag is under 1 second.
 2. Sync sequences from Neon → Railway (section 4.5).
-3. Set `DATABASE_URL` in Vercel project settings to the Railway pooled connection string.
-4. Update the Railway backend service `DATABASE_URL` env var to the Railway pooled connection string.
+3. Set `DATABASE_URL` in Vercel project settings to the Railway app/runtime connection string.
+4. Update the Railway backend service `DATABASE_URL` env var to the Railway app/runtime connection string.
 5. Deploy web + backend.
 6. On Railway, drop the subscription (it's no longer needed):
    ```sql
@@ -140,7 +186,17 @@ Run the output on Railway.
    ```sql
    DROP PUBLICATION boardsesh_migration;
    ```
-8. Monitor error rates and query latency for 24-48 hours.
+   Or use:
+   ```bash
+   scripts/neon-to-railway-replication.sh teardown
+   ```
+8. Monitor error rates and query latency for 24-48 hours. Specifically watch:
+   - **Sentry** for HTTP 5xx, GraphQL resolver errors, and `prepared statement "X" already exists` (the canary signal that `prepare:false` regressed somewhere).
+     - **TODO before cutover:** record the Sentry project URL / saved-search filter here.
+   - **Vercel Functions** logs for elevated p95 latency on `/api/og/*`, `/api/internal/*`, and the climb-search SSR pages.
+     - **TODO before cutover:** record the Vercel project / function-filter URL here.
+   - **Railway PostgreSQL metrics** — connection count, CPU, query throughput, pgbouncer wait time.
+     - **TODO before cutover:** record the Railway metrics dashboard URL here.
 
 ## 6. Rollback Procedure
 
@@ -152,7 +208,7 @@ Run the output on Railway.
 
 ### 7.1 PostgreSQL Installation
 
-Install PostgreSQL 17.x to match Railway's version. Enable the same extensions:
+Install PostgreSQL **at the same major version** Railway is running. Physical streaming replication via `pg_basebackup` requires identical major versions on primary and standby — a 17 → 18 mismatch fails on startup. Whenever Railway upgrades the major version, the homelab replica must be re-baselined at the new version (drop, reinstall the matching `postgresql-N` packages, redo section 7.4).
 
 ```bash
 sudo apt install postgresql-17 postgresql-17-postgis-3
@@ -229,20 +285,34 @@ SELECT now() - pg_last_xact_replay_timestamp() AS replication_lag;
 
 ### 7.6 Application Read Routing
 
-The codebase supports a `READ_REPLICA_URL` environment variable. When set, `createReadDb()` returns a read-only client pointed at the replica.
+The application has a `READ_REPLICA_URL` seam wired through `packages/db/src/client/postgres.ts`:
 
-Route to the replica:
+- `createReadDb()` / `createReadPool()` — return a `postgres-js` client pointed at `process.env.READ_REPLICA_URL`. When the env var is unset, both fall back to the primary singleton, so call sites don't need to branch and the seam is safe to merge before a replica exists.
+- `closeReadPool()` — tears down the read client; called from the backend's shutdown path next to `closePool()`.
+- Web entry points: `getReadDb`, `getReadPool` (re-exported from `packages/web/app/lib/db/db.ts`), plus the `dbzRead` drizzle singleton.
+- Backend entry point: `dbRead` (exported from `packages/backend/src/db/client.ts`).
 
-- Analytics and stats queries
-- Search results (seconds-stale data is acceptable)
-- Feed generation
-- Profile views
+To turn the homelab replica on for application reads, set `READ_REPLICA_URL` in Vercel project settings (and on the Railway backend service) to a connection string pointing at the homelab — typically a private endpoint reached via WireGuard / Cloudflare Tunnel as in section 7.3. The replica uses postgres-js with `prepare: false` just like the primary, so it works whether the homelab sits behind PgBouncer or accepts direct connections.
 
-Keep on primary:
+**Routed to the replica today** (see `git log` on these files for exact commits):
 
-- Auth and sessions
-- All writes
-- Real-time session data (party mode)
+- `packages/web/app/lib/db/queries/climbs/search-climbs.ts` — climb-search SSR (`cachedSearchClimbs`).
+- `packages/backend/src/db/queries/climbs/search-climbs.ts` — GraphQL `searchClimbs` resolver.
+- `packages/web/app/lib/db/queries/climbs/holds-heatmap.ts` — heatmap stats.
+- `packages/web/app/api/internal/prewarm-heatmap/[board_name]/route.ts` — heatmap warm-up cron.
+- `packages/web/app/lib/seo/dynamic-og-data.ts` — OG profile/setter/session/playlist summary queries.
+- `packages/web/app/api/og/profile/route.tsx` — OG profile per-grade tick aggregation.
+- `packages/backend/src/graphql/resolvers/social/session-feed.ts` — session-grouped activity feed.
+
+**Kept on primary:**
+
+- Auth (`/api/auth/*`) and session reads/writes.
+- All write paths — `boardsesh_ticks` insert/update, profile edits, comments, votes, follows, party-mode `board_sessions` writes.
+- Aurora sync (`packages/web/app/api/internal/user-sync-cron/route.ts`, `packages/aurora-sync/`) — credentials and sync-status writes are write-heavy and must read its own writes.
+- Backend GraphQL resolvers other than the read-only feed/search.
+- `packages/db/scripts/*` — one-shot CLIs target the direct primary URL.
+
+When adding new read paths, default to `getReadDb()` / `dbRead` for stale-tolerant reads (analytics, public profile views, search). Reach for the primary `getDb()` / `db` only when reads need to see the caller's just-written data, or when the data is auth-sensitive.
 
 ### 7.7 DR Failover
 
@@ -260,9 +330,9 @@ If Railway goes down:
 
 ### Pre-cutover (while Railway is still a replica)
 
-- [ ] `pg_dump` from Neon completes without errors
-- [ ] `pg_restore` to Railway completes without errors
+- [ ] Railway schema-only restore completes without errors
 - [ ] Logical replication subscription is active and streaming
+- [ ] Initial table sync is complete (`pg_subscription_rel` states are ready)
 - [ ] Replication lag is under a few seconds
 - [ ] Row counts match between Neon and Railway on high-write tables
 - [ ] Extensions verified: `SELECT * FROM pg_extension;` shows postgis, uuid-ossp, pg_trgm
@@ -282,9 +352,9 @@ If Railway goes down:
 
 ## 9. Cost Comparison
 
-| Item | Neon (Before) | Railway (After) |
-|------|---------------|-----------------|
-| Database hosting | $50-100/mo | ~$5-20/mo (existing subscription) |
-| Connection pooling | Included | PgBouncer included |
-| Read replica | Extra cost | $0 (homelab) |
-| **Total** | **$50-100/mo** | **$5-20/mo** |
+| Item               | Neon (Before)  | Railway (After)                   |
+| ------------------ | -------------- | --------------------------------- |
+| Database hosting   | $50-100/mo     | ~$5-20/mo (existing subscription) |
+| Connection pooling | Included       | Add PgBouncer only if needed      |
+| Read replica       | Extra cost     | $0 (homelab)                      |
+| **Total**          | **$50-100/mo** | **$5-20/mo**                      |

@@ -19,17 +19,27 @@ const sqlLogger = process.env.DEBUG_SQL === 'true' ? new QueryLogger() : undefin
 
 const fullSchema = { ...schema, ...relations };
 
+// `prepare: false` is required when the target is PgBouncer in transaction
+// pooling mode (Railway's pooled URL): backends are reused across transactions
+// so per-connection prepared statement caches collide. The flag is a safe no-op
+// against direct PostgreSQL.
+const POOL_OPTIONS = {
+  max: 10,
+  idle_timeout: 30,
+  connect_timeout: 30,
+  prepare: false,
+} as const;
+
 let client: ReturnType<typeof postgres> | null = null;
 let db: ReturnType<typeof drizzle> | null = null;
+
+let readClient: ReturnType<typeof postgres> | null = null;
+let readDb: ReturnType<typeof drizzle> | null = null;
 
 export function createDb() {
   if (!db) {
     const { connectionString } = getConnectionConfig();
-    client = postgres(connectionString, {
-      max: 10,
-      idle_timeout: 30,
-      connect_timeout: 30,
-    });
+    client = postgres(connectionString, POOL_OPTIONS);
     db = drizzle(client, { schema: fullSchema, logger: sqlLogger });
   }
   return db;
@@ -50,6 +60,45 @@ export async function closePool(): Promise<void> {
   } finally {
     client = null;
     db = null;
+  }
+}
+
+/**
+ * Returns a drizzle instance pointed at READ_REPLICA_URL. When the env var is
+ * unset, returns the primary `db` so call sites don't need to branch — this
+ * makes wiring the seam in safe before a replica exists.
+ */
+export function createReadDb() {
+  const { readReplicaUrl } = getConnectionConfig();
+  if (!readReplicaUrl) {
+    return createDb();
+  }
+  if (!readDb) {
+    readClient = postgres(readReplicaUrl, POOL_OPTIONS);
+    readDb = drizzle(readClient, { schema: fullSchema, logger: sqlLogger });
+  }
+  return readDb;
+}
+
+export function createReadPool() {
+  const { readReplicaUrl } = getConnectionConfig();
+  if (!readReplicaUrl) {
+    return createPool();
+  }
+  if (!readClient) {
+    createReadDb();
+  }
+  return readClient!;
+}
+
+export async function closeReadPool(): Promise<void> {
+  try {
+    if (readClient) {
+      await readClient.end();
+    }
+  } finally {
+    readClient = null;
+    readDb = null;
   }
 }
 

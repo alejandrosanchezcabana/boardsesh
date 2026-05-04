@@ -1,5 +1,5 @@
 import { eq, and, desc, sql, count as drizzleCount, isNull, inArray } from 'drizzle-orm';
-import { db } from '../../../db/client';
+import { dbRead as db } from '../../../db/client';
 import * as dbSchema from '@boardsesh/db/schema';
 import { getGradeLabel } from '@boardsesh/db/queries';
 import { validateInput, isNoMatchClimb } from '../shared/helpers';

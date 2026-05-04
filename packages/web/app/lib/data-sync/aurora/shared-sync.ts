@@ -46,7 +46,11 @@ export const SHARED_SYNC_TABLES: string[] = [
 // Tables we actually want to process and store
 const TABLES_TO_PROCESS = new Set(['climbs', 'climb_stats', 'beta_links', 'attempts', 'shared_syncs']);
 
-const upsertAttempts = (db: PgDatabase<PgQueryResultHKT, Record<string, unknown>>, board: AuroraBoardName, data: Attempt[]) =>
+const upsertAttempts = (
+  db: PgDatabase<PgQueryResultHKT, Record<string, unknown>>,
+  board: AuroraBoardName,
+  data: Attempt[],
+) =>
   Promise.all(
     data.map(async (item) => {
       const attemptsSchema = UNIFIED_TABLES.attempts;
@@ -70,7 +74,11 @@ const upsertAttempts = (db: PgDatabase<PgQueryResultHKT, Record<string, unknown>
     }),
   );
 
-async function upsertClimbStats(db: PgDatabase<PgQueryResultHKT, Record<string, unknown>>, board: AuroraBoardName, data: ClimbStats[]) {
+async function upsertClimbStats(
+  db: PgDatabase<PgQueryResultHKT, Record<string, unknown>>,
+  board: AuroraBoardName,
+  data: ClimbStats[],
+) {
   const climbStatsSchema = UNIFIED_TABLES.climbStats;
   const climbStatHistorySchema = UNIFIED_TABLES.climbStatsHistory;
 
@@ -123,7 +131,11 @@ async function upsertClimbStats(db: PgDatabase<PgQueryResultHKT, Record<string, 
   );
 }
 
-async function upsertBetaLinks(db: PgDatabase<PgQueryResultHKT, Record<string, unknown>>, board: AuroraBoardName, data: BetaLink[]) {
+async function upsertBetaLinks(
+  db: PgDatabase<PgQueryResultHKT, Record<string, unknown>>,
+  board: AuroraBoardName,
+  data: BetaLink[],
+) {
   const betaLinksSchema = UNIFIED_TABLES.betaLinks;
 
   await Promise.all(

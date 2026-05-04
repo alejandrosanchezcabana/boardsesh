@@ -12,21 +12,30 @@ function readSource(relativePath: string): string {
 }
 
 describe('shutdown: closePool wiring', () => {
-  it('index.ts imports and calls closePool from @boardsesh/db/client', () => {
+  it('index.ts imports closePool and closeReadPool from @boardsesh/db/client', () => {
     const source = readSource('src/index.ts');
-    expect(source).toContain("import { closePool } from '@boardsesh/db/client'");
+    expect(source).toContain("import { closePool, closeReadPool } from '@boardsesh/db/client'");
     expect(source).toContain('await closePool()');
+    expect(source).toContain('await closeReadPool()');
   });
 
-  it('index.ts logs when pool is closed', () => {
+  it('index.ts logs when pools are closed', () => {
     const source = readSource('src/index.ts');
-    expect(source).toContain("'Database pool closed'");
+    expect(source).toContain("'Database pools closed'");
   });
 
-  it('index.ts handles closePool errors gracefully', () => {
+  it('index.ts handles pool close errors gracefully', () => {
     const source = readSource('src/index.ts');
     // closePool should be in a try/catch
-    expect(source).toContain("'Error closing database pool:'");
+    expect(source).toContain("'Error closing database pools:'");
+  });
+
+  it('index.ts closes read pool before primary pool', () => {
+    const source = readSource('src/index.ts');
+    const readIdx = source.indexOf('await closeReadPool()');
+    const primaryIdx = source.indexOf('await closePool()');
+    expect(readIdx).toBeGreaterThanOrEqual(0);
+    expect(readIdx).toBeLessThan(primaryIdx);
   });
 });
 
@@ -107,5 +116,15 @@ describe('closePool implementation', () => {
   it('is re-exported from client/index.ts', () => {
     const indexSource = readFileSync(resolve(ROOT, '../db/src/client/index.ts'), 'utf-8');
     expect(indexSource).toContain('closePool');
+  });
+
+  it('closeReadPool is exported and re-exported', () => {
+    expect(source).toContain('export async function closeReadPool()');
+    const indexSource = readFileSync(resolve(ROOT, '../db/src/client/index.ts'), 'utf-8');
+    expect(indexSource).toContain('closeReadPool');
+  });
+
+  it('postgres-js clients are configured with prepare:false for PgBouncer', () => {
+    expect(source).toContain('prepare: false');
   });
 });

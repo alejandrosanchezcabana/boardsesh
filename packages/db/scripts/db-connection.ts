@@ -33,7 +33,9 @@ type ScriptDb = ReturnType<typeof drizzle>;
 
 export function createScriptDb(url?: string): { db: ScriptDb; close: () => Promise<void> } {
   const databaseUrl = url ?? getScriptDatabaseUrl();
-  const client = postgres(databaseUrl);
+  // Scripts are short-lived one-shots and target the direct (non-pooled) URL,
+  // so a single connection is sufficient and avoids opening 10 by default.
+  const client = postgres(databaseUrl, { max: 1 });
   const db = drizzle(client);
   return {
     db,

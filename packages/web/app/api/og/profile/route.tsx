@@ -1,8 +1,7 @@
 import React from 'react';
 import { ImageResponse } from '@vercel/og';
 import type { NextRequest } from 'next/server';
-// oxlint-disable-next-line no-restricted-imports -- legacy raw Neon sql usage; migrate to drizzle
-import { sql } from '@/app/lib/db/db';
+import { getReadPool } from '@/app/lib/db/db';
 import { themeTokens } from '@/app/theme/theme-config';
 import { FONT_GRADE_COLORS, getGradeColorWithOpacity } from '@/app/lib/grade-colors';
 import { BOULDER_GRADES } from '@/app/lib/board-data';
@@ -33,6 +32,7 @@ export async function GET(request: NextRequest) {
     }
 
     const dbT0 = performance.now();
+    const sql = getReadPool();
     const [summary, gradeRows] = await Promise.all([
       getProfileOgSummary(userId),
       sql`

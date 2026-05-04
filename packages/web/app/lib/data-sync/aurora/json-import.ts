@@ -429,429 +429,425 @@ export async function importJsonExportData(
 
   const db = getDb();
 
-    // Step 1: Import climbs FIRST so they're available for name resolution.
-    // Draft climbs are always imported (upserted) against the user's account.
-    // Published (non-draft) climbs are only inserted if they don't already exist
-    // in our DB -- following the shared-sync pattern where existing published
-    // climbs are never overwritten.
-    if (data.climbs.length > 0) {
-      type ClimbRow = typeof boardClimbs.$inferInsert;
+  // Step 1: Import climbs FIRST so they're available for name resolution.
+  // Draft climbs are always imported (upserted) against the user's account.
+  // Published (non-draft) climbs are only inserted if they don't already exist
+  // in our DB -- following the shared-sync pattern where existing published
+  // climbs are never overwritten.
+  if (data.climbs.length > 0) {
+    type ClimbRow = typeof boardClimbs.$inferInsert;
 
-      // Split climbs into drafts and published
-      const draftClimbs = data.climbs.filter((c) => c.is_draft === true);
-      const publishedClimbs = data.climbs.filter((c) => c.is_draft !== true);
+    // Split climbs into drafts and published
+    const draftClimbs = data.climbs.filter((c) => c.is_draft === true);
+    const publishedClimbs = data.climbs.filter((c) => c.is_draft !== true);
 
-      // For published climbs, check which names already exist so we skip them
-      const publishedNames = publishedClimbs.map((c) => c.name);
-      const existingPublishedNames = new Set<string>();
-      if (publishedNames.length > 0) {
-        const chunkSize = 500;
-        for (let i = 0; i < publishedNames.length; i += chunkSize) {
-          const chunk = publishedNames.slice(i, i + chunkSize);
-          const existing = await db
-            .select({ name: boardClimbs.name })
-            .from(boardClimbs)
-            .where(
-              and(
-                eq(boardClimbs.boardType, boardType),
-                inArray(boardClimbs.name, chunk),
-                eq(boardClimbs.isDraft, false),
-              ),
-            );
-          for (const row of existing) {
-            if (row.name) existingPublishedNames.add(row.name);
-          }
+    // For published climbs, check which names already exist so we skip them
+    const publishedNames = publishedClimbs.map((c) => c.name);
+    const existingPublishedNames = new Set<string>();
+    if (publishedNames.length > 0) {
+      const chunkSize = 500;
+      for (let i = 0; i < publishedNames.length; i += chunkSize) {
+        const chunk = publishedNames.slice(i, i + chunkSize);
+        const existing = await db
+          .select({ name: boardClimbs.name })
+          .from(boardClimbs)
+          .where(
+            and(eq(boardClimbs.boardType, boardType), inArray(boardClimbs.name, chunk), eq(boardClimbs.isDraft, false)),
+          );
+        for (const row of existing) {
+          if (row.name) existingPublishedNames.add(row.name);
         }
       }
-
-      // Build rows for draft climbs (always imported)
-      const draftRows: ClimbRow[] = [];
-      for (const climb of draftClimbs) {
-        const layoutId = resolveLayoutName(boardType, climb.layout);
-        if (layoutId == null) {
-          result.climbs.failed++;
-          continue;
-        }
-
-        const coordMap = buildCoordinateMap(boardType, layoutId);
-        const frames = convertHoldsToFrames(climb.holds, coordMap, boardType);
-        if (!frames) {
-          result.climbs.failed++;
-          continue;
-        }
-
-        const edges = computeEdgesFromHolds(climb.holds);
-
-        draftRows.push({
-          uuid: generateClimbImportUuid(userId, boardType, layoutId, climb.name, climb.created_at),
-          boardType,
-          layoutId,
-          userId,
-          setterId: null,
-          setterUsername: data.user.username,
-          name: climb.name,
-          description: climb.description ?? '',
-          frames,
-          framesCount: 1,
-          framesPace: 0,
-          isDraft: true,
-          isListed: false,
-          edgeLeft: edges?.edgeLeft ?? null,
-          edgeRight: edges?.edgeRight ?? null,
-          edgeBottom: edges?.edgeBottom ?? null,
-          edgeTop: edges?.edgeTop ?? null,
-          angle: null,
-          createdAt: climb.created_at ?? now,
-          synced: false,
-          syncError: null,
-        });
-      }
-
-      // Build rows for published climbs that don't already exist
-      const publishedRows: ClimbRow[] = [];
-      for (const climb of publishedClimbs) {
-        if (existingPublishedNames.has(climb.name)) {
-          result.climbs.skipped++;
-          continue;
-        }
-
-        const layoutId = resolveLayoutName(boardType, climb.layout);
-        if (layoutId == null) {
-          result.climbs.failed++;
-          continue;
-        }
-
-        const coordMap = buildCoordinateMap(boardType, layoutId);
-        const frames = convertHoldsToFrames(climb.holds, coordMap, boardType);
-        if (!frames) {
-          result.climbs.failed++;
-          continue;
-        }
-
-        const edges = computeEdgesFromHolds(climb.holds);
-
-        publishedRows.push({
-          uuid: generateClimbImportUuid(userId, boardType, layoutId, climb.name, climb.created_at),
-          boardType,
-          layoutId,
-          userId,
-          setterId: null,
-          setterUsername: data.user.username,
-          name: climb.name,
-          description: climb.description ?? '',
-          frames,
-          framesCount: 1,
-          framesPace: 0,
-          isDraft: false,
-          isListed: true,
-          edgeLeft: edges?.edgeLeft ?? null,
-          edgeRight: edges?.edgeRight ?? null,
-          edgeBottom: edges?.edgeBottom ?? null,
-          edgeTop: edges?.edgeTop ?? null,
-          angle: null,
-          createdAt: climb.created_at ?? now,
-          synced: false,
-          syncError: null,
-        });
-      }
-
-      const totalRows = draftRows.length + publishedRows.length;
-
-      if (totalRows > 0) {
-        await db.transaction(async (tx) => {
-          // Insert draft climbs with upsert (re-import updates them)
-          for (let i = 0; i < draftRows.length; i += BATCH_SIZE) {
-            const batch = draftRows.slice(i, i + BATCH_SIZE);
-            await tx
-              .insert(boardClimbs)
-              .values(batch)
-              .onConflictDoUpdate({
-                target: boardClimbs.uuid,
-                set: {
-                  name: sql`excluded.name`,
-                  setterUsername: sql`excluded.setter_username`,
-                  description: sql`excluded.description`,
-                  frames: sql`excluded.frames`,
-                  isDraft: sql`excluded.is_draft`,
-                  isListed: sql`excluded.is_listed`,
-                  edgeLeft: sql`excluded.edge_left`,
-                  edgeRight: sql`excluded.edge_right`,
-                  edgeBottom: sql`excluded.edge_bottom`,
-                  edgeTop: sql`excluded.edge_top`,
-                },
-              });
-            result.climbs.imported += batch.length;
-          }
-
-          // Insert published climbs — skip on conflict (already exist from a prior import)
-          for (let i = 0; i < publishedRows.length; i += BATCH_SIZE) {
-            const batch = publishedRows.slice(i, i + BATCH_SIZE);
-            await tx.insert(boardClimbs).values(batch).onConflictDoNothing();
-            result.climbs.imported += batch.length;
-          }
-
-          // Populate denormalized required_set_ids and compatible_size_ids
-          const allInsertedUuids = [...draftRows.map((r) => r.uuid), ...publishedRows.map((r) => r.uuid)];
-          await populateDenormalizedColumns(tx, boardType, allInsertedUuids);
-        });
-      }
-
-      onProgress?.({
-        type: 'progress',
-        step: 'climbs',
-        current: data.climbs.length,
-        total: data.climbs.length,
-      });
-    } else {
-      onProgress?.({ type: 'progress', step: 'climbs', current: 0, total: 0 });
     }
 
-    // Step 2: Collect all unique climb names from ascents/attempts/circuits
-    const allClimbNames = new Set([
-      ...data.ascents.map((a) => a.climb),
-      ...data.attempts.map((a) => a.climb),
-      ...data.circuits.flatMap((c) => c.climbs),
-    ]);
+    // Build rows for draft climbs (always imported)
+    const draftRows: ClimbRow[] = [];
+    for (const climb of draftClimbs) {
+      const layoutId = resolveLayoutName(boardType, climb.layout);
+      if (layoutId == null) {
+        result.climbs.failed++;
+        continue;
+      }
 
-    // Step 3: Resolve climb names to UUIDs (includes user's own drafts)
+      const coordMap = buildCoordinateMap(boardType, layoutId);
+      const frames = convertHoldsToFrames(climb.holds, coordMap, boardType);
+      if (!frames) {
+        result.climbs.failed++;
+        continue;
+      }
+
+      const edges = computeEdgesFromHolds(climb.holds);
+
+      draftRows.push({
+        uuid: generateClimbImportUuid(userId, boardType, layoutId, climb.name, climb.created_at),
+        boardType,
+        layoutId,
+        userId,
+        setterId: null,
+        setterUsername: data.user.username,
+        name: climb.name,
+        description: climb.description ?? '',
+        frames,
+        framesCount: 1,
+        framesPace: 0,
+        isDraft: true,
+        isListed: false,
+        edgeLeft: edges?.edgeLeft ?? null,
+        edgeRight: edges?.edgeRight ?? null,
+        edgeBottom: edges?.edgeBottom ?? null,
+        edgeTop: edges?.edgeTop ?? null,
+        angle: null,
+        createdAt: climb.created_at ?? now,
+        synced: false,
+        syncError: null,
+      });
+    }
+
+    // Build rows for published climbs that don't already exist
+    const publishedRows: ClimbRow[] = [];
+    for (const climb of publishedClimbs) {
+      if (existingPublishedNames.has(climb.name)) {
+        result.climbs.skipped++;
+        continue;
+      }
+
+      const layoutId = resolveLayoutName(boardType, climb.layout);
+      if (layoutId == null) {
+        result.climbs.failed++;
+        continue;
+      }
+
+      const coordMap = buildCoordinateMap(boardType, layoutId);
+      const frames = convertHoldsToFrames(climb.holds, coordMap, boardType);
+      if (!frames) {
+        result.climbs.failed++;
+        continue;
+      }
+
+      const edges = computeEdgesFromHolds(climb.holds);
+
+      publishedRows.push({
+        uuid: generateClimbImportUuid(userId, boardType, layoutId, climb.name, climb.created_at),
+        boardType,
+        layoutId,
+        userId,
+        setterId: null,
+        setterUsername: data.user.username,
+        name: climb.name,
+        description: climb.description ?? '',
+        frames,
+        framesCount: 1,
+        framesPace: 0,
+        isDraft: false,
+        isListed: true,
+        edgeLeft: edges?.edgeLeft ?? null,
+        edgeRight: edges?.edgeRight ?? null,
+        edgeBottom: edges?.edgeBottom ?? null,
+        edgeTop: edges?.edgeTop ?? null,
+        angle: null,
+        createdAt: climb.created_at ?? now,
+        synced: false,
+        syncError: null,
+      });
+    }
+
+    const totalRows = draftRows.length + publishedRows.length;
+
+    if (totalRows > 0) {
+      await db.transaction(async (tx) => {
+        // Insert draft climbs with upsert (re-import updates them)
+        for (let i = 0; i < draftRows.length; i += BATCH_SIZE) {
+          const batch = draftRows.slice(i, i + BATCH_SIZE);
+          await tx
+            .insert(boardClimbs)
+            .values(batch)
+            .onConflictDoUpdate({
+              target: boardClimbs.uuid,
+              set: {
+                name: sql`excluded.name`,
+                setterUsername: sql`excluded.setter_username`,
+                description: sql`excluded.description`,
+                frames: sql`excluded.frames`,
+                isDraft: sql`excluded.is_draft`,
+                isListed: sql`excluded.is_listed`,
+                edgeLeft: sql`excluded.edge_left`,
+                edgeRight: sql`excluded.edge_right`,
+                edgeBottom: sql`excluded.edge_bottom`,
+                edgeTop: sql`excluded.edge_top`,
+              },
+            });
+          result.climbs.imported += batch.length;
+        }
+
+        // Insert published climbs — skip on conflict (already exist from a prior import)
+        for (let i = 0; i < publishedRows.length; i += BATCH_SIZE) {
+          const batch = publishedRows.slice(i, i + BATCH_SIZE);
+          await tx.insert(boardClimbs).values(batch).onConflictDoNothing();
+          result.climbs.imported += batch.length;
+        }
+
+        // Populate denormalized required_set_ids and compatible_size_ids
+        const allInsertedUuids = [...draftRows.map((r) => r.uuid), ...publishedRows.map((r) => r.uuid)];
+        await populateDenormalizedColumns(tx, boardType, allInsertedUuids);
+      });
+    }
+
     onProgress?.({
       type: 'progress',
-      step: 'resolving',
-      message: `Resolving ${allClimbNames.size} climb names...`,
+      step: 'climbs',
+      current: data.climbs.length,
+      total: data.climbs.length,
     });
-    const nameToUuid = await resolveClimbNames(db, boardType, [...allClimbNames], userId);
+  } else {
+    onProgress?.({ type: 'progress', step: 'climbs', current: 0, total: 0 });
+  }
 
-    // Track unresolved names
-    result.unresolvedClimbs = [...allClimbNames].filter((name) => !nameToUuid.has(name));
+  // Step 2: Collect all unique climb names from ascents/attempts/circuits
+  const allClimbNames = new Set([
+    ...data.ascents.map((a) => a.climb),
+    ...data.attempts.map((a) => a.climb),
+    ...data.circuits.flatMap((c) => c.climbs),
+  ]);
 
-    // Step 4: Get existing tick keys for cross-source dedup
-    onProgress?.({ type: 'progress', step: 'dedup', message: 'Checking for duplicates...' });
-    const existingKeys = await getExistingTickKeys(db, userId, boardType);
+  // Step 3: Resolve climb names to UUIDs (includes user's own drafts)
+  onProgress?.({
+    type: 'progress',
+    step: 'resolving',
+    message: `Resolving ${allClimbNames.size} climb names...`,
+  });
+  const nameToUuid = await resolveClimbNames(db, boardType, [...allClimbNames], userId);
 
-    // Step 5: Collect ascent rows to insert (in-memory dedup first)
-    type TickRow = typeof boardseshTicks.$inferInsert;
+  // Track unresolved names
+  result.unresolvedClimbs = [...allClimbNames].filter((name) => !nameToUuid.has(name));
 
-    const ascentRows = data.ascents.reduce<TickRow[]>((rows, ascent) => {
-      const climbUuid = nameToUuid.get(ascent.climb);
-      if (!climbUuid) {
-        result.ascents.failed++;
-        return rows;
-      }
+  // Step 4: Get existing tick keys for cross-source dedup
+  onProgress?.({ type: 'progress', step: 'dedup', message: 'Checking for duplicates...' });
+  const existingKeys = await getExistingTickKeys(db, userId, boardType);
 
-      const climbedAt = normalizeTimestamp(ascent.climbed_at);
-      const tickKey = `${climbUuid}:${ascent.angle}:${climbedAt}`;
-      if (existingKeys.has(tickKey)) {
-        result.ascents.skipped++;
-        return rows;
-      }
+  // Step 5: Collect ascent rows to insert (in-memory dedup first)
+  type TickRow = typeof boardseshTicks.$inferInsert;
 
-      existingKeys.add(tickKey);
-      rows.push({
-        uuid: randomUUID(),
-        userId,
-        boardType,
-        climbUuid,
-        angle: ascent.angle,
-        isMirror: false,
-        status: ascent.count === 1 ? 'flash' : 'send',
-        attemptCount: ascent.count,
-        // The JSON export 'stars' field is already on a 1-5 scale (user-facing),
-        // unlike the Aurora API 'quality' field which is 0-3.
-        quality: ascent.stars,
-        difficulty: fontGradeToDifficultyId(ascent.grade),
-        isBenchmark: false,
-        comment: '',
-        climbedAt,
-        createdAt: ascent.created_at ? normalizeTimestamp(ascent.created_at) : now,
-        updatedAt: now,
-        auroraType: 'ascents' as const,
-        auroraId: generateJsonImportAuroraId(userId, climbUuid, ascent.angle, climbedAt, 'ascents'),
-        auroraSyncedAt: now,
-      });
+  const ascentRows = data.ascents.reduce<TickRow[]>((rows, ascent) => {
+    const climbUuid = nameToUuid.get(ascent.climb);
+    if (!climbUuid) {
+      result.ascents.failed++;
       return rows;
-    }, []);
+    }
 
-    // Step 6: Collect attempt rows to insert
-    const attemptRows = data.attempts.reduce<TickRow[]>((rows, attempt) => {
-      const climbUuid = nameToUuid.get(attempt.climb);
-      if (!climbUuid) {
-        result.attempts.failed++;
-        return rows;
-      }
-
-      const climbedAt = normalizeTimestamp(attempt.climbed_at);
-      const tickKey = `${climbUuid}:${attempt.angle}:${climbedAt}`;
-      if (existingKeys.has(tickKey)) {
-        result.attempts.skipped++;
-        return rows;
-      }
-
-      existingKeys.add(tickKey);
-      rows.push({
-        uuid: randomUUID(),
-        userId,
-        boardType,
-        climbUuid,
-        angle: attempt.angle,
-        isMirror: false,
-        status: 'attempt',
-        attemptCount: attempt.count,
-        quality: null,
-        difficulty: null,
-        isBenchmark: false,
-        comment: '',
-        climbedAt,
-        createdAt: attempt.created_at ? normalizeTimestamp(attempt.created_at) : now,
-        updatedAt: now,
-        auroraType: 'bids' as const,
-        auroraId: generateJsonImportAuroraId(userId, climbUuid, attempt.angle, climbedAt, 'bids'),
-        auroraSyncedAt: now,
-      });
+    const climbedAt = normalizeTimestamp(ascent.climbed_at);
+    const tickKey = `${climbUuid}:${ascent.angle}:${climbedAt}`;
+    if (existingKeys.has(tickKey)) {
+      result.ascents.skipped++;
       return rows;
-    }, []);
+    }
 
-    // Step 7: Batch-insert ascents and attempts in a transaction
-    await db.transaction(async (tx) => {
-      result.ascents.imported = await batchInsertTicks(
-        tx,
-        ascentRows,
-        {
-          climbUuid: sql`excluded.climb_uuid`,
-          angle: sql`excluded.angle`,
-          status: sql`excluded.status`,
-          attemptCount: sql`excluded.attempt_count`,
-          quality: sql`excluded.quality`,
-          difficulty: sql`excluded.difficulty`,
-          climbedAt: sql`excluded.climbed_at`,
-          updatedAt: sql`excluded.updated_at`,
-          auroraSyncedAt: sql`excluded.aurora_synced_at`,
-        },
-        'ascents',
-        data.ascents.length,
-        onProgress,
-      );
-
-      result.attempts.imported = await batchInsertTicks(
-        tx,
-        attemptRows,
-        {
-          climbUuid: sql`excluded.climb_uuid`,
-          angle: sql`excluded.angle`,
-          attemptCount: sql`excluded.attempt_count`,
-          climbedAt: sql`excluded.climbed_at`,
-          updatedAt: sql`excluded.updated_at`,
-          auroraSyncedAt: sql`excluded.aurora_synced_at`,
-        },
-        'attempts',
-        data.attempts.length,
-        onProgress,
-      );
+    existingKeys.add(tickKey);
+    rows.push({
+      uuid: randomUUID(),
+      userId,
+      boardType,
+      climbUuid,
+      angle: ascent.angle,
+      isMirror: false,
+      status: ascent.count === 1 ? 'flash' : 'send',
+      attemptCount: ascent.count,
+      // The JSON export 'stars' field is already on a 1-5 scale (user-facing),
+      // unlike the Aurora API 'quality' field which is 0-3.
+      quality: ascent.stars,
+      difficulty: fontGradeToDifficultyId(ascent.grade),
+      isBenchmark: false,
+      comment: '',
+      climbedAt,
+      createdAt: ascent.created_at ? normalizeTimestamp(ascent.created_at) : now,
+      updatedAt: now,
+      auroraType: 'ascents' as const,
+      auroraId: generateJsonImportAuroraId(userId, climbUuid, ascent.angle, climbedAt, 'ascents'),
+      auroraSyncedAt: now,
     });
+    return rows;
+  }, []);
 
-    // Step 8: Import circuits as playlists (separate transaction per circuit
-    // so one failure doesn't roll back others or abort the tick transaction)
-    for (let ci = 0; ci < data.circuits.length; ci++) {
-      const circuit = data.circuits[ci];
-      const resolvedClimbs = circuit.climbs
-        .map((name) => nameToUuid.get(name))
-        .filter((uuid): uuid is string => uuid != null);
+  // Step 6: Collect attempt rows to insert
+  const attemptRows = data.attempts.reduce<TickRow[]>((rows, attempt) => {
+    const climbUuid = nameToUuid.get(attempt.climb);
+    if (!climbUuid) {
+      result.attempts.failed++;
+      return rows;
+    }
 
-      const circuitHash = createHash('sha256')
-        .update(`${userId}:${boardType}:${circuit.name}:${circuit.created_at}`)
-        .digest('hex')
-        .slice(0, 32);
-      const circuitAuroraId = `json-import-circuit-${circuitHash}`;
-      const formattedColor = circuit.color ? `#${circuit.color}` : null;
-      const circuitNow = new Date();
+    const climbedAt = normalizeTimestamp(attempt.climbed_at);
+    const tickKey = `${climbUuid}:${attempt.angle}:${climbedAt}`;
+    if (existingKeys.has(tickKey)) {
+      result.attempts.skipped++;
+      return rows;
+    }
 
-      try {
-        await db.transaction(async (tx) => {
-          const [playlist] = await tx
-            .insert(playlists)
-            .values({
-              uuid: randomUUID(),
-              boardType,
-              layoutId: null,
+    existingKeys.add(tickKey);
+    rows.push({
+      uuid: randomUUID(),
+      userId,
+      boardType,
+      climbUuid,
+      angle: attempt.angle,
+      isMirror: false,
+      status: 'attempt',
+      attemptCount: attempt.count,
+      quality: null,
+      difficulty: null,
+      isBenchmark: false,
+      comment: '',
+      climbedAt,
+      createdAt: attempt.created_at ? normalizeTimestamp(attempt.created_at) : now,
+      updatedAt: now,
+      auroraType: 'bids' as const,
+      auroraId: generateJsonImportAuroraId(userId, climbUuid, attempt.angle, climbedAt, 'bids'),
+      auroraSyncedAt: now,
+    });
+    return rows;
+  }, []);
+
+  // Step 7: Batch-insert ascents and attempts in a transaction
+  await db.transaction(async (tx) => {
+    result.ascents.imported = await batchInsertTicks(
+      tx,
+      ascentRows,
+      {
+        climbUuid: sql`excluded.climb_uuid`,
+        angle: sql`excluded.angle`,
+        status: sql`excluded.status`,
+        attemptCount: sql`excluded.attempt_count`,
+        quality: sql`excluded.quality`,
+        difficulty: sql`excluded.difficulty`,
+        climbedAt: sql`excluded.climbed_at`,
+        updatedAt: sql`excluded.updated_at`,
+        auroraSyncedAt: sql`excluded.aurora_synced_at`,
+      },
+      'ascents',
+      data.ascents.length,
+      onProgress,
+    );
+
+    result.attempts.imported = await batchInsertTicks(
+      tx,
+      attemptRows,
+      {
+        climbUuid: sql`excluded.climb_uuid`,
+        angle: sql`excluded.angle`,
+        attemptCount: sql`excluded.attempt_count`,
+        climbedAt: sql`excluded.climbed_at`,
+        updatedAt: sql`excluded.updated_at`,
+        auroraSyncedAt: sql`excluded.aurora_synced_at`,
+      },
+      'attempts',
+      data.attempts.length,
+      onProgress,
+    );
+  });
+
+  // Step 8: Import circuits as playlists (separate transaction per circuit
+  // so one failure doesn't roll back others or abort the tick transaction)
+  for (let ci = 0; ci < data.circuits.length; ci++) {
+    const circuit = data.circuits[ci];
+    const resolvedClimbs = circuit.climbs
+      .map((name) => nameToUuid.get(name))
+      .filter((uuid): uuid is string => uuid != null);
+
+    const circuitHash = createHash('sha256')
+      .update(`${userId}:${boardType}:${circuit.name}:${circuit.created_at}`)
+      .digest('hex')
+      .slice(0, 32);
+    const circuitAuroraId = `json-import-circuit-${circuitHash}`;
+    const formattedColor = circuit.color ? `#${circuit.color}` : null;
+    const circuitNow = new Date();
+
+    try {
+      await db.transaction(async (tx) => {
+        const [playlist] = await tx
+          .insert(playlists)
+          .values({
+            uuid: randomUUID(),
+            boardType,
+            layoutId: null,
+            name: circuit.name,
+            description: circuit.description ?? null,
+            isPublic: false,
+            color: formattedColor,
+            auroraType: 'circuits',
+            auroraId: circuitAuroraId,
+            auroraSyncedAt: circuitNow,
+            createdAt: circuit.created_at ? new Date(circuit.created_at) : circuitNow,
+            updatedAt: circuitNow,
+          })
+          .onConflictDoUpdate({
+            target: playlists.auroraId,
+            set: {
               name: circuit.name,
               description: circuit.description ?? null,
               isPublic: false,
               color: formattedColor,
-              auroraType: 'circuits',
-              auroraId: circuitAuroraId,
-              auroraSyncedAt: circuitNow,
-              createdAt: circuit.created_at ? new Date(circuit.created_at) : circuitNow,
               updatedAt: circuitNow,
-            })
-            .onConflictDoUpdate({
-              target: playlists.auroraId,
-              set: {
-                name: circuit.name,
-                description: circuit.description ?? null,
-                isPublic: false,
-                color: formattedColor,
-                updatedAt: circuitNow,
-                auroraSyncedAt: circuitNow,
-              },
-            })
-            .returning({ id: playlists.id });
+              auroraSyncedAt: circuitNow,
+            },
+          })
+          .returning({ id: playlists.id });
 
-          await tx
-            .insert(playlistOwnership)
-            .values({
-              playlistId: playlist.id,
-              userId,
-              role: 'owner',
-            })
-            .onConflictDoNothing();
+        await tx
+          .insert(playlistOwnership)
+          .values({
+            playlistId: playlist.id,
+            userId,
+            role: 'owner',
+          })
+          .onConflictDoNothing();
 
-          // Only replace playlist climbs when we have resolved climbs to insert.
-          // This avoids wiping out previously-resolved climbs if name resolution
-          // fails on a re-import (e.g., climb was renamed/delisted).
-          if (resolvedClimbs.length > 0) {
-            await tx.delete(playlistClimbs).where(eq(playlistClimbs.playlistId, playlist.id));
+        // Only replace playlist climbs when we have resolved climbs to insert.
+        // This avoids wiping out previously-resolved climbs if name resolution
+        // fails on a re-import (e.g., climb was renamed/delisted).
+        if (resolvedClimbs.length > 0) {
+          await tx.delete(playlistClimbs).where(eq(playlistClimbs.playlistId, playlist.id));
 
-            // Batch-insert playlist climbs
-            const climbValues = resolvedClimbs.map((climbUuid, i) => ({
-              playlistId: playlist.id,
-              climbUuid,
-              angle: null as number | null,
-              position: i,
-            }));
+          // Batch-insert playlist climbs
+          const climbValues = resolvedClimbs.map((climbUuid, i) => ({
+            playlistId: playlist.id,
+            climbUuid,
+            angle: null as number | null,
+            position: i,
+          }));
 
-            for (let i = 0; i < climbValues.length; i += BATCH_SIZE) {
-              await tx.insert(playlistClimbs).values(climbValues.slice(i, i + BATCH_SIZE));
-            }
+          for (let i = 0; i < climbValues.length; i += BATCH_SIZE) {
+            await tx.insert(playlistClimbs).values(climbValues.slice(i, i + BATCH_SIZE));
           }
-        });
-        result.circuits.imported++;
-      } catch (error) {
-        console.error(`Failed to import circuit "${circuit.name}":`, error);
-        result.circuits.failed++;
-      }
-
-      onProgress?.({
-        type: 'progress',
-        step: 'circuits',
-        current: ci + 1,
-        total: data.circuits.length,
-      });
-    }
-
-    // Step 9: Build inferred sessions for imported ticks (skipped during chunked imports
-    // until the final chunk to avoid rebuilding sessions on every batch).
-    // Always run on the final chunk — earlier chunks may have imported ticks even if
-    // this chunk only contains circuits.
-    if (!options?.skipSessionBuild) {
-      onProgress?.({ type: 'progress', step: 'sessions', message: 'Building sessions...' });
-      try {
-        const assigned = await buildInferredSessionsForUser(userId);
-        if (assigned > 0) {
-          console.info(`Built inferred sessions: assigned ${assigned} ticks for user ${userId}`);
         }
-      } catch (error) {
-        console.error('Error building inferred sessions after JSON import:', error);
-      }
+      });
+      result.circuits.imported++;
+    } catch (error) {
+      console.error(`Failed to import circuit "${circuit.name}":`, error);
+      result.circuits.failed++;
     }
 
-    return result;
+    onProgress?.({
+      type: 'progress',
+      step: 'circuits',
+      current: ci + 1,
+      total: data.circuits.length,
+    });
+  }
+
+  // Step 9: Build inferred sessions for imported ticks (skipped during chunked imports
+  // until the final chunk to avoid rebuilding sessions on every batch).
+  // Always run on the final chunk — earlier chunks may have imported ticks even if
+  // this chunk only contains circuits.
+  if (!options?.skipSessionBuild) {
+    onProgress?.({ type: 'progress', step: 'sessions', message: 'Building sessions...' });
+    try {
+      const assigned = await buildInferredSessionsForUser(userId);
+      if (assigned > 0) {
+        console.info(`Built inferred sessions: assigned ${assigned} ticks for user ${userId}`);
+      }
+    } catch (error) {
+      console.error('Error building inferred sessions after JSON import:', error);
+    }
+  }
+
+  return result;
 }

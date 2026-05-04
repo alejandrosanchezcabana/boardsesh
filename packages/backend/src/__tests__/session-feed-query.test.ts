@@ -18,12 +18,18 @@ const sessionFeedTestState = vi.hoisted(() => {
   };
 });
 
-vi.mock('../db/client', () => ({
-  db: {
+vi.mock('../db/client', () => {
+  const fakeDb = {
     execute: sessionFeedTestState.executeMock,
     select: sessionFeedTestState.selectMock,
-  },
-}));
+  };
+  // sessionGroupedFeed reads from `dbRead`; alias it to the same fake so the
+  // existing call assertions still hit `executeMock` / `selectMock`.
+  return {
+    db: fakeDb,
+    dbRead: fakeDb,
+  };
+});
 
 const { sessionGroupedFeed } = await import('../graphql/resolvers/social/session-feed').then(
   (module) => module.sessionFeedQueries,

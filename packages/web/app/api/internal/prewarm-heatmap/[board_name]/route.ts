@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { sql } from 'drizzle-orm';
 import { AURORA_BOARD_NAMES, getBoardSelectorOptions, isAuroraBoardName } from '@/app/lib/board-constants';
 import type { AuroraBoardName } from '@boardsesh/shared-schema';
-import { dbz as db } from '@/app/lib/db/db';
+import { dbzRead as db } from '@/app/lib/db/db';
 import { cachedGetHoldHeatmapData } from '@/app/lib/db/queries/climbs/holds-heatmap-cache';
 import { DEFAULT_SEARCH_PARAMS } from '@/app/lib/url-utils';
 import type { ParsedBoardRouteParameters } from '@/app/lib/types';

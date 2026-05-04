@@ -11,33 +11,36 @@ import type { AuroraBoardName } from '../api/types';
 import { resolveDaemonOptions, runDaemonLoop } from './daemon';
 import type { SyncRunnerConfig, SyncSummary, CredentialRecord, DaemonOptions } from './types';
 
-function createFreshClient(): ReturnType<typeof postgres> {
-  const connectionString = process.env.DATABASE_URL;
-  if (!connectionString) {
-    throw new Error('DATABASE_URL is required');
-  }
-  return postgres(connectionString, {
-    max: 5,
-    idle_timeout: 30,
-    connect_timeout: 30,
-  });
-}
-
-function createSimpleDb() {
-  const connectionString = process.env.DATABASE_URL;
-  if (!connectionString) {
-    throw new Error('DATABASE_URL is required');
-  }
-  const client = postgres(connectionString, { max: 5, idle_timeout: 30 });
-  return { db: drizzle(client), client };
-}
+type RunnerClient = ReturnType<typeof postgres>;
+type RunnerDb = ReturnType<typeof drizzle>;
 
 export class SyncRunner {
   private config: SyncRunnerConfig;
   private daemonController: AbortController | null = null;
+  private client: RunnerClient | null = null;
+  private db: RunnerDb | null = null;
 
   constructor(config: SyncRunnerConfig = {}) {
     this.config = config;
+  }
+
+  private getClient(): { client: RunnerClient; db: RunnerDb } {
+    if (!this.client || !this.db) {
+      const connectionString = process.env.DATABASE_URL;
+      if (!connectionString) {
+        throw new Error('DATABASE_URL is required');
+      }
+      // `prepare: false` is required for Railway's PgBouncer pooled URL
+      // (transaction-pooling mode is incompatible with prepared statements).
+      this.client = postgres(connectionString, {
+        max: 5,
+        idle_timeout: 30,
+        connect_timeout: 30,
+        prepare: false,
+      });
+      this.db = drizzle(this.client);
+    }
+    return { client: this.client, db: this.db };
   }
 
   private log(message: string): void {
@@ -136,23 +139,19 @@ export class SyncRunner {
   }
 
   async syncUser(userId: string, boardType: string): Promise<void> {
-    const { db, client } = createSimpleDb();
-    try {
-      const credentials = await db
-        .select()
-        .from(auroraCredentials)
-        .where(and(eq(auroraCredentials.userId, userId), eq(auroraCredentials.boardType, boardType)))
-        .limit(1);
+    const { db } = this.getClient();
+    const credentials = await db
+      .select()
+      .from(auroraCredentials)
+      .where(and(eq(auroraCredentials.userId, userId), eq(auroraCredentials.boardType, boardType)))
+      .limit(1);
 
-      if (credentials.length === 0) {
-        throw new Error(`No credentials found for user ${userId} on ${boardType}`);
-      }
-
-      const cred = credentials[0] as CredentialRecord;
-      await this.syncSingleCredential(cred);
-    } finally {
-      await client.end();
+    if (credentials.length === 0) {
+      throw new Error(`No credentials found for user ${userId} on ${boardType}`);
     }
+
+    const cred = credentials[0] as CredentialRecord;
+    await this.syncSingleCredential(cred);
   }
 
   async runDaemon(options: DaemonOptions = {}): Promise<void> {
@@ -205,29 +204,21 @@ export class SyncRunner {
   }
 
   private async getActiveCredentials(): Promise<CredentialRecord[]> {
-    const { db, client } = createSimpleDb();
-    try {
-      const credentials = await db.select().from(auroraCredentials).where(this.syncableCredentialsFilter());
-      return credentials as CredentialRecord[];
-    } finally {
-      await client.end();
-    }
+    const { db } = this.getClient();
+    const credentials = await db.select().from(auroraCredentials).where(this.syncableCredentialsFilter());
+    return credentials as CredentialRecord[];
   }
 
   private async getNextCredentialToSync(): Promise<CredentialRecord | null> {
-    const { db, client } = createSimpleDb();
-    try {
-      const credentials = await db
-        .select()
-        .from(auroraCredentials)
-        .where(this.syncableCredentialsFilter())
-        .orderBy(sql`${auroraCredentials.lastSyncAt} ASC NULLS FIRST`)
-        .limit(1);
+    const { db } = this.getClient();
+    const credentials = await db
+      .select()
+      .from(auroraCredentials)
+      .where(this.syncableCredentialsFilter())
+      .orderBy(sql`${auroraCredentials.lastSyncAt} ASC NULLS FIRST`)
+      .limit(1);
 
-      return credentials.length > 0 ? (credentials[0] as CredentialRecord) : null;
-    } finally {
-      await client.end();
-    }
+    return credentials.length > 0 ? (credentials[0] as CredentialRecord) : null;
   }
 
   private async syncSingleCredential(cred: CredentialRecord): Promise<void> {
@@ -273,14 +264,10 @@ export class SyncRunner {
 
     await this.updateStoredToken(cred.userId, cred.boardType, token);
 
-    const pgClient = createFreshClient();
-    try {
-      this.log(`[SyncRunner] Syncing user ${cred.userId} for ${boardType}...`);
-      await syncUserData(pgClient, boardType, token, cred.auroraUserId, cred.userId, undefined, this.log.bind(this));
-      await this.updateCredentialStatus(cred.userId, cred.boardType, 'active', null, new Date());
-    } finally {
-      await pgClient.end();
-    }
+    const { client } = this.getClient();
+    this.log(`[SyncRunner] Syncing user ${cred.userId} for ${boardType}...`);
+    await syncUserData(client, boardType, token, cred.auroraUserId, cred.userId, undefined, this.log.bind(this));
+    await this.updateCredentialStatus(cred.userId, cred.boardType, 'active', null, new Date());
   }
 
   private async updateCredentialStatus(
@@ -290,45 +277,45 @@ export class SyncRunner {
     error: string | null,
     lastSyncAt?: Date,
   ): Promise<void> {
-    const { db, client } = createSimpleDb();
-    try {
-      const updateData: Record<string, unknown> = {
-        syncStatus: status,
-        syncError: error,
-        updatedAt: new Date(),
-      };
+    const { db } = this.getClient();
+    const updateData: Record<string, unknown> = {
+      syncStatus: status,
+      syncError: error,
+      updatedAt: new Date(),
+    };
 
-      if (lastSyncAt) {
-        updateData.lastSyncAt = lastSyncAt;
-      }
-
-      await db
-        .update(auroraCredentials)
-        .set(updateData)
-        .where(and(eq(auroraCredentials.userId, userId), eq(auroraCredentials.boardType, boardType)));
-    } finally {
-      await client.end();
+    if (lastSyncAt) {
+      updateData.lastSyncAt = lastSyncAt;
     }
+
+    await db
+      .update(auroraCredentials)
+      .set(updateData)
+      .where(and(eq(auroraCredentials.userId, userId), eq(auroraCredentials.boardType, boardType)));
   }
 
   private async updateStoredToken(userId: string, boardType: string, token: string): Promise<void> {
     const encryptedToken = encrypt(token);
-    const { db, client } = createSimpleDb();
-    try {
-      await db
-        .update(auroraCredentials)
-        .set({
-          auroraToken: encryptedToken,
-          updatedAt: new Date(),
-        })
-        .where(and(eq(auroraCredentials.userId, userId), eq(auroraCredentials.boardType, boardType)));
-    } finally {
-      await client.end();
-    }
+    const { db } = this.getClient();
+    await db
+      .update(auroraCredentials)
+      .set({
+        auroraToken: encryptedToken,
+        updatedAt: new Date(),
+      })
+      .where(and(eq(auroraCredentials.userId, userId), eq(auroraCredentials.boardType, boardType)));
   }
 
   async close(): Promise<void> {
     this.daemonController?.abort();
+    if (this.client) {
+      try {
+        await this.client.end();
+      } finally {
+        this.client = null;
+        this.db = null;
+      }
+    }
   }
 
   private formatErrorMessage(error: unknown): string {

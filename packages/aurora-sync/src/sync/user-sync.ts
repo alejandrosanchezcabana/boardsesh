@@ -400,11 +400,7 @@ async function upsertTableData(
   return { synced: data.length, skipped: 0 };
 }
 
-async function updateUserSyncs(
-  tx: DrizzleDb,
-  boardName: AuroraBoardName,
-  userSyncs: UserSyncData[],
-) {
+async function updateUserSyncs(tx: DrizzleDb, boardName: AuroraBoardName, userSyncs: UserSyncData[]) {
   const userSyncsSchema = UNIFIED_TABLES.userSyncs;
 
   for (const sync of userSyncs) {
