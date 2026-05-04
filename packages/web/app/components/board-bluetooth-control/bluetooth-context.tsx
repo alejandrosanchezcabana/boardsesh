@@ -43,10 +43,12 @@ type BluetoothContextValue = {
   /** Board configuration for the current route — exposed so light-show
    * features (party mode) can read holdsData and edge bounds. */
   boardDetails: BoardDetails;
-  /** True while a non-queue light show (e.g. party mode) is driving the
-   * board. The auto-sender stops emitting queue frames during this. */
-  partyActive: boolean;
-  setPartyActive: (active: boolean) => void;
+  /** Which non-queue light show is driving the board, if any. The
+   * auto-sender stops emitting queue frames whenever this is non-'off'.
+   * 'glyphs' spells BOARDSESH across the wall; 'disco' strobes the
+   * current climb's holds through random role colours. */
+  partyMode: 'off' | 'glyphs' | 'disco';
+  setPartyMode: (mode: 'off' | 'glyphs' | 'disco') => void;
   isBluetoothSupported: boolean;
   isIOS: boolean;
 };
@@ -142,14 +144,14 @@ export function BluetoothProvider({
   const { showMessage } = useSnackbar();
   const { t } = useTranslation('settings');
 
-  const [partyActive, setPartyActive] = useState(false);
+  const [partyMode, setPartyMode] = useState<'off' | 'glyphs' | 'disco'>('off');
   const clearBoard = useCallback(() => sendFramesToBoard(''), [sendFramesToBoard]);
 
-  // Stop the party loop the moment the board disconnects so a reconnect
-  // doesn't immediately resume an orphaned interval in the drawer.
+  // Stop any active light show the moment the board disconnects so a
+  // reconnect doesn't immediately resume an orphaned interval in the drawer.
   useEffect(() => {
-    if (!isConnected && partyActive) setPartyActive(false);
-  }, [isConnected, partyActive]);
+    if (!isConnected && partyMode !== 'off') setPartyMode('off');
+  }, [isConnected, partyMode]);
 
   // Both `[board_name]/[layout_id]/[size_id]/[set_ids]/[angle]/...` and
   // `/b/{slug}/{angle}/...` routes carry `[angle]` as a dynamic segment.
@@ -347,8 +349,8 @@ export function BluetoothProvider({
       sendFramesToBoard,
       clearBoard,
       boardDetails,
-      partyActive,
-      setPartyActive,
+      partyMode,
+      setPartyMode,
       isBluetoothSupported,
       isIOS,
     }),
@@ -360,8 +362,8 @@ export function BluetoothProvider({
       sendFramesToBoard,
       clearBoard,
       boardDetails,
-      partyActive,
-      setPartyActive,
+      partyMode,
+      setPartyMode,
       isBluetoothSupported,
       isIOS,
     ],
@@ -428,7 +430,7 @@ export function BluetoothProvider({
 
   return (
     <BluetoothContext.Provider value={value}>
-      {isConnected && !partyActive && (
+      {isConnected && partyMode === 'off' && (
         <BluetoothAutoSender sendFramesToBoard={sendFramesToBoard} layoutName={boardDetails.layout_name ?? ''} />
       )}
       {activePickerState && (
