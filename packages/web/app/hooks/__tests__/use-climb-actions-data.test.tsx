@@ -319,6 +319,127 @@ describe('useClimbActionsData', () => {
     });
   });
 
+  it('rapid addToPlaylist taps converge to a single climbCount increment (#1851)', async () => {
+    mockRequest.mockResolvedValueOnce({ favorites: [] });
+    mockRequest.mockResolvedValueOnce({
+      allUserPlaylists: [{ uuid: 'pl-1', name: 'Test', climbCount: 2 }],
+    });
+    mockRequest.mockResolvedValueOnce({ playlistsForClimbs: [] });
+
+    const wrapper = createQueryWrapper();
+    const { result } = renderHook(() => useClimbActionsData(defaultOptions), { wrapper });
+
+    await waitFor(() => {
+      expect(result.current.playlistsProviderProps.isLoading).toBe(false);
+    });
+
+    // Three rapid taps — server is idempotent so all three resolve successfully.
+    mockRequest.mockResolvedValue({ addClimbToPlaylist: { success: true } });
+
+    await act(async () => {
+      await Promise.all([
+        result.current.playlistsProviderProps.addToPlaylist('pl-1', 'climb-1', 40),
+        result.current.playlistsProviderProps.addToPlaylist('pl-1', 'climb-1', 40),
+        result.current.playlistsProviderProps.addToPlaylist('pl-1', 'climb-1', 40),
+      ]);
+    });
+
+    // Starting count is 2; only the first tap performs an effective add (2 + 1 = 3).
+    // Without the membership gate, all three taps would each apply +1 (2 + 3 = 5).
+    const addedPlaylist = result.current.playlistsProviderProps.playlists.find((p) => p.uuid === 'pl-1');
+    expect(addedPlaylist?.climbCount).toBe(3);
+    expect(result.current.playlistsProviderProps.playlistMemberships.get('climb-1')?.has('pl-1')).toBe(true);
+  });
+
+  it('rapid removeFromPlaylist taps converge to a single climbCount decrement (#1851)', async () => {
+    mockRequest.mockResolvedValueOnce({ favorites: [] });
+    mockRequest.mockResolvedValueOnce({
+      allUserPlaylists: [{ uuid: 'pl-1', name: 'Test', climbCount: 5 }],
+    });
+    mockRequest.mockResolvedValueOnce({
+      playlistsForClimbs: [{ climbUuid: 'climb-1', playlistUuids: ['pl-1'] }],
+    });
+
+    const wrapper = createQueryWrapper();
+    const { result } = renderHook(() => useClimbActionsData(defaultOptions), { wrapper });
+
+    await waitFor(() => {
+      expect(result.current.playlistsProviderProps.playlistMemberships.get('climb-1')?.has('pl-1')).toBe(true);
+    });
+
+    mockRequest.mockResolvedValue({ removeClimbFromPlaylist: { success: true } });
+
+    await act(async () => {
+      await Promise.all([
+        result.current.playlistsProviderProps.removeFromPlaylist('pl-1', 'climb-1'),
+        result.current.playlistsProviderProps.removeFromPlaylist('pl-1', 'climb-1'),
+        result.current.playlistsProviderProps.removeFromPlaylist('pl-1', 'climb-1'),
+      ]);
+    });
+
+    // Starting count is 5; only the first tap performs an effective remove (5 - 1 = 4).
+    // Without the membership gate, all three taps would each apply -1 (5 - 3 = 2).
+    const removedPlaylist = result.current.playlistsProviderProps.playlists.find((p) => p.uuid === 'pl-1');
+    expect(removedPlaylist?.climbCount).toBe(4);
+    expect(result.current.playlistsProviderProps.playlistMemberships.get('climb-1')?.has('pl-1')).toBe(false);
+  });
+
+  it('addToPlaylist rolls back membership and climbCount when the request fails', async () => {
+    mockRequest.mockResolvedValueOnce({ favorites: [] });
+    mockRequest.mockResolvedValueOnce({
+      allUserPlaylists: [{ uuid: 'pl-1', name: 'Test', climbCount: 2 }],
+    });
+    mockRequest.mockResolvedValueOnce({ playlistsForClimbs: [] });
+
+    const wrapper = createQueryWrapper();
+    const { result } = renderHook(() => useClimbActionsData(defaultOptions), { wrapper });
+
+    await waitFor(() => {
+      expect(result.current.playlistsProviderProps.isLoading).toBe(false);
+    });
+
+    mockRequest.mockRejectedValueOnce(new Error('network down'));
+
+    await act(async () => {
+      await expect(result.current.playlistsProviderProps.addToPlaylist('pl-1', 'climb-1', 40)).rejects.toThrow(
+        'network down',
+      );
+    });
+
+    const playlist = result.current.playlistsProviderProps.playlists.find((p) => p.uuid === 'pl-1');
+    expect(playlist?.climbCount).toBe(2);
+    expect(result.current.playlistsProviderProps.playlistMemberships.get('climb-1')?.has('pl-1') ?? false).toBe(false);
+  });
+
+  it('removeFromPlaylist rolls back membership and climbCount when the request fails', async () => {
+    mockRequest.mockResolvedValueOnce({ favorites: [] });
+    mockRequest.mockResolvedValueOnce({
+      allUserPlaylists: [{ uuid: 'pl-1', name: 'Test', climbCount: 5 }],
+    });
+    mockRequest.mockResolvedValueOnce({
+      playlistsForClimbs: [{ climbUuid: 'climb-1', playlistUuids: ['pl-1'] }],
+    });
+
+    const wrapper = createQueryWrapper();
+    const { result } = renderHook(() => useClimbActionsData(defaultOptions), { wrapper });
+
+    await waitFor(() => {
+      expect(result.current.playlistsProviderProps.playlistMemberships.get('climb-1')?.has('pl-1')).toBe(true);
+    });
+
+    mockRequest.mockRejectedValueOnce(new Error('network down'));
+
+    await act(async () => {
+      await expect(result.current.playlistsProviderProps.removeFromPlaylist('pl-1', 'climb-1')).rejects.toThrow(
+        'network down',
+      );
+    });
+
+    const playlist = result.current.playlistsProviderProps.playlists.find((p) => p.uuid === 'pl-1');
+    expect(playlist?.climbCount).toBe(5);
+    expect(result.current.playlistsProviderProps.playlistMemberships.get('climb-1')?.has('pl-1')).toBe(true);
+  });
+
   it('createPlaylist sends mutation and updates cache', async () => {
     mockRequest.mockResolvedValueOnce({ favorites: [] });
     mockRequest.mockResolvedValueOnce({ allUserPlaylists: [] });
