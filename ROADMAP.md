@@ -30,7 +30,7 @@ Current initiatives:
 - **MoonBoard support** — feature parity with Kilter/Tension. [board filter](https://github.com/orgs/boardsesh/projects/3/views/1?filterQuery=initiative%3A%22MoonBoard+support%22)
 - **BLE / device picker** — Bluetooth UX, mismatch handling, [ESP32 emulator](CONTRIBUTING.md#testing-ble-end-to-end-with-an-esp32). [board filter](https://github.com/orgs/boardsesh/projects/3/views/1?filterQuery=initiative%3A%22BLE+%2F+device+picker%22)
 - **OG smartlinks & SEO** — [docs/og-smartlinks-roadmap.md](docs/og-smartlinks-roadmap.md) · [board filter](https://github.com/orgs/boardsesh/projects/3/views/1?filterQuery=initiative%3A%22OG+smartlinks+%26+SEO%22)
-- **Aurora migration** — decoupling from the Aurora API. [docs/aurora-sync.md](docs/aurora-sync.md), [docs/neon-migration.md](docs/neon-migration.md)
+- **Aurora migration** — decoupling from the Aurora API. [docs/aurora-sync.md](docs/aurora-sync.md)
 
 A new initiative gets its own `Initiative` tag on the board once it has a tracking issue and a design doc under `docs/`.
 
