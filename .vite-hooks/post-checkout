@@ -1,0 +1,38 @@
+prev_head="$1"
+new_head="$2"
+branch_flag="$3"
+
+# Only act on branch-style checkouts (worktree add, clone, branch switch).
+# File checkouts (e.g. `git checkout -- some/file`) pass branch_flag=0.
+[ "$branch_flag" = "1" ] || exit 0
+
+repo_root=$(git rev-parse --show-toplevel) || exit 0
+cd "$repo_root" || exit 0
+
+# Skip if deps already present — only act on fresh worktrees / clones.
+if [ -d node_modules ] && [ -d packages/web/node_modules ]; then
+  exit 0
+fi
+
+echo "==> New worktree detected at $repo_root"
+
+if ! command -v vp >/dev/null 2>&1; then
+  echo "==> Installing Vite+ (vp)..."
+  if ! curl -fsSL https://vite.plus | bash; then
+    echo "!! Vite+ install failed — run \`curl -fsSL https://vite.plus | bash\` manually, then \`vp install\`." >&2
+    exit 0
+  fi
+  export PATH="$HOME/.local/bin:$HOME/.vite-plus/bin:$HOME/.bun/bin:$PATH"
+  if ! command -v vp >/dev/null 2>&1; then
+    echo "!! vp installed but not on PATH — add the install dir to PATH and run \`vp install\` manually." >&2
+    exit 0
+  fi
+fi
+
+echo "==> Installing dependencies (vp install)..."
+if ! vp install; then
+  echo "!! vp install failed — fix the issue and rerun \`vp install\` in $repo_root." >&2
+  exit 0
+fi
+
+echo "==> Worktree ready."
