@@ -23,8 +23,12 @@
     },
     "empty": {
       "title": "Aún no tienes playlists",
-      "description": "Crea tu primera playlist añadiendo bloques desde la lista."
+      "description": "Toca el botón + para crear tu primera playlist."
     },
+    "createFab": {
+      "ariaLabel": "Crear playlist"
+    },
+    "customUnavailable": "Las configuraciones personalizadas todavía no están disponibles aquí. Elige uno de tus boards o una configuración popular arriba.",
     "errors": {
       "loadTitle": "No se pudo cargar la biblioteca",
       "loadDescription": "Hubo un error al cargar tu biblioteca. Inténtalo de nuevo.",
@@ -197,7 +201,6 @@
     "youSignInTitle": "Inicia sesión para ver tu progreso",
     "youSignInDescription": "Inicia sesión para registrar tus estadísticas, sesiones y logbook.",
     "selectBoardForPlaylist": "Selecciona una tabla de escalada antes de crear una playlist",
-    "boardDetailsMissing": "No se pueden determinar los datos de la tabla de escalada para crear la playlist",
     "createdPlaylistToast": "Playlist «{{name}}» creada",
     "createPlaylistFailed": "No se pudo crear la playlist"
   }

@@ -58,6 +58,7 @@ export default async function BoardSlugPlaylistsPage(props: PlaylistsPageProps) 
           initialPlaylists={initialPlaylists}
           initialDiscoverPlaylists={initialDiscoverPlaylists}
           boardConfigs={boardConfigs}
+          createSource="board-slug-playlists-fab"
         />
       </div>
     </I18nProvider>

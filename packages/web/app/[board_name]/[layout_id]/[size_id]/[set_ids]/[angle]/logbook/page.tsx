@@ -45,6 +45,7 @@ export default async function BoardLogbookPage(props: { params: Promise<BoardRou
           initialPlaylists={initialPlaylists}
           initialDiscoverPlaylists={initialDiscoverPlaylists}
           boardConfigs={boardConfigs}
+          createSource="board-route-logbook-fab"
         />
       </div>
     );

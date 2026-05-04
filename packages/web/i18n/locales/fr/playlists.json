@@ -201,7 +201,6 @@
     "youSignInTitle": "Connectez-vous pour voir votre progression",
     "youSignInDescription": "Connectez-vous pour suivre vos stats, vos sessions et votre carnet.",
     "selectBoardForPlaylist": "Choisissez un board avant de créer une playlist",
-    "boardDetailsMissing": "Impossible de déterminer les détails du board pour créer la playlist",
     "createdPlaylistToast": "Playlist « {{name}} » créée",
     "createPlaylistFailed": "Impossible de créer la playlist"
   }

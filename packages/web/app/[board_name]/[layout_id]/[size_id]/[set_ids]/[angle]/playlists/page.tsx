@@ -55,6 +55,7 @@ export default async function PlaylistsPage(props: { params: Promise<BoardRouteP
             initialPlaylists={initialPlaylists}
             initialDiscoverPlaylists={initialDiscoverPlaylists}
             boardConfigs={boardConfigs}
+            createSource="board-route-playlists-fab"
           />
         </div>
       </I18nProvider>

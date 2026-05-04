@@ -59,6 +59,8 @@ type LibraryPageContentProps = {
   } | null;
   /** Board configuration data for the custom-board picker path. */
   boardConfigs?: BoardConfigData;
+  /** Analytics label that distinguishes which page the FAB is on. */
+  createSource?: string;
 };
 
 export default function LibraryPageContent({
@@ -68,6 +70,7 @@ export default function LibraryPageContent({
   initialPlaylists,
   initialDiscoverPlaylists,
   boardConfigs,
+  createSource = 'discover-fab',
 }: LibraryPageContentProps) {
   const { data: session, status: sessionStatus } = useSession();
   const { token, isLoading: tokenLoading } = useWsAuthToken();
@@ -335,9 +338,14 @@ export default function LibraryPageContent({
       setIsCustomBoardOpen(false);
       if (config && config.layoutId > 0) {
         openCreateDrawerFor(config.board, config.layoutId);
+        return;
       }
+      // BoardSelectorDrawer can fire onBoardSelected with no config (e.g. when it
+      // navigates without a stored entry); we have nothing to feed the create
+      // mutation, so surface the failure instead of dropping the tap.
+      showMessage(t('bottomTabBar.selectBoardForPlaylist'), 'error');
     },
-    [openCreateDrawerFor],
+    [openCreateDrawerFor, showMessage, t],
   );
 
   const handlePlaylistCreated = useCallback(
@@ -529,7 +537,7 @@ export default function LibraryPageContent({
           onTransitionEnd={handleCreateDrawerTransitionEnd}
           boardName={createBoardContext.boardType}
           layoutId={createBoardContext.layoutId}
-          source="discover-fab"
+          source={createSource}
           onCreated={handlePlaylistCreated}
         />
       )}

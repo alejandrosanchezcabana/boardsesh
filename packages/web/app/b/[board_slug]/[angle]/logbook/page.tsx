@@ -51,6 +51,7 @@ export default async function BoardSlugLogbookPage(props: BoardSlugLogbookPagePr
         initialPlaylists={initialPlaylists}
         initialDiscoverPlaylists={initialDiscoverPlaylists}
         boardConfigs={boardConfigs}
+        createSource="board-slug-logbook-fab"
       />
     </div>
   );
