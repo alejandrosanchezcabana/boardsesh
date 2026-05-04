@@ -79,6 +79,7 @@ export const useQueueDataFetching = ({
       showOnlyCompleted: searchParams.showOnlyCompleted || undefined,
       onlyDrafts: searchParams.onlyDrafts || undefined,
       projectsOnly: searchParams.projectsOnly || undefined,
+      zoneBox: searchParams.zoneBox || undefined,
     }),
     [searchParams, parsedParams],
   );
@@ -159,6 +160,7 @@ export const useQueueDataFetching = ({
       showOnlyCompleted: countSearchParams.showOnlyCompleted || undefined,
       onlyDrafts: countSearchParams.onlyDrafts || undefined,
       projectsOnly: countSearchParams.projectsOnly || undefined,
+      zoneBox: countSearchParams.zoneBox || undefined,
     }),
     [countSearchParams, parsedParams],
   );

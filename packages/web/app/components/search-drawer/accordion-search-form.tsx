@@ -20,6 +20,7 @@ import { useBoardProvider } from '@/app/components/board-provider/board-provider
 import SearchClimbNameInput from './search-climb-name-input';
 import SetterNameSelect from './setter-name-select';
 import ClimbHoldSearchForm from './climb-hold-search-form';
+import ClimbZoneSearchForm from './climb-zone-search-form';
 import type { BoardDetails } from '@/app/lib/types';
 import { buildGradeRangeUpdate } from './grade-range-utils';
 import { useAuthModal } from '@/app/components/providers/auth-modal-provider';
@@ -28,6 +29,7 @@ import {
   getStatusPanelSummary,
   getUserPanelSummary,
   getHoldsPanelSummary,
+  getZonePanelSummary,
 } from './search-summary-utils';
 import CollapsibleSection, {
   type CollapsibleSectionConfig,
@@ -491,6 +493,19 @@ const AccordionSearchForm: React.FC<AccordionSearchFormProps> = ({ boardDetails,
       content: (
         <div className={styles.holdSearchContainer}>
           <ClimbHoldSearchForm boardDetails={boardDetails} />
+        </div>
+      ),
+    },
+    {
+      key: 'zone',
+      label: t('search.panels.zone'),
+      title: t('search.panels.zone'),
+      defaultSummary: t('search.panels.anyDefault'),
+      getSummary: () => getZonePanelSummary(uiSearchParams),
+      lazy: true,
+      content: (
+        <div className={styles.holdSearchContainer}>
+          <ClimbZoneSearchForm boardDetails={boardDetails} />
         </div>
       ),
     },

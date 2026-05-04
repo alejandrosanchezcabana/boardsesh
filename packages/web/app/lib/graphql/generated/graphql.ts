@@ -624,6 +624,8 @@ export type ClimbSearchInput = {
   sortBy?: InputMaybe<Scalars['String']['input']>;
   /** Sort direction ('asc' or 'desc') */
   sortOrder?: InputMaybe<Scalars['String']['input']>;
+  /** Restrict results to climbs whose bounding box fits inside this zone */
+  zoneBox?: InputMaybe<ZoneBoxInput>;
 };
 
 /** Result of a climb search query. */
@@ -4751,6 +4753,22 @@ export type VoteSummary = {
   userVote: Scalars['Int']['output'];
   /** Net vote score */
   voteScore: Scalars['Int']['output'];
+};
+
+/**
+ * Bounding box defining a board region for filtering climbs.
+ * Coordinates are in the same grid space as board placements
+ * (board_holes.x/y) and board_climbs edge columns.
+ */
+export type ZoneBoxInput = {
+  /** Bottom edge of the zone (smaller y) */
+  edgeBottom: Scalars['Int']['input'];
+  /** Left edge of the zone (smaller x) */
+  edgeLeft: Scalars['Int']['input'];
+  /** Right edge of the zone (larger x) */
+  edgeRight: Scalars['Int']['input'];
+  /** Top edge of the zone (larger y) */
+  edgeTop: Scalars['Int']['input'];
 };
 
 export type GetDeleteAccountInfoQueryVariables = Exact<{ [key: string]: never; }>;

@@ -71,6 +71,18 @@ export type ClimbInput = {
   userAttempts?: number | null;
 };
 
+/**
+ * Bounding box on the board grid (same coordinate space as board_holes.x/y
+ * and board_climbs edge columns). Used to filter search results to climbs
+ * whose entire bounding box sits inside the zone.
+ */
+export type ZoneBoxInput = {
+  edgeLeft: number;
+  edgeRight: number;
+  edgeBottom: number;
+  edgeTop: number;
+};
+
 export type ClimbSearchInput = {
   boardName: string;
   layoutId: number;
@@ -101,6 +113,8 @@ export type ClimbSearchInput = {
   showOnlyCompleted?: boolean;
   onlyDrafts?: boolean;
   projectsOnly?: boolean;
+  // Zone filter — restrict to climbs fully inside the bounding box
+  zoneBox?: ZoneBoxInput;
 };
 
 /**

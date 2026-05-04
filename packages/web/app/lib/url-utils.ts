@@ -93,6 +93,7 @@ export const searchParamsToUrlParams = (input: SearchRequestPagination): URLSear
   const showOnlyCompleted = input.showOnlyCompleted ?? DEFAULT_SEARCH_PARAMS.showOnlyCompleted;
   const onlyDrafts = input.onlyDrafts ?? DEFAULT_SEARCH_PARAMS.onlyDrafts;
   const projectsOnly = input.projectsOnly ?? DEFAULT_SEARCH_PARAMS.projectsOnly;
+  const zoneBox = input.zoneBox ?? DEFAULT_SEARCH_PARAMS.zoneBox;
   const page = input.page ?? DEFAULT_SEARCH_PARAMS.page;
   const pageSize = input.pageSize ?? DEFAULT_SEARCH_PARAMS.pageSize;
 
@@ -160,6 +161,12 @@ export const searchParamsToUrlParams = (input: SearchRequestPagination): URLSear
   if (projectsOnly !== DEFAULT_SEARCH_PARAMS.projectsOnly) {
     params.projectsOnly = projectsOnly.toString();
   }
+  if (zoneBox) {
+    params.zoneEdgeLeft = zoneBox.edgeLeft.toString();
+    params.zoneEdgeRight = zoneBox.edgeRight.toString();
+    params.zoneEdgeBottom = zoneBox.edgeBottom.toString();
+    params.zoneEdgeTop = zoneBox.edgeTop.toString();
+  }
 
   // Add holds filter entries only if they exist.
   // Per-hold value is a comma-joined list of `{TYPE}:{include|exclude}` triples,
@@ -197,6 +204,7 @@ export const DEFAULT_SEARCH_PARAMS: SearchRequestPagination = {
   showOnlyCompleted: false,
   onlyDrafts: false,
   projectsOnly: false,
+  zoneBox: null,
   page: 0,
   pageSize: PAGE_LIMIT,
 };
@@ -286,9 +294,21 @@ export const urlParamsToSearchParams = (urlParams: URLSearchParams): SearchReque
     showOnlyCompleted: urlParams.get('showOnlyCompleted') === 'true',
     onlyDrafts: urlParams.get('onlyDrafts') === 'true',
     projectsOnly: urlParams.get('projectsOnly') === 'true',
+    zoneBox: parseZoneBoxFromQuery(urlParams),
     page: Number(urlParams.get('page') ?? DEFAULT_SEARCH_PARAMS.page),
     pageSize: Number(urlParams.get('pageSize') ?? DEFAULT_SEARCH_PARAMS.pageSize),
   };
+};
+
+const parseZoneBoxFromQuery = (urlParams: URLSearchParams) => {
+  const edgeLeft = parseQueryParamInt(urlParams, 'zoneEdgeLeft');
+  const edgeRight = parseQueryParamInt(urlParams, 'zoneEdgeRight');
+  const edgeBottom = parseQueryParamInt(urlParams, 'zoneEdgeBottom');
+  const edgeTop = parseQueryParamInt(urlParams, 'zoneEdgeTop');
+  if (edgeLeft === undefined || edgeRight === undefined || edgeBottom === undefined || edgeTop === undefined) {
+    return null;
+  }
+  return { edgeLeft, edgeRight, edgeBottom, edgeTop };
 };
 
 export const parsedRouteSearchParamsToSearchParams = (urlParams: SearchRequestPagination): SearchRequestPagination => {

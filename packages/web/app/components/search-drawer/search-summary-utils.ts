@@ -14,6 +14,9 @@ export function hasActiveFilters(params: SearchRequestPagination): boolean {
     if (key === 'holdsFilter') {
       return Object.keys(value || {}).length > 0;
     }
+    if (key === 'zoneBox') {
+      return value !== null;
+    }
     return value !== DEFAULT_SEARCH_PARAMS[key as keyof typeof DEFAULT_SEARCH_PARAMS];
   });
 }
@@ -23,6 +26,9 @@ export function hasActiveNonNameFilters(params: SearchRequestPagination): boolea
     if (key === 'name') return false;
     if (key === 'holdsFilter') {
       return Object.keys(value || {}).length > 0;
+    }
+    if (key === 'zoneBox') {
+      return value !== null;
     }
     return value !== DEFAULT_SEARCH_PARAMS[key as keyof typeof DEFAULT_SEARCH_PARAMS];
   });
@@ -108,6 +114,10 @@ export function getHoldsPanelSummary(params: SearchRequestPagination): string[] 
   return [`${holdsCount} hold${holdsCount !== 1 ? 's' : ''}`];
 }
 
+export function getZonePanelSummary(params: SearchRequestPagination): string[] {
+  return params.zoneBox ? ['Zone'] : [];
+}
+
 /**
  * Get compact search pill summary (max 2 items + "+N more")
  * Used for display in the search bar and recent search pills
@@ -119,6 +129,7 @@ export function getSearchPillSummary(params: SearchRequestPagination): string {
     ...getStatusPanelSummary(params),
     ...getUserPanelSummary(params),
     ...getHoldsPanelSummary(params),
+    ...getZonePanelSummary(params),
   ];
 
   if (allParts.length === 0) return DEFAULT_CLIMB_SEARCH_SUMMARY;
@@ -142,6 +153,7 @@ export function getSearchPillFullSummary(params: SearchRequestPagination): strin
     ...getStatusPanelSummary(params),
     ...getUserPanelSummary(params),
     ...getHoldsPanelSummary(params),
+    ...getZonePanelSummary(params),
   ];
 
   if (allParts.length === 0) return DEFAULT_CLIMB_SEARCH_SUMMARY;

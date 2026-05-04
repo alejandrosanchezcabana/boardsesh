@@ -167,6 +167,19 @@ export const createClimbFilters = (params: BoardRouteParams, searchParams: Climb
     )`);
   }
 
+  // Zone filter — keep only climbs whose entire bounding box sits inside
+  // the user-defined zone (in board_holes/board_climbs grid coordinates).
+  // The denormalized edge columns on board_climbs make this a simple range
+  // check; no extra join needed.
+  const zoneConditions: SQL[] = searchParams.zoneBox
+    ? [
+        sql`${boardClimbs.edgeLeft} >= ${searchParams.zoneBox.edgeLeft}`,
+        sql`${boardClimbs.edgeRight} <= ${searchParams.zoneBox.edgeRight}`,
+        sql`${boardClimbs.edgeBottom} >= ${searchParams.zoneBox.edgeBottom}`,
+        sql`${boardClimbs.edgeTop} <= ${searchParams.zoneBox.edgeTop}`,
+      ]
+    : [];
+
   // Tall climbs filter condition
   const tallClimbsConditions: SQL[] = [];
 
@@ -318,6 +331,7 @@ export const createClimbFilters = (params: BoardRouteParams, searchParams: Climb
       ...holdConditions,
       ...holdStateConditions,
       ...tallClimbsConditions,
+      ...zoneConditions,
       ...setIdsConditions,
       ...personalProgressConditions,
       ...projectsOnlyConditions,
@@ -348,6 +362,7 @@ export const createClimbFilters = (params: BoardRouteParams, searchParams: Climb
     holdConditions,
     holdStateConditions,
     tallClimbsConditions,
+    zoneConditions,
     setIdsConditions,
     sizeConditions,
     personalProgressConditions,

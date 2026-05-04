@@ -138,6 +138,7 @@
       "progress": "Progress",
       "holds": "Holds",
       "holdsTitle": "Search by Hold",
+      "zone": "Zone",
       "anyDefault": "Any",
       "allClimbs": "All climbs"
     },
@@ -184,6 +185,11 @@
       "excluded": "{{count}} excluded",
       "showHeatmap": "Show heatmap",
       "hideHeatmap": "Hide heatmap"
+    },
+    "zone": {
+      "description": "Drag the box to limit results to climbs that fit inside it.",
+      "draw": "Draw zone",
+      "clear": "Clear zone"
     },
     "sortToggle": "Sort"
   },

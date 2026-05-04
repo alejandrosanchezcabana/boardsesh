@@ -24,7 +24,9 @@ async function main() {
 
   try {
     // Find board types that have NULL denormalized columns
-    const boardTypes = await executeRows<{ board_type: string; null_count: string }>(db, sql`
+    const boardTypes = await executeRows<{ board_type: string; null_count: string }>(
+      db,
+      sql`
       SELECT board_type, COUNT(*) as null_count
       FROM board_climbs
       WHERE (required_set_ids IS NULL OR compatible_size_ids IS NULL)
@@ -33,7 +35,8 @@ async function main() {
         AND board_type != 'moonboard'
       GROUP BY board_type
       ORDER BY board_type
-    `);
+    `,
+    );
 
     if (boardTypes.length === 0) {
       console.info('No climbs with NULL denormalized columns found. Nothing to do.');
@@ -61,7 +64,9 @@ async function main() {
 
       while (true) {
         // Fetch a batch of UUIDs with NULL denormalized columns
-        const batchRows = await executeRows<{ uuid: string }>(db, sql`
+        const batchRows = await executeRows<{ uuid: string }>(
+          db,
+          sql`
           SELECT uuid
           FROM board_climbs
           WHERE board_type = ${bt.board_type}
@@ -69,7 +74,8 @@ async function main() {
             AND frames IS NOT NULL
             AND frames != ''
           LIMIT ${batchSize}
-        `);
+        `,
+        );
 
         const uuids = batchRows.map((r) => r.uuid);
         if (uuids.length === 0) break;
@@ -86,7 +92,9 @@ async function main() {
 
     // Verify
     console.info('\nVerification:');
-    const remaining = await executeRows<{ board_type: string; remaining: string }>(db, sql`
+    const remaining = await executeRows<{ board_type: string; remaining: string }>(
+      db,
+      sql`
       SELECT board_type, COUNT(*) as remaining
       FROM board_climbs
       WHERE (required_set_ids IS NULL OR compatible_size_ids IS NULL)
@@ -95,7 +103,8 @@ async function main() {
         AND board_type != 'moonboard'
       GROUP BY board_type
       ORDER BY board_type
-    `);
+    `,
+    );
 
     if (remaining.length === 0) {
       console.info('  All denormalized columns populated.');

@@ -169,6 +169,7 @@ describe('hasUserSpecificFilters', () => {
     showOnlyCompleted: false,
     onlyDrafts: false,
     projectsOnly: false,
+    zoneBox: null,
     page: 0,
     pageSize: 20,
   };
