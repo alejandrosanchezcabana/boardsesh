@@ -91,7 +91,7 @@ export default async function ProfilePage({ params }: PageProps) {
   const locale = await getLocale();
 
   return (
-    <I18nProvider locale={locale} namespaces={['profile']}>
+    <I18nProvider locale={locale} namespaces={['profile', 'feed']}>
       <ProfilePageContent
         userId={user_id}
         initialProfile={initialProfile}
