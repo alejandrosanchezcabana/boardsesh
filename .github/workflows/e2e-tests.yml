@@ -179,7 +179,7 @@ jobs:
         env:
           NEXTAUTH_SECRET: test-secret-for-ci
           NEXTAUTH_URL: http://localhost:3000
-          DATABASE_URL: postgresql://postgres:password@db.localtest.me:5432/main
+          DATABASE_URL: postgresql://postgres:password@postgres:5432/main
           NEXT_PUBLIC_WS_URL: ws://localhost:8080/graphql
 
       - name: Verify GraphQL Documents map is tree-shaken
@@ -247,22 +247,8 @@ jobs:
           --health-retries 5
           --shm-size 256mb
 
-      neon-proxy:
-        image: ghcr.io/timowilhelm/local-neon-http-proxy:main
-        env:
-          PG_CONNECTION_STRING: postgres://postgres:password@postgres:5432/main
-          POSTGRES_DB: main
-
     steps:
       - uses: actions/checkout@v6
-
-      - name: Point db.localtest.me to neon-proxy service
-        run: |
-          # Resolve the neon-proxy service IP and add a hosts entry so the
-          # Neon driver's fetchEndpoint (http://db.localtest.me:4444/sql) reaches
-          # the proxy container instead of localhost.
-          PROXY_IP=$(getent hosts neon-proxy | awk '{ print $1 }')
-          echo "$PROXY_IP db.localtest.me" >> /etc/hosts
 
       - name: Install unzip (required by setup-bun)
         # apt-get from the default Ubuntu mirror is intermittently unreachable
@@ -365,7 +351,7 @@ jobs:
           # pub/sub mode without REDIS_URL, which is fine for e2e coverage.
           bunx wait-on http-get://localhost:8080/health http://localhost:3000 --timeout 90000
         env:
-          DATABASE_URL: postgresql://postgres:password@db.localtest.me:5432/main
+          DATABASE_URL: postgresql://postgres:password@postgres:5432/main
           NEXTAUTH_SECRET: test-secret-for-ci
           NEXTAUTH_URL: http://localhost:3000
           NEXT_PUBLIC_WS_URL: ws://localhost:8080/graphql
@@ -375,7 +361,7 @@ jobs:
         working-directory: packages/web
         env:
           PLAYWRIGHT_TEST_BASE_URL: http://localhost:3000
-          DATABASE_URL: postgresql://postgres:password@db.localtest.me:5432/main
+          DATABASE_URL: postgresql://postgres:password@postgres:5432/main
           NEXTAUTH_SECRET: test-secret-for-ci
           NEXTAUTH_URL: http://localhost:3000
           NEXT_PUBLIC_WS_URL: ws://localhost:8080/graphql
@@ -442,19 +428,8 @@ jobs:
           --health-retries 5
           --shm-size 256mb
 
-      neon-proxy:
-        image: ghcr.io/timowilhelm/local-neon-http-proxy:main
-        env:
-          PG_CONNECTION_STRING: postgres://postgres:password@postgres:5432/main
-          POSTGRES_DB: main
-
     steps:
       - uses: actions/checkout@v6
-
-      - name: Point db.localtest.me to neon-proxy service
-        run: |
-          PROXY_IP=$(getent hosts neon-proxy | awk '{ print $1 }')
-          echo "$PROXY_IP db.localtest.me" >> /etc/hosts
 
       - name: Install unzip (required by setup-bun)
         # apt-get from the default Ubuntu mirror is intermittently unreachable
@@ -550,7 +525,7 @@ jobs:
           bun run --filter=@boardsesh/web start > web.log 2>&1 &
           bunx wait-on http-get://localhost:8080/health http://localhost:3000 --timeout 90000
         env:
-          DATABASE_URL: postgresql://postgres:password@db.localtest.me:5432/main
+          DATABASE_URL: postgresql://postgres:password@postgres:5432/main
           NEXTAUTH_SECRET: test-secret-for-ci
           NEXTAUTH_URL: http://localhost:3000
           NEXT_PUBLIC_WS_URL: ws://localhost:8080/graphql
@@ -577,7 +552,7 @@ jobs:
         working-directory: packages/web
         env:
           PLAYWRIGHT_TEST_BASE_URL: http://localhost:3000
-          DATABASE_URL: postgresql://postgres:password@db.localtest.me:5432/main
+          DATABASE_URL: postgresql://postgres:password@postgres:5432/main
           NEXTAUTH_SECRET: test-secret-for-ci
           NEXTAUTH_URL: http://localhost:3000
           NEXT_PUBLIC_WS_URL: ws://localhost:8080/graphql

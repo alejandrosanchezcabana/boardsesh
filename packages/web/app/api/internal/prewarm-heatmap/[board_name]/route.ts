@@ -1,8 +1,9 @@
 import { NextResponse } from 'next/server';
 import { sql } from 'drizzle-orm';
+import { executeRows } from '@/app/lib/db/db';
 import { AURORA_BOARD_NAMES, getBoardSelectorOptions, isAuroraBoardName } from '@/app/lib/board-constants';
 import type { AuroraBoardName } from '@boardsesh/shared-schema';
-import { dbz as db } from '@/app/lib/db/db';
+import { dbzRead as db } from '@/app/lib/db/db';
 import { cachedGetHoldHeatmapData } from '@/app/lib/db/queries/climbs/holds-heatmap-cache';
 import { DEFAULT_SEARCH_PARAMS } from '@/app/lib/url-utils';
 import type { ParsedBoardRouteParameters } from '@/app/lib/types';
@@ -29,7 +30,7 @@ type WarmTarget = {
 
 async function getAnglesForLayout(boardName: AuroraBoardName, layoutId: number): Promise<number[]> {
   // Same query used by packages/backend/src/graphql/resolvers/board/queries.ts:44-50
-  const result = await db.execute<{ angle: number }>(sql`
+  const result = await executeRows<{ angle: number }>(db, sql`
     SELECT DISTINCT pa.angle
     FROM board_products_angles pa
     JOIN board_layouts l
@@ -37,7 +38,7 @@ async function getAnglesForLayout(boardName: AuroraBoardName, layoutId: number):
     WHERE l.board_type = ${boardName} AND l.id = ${layoutId}
     ORDER BY pa.angle ASC
   `);
-  return result.rows.map((row) => Number(row.angle));
+  return result.map((row) => Number(row.angle));
 }
 
 function buildTargetsForBoard(boardName: AuroraBoardName, anglesByLayout: Map<number, number[]>): WarmTarget[] {

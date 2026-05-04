@@ -1,7 +1,7 @@
 import React from 'react';
 import { ImageResponse } from '@vercel/og';
 import type { NextRequest } from 'next/server';
-import { dbz } from '@/app/lib/db/db';
+import { dbz, executeRows } from '@/app/lib/db/db';
 import { sql } from 'drizzle-orm';
 import { themeTokens } from '@/app/theme/theme-config';
 import { FONT_GRADE_COLORS, getGradeColorWithOpacity } from '@/app/lib/grade-colors';
@@ -9,7 +9,7 @@ import { BOULDER_GRADES } from '@/app/lib/board-data';
 import { createOgImageHeaders, OG_IMAGE_HEIGHT, OG_IMAGE_WIDTH } from '@/app/lib/seo/og';
 import { getSetterOgSummary } from '@/app/lib/seo/dynamic-og-data';
 
-export const runtime = 'edge';
+export const runtime = 'nodejs';
 
 // Maps difficulty ID to Font grade name for OG image labels.
 // OG images are static server-rendered PNGs — they always use Font grades
@@ -35,10 +35,10 @@ export async function GET(request: NextRequest) {
     const dbT0 = performance.now();
     const [summary, gradeResult] = await Promise.all([
       getSetterOgSummary(username),
-      dbz.execute<{
+      executeRows<{
         difficulty: number;
         cnt: number;
-      }>(sql`
+      }>(dbz, sql`
         SELECT bt.difficulty, COUNT(*) as cnt
         FROM boardsesh_ticks bt
         JOIN board_climbs bc ON bc.uuid = bt.climb_uuid
@@ -50,7 +50,7 @@ export async function GET(request: NextRequest) {
       `),
     ]);
     const dbMs = performance.now() - dbT0;
-    const gradeRows = gradeResult.rows;
+    const gradeRows = gradeResult;
 
     const displayName = summary.displayName;
     const origin = process.env.VERCEL_URL ? 'https://www.boardsesh.com' : 'http://localhost:3000';

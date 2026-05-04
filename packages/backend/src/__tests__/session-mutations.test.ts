@@ -37,7 +37,7 @@ vi.mock('../db/client', () => {
     values: vi.fn().mockReturnThis(),
     onConflictDoNothing: vi.fn().mockResolvedValue(undefined),
     delete: vi.fn().mockReturnThis(),
-    execute: vi.fn().mockResolvedValue({ rows: [] }),
+    execute: vi.fn().mockResolvedValue([]),
   };
   return { db: mockDb };
 });

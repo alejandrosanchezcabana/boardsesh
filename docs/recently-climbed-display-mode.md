@@ -50,7 +50,7 @@ This keeps the climb-on-wall responsive even for privacy-conscious climbers whil
 
 **One feed table, not two.** A single `board_climb_activity` table with an `eventType` text column (not Postgres enum, so adding new event types like the future `turn` action is a no-op migration). A `metadata jsonb` column carries event-type-specific fields (e.g., the `turn` event will need session info). The first-class columns are only the ones we index on or filter by in the feed query.
 
-**Only the device that actually wrote the frames over BLE may emit `ClimbActivated`.** This is the load-bearing constraint of the whole feature, not a corollary. The producer is gated on a *successful* `sendFramesToBoard` call returning `result === true` for the specific `(climbUuid, boardUuid)` pair that just completed — i.e., the BLE GATT write to the controller actually happened on this device for this climb. Concretely:
+**Only the device that actually wrote the frames over BLE may emit `ClimbActivated`.** This is the load-bearing constraint of the whole feature, not a corollary. The producer is gated on a _successful_ `sendFramesToBoard` call returning `result === true` for the specific `(climbUuid, boardUuid)` pair that just completed — i.e., the BLE GATT write to the controller actually happened on this device for this climb. Concretely:
 
 - `setCurrentClimb` does **not** publish display events. A queue advance is observed by every party-session participant; if any of them emitted on observation, we'd get N duplicate events for one physical send, plus phantom events when a user advances their queue away from the wall with no BLE connection at all.
 - Every client in a party session runs `BluetoothAutoSender` and reacts to `currentClimbQueueItem` changes, but only the one with an active BLE connection has `sendFramesToBoard` resolve truthy. Clients without a connection see `result` as falsy/undefined and **must not** call `recordBoardActivation`. Clients whose write was aborted (e.g., the user swiped past the climb mid-write — see `controller.signal.aborted` at `bluetooth-context.tsx:84`) also must not call it.
@@ -160,17 +160,17 @@ Layout: large hold-rendered current climb on the left (must respect `mirrored`),
 
 A new section embedded on board pages — both the user's "My Board" view and any board search-result page that lands on `/b/{slug}` — showing the chronological activity stream in a logbook-style list. Implemented as a new component `packages/web/app/components/logbook/recently-climbed-feed.tsx` that reuses the existing `logbook-entry-card.tsx` (or a sibling card variant — see below) so styling stays consistent with the rest of the logbook UI.
 
-**Data source.** The same `recentBoardActivity(boardUuid, limit, before)` GraphQL query that powers the TV display, but with a different aggregation: rather than one feed item per event, we collapse events into one card per *climb* (keyed by `boardUuid + climbUuid`, ordered by most-recent activity), so a climb that's been activated 3 times and ticked twice that day shows as a single card. Aggregation happens server-side in the resolver to keep the wire payload small.
+**Data source.** The same `recentBoardActivity(boardUuid, limit, before)` GraphQL query that powers the TV display, but with a different aggregation: rather than one feed item per event, we collapse events into one card per _climb_ (keyed by `boardUuid + climbUuid`, ordered by most-recent activity), so a climb that's been activated 3 times and ticked twice that day shows as a single card. Aggregation happens server-side in the resolver to keep the wire payload small.
 
 **Card variant — `RecentlyClimbedCard`.** A new component (sibling of `logbook-entry-card.tsx`, sharing the same outer layout primitives) tailored for this feed. Differences from the standard logbook card:
 
-| Standard logbook card | RecentlyClimbedCard |
-| --- | --- |
-| Shows the user's tries count | Hidden |
-| Shows climb grade | Hidden |
-| Shows star ratings | Hidden |
+| Standard logbook card               | RecentlyClimbedCard                                                    |
+| ----------------------------------- | ---------------------------------------------------------------------- |
+| Shows the user's tries count        | Hidden                                                                 |
+| Shows climb grade                   | Hidden                                                                 |
+| Shows star ratings                  | Hidden                                                                 |
 | Shows tick status icon for one user | Avatar group: senders' avatars + activator avatar (when not opted-out) |
-| Single-user context | Multi-user roll-up |
+| Single-user context                 | Multi-user roll-up                                                     |
 
 The avatar group renders, in order: the activator (if they've opted in), then up to 4 senders ordered by most recent send, with a `+N` overflow chip if there are more. Each avatar shows a small badge corresponding to the highest-ranked tick status that user logged on this climb at this board (using the existing tick-status icon set from `packages/web/app/components/climb-actions/`).
 
@@ -188,7 +188,7 @@ The avatar group renders, in order: the activator (if they've opted in), then up
 
 ### Bluetooth send → display event
 
-`packages/web/app/components/board-bluetooth-control/bluetooth-context.tsx:74` (`BluetoothAutoSender.sendClimb`): immediately after the existing `result === true` analytics block (and only there — same `controller.signal.aborted` check applies), fire the new `recordBoardActivation` mutation with the just-written climb's `climbUuid`, `angle`, and `mirrored` plus the resolved `boardUuid`. The same conditions that gate the success-analytics call gate the mutation: BLE write returned truthy *and* the abort signal was not tripped. **No fallback path exists if the write fails or is aborted** — a failed/aborted send produces no display event because the board did not light up. This is the only call site of `recordBoardActivation` in the codebase; do not add others.
+`packages/web/app/components/board-bluetooth-control/bluetooth-context.tsx:74` (`BluetoothAutoSender.sendClimb`): immediately after the existing `result === true` analytics block (and only there — same `controller.signal.aborted` check applies), fire the new `recordBoardActivation` mutation with the just-written climb's `climbUuid`, `angle`, and `mirrored` plus the resolved `boardUuid`. The same conditions that gate the success-analytics call gate the mutation: BLE write returned truthy _and_ the abort signal was not tripped. **No fallback path exists if the write fails or is aborted** — a failed/aborted send produces no display event because the board did not light up. This is the only call site of `recordBoardActivation` in the codebase; do not add others.
 
 Concrete properties this gives us:
 

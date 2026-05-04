@@ -1,15 +1,14 @@
 import React from 'react';
 import { ImageResponse } from '@vercel/og';
 import type { NextRequest } from 'next/server';
-// oxlint-disable-next-line no-restricted-imports -- legacy raw Neon sql usage; migrate to drizzle
-import { sql } from '@/app/lib/db/db';
+import { getReadPool, rowsFromResult } from '@/app/lib/db/db';
 import { themeTokens } from '@/app/theme/theme-config';
 import { FONT_GRADE_COLORS, getGradeColorWithOpacity } from '@/app/lib/grade-colors';
 import { BOULDER_GRADES } from '@/app/lib/board-data';
 import { createOgImageHeaders, OG_IMAGE_HEIGHT, OG_IMAGE_WIDTH } from '@/app/lib/seo/og';
 import { getProfileOgSummary } from '@/app/lib/seo/dynamic-og-data';
 
-export const runtime = 'edge';
+export const runtime = 'nodejs';
 
 // Maps difficulty ID to Font grade name for OG image labels.
 // OG images are static server-rendered PNGs — they always use Font grades
@@ -33,9 +32,10 @@ export async function GET(request: NextRequest) {
     }
 
     const dbT0 = performance.now();
+    const sql = getReadPool();
     const [summary, gradeRows] = await Promise.all([
       getProfileOgSummary(userId),
-      sql`
+      rowsFromResult<{ difficulty: number; cnt: number }>(await sql`
         SELECT difficulty, COUNT(DISTINCT climb_uuid) as cnt
         FROM boardsesh_ticks
         WHERE user_id = ${userId}
@@ -43,7 +43,7 @@ export async function GET(request: NextRequest) {
           AND difficulty IS NOT NULL
         GROUP BY difficulty
         ORDER BY difficulty
-      `,
+      `),
     ]);
     const dbMs = performance.now() - dbT0;
 

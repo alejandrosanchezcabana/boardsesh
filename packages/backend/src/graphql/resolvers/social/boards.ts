@@ -1,6 +1,7 @@
 import { v4 as uuidv4 } from 'uuid';
 import { eq, and, count, isNull, sql, ilike, or, desc, inArray, like } from 'drizzle-orm';
 import type { ConnectionContext } from '@boardsesh/shared-schema';
+import { rowsFromResult } from '@boardsesh/db/client';
 import { db } from '../../../db/client';
 import * as dbSchema from '@boardsesh/db/schema';
 import { requireAuthenticated, applyRateLimit, validateInput } from '../shared/helpers';
@@ -534,10 +535,7 @@ async function getPopularConfigs(): Promise<CachedPopularConfig[]> {
     ORDER BY board_count DESC, total_ascents DESC, configs.board_type, bl.name
   `);
 
-  // db.execute() returns QueryResult with .rows for neon-serverless, or an array directly for postgres-js
-  const rows = Array.isArray(result)
-    ? (result as Array<Record<string, unknown>>)
-    : (result as unknown as { rows: Array<Record<string, unknown>> }).rows;
+  const rows = rowsFromResult<Record<string, unknown>>(result);
 
   const configs: CachedPopularConfig[] = rows.map((row) => {
     const boardType = row.board_type as string;

@@ -23,11 +23,22 @@ vi.mock('@/app/lib/board-utils', () => ({
   getBoardDetailsForBoard: getBoardDetailsForBoardMock,
 }));
 
+// dynamic-og-data uses `dbzRead` (drizzle) and `getReadPool()` (postgres-js
+// tagged template) for replica-tolerant reads. Mock both onto the existing
+// `executeMock` and a fresh tagged-template fake.
+const mockSqlTag = vi.fn();
+const rowsFromResultMock = <T,>(result: unknown): T[] => {
+  if (Array.isArray(result)) return result as T[];
+  throw new TypeError('Expected postgres-js query result to be a row array');
+};
 vi.mock('@/app/lib/db/db', () => ({
-  dbz: {
-    execute: executeMock,
-  },
-  sql: vi.fn(),
+  dbz: { execute: executeMock },
+  sql: mockSqlTag,
+  dbzRead: { execute: executeMock },
+  getReadPool: () => mockSqlTag,
+  rowsFromResult: rowsFromResultMock,
+  executeRows: async <T,>(conn: { execute: (query: unknown) => Promise<unknown> }, query: unknown) =>
+    rowsFromResultMock<T>(await conn.execute(query)),
 }));
 
 vi.mock('@/app/lib/string-utils', () => ({
@@ -78,34 +89,24 @@ describe('getSessionOgSummary', () => {
 
   it('reads party sessions from board_sessions and resolves slug board previews', async () => {
     executeMock
-      .mockResolvedValueOnce({
-        rows: [
-          {
-            name: 'Evening Session',
-            leader_name: 'Alex',
-            version_at: '2024-01-03T00:00:00.000Z',
-            board_path: '/b/my-home-wall',
-            board_slug: null,
-            board_angle: null,
-            board_type: null,
-            layout_id: null,
-            size_id: null,
-            set_ids: null,
-          },
-        ],
-      })
-      .mockResolvedValueOnce({
-        rows: [{ participant_count: 2 }],
-      })
-      .mockResolvedValueOnce({
-        rows: [{ display_name: 'Alex' }, { display_name: 'Sam' }],
-      })
-      .mockResolvedValueOnce({
-        rows: [{ total_sends: 2 }],
-      })
-      .mockResolvedValueOnce({
-        rows: [{ difficulty: 10, cnt: 2 }],
-      });
+      .mockResolvedValueOnce([
+        {
+          name: 'Evening Session',
+          leader_name: 'Alex',
+          version_at: '2024-01-03T00:00:00.000Z',
+          board_path: '/b/my-home-wall',
+          board_slug: null,
+          board_angle: null,
+          board_type: null,
+          layout_id: null,
+          size_id: null,
+          set_ids: null,
+        },
+      ])
+      .mockResolvedValueOnce([{ participant_count: 2 }])
+      .mockResolvedValueOnce([{ display_name: 'Alex' }, { display_name: 'Sam' }])
+      .mockResolvedValueOnce([{ total_sends: 2 }])
+      .mockResolvedValueOnce([{ difficulty: 10, cnt: 2 }]);
     resolveBoardBySlugMock.mockResolvedValue({
       slug: 'my-home-wall',
       boardType: 'kilter',
@@ -157,35 +158,25 @@ describe('getSessionOgSummary', () => {
 
   it('parses legacy board paths and falls back to inferred sessions cleanly', async () => {
     executeMock
-      .mockResolvedValueOnce({ rows: [] })
-      .mockResolvedValueOnce({
-        rows: [
-          {
-            name: 'Solo Volume Day',
-            leader_name: 'Alex',
-            version_at: '2024-01-05T00:00:00.000Z',
-            board_path: null,
-            board_slug: null,
-            board_angle: null,
-            board_type: null,
-            layout_id: null,
-            size_id: null,
-            set_ids: null,
-          },
-        ],
-      })
-      .mockResolvedValueOnce({
-        rows: [{ participant_count: 1 }],
-      })
-      .mockResolvedValueOnce({
-        rows: [{ display_name: 'Alex' }],
-      })
-      .mockResolvedValueOnce({
-        rows: [{ total_sends: 1 }],
-      })
-      .mockResolvedValueOnce({
-        rows: [{ difficulty: 12, cnt: 1 }],
-      });
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([
+        {
+          name: 'Solo Volume Day',
+          leader_name: 'Alex',
+          version_at: '2024-01-05T00:00:00.000Z',
+          board_path: null,
+          board_slug: null,
+          board_angle: null,
+          board_type: null,
+          layout_id: null,
+          size_id: null,
+          set_ids: null,
+        },
+      ])
+      .mockResolvedValueOnce([{ participant_count: 1 }])
+      .mockResolvedValueOnce([{ display_name: 'Alex' }])
+      .mockResolvedValueOnce([{ total_sends: 1 }])
+      .mockResolvedValueOnce([{ difficulty: 12, cnt: 1 }]);
 
     const { getSessionOgSummary } = await import('../dynamic-og-data');
     const summary = await getSessionOgSummary('inferred-123');
@@ -212,34 +203,24 @@ describe('getSessionOgSummary', () => {
 
   it('uses board config from legacy board paths when present', async () => {
     executeMock
-      .mockResolvedValueOnce({
-        rows: [
-          {
-            name: 'Board Night',
-            leader_name: 'Sam',
-            version_at: '2024-01-06T00:00:00.000Z',
-            board_path: '/tension/original/8x10/main_aux/35',
-            board_slug: null,
-            board_angle: null,
-            board_type: null,
-            layout_id: null,
-            size_id: null,
-            set_ids: null,
-          },
-        ],
-      })
-      .mockResolvedValueOnce({
-        rows: [{ participant_count: 3 }],
-      })
-      .mockResolvedValueOnce({
-        rows: [{ display_name: 'Sam' }, { display_name: 'Taylor' }],
-      })
-      .mockResolvedValueOnce({
-        rows: [{ total_sends: 3 }],
-      })
-      .mockResolvedValueOnce({
-        rows: [{ difficulty: 10, cnt: 3 }],
-      });
+      .mockResolvedValueOnce([
+        {
+          name: 'Board Night',
+          leader_name: 'Sam',
+          version_at: '2024-01-06T00:00:00.000Z',
+          board_path: '/tension/original/8x10/main_aux/35',
+          board_slug: null,
+          board_angle: null,
+          board_type: null,
+          layout_id: null,
+          size_id: null,
+          set_ids: null,
+        },
+      ])
+      .mockResolvedValueOnce([{ participant_count: 3 }])
+      .mockResolvedValueOnce([{ display_name: 'Sam' }, { display_name: 'Taylor' }])
+      .mockResolvedValueOnce([{ total_sends: 3 }])
+      .mockResolvedValueOnce([{ difficulty: 10, cnt: 3 }]);
     parseBoardRouteParamsWithSlugsMock.mockResolvedValueOnce({
       board_name: 'tension',
       layout_id: 2,
@@ -273,34 +254,24 @@ describe('getSessionOgSummary', () => {
 
   it('counts sends even when tick difficulty is null and grades come from climb stats', async () => {
     executeMock
-      .mockResolvedValueOnce({
-        rows: [
-          {
-            name: 'Null Grade Night',
-            leader_name: 'Alex',
-            version_at: '2024-01-07T00:00:00.000Z',
-            board_path: '/b/my-home-wall',
-            board_slug: null,
-            board_angle: null,
-            board_type: null,
-            layout_id: null,
-            size_id: null,
-            set_ids: null,
-          },
-        ],
-      })
-      .mockResolvedValueOnce({
-        rows: [{ participant_count: 1 }],
-      })
-      .mockResolvedValueOnce({
-        rows: [{ display_name: 'Alex' }],
-      })
-      .mockResolvedValueOnce({
-        rows: [{ total_sends: 5 }],
-      })
-      .mockResolvedValueOnce({
-        rows: [{ difficulty: 20, cnt: 5 }],
-      });
+      .mockResolvedValueOnce([
+        {
+          name: 'Null Grade Night',
+          leader_name: 'Alex',
+          version_at: '2024-01-07T00:00:00.000Z',
+          board_path: '/b/my-home-wall',
+          board_slug: null,
+          board_angle: null,
+          board_type: null,
+          layout_id: null,
+          size_id: null,
+          set_ids: null,
+        },
+      ])
+      .mockResolvedValueOnce([{ participant_count: 1 }])
+      .mockResolvedValueOnce([{ display_name: 'Alex' }])
+      .mockResolvedValueOnce([{ total_sends: 5 }])
+      .mockResolvedValueOnce([{ difficulty: 20, cnt: 5 }]);
     resolveBoardBySlugMock.mockResolvedValue({
       slug: 'my-home-wall',
       boardType: 'kilter',

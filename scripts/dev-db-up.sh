@@ -7,11 +7,10 @@
 # This script:
 #   1. Starts postgres and redis containers
 #   2. Waits for postgres to be healthy
-#   3. Ensures pg_hba.conf allows Docker network connections (for neon-proxy)
-#   4. Ensures the postgres user has a password set (neon-proxy requires it)
+#   3. Ensures pg_hba.conf allows Docker network connections
+#   4. Ensures the postgres user has a password set
 #   5. Syncs drizzle migration tracker (public → drizzle schema)
-#   6. Starts neon-proxy and waits for connectivity
-#   7. Runs drizzle migrations (to pick up any newer migrations not yet in the image)
+#   6. Runs drizzle migrations (to pick up any newer migrations not yet in the image)
 
 set -e
 
@@ -66,7 +65,7 @@ run_pending_drizzle_sql_migrations() {
 # This makes multi-worktree setups fast — the second worktree skips all
 # container setup and pg_hba configuration.
 all_running=true
-for svc in postgres neon-proxy redis; do
+for svc in postgres redis; do
   container=$(docker compose ps -q "$svc" 2>/dev/null)
   if [ -z "$container" ] || ! docker inspect "$container" --format='{{.State.Running}}' 2>/dev/null | grep -q true; then
     all_running=false
@@ -114,7 +113,6 @@ docker compose up -d postgres redis
 
 # Resolve container names dynamically (derived from directory name)
 PG_CONTAINER=$(docker compose ps -q postgres)
-NEON_SERVICE="neon-proxy"
 
 echo "Waiting for postgres to be healthy..."
 attempts=0
@@ -130,15 +128,11 @@ done
 echo "Postgres is ready."
 
 # ── Ensure pg_hba.conf allows Docker network connections ────────────────
-# The neon-proxy container connects from the Docker network (172.x.x.x).
-# We need an md5 auth rule for 0.0.0.0/0. Using 'trust' breaks the neon
-# proxy because it tries to read the password hash from pg_authid.
 echo "Ensuring pg_hba.conf allows Docker network connections..."
 if docker exec "$PG_CONTAINER" grep -q "host all all 0.0.0.0/0 md5" "$HBA_FILE" 2>/dev/null; then
   echo "  pg_hba.conf already has md5 rule."
 else
   echo "  Adding md5 auth rule for Docker network..."
-  # Remove any trust rule for 0.0.0.0/0 (breaks neon proxy password lookup)
   docker exec "$PG_CONTAINER" sed -i '/host all all 0\.0\.0\.0\/0 trust/d' "$HBA_FILE" 2>/dev/null || true
   docker exec -u postgres "$PG_CONTAINER" bash -c "echo 'host all all 0.0.0.0/0 md5' >> $HBA_FILE"
   docker exec -u postgres "$PG_CONTAINER" pg_ctl reload -D /var/lib/postgresql/pgdata
@@ -170,45 +164,6 @@ docker exec -u postgres "$PG_CONTAINER" psql -U postgres -d main -q -c \
 DRIZZLE_COUNT=$(docker exec -u postgres "$PG_CONTAINER" psql -U postgres -d main -t -A -c \
   "SELECT count(*) FROM drizzle.\"__drizzle_migrations\";")
 echo "  drizzle.__drizzle_migrations has $DRIZZLE_COUNT records."
-
-# ── Start neon-proxy now that postgres is configured ────────────────────
-echo "Starting neon-proxy..."
-docker compose up -d neon-proxy
-
-# Wait for neon-proxy to accept connections
-NEON_CONTAINER=$(docker compose ps -q "$NEON_SERVICE")
-echo "Waiting for neon-proxy to be ready..."
-attempts=0
-max_attempts=30
-while [ "$attempts" -lt "$max_attempts" ]; do
-  attempts=$((attempts + 1))
-  sleep 1
-  # Check container is running
-  if ! docker inspect "$NEON_CONTAINER" --format='{{.State.Running}}' 2>/dev/null | grep -q true; then
-    continue
-  fi
-  # Check for connection errors in proxy logs
-  if docker compose logs --tail=3 "$NEON_SERVICE" 2>&1 | grep -q "Console request failed"; then
-    continue
-  fi
-  # Give it one more second to stabilize
-  sleep 1
-  if ! docker compose logs --tail=3 "$NEON_SERVICE" 2>&1 | grep -q "Console request failed"; then
-    echo "  neon-proxy is ready."
-    break
-  fi
-done
-
-if [ "$attempts" -ge "$max_attempts" ]; then
-  echo ""
-  echo "ERROR: neon-proxy failed to connect to postgres."
-  echo "Proxy logs:"
-  docker compose logs --tail=5 "$NEON_SERVICE" 2>&1 | grep -i "error\|fatal\|fail"
-  echo ""
-  echo "pg_hba.conf non-comment lines:"
-  docker exec "$PG_CONTAINER" grep -v "^#" "$HBA_FILE" | grep -v "^$"
-  exit 1
-fi
 
 echo "Running database migrations..."
 run_pending_drizzle_sql_migrations

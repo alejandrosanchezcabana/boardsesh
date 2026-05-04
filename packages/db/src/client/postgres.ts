@@ -1,0 +1,173 @@
+import { drizzle } from 'drizzle-orm/postgres-js';
+import type { Logger, SQLWrapper } from 'drizzle-orm';
+import postgres from 'postgres';
+import { getConnectionConfig } from './config';
+import * as schema from '../schema/index';
+import * as relations from '../relations/index';
+
+class QueryLogger implements Logger {
+  logQuery(query: string, params: unknown[]): void {
+    const timestamp = new Date().toISOString();
+    console.info(`[SQL ${timestamp}] ${query}`);
+    if (params.length > 0) {
+      console.info(`[SQL params] ${JSON.stringify(params)}`);
+    }
+  }
+}
+
+const sqlLogger = process.env.DEBUG_SQL === 'true' ? new QueryLogger() : undefined;
+
+const fullSchema = { ...schema, ...relations };
+
+// `prepare: false` is required when the target is PgBouncer in transaction
+// pooling mode (Railway's pooled URL): backends are reused across transactions
+// so per-connection prepared statement caches collide. The flag is a safe no-op
+// against direct PostgreSQL.
+const BASE_POOL_OPTIONS = {
+  max: 10,
+  idle_timeout: 30,
+  connect_timeout: 30,
+  prepare: false,
+} as const;
+
+const LOCAL_HOST_PATTERN = /@(localhost|127\.0\.0\.1|\[::1\]|postgres|postgres-test)(:|\/|$)/;
+
+function buildPoolOptions(connectionString: string) {
+  // postgres-js does not enforce TLS unless told. Force SSL for non-local
+  // hosts so a misconfigured DATABASE_URL (missing `?sslmode=require`) cannot
+  // silently degrade to plaintext against Railway. Local docker stays plain.
+  const isLocal = LOCAL_HOST_PATTERN.test(connectionString);
+  return isLocal ? BASE_POOL_OPTIONS : { ...BASE_POOL_OPTIONS, ssl: 'require' as const };
+}
+
+// Cache the pool/db on globalThis so Next.js HMR re-evaluating this module in
+// dev does not orphan TCP pools and exhaust `max` after a few file saves.
+type DbCache = {
+  client?: ReturnType<typeof postgres>;
+  db?: ReturnType<typeof drizzle>;
+  readClient?: ReturnType<typeof postgres>;
+  readDb?: ReturnType<typeof drizzle>;
+};
+
+const globalForDb = globalThis as unknown as { __boardseshDb?: DbCache };
+const cache: DbCache = (globalForDb.__boardseshDb ??= {});
+
+export function createDb() {
+  if (!cache.db) {
+    const { connectionString } = getConnectionConfig();
+    cache.client = postgres(connectionString, buildPoolOptions(connectionString));
+    cache.db = drizzle(cache.client, { schema: fullSchema, logger: sqlLogger });
+  }
+  return cache.db;
+}
+
+export function createPool() {
+  if (!cache.client) {
+    createDb();
+  }
+  return cache.client!;
+}
+
+export async function closePool(): Promise<void> {
+  try {
+    if (cache.client) {
+      await cache.client.end();
+    }
+  } finally {
+    cache.client = undefined;
+    cache.db = undefined;
+  }
+}
+
+function ensureReadConnection(readReplicaUrl: string) {
+  if (!cache.readClient || !cache.readDb) {
+    cache.readClient = postgres(readReplicaUrl, buildPoolOptions(readReplicaUrl));
+    cache.readDb = drizzle(cache.readClient, { schema: fullSchema, logger: sqlLogger });
+  }
+  return { readClient: cache.readClient, readDb: cache.readDb };
+}
+
+/**
+ * Returns a drizzle instance pointed at READ_REPLICA_URL. When the env var is
+ * unset, returns the primary `db` so call sites don't need to branch — this
+ * makes wiring the seam in safe before a replica exists.
+ */
+export function createReadDb() {
+  const { readReplicaUrl } = getConnectionConfig();
+  if (!readReplicaUrl) {
+    return createDb();
+  }
+  return ensureReadConnection(readReplicaUrl).readDb;
+}
+
+export function createReadPool() {
+  const { readReplicaUrl } = getConnectionConfig();
+  if (!readReplicaUrl) {
+    return createPool();
+  }
+  return ensureReadConnection(readReplicaUrl).readClient;
+}
+
+export async function closeReadPool(): Promise<void> {
+  try {
+    if (cache.readClient) {
+      await cache.readClient.end();
+    }
+  } finally {
+    cache.readClient = undefined;
+    cache.readDb = undefined;
+  }
+}
+
+type ExecuteConnection = {
+  execute(query: SQLWrapper | string): PromiseLike<unknown>;
+};
+
+type CommandCountResult = {
+  count?: number | bigint;
+  rowCount?: number | bigint;
+};
+
+export function rowsFromResult<T>(result: unknown): T[] {
+  if (Array.isArray(result)) {
+    return result as T[];
+  }
+
+  throw new TypeError('Expected postgres-js query result to be a row array');
+}
+
+export function firstRowFromResult<T>(result: unknown): T | undefined {
+  return rowsFromResult<T>(result)[0];
+}
+
+export async function executeRows<T>(conn: ExecuteConnection, query: SQLWrapper | string): Promise<T[]> {
+  return rowsFromResult<T>(await conn.execute(query));
+}
+
+export async function executeFirstRow<T>(conn: ExecuteConnection, query: SQLWrapper | string): Promise<T | undefined> {
+  return firstRowFromResult<T>(await conn.execute(query));
+}
+
+export function commandCountFromResult(result: unknown): number | undefined {
+  if (!result || typeof result !== 'object') {
+    return undefined;
+  }
+
+  const raw = result as CommandCountResult;
+  const value = raw.count ?? raw.rowCount;
+  if (value === undefined) {
+    return undefined;
+  }
+
+  return Number(value);
+}
+
+export async function executeCommandCount(
+  conn: ExecuteConnection,
+  query: SQLWrapper | string,
+): Promise<number | undefined> {
+  return commandCountFromResult(await conn.execute(query));
+}
+
+export type DbInstance = ReturnType<typeof createDb>;
+export type PoolInstance = ReturnType<typeof postgres>;

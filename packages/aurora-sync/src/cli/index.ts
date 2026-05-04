@@ -137,16 +137,12 @@ program
   .command('list')
   .description('List all users with Aurora credentials')
   .action(async () => {
-    // Import directly here to avoid circular deps
-    const { createPool } = await import('@boardsesh/db/client');
+    const { createDb, closePool } = await import('@boardsesh/db/client');
     const { auroraCredentials } = await import('@boardsesh/db/schema/auth');
-    const { drizzle } = await import('drizzle-orm/neon-serverless');
 
-    const pool = createPool();
-    const client = await pool.connect();
+    const db = createDb();
 
     try {
-      const db = drizzle(client);
       const credentials = await db
         .select({
           userId: auroraCredentials.userId,
@@ -182,10 +178,10 @@ program
         });
       }
 
-      await pool.end();
+      await closePool();
     } catch (error) {
       console.error('Error listing credentials:', error);
-      await pool.end();
+      await closePool();
       process.exit(1);
     }
   });

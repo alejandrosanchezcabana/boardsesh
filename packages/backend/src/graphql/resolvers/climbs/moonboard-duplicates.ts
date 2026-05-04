@@ -5,6 +5,7 @@ import type {
   MoonBoardHoldsInput,
 } from '@boardsesh/shared-schema';
 import * as dbSchema from '@boardsesh/db/schema';
+import { executeRows } from '@boardsesh/db/client';
 import { db } from '../../../db/client';
 import { convertLitUpHoldsStringToMap } from '../../../db/queries/util/hold-state';
 
@@ -47,10 +48,6 @@ const MOONBOARD_COORDINATE_GROUPS: Array<{
 ];
 
 export const MOONBOARD_DUPLICATE_ERROR_PREFIX = 'A MoonBoard climb with the same holds already exists';
-
-function getExecuteRows<T extends Record<string, unknown>>(result: unknown): T[] {
-  return Array.isArray(result) ? (result as T[]) : ((result as { rows?: T[] }).rows ?? []);
-}
 
 function coordinateToHoldId(coord: string): number {
   const colIndex = coord[0].toUpperCase().charCodeAt(0) - 'A'.charCodeAt(0);
@@ -156,7 +153,7 @@ export async function findMoonBoardDuplicateMatches(
       uniqueSignatures.map((signature) => sql`${signature}`),
       sql`, `,
     );
-    const exactMatchResult = await db.execute(sql`
+    const exactMatchRows = await executeRows<DuplicateLookupRow>(db, sql`
       SELECT
         ${dbSchema.boardClimbs.uuid} AS uuid,
         ${dbSchema.boardClimbs.name} AS name,
@@ -189,7 +186,6 @@ export async function findMoonBoardDuplicateMatches(
       ORDER BY COALESCE(${dbSchema.boardClimbStats.ascensionistCount}, 0) DESC, ${dbSchema.boardClimbs.uuid} ASC
     `);
 
-    const exactMatchRows = getExecuteRows<DuplicateLookupRow>(exactMatchResult);
     for (const row of exactMatchRows) {
       const next = {
         uuid: row.uuid,
@@ -202,7 +198,7 @@ export async function findMoonBoardDuplicateMatches(
       }
     }
 
-    const legacyResult = await db.execute(sql`
+    const legacyRows = await executeRows<LegacyDuplicateLookupRow>(db, sql`
       SELECT
         ${dbSchema.boardClimbs.uuid} AS uuid,
         ${dbSchema.boardClimbs.name} AS name,
@@ -227,7 +223,6 @@ export async function findMoonBoardDuplicateMatches(
       ORDER BY COALESCE(${dbSchema.boardClimbStats.ascensionistCount}, 0) DESC, ${dbSchema.boardClimbs.uuid} ASC
     `);
 
-    const legacyRows = getExecuteRows<LegacyDuplicateLookupRow>(legacyResult);
     for (const row of legacyRows) {
       const signature = buildMoonBoardHoldSignatureFromFrames(row.frames);
       if (!signature || !uniqueSignatures.includes(signature)) continue;

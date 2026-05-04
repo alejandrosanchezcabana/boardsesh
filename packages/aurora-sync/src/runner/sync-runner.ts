@@ -1,7 +1,6 @@
-import { neon, neonConfig, Pool } from '@neondatabase/serverless';
-import { drizzle as drizzleHttp } from 'drizzle-orm/neon-http';
+import postgres from 'postgres';
+import { drizzle } from 'drizzle-orm/postgres-js';
 import { eq, ne, and, or, isNotNull, sql } from 'drizzle-orm';
-import ws from 'ws';
 
 import { auroraCredentials } from '@boardsesh/db/schema/auth';
 import { syncUserData } from '../sync/user-sync';
@@ -12,43 +11,36 @@ import type { AuroraBoardName } from '../api/types';
 import { resolveDaemonOptions, runDaemonLoop } from './daemon';
 import type { SyncRunnerConfig, SyncSummary, CredentialRecord, DaemonOptions } from './types';
 
-// Configure WebSocket constructor for Node.js environment
-neonConfig.webSocketConstructor = ws;
-
-/**
- * Create a fresh pool for each operation to avoid stale WebSocket connections
- */
-function createFreshPool(): Pool {
-  const connectionString = process.env.DATABASE_URL;
-  if (!connectionString) {
-    throw new Error('DATABASE_URL is required');
-  }
-  return new Pool({
-    connectionString,
-    connectionTimeoutMillis: 30000,
-    idleTimeoutMillis: 30000, // Short idle timeout to avoid stale connections
-    max: 5,
-  });
-}
-
-/**
- * Create HTTP-based Drizzle instance for simple queries (no transactions needed)
- */
-function createHttpDb() {
-  const connectionString = process.env.DATABASE_URL;
-  if (!connectionString) {
-    throw new Error('DATABASE_URL is required');
-  }
-  const sql = neon(connectionString);
-  return drizzleHttp({ client: sql });
-}
+type RunnerClient = ReturnType<typeof postgres>;
+type RunnerDb = ReturnType<typeof drizzle>;
 
 export class SyncRunner {
   private config: SyncRunnerConfig;
   private daemonController: AbortController | null = null;
+  private client: RunnerClient | null = null;
+  private db: RunnerDb | null = null;
 
   constructor(config: SyncRunnerConfig = {}) {
     this.config = config;
+  }
+
+  private getClient(): { client: RunnerClient; db: RunnerDb } {
+    if (!this.client || !this.db) {
+      const connectionString = process.env.DATABASE_URL;
+      if (!connectionString) {
+        throw new Error('DATABASE_URL is required');
+      }
+      // `prepare: false` is required for Railway's PgBouncer pooled URL
+      // (transaction-pooling mode is incompatible with prepared statements).
+      this.client = postgres(connectionString, {
+        max: 5,
+        idle_timeout: 30,
+        connect_timeout: 30,
+        prepare: false,
+      });
+      this.db = drizzle(this.client);
+    }
+    return { client: this.client, db: this.db };
   }
 
   private log(message: string): void {
@@ -67,10 +59,6 @@ export class SyncRunner {
     }
   }
 
-  /**
-   * Sync the next user that needs syncing (oldest lastSyncAt first)
-   * Only syncs 1 user per call to avoid IP blocking from Aurora API
-   */
   async syncNextUser(): Promise<SyncSummary> {
     const results: SyncSummary = {
       total: 1,
@@ -79,7 +67,6 @@ export class SyncRunner {
       errors: [],
     };
 
-    // Get the next credential to sync (oldest lastSyncAt first)
     const cred = await this.getNextCredentialToSync();
 
     if (!cred) {
@@ -112,10 +99,7 @@ export class SyncRunner {
     return results;
   }
 
-  /**
-   * @deprecated Use syncNextUser() instead to avoid IP blocking
-   * Sync all users with syncable credentials
-   */
+  /** @deprecated Use syncNextUser() instead to avoid IP blocking */
   async syncAllUsers(): Promise<SyncSummary> {
     const results: SyncSummary = {
       total: 0,
@@ -124,13 +108,11 @@ export class SyncRunner {
       errors: [],
     };
 
-    // Get credentials list using HTTP (simple query, no transaction needed)
     const credentials = await this.getActiveCredentials();
     results.total = credentials.length;
 
     this.log(`[SyncRunner] Found ${credentials.length} users with Aurora credentials to sync`);
 
-    // Sync each user sequentially with fresh connection per user
     for (const cred of credentials) {
       try {
         await this.syncSingleCredential(cred);
@@ -156,12 +138,8 @@ export class SyncRunner {
     return results;
   }
 
-  /**
-   * Sync a specific user by NextAuth userId and board type
-   */
   async syncUser(userId: string, boardType: string): Promise<void> {
-    // Use HTTP for simple lookup query
-    const db = createHttpDb();
+    const { db } = this.getClient();
     const credentials = await db
       .select()
       .from(auroraCredentials)
@@ -181,8 +159,6 @@ export class SyncRunner {
       throw new Error('Daemon mode is already running');
     }
 
-    // Resolve once here so startup config errors (e.g. equal quiet hours) surface
-    // before we spawn an AbortController or log "Starting daemon mode".
     const resolved = resolveDaemonOptions(options);
     const controller = new AbortController();
     this.daemonController = controller;
@@ -213,15 +189,6 @@ export class SyncRunner {
     }
   }
 
-  // Shared WHERE clause for credentials that are eligible to be synced.
-  // Kilter is excluded because the Kilter backend is permanently down.
-  //
-  // Sync statuses picked up:
-  //   - 'pending': newly linked credentials that haven't been synced yet.
-  //     The daemon bootstraps them on its first cycle.
-  //   - 'active': regularly-synced credentials.
-  //   - 'error': previously failed credentials — retry so transient-classified
-  //     failures recover automatically. `sync_error` gets overwritten each retry.
   private syncableCredentialsFilter() {
     return and(
       or(
@@ -237,22 +204,18 @@ export class SyncRunner {
   }
 
   private async getActiveCredentials(): Promise<CredentialRecord[]> {
-    // Use HTTP for simple lookup query (no transaction needed)
-    const db = createHttpDb();
+    const { db } = this.getClient();
     const credentials = await db.select().from(auroraCredentials).where(this.syncableCredentialsFilter());
-
     return credentials as CredentialRecord[];
   }
 
   private async getNextCredentialToSync(): Promise<CredentialRecord | null> {
-    // Use HTTP for simple lookup query (no transaction needed)
-    // Get the credential with the oldest lastSyncAt (or null = never synced)
-    const db = createHttpDb();
+    const { db } = this.getClient();
     const credentials = await db
       .select()
       .from(auroraCredentials)
       .where(this.syncableCredentialsFilter())
-      .orderBy(sql`${auroraCredentials.lastSyncAt} ASC NULLS FIRST`) // Never-synced users first, then oldest
+      .orderBy(sql`${auroraCredentials.lastSyncAt} ASC NULLS FIRST`)
       .limit(1);
 
     return credentials.length > 0 ? (credentials[0] as CredentialRecord) : null;
@@ -265,7 +228,6 @@ export class SyncRunner {
 
     const boardType = cred.boardType as AuroraBoardName;
 
-    // Decrypt credentials
     let username: string;
     let password: string;
     try {
@@ -277,7 +239,6 @@ export class SyncRunner {
       throw new Error(errorMessage);
     }
 
-    // Get fresh token by logging in
     this.log(`[SyncRunner] Getting fresh token for user ${cred.userId} (${boardType})...`);
     const auroraClient = new AuroraClimbingClient({ boardName: boardType });
     let token: string;
@@ -291,7 +252,7 @@ export class SyncRunner {
     } catch (loginError) {
       if (isTransientAuroraError(loginError)) {
         this.log(
-          `[SyncRunner] Transient Aurora login error for user ${cred.userId} (${boardType}); will retry later: ${loginError.message}`,
+          `[SyncRunner] Transient Aurora login error for user ${cred.userId} (${boardType}); will retry later: ${(loginError as Error).message}`,
         );
         throw loginError;
       }
@@ -301,22 +262,12 @@ export class SyncRunner {
       throw new Error(errorMessage);
     }
 
-    // Update stored token
     await this.updateStoredToken(cred.userId, cred.boardType, token);
 
-    // Create a fresh pool for this sync operation to avoid stale connections
-    const pool = createFreshPool();
-    try {
-      // Sync user data - pass NextAuth userId directly since we have it
-      this.log(`[SyncRunner] Syncing user ${cred.userId} for ${boardType}...`);
-      await syncUserData(pool, boardType, token, cred.auroraUserId, cred.userId, undefined, this.log.bind(this));
-
-      // Update last sync time on success
-      await this.updateCredentialStatus(cred.userId, cred.boardType, 'active', null, new Date());
-    } finally {
-      // Always close the pool when done
-      await pool.end();
-    }
+    const { client } = this.getClient();
+    this.log(`[SyncRunner] Syncing user ${cred.userId} for ${boardType}...`);
+    await syncUserData(client, boardType, token, cred.auroraUserId, cred.userId, undefined, this.log.bind(this));
+    await this.updateCredentialStatus(cred.userId, cred.boardType, 'active', null, new Date());
   }
 
   private async updateCredentialStatus(
@@ -326,8 +277,7 @@ export class SyncRunner {
     error: string | null,
     lastSyncAt?: Date,
   ): Promise<void> {
-    // Use HTTP for simple update (no transaction needed)
-    const db = createHttpDb();
+    const { db } = this.getClient();
     const updateData: Record<string, unknown> = {
       syncStatus: status,
       syncError: error,
@@ -346,8 +296,7 @@ export class SyncRunner {
 
   private async updateStoredToken(userId: string, boardType: string, token: string): Promise<void> {
     const encryptedToken = encrypt(token);
-    // Use HTTP for simple update (no transaction needed)
-    const db = createHttpDb();
+    const { db } = this.getClient();
     await db
       .update(auroraCredentials)
       .set({
@@ -357,18 +306,22 @@ export class SyncRunner {
       .where(and(eq(auroraCredentials.userId, userId), eq(auroraCredentials.boardType, boardType)));
   }
 
-  /**
-   * Close is now a no-op since we create fresh pools per operation
-   */
   async close(): Promise<void> {
     this.daemonController?.abort();
+    if (this.client) {
+      try {
+        await this.client.end();
+      } finally {
+        this.client = null;
+        this.db = null;
+      }
+    }
   }
 
   private formatErrorMessage(error: unknown): string {
     if (error instanceof Error) {
       return error.message;
     }
-
     return String(error);
   }
 }

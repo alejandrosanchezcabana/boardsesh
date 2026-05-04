@@ -239,22 +239,6 @@ else
   echo "♻️  Database setup already completed. Skipping initial setup."
 fi
 
-# Create Neon control plane table (required for local Neon proxy)
-echo "🔧 Setting up Neon control plane for local proxy..."
-psql $PGDBNAME -c "CREATE SCHEMA IF NOT EXISTS neon_control_plane;" > /dev/null 2>&1 || true
-psql $PGDBNAME -c "DROP TABLE IF EXISTS neon_control_plane.endpoints;" > /dev/null 2>&1 || true
-psql $PGDBNAME -c "
-CREATE TABLE IF NOT EXISTS neon_control_plane.endpoints (
-  endpoint_id TEXT PRIMARY KEY,
-  allowed_ips TEXT,
-  passwordless_access BOOLEAN DEFAULT FALSE
-);
-INSERT INTO neon_control_plane.endpoints (endpoint_id, allowed_ips, passwordless_access)
-VALUES ('db', '0.0.0.0/0', TRUE)
-ON CONFLICT (endpoint_id) DO NOTHING;
-" > /dev/null 2>&1
-echo "   ✅ Neon control plane configured"
-
 echo "📦 Step 7/8: Checking Node.js dependencies..."
 cd /app
 

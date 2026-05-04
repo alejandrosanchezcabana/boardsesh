@@ -1,19 +1,25 @@
 import 'server-only';
-import { neon } from '@neondatabase/serverless';
-import { configureNeonForEnvironment, getConnectionConfig, createNeonHttp } from '@boardsesh/db/client';
+import { createDb, createPool, createReadDb } from '@boardsesh/db/client';
 
-// Re-export from @boardsesh/db with server-only protection
-export { createDb as getDb, createPool as getPool, createNeonHttp } from '@boardsesh/db/client';
-export { configureNeonForEnvironment, getConnectionConfig } from '@boardsesh/db/client';
+export {
+  createDb as getDb,
+  createPool as getPool,
+  closePool,
+  createReadDb as getReadDb,
+  createReadPool as getReadPool,
+  closeReadPool,
+  getConnectionConfig,
+  rowsFromResult,
+  firstRowFromResult,
+  executeRows,
+  executeFirstRow,
+  commandCountFromResult,
+  executeCommandCount,
+} from '@boardsesh/db/client';
 
-// Configure and export the raw SQL template literal function
-
-// Configure Neon for the environment
-configureNeonForEnvironment();
-const { connectionString } = getConnectionConfig();
-
-// Export the neon SQL template literal function for raw SQL queries
-export const sql = neon(connectionString);
-
-// For backward compatibility (some code may use dbz)
-export const dbz = createNeonHttp();
+// Shared singletons. Both `sql` (postgres-js tagged template) and `dbz`
+// (drizzle) are backed by the same pool from @boardsesh/db/client so a Vercel
+// function instance opens one pool, not two.
+export const sql = createPool();
+export const dbz = createDb();
+export const dbzRead = createReadDb();

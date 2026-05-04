@@ -161,7 +161,6 @@ GitHub Actions ─→ Build images ─→ Push to GHCR ─→ Ansible deploy
 │  │ web-pr-42     :3000      │  │ web-pr-57     :3000      │       │
 │  │ backend-pr-42 :8080      │  │ backend-pr-57 :8080      │       │
 │  │ postgres-pr-42:5432      │  │ postgres-pr-57:5432      │       │
-│  │ neon-proxy-pr-42:4444    │  │ neon-proxy-pr-57:4444    │       │
 │  │ redis-pr-42   :6379      │  │ redis-pr-57   :6379      │       │
 │  │ (isolated Docker network)│  │ (isolated Docker network)│       │
 │  └──────────────────────────┘  └──────────────────────────┘       │
@@ -329,7 +328,7 @@ Already exists and works. Tagged per PR: `ghcr.io/marcodejongh/boardsesh-backend
 
 ### 2.5 Docker Compose Template
 
-Each PR gets 5 containers in an isolated Docker network. The compose template uses Ansible Jinja2 templating and Traefik Docker labels for automatic routing.
+Each PR gets 4 containers in an isolated Docker network. The compose template uses Ansible Jinja2 templating and Traefik Docker labels for automatic routing.
 
 **File: `docker-compose.pr.yml.j2`** (Ansible template)
 
@@ -351,8 +350,6 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-      neon-proxy:
-        condition: service_started
     deploy:
       resources:
         limits:
@@ -429,24 +426,6 @@ services:
     networks:
       - pr-{{ pr_number }}
 
-  neon-proxy:
-    image: ghcr.io/timowilhelm/local-neon-http-proxy:main
-    container_name: neon-proxy-pr-{{ pr_number }}
-    restart: unless-stopped
-    environment:
-      - PG_CONNECTION_STRING=postgres://postgres:password@postgres:5432/main
-      - POSTGRES_DB=main
-    depends_on:
-      postgres:
-        condition: service_healthy
-    deploy:
-      resources:
-        limits:
-          memory: 128M
-          cpus: '0.1'
-    networks:
-      - pr-{{ pr_number }}
-
   redis:
     image: redis:7-alpine
     container_name: redis-pr-{{ pr_number }}
@@ -473,14 +452,13 @@ networks:
 
 #### Key Design Points
 
-1. **5 containers per PR**: web, backend, postgres, neon-proxy, redis — fully isolated stack
+1. **4 containers per PR**: web, backend, postgres, redis — fully isolated stack
 2. **Isolated networks**: Each PR stack runs in its own Docker network (`pr-{N}`). Services reference each other by service name — no port conflicts.
 3. **Traefik network**: Web and backend containers also join the shared `traefik` network so the reverse proxy can reach them.
 4. **No published ports**: Services don't expose ports to the host. All traffic goes through Traefik.
-5. **Neon proxy**: Required because the web app uses `@neondatabase/serverless` which needs a Neon HTTP proxy
-6. **Redis**: Required by the backend for pub/sub (multi-instance scaling)
-7. **Resource limits**: Each service has memory and CPU limits to prevent a single PR from consuming all resources
-8. **`NEXT_PUBLIC_WS_URL` baked at build time**: It's a client-side env var, set during the Docker image build
+5. **Redis**: Required by the backend for pub/sub (multi-instance scaling)
+6. **Resource limits**: Each service has memory and CPU limits to prevent a single PR from consuming all resources
+7. **`NEXT_PUBLIC_WS_URL` baked at build time**: It's a client-side env var, set during the Docker image build
 
 ### 2.6 Traefik Configuration
 
@@ -1084,14 +1062,13 @@ Resource breakdown per PR:
 | Web (Next.js)       | 512MB  | 0.5  | ~200MB image  |
 | Backend (Node)      | 256MB  | 0.25 | ~150MB image  |
 | PostgreSQL (dev-db) | 1GB    | 0.5  | ~1.5GB (data) |
-| Neon Proxy          | 128MB  | 0.1  | ~50MB         |
 | Redis               | 64MB   | 0.1  | ~10MB         |
 
 ### Phase 2 Result
 
 After Phase 2, PRs get:
 
-- An isolated full-stack environment (web + backend + database + neon-proxy + redis)
+- An isolated full-stack environment (web + backend + database + redis)
 - The database uses the `boardsesh-dev-db` Docker image (full board data, seed users)
 - Frontend and backend containers built per-PR and pushed to GHCR
 - Traefik routes traffic automatically via Docker labels
@@ -1409,12 +1386,12 @@ What changed → what gets deployed:
 - [ ] Create `Dockerfile.web` for the Next.js app (standalone output)
 - [ ] Add `output: 'standalone'` to `next.config.mjs`
 - [ ] Test both Dockerfiles build correctly locally
-- [ ] Verify the web Docker image works with the dev-db + neon-proxy setup
+- [ ] Verify the web Docker image works with the dev-db setup
 
 ### Phase 2c: Ansible Playbook & GitHub Actions
 
 - [ ] Create `manage_branch_deploys.yml` playbook (deploy/cleanup/sweep)
-- [ ] Create docker-compose Jinja2 template with all 5 services
+- [ ] Create docker-compose Jinja2 template with all 4 services
 - [ ] Create `.github/workflows/branch-deploy.yml` (build images + Ansible deploy)
 - [ ] Create `.github/workflows/branch-deploy-cleanup.yml` (Ansible cleanup + GHCR image delete)
 - [ ] Create `.github/workflows/branch-deploy-sweep.yml` (Ansible sweep)

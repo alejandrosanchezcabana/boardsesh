@@ -1,5 +1,6 @@
 import { eq, and, isNull, count, sql } from 'drizzle-orm';
 import type { ConnectionContext } from '@boardsesh/shared-schema';
+import { executeRows } from '@boardsesh/db/client';
 import { db } from '../../../db/client';
 import * as dbSchema from '@boardsesh/db/schema';
 import { requireAuthenticated, applyRateLimit, validateInput } from '../shared/helpers';
@@ -145,7 +146,7 @@ export const socialCommentQueries = {
     const totalCount = Number(countResult[0]?.count || 0);
 
     // Main query — LEFT JOIN vote_counts instead of LATERAL JOIN subqueries
-    const rawResult = await db.execute(sql`
+    const rawRows = await executeRows<CommentRow>(db, sql`
       SELECT
         c."id",
         c."uuid",
@@ -191,8 +192,6 @@ export const socialCommentQueries = {
       OFFSET ${offset}
     `);
 
-    // db.execute() returns QueryResult (neon-serverless) with .rows property
-    const rawRows = (rawResult as unknown as { rows: CommentRow[] }).rows;
     const comments = rawRows.map(mapCommentRow);
 
     return {
@@ -257,7 +256,7 @@ export const socialCommentQueries = {
 
     const distinctClause = boardTypeFilter ? sql`DISTINCT ON (c."id")` : sql``;
 
-    const rawResult = await db.execute(sql`
+    const rawRows = await executeRows<CommentRow>(db, sql`
       SELECT ${distinctClause}
         c."id",
         c."uuid",
@@ -304,7 +303,6 @@ export const socialCommentQueries = {
       OFFSET ${offset}
     `);
 
-    const rawRows = (rawResult as unknown as { rows: CommentRow[] }).rows;
     const hasMore = rawRows.length > limit;
     const resultRows = hasMore ? rawRows.slice(0, limit) : rawRows;
     const comments = resultRows.map(mapCommentRow);

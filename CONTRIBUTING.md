@@ -50,11 +50,11 @@ After setup completes, start the development server:
 vp run dev
 ```
 
-This automatically starts the database containers (PostgreSQL, neon-proxy, Redis), runs any pending migrations, and then launches the backend and web servers. Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+This automatically starts the database containers (PostgreSQL, Redis), runs any pending migrations, and then launches the backend and web servers. Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
 You can also run pieces independently:
 
-- `vp run db:up` - Database only (PostgreSQL, Redis, neon-proxy + migrations)
+- `vp run db:up` - Database only (PostgreSQL, Redis + migrations)
 - `vp run dev:backend` - Database + backend only
 - `vp run dev:web` - Database + web only
 

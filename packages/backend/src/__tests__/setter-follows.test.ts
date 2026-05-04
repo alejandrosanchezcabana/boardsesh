@@ -281,26 +281,24 @@ describe('userClimbs query', () => {
     const countChain = createMockChain([{ count: 1 }]);
     mockDb.select.mockReturnValueOnce(countChain);
 
-    // 3. Climbs query via db.execute() → one result (returns {rows: [...]})
-    mockDb.execute.mockResolvedValueOnce({
-      rows: [
-        {
-          uuid: 'climb-1',
-          layout_id: 1,
-          board_type: 'kilter',
-          setter_username: 'setter1',
-          name: 'Test Climb',
-          description: '',
-          frames: 'abc',
-          stats_angle: 40,
-          ascensionist_count: 10,
-          difficulty_id: 20,
-          quality_average: 3.5,
-          difficulty_error: 0.1,
-          benchmark_difficulty: null,
-        },
-      ],
-    });
+    // 3. Climbs query via db.execute() → one result (postgres-js returns array directly)
+    mockDb.execute.mockResolvedValueOnce([
+      {
+        uuid: 'climb-1',
+        layout_id: 1,
+        board_type: 'kilter',
+        setter_username: 'setter1',
+        name: 'Test Climb',
+        description: '',
+        frames: 'abc',
+        stats_angle: 40,
+        ascensionist_count: 10,
+        difficulty_id: 20,
+        quality_average: 3.5,
+        difficulty_error: 0.1,
+        benchmark_difficulty: null,
+      },
+    ]);
 
     const result = await setterFollowQueries.userClimbs(null, { input: { userId: 'user-123' } }, ctx);
 
@@ -322,41 +320,39 @@ describe('userClimbs query', () => {
     const countChain = createMockChain([{ count: 2 }]);
     mockDb.select.mockReturnValueOnce(countChain);
 
-    // 3. Climbs query via db.execute() → two results (returns {rows: [...]})
-    mockDb.execute.mockResolvedValueOnce({
-      rows: [
-        {
-          uuid: 'climb-direct',
-          layout_id: 1,
-          board_type: 'kilter',
-          setter_username: 'user-123',
-          name: 'Direct Climb',
-          description: '',
-          frames: '',
-          stats_angle: 40,
-          ascensionist_count: 5,
-          difficulty_id: 18,
-          quality_average: 4,
-          difficulty_error: 0,
-          benchmark_difficulty: null,
-        },
-        {
-          uuid: 'climb-aurora',
-          layout_id: 1,
-          board_type: 'kilter',
-          setter_username: 'aurora-setter',
-          name: 'Aurora Climb',
-          description: '',
-          frames: '',
-          stats_angle: 40,
-          ascensionist_count: 20,
-          difficulty_id: 22,
-          quality_average: 3,
-          difficulty_error: 0.2,
-          benchmark_difficulty: null,
-        },
-      ],
-    });
+    // 3. Climbs query via db.execute() → two results
+    mockDb.execute.mockResolvedValueOnce([
+      {
+        uuid: 'climb-direct',
+        layout_id: 1,
+        board_type: 'kilter',
+        setter_username: 'user-123',
+        name: 'Direct Climb',
+        description: '',
+        frames: '',
+        stats_angle: 40,
+        ascensionist_count: 5,
+        difficulty_id: 18,
+        quality_average: 4,
+        difficulty_error: 0,
+        benchmark_difficulty: null,
+      },
+      {
+        uuid: 'climb-aurora',
+        layout_id: 1,
+        board_type: 'kilter',
+        setter_username: 'aurora-setter',
+        name: 'Aurora Climb',
+        description: '',
+        frames: '',
+        stats_angle: 40,
+        ascensionist_count: 20,
+        difficulty_id: 22,
+        quality_average: 3,
+        difficulty_error: 0.2,
+        benchmark_difficulty: null,
+      },
+    ]);
 
     const result = await setterFollowQueries.userClimbs(null, { input: { userId: 'user-123' } }, ctx);
 
@@ -377,55 +373,53 @@ describe('userClimbs query', () => {
     mockDb.select.mockReturnValueOnce(countChain);
 
     // 3. Climbs via db.execute() → limit+1 results (3 results for limit=2, indicating hasMore)
-    mockDb.execute.mockResolvedValueOnce({
-      rows: [
-        {
-          uuid: 'c1',
-          layout_id: 1,
-          board_type: 'kilter',
-          setter_username: '',
-          name: 'A',
-          description: '',
-          frames: '',
-          stats_angle: 40,
-          ascensionist_count: 0,
-          difficulty_id: null,
-          quality_average: 0,
-          difficulty_error: 0,
-          benchmark_difficulty: null,
-        },
-        {
-          uuid: 'c2',
-          layout_id: 1,
-          board_type: 'kilter',
-          setter_username: '',
-          name: 'B',
-          description: '',
-          frames: '',
-          stats_angle: 40,
-          ascensionist_count: 0,
-          difficulty_id: null,
-          quality_average: 0,
-          difficulty_error: 0,
-          benchmark_difficulty: null,
-        },
-        {
-          uuid: 'c3',
-          layout_id: 1,
-          board_type: 'kilter',
-          setter_username: '',
-          name: 'C',
-          description: '',
-          frames: '',
-          stats_angle: 40,
-          ascensionist_count: 0,
-          difficulty_id: null,
-          quality_average: 0,
-          difficulty_error: 0,
-          benchmark_difficulty: null,
-        },
-      ],
-    });
+    mockDb.execute.mockResolvedValueOnce([
+      {
+        uuid: 'c1',
+        layout_id: 1,
+        board_type: 'kilter',
+        setter_username: '',
+        name: 'A',
+        description: '',
+        frames: '',
+        stats_angle: 40,
+        ascensionist_count: 0,
+        difficulty_id: null,
+        quality_average: 0,
+        difficulty_error: 0,
+        benchmark_difficulty: null,
+      },
+      {
+        uuid: 'c2',
+        layout_id: 1,
+        board_type: 'kilter',
+        setter_username: '',
+        name: 'B',
+        description: '',
+        frames: '',
+        stats_angle: 40,
+        ascensionist_count: 0,
+        difficulty_id: null,
+        quality_average: 0,
+        difficulty_error: 0,
+        benchmark_difficulty: null,
+      },
+      {
+        uuid: 'c3',
+        layout_id: 1,
+        board_type: 'kilter',
+        setter_username: '',
+        name: 'C',
+        description: '',
+        frames: '',
+        stats_angle: 40,
+        ascensionist_count: 0,
+        difficulty_id: null,
+        quality_average: 0,
+        difficulty_error: 0,
+        benchmark_difficulty: null,
+      },
+    ]);
 
     const result = await setterFollowQueries.userClimbs(null, { input: { userId: 'user-123', limit: 2 } }, ctx);
 
@@ -446,7 +440,7 @@ describe('userClimbs query', () => {
     mockDb.select.mockReturnValueOnce(countChain);
 
     // 3. Climbs via db.execute() → empty
-    mockDb.execute.mockResolvedValueOnce({ rows: [] });
+    mockDb.execute.mockResolvedValueOnce([]);
 
     const result = await setterFollowQueries.userClimbs(null, { input: { userId: 'user-123' } }, ctx);
 

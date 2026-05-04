@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
 import { syncUserData } from '@/app/lib/data-sync/aurora/user-sync';
-import { getPool } from '@/app/lib/db/db';
-import { drizzle } from 'drizzle-orm/neon-serverless';
+import { getDb } from '@/app/lib/db/db';
 import { eq, and, or, isNotNull, asc } from 'drizzle-orm';
 import { decrypt, encrypt } from '@boardsesh/crypto';
 import * as schema from '@/app/lib/db/schema';
@@ -27,32 +26,23 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const pool = getPool();
+    const db = getDb();
 
     // Get ONE credential to sync - prioritize users who haven't synced longest (NULLS FIRST)
     // Include both 'active' and 'error' status to retry failed syncs
-    let credentials;
-    {
-      const client = await pool.connect();
-      try {
-        const db = drizzle(client);
-        credentials = await db
-          .select()
-          .from(schema.auroraCredentials)
-          .where(
-            and(
-              or(eq(schema.auroraCredentials.syncStatus, 'active'), eq(schema.auroraCredentials.syncStatus, 'error')),
-              isNotNull(schema.auroraCredentials.encryptedUsername),
-              isNotNull(schema.auroraCredentials.encryptedPassword),
-              isNotNull(schema.auroraCredentials.auroraUserId),
-            ),
-          )
-          .orderBy(asc(schema.auroraCredentials.lastSyncAt)) // NULLS FIRST is default in PostgreSQL
-          .limit(1);
-      } finally {
-        client.release();
-      }
-    }
+    const credentials = await db
+      .select()
+      .from(schema.auroraCredentials)
+      .where(
+        and(
+          or(eq(schema.auroraCredentials.syncStatus, 'active'), eq(schema.auroraCredentials.syncStatus, 'error')),
+          isNotNull(schema.auroraCredentials.encryptedUsername),
+          isNotNull(schema.auroraCredentials.encryptedPassword),
+          isNotNull(schema.auroraCredentials.auroraUserId),
+        ),
+      )
+      .orderBy(asc(schema.auroraCredentials.lastSyncAt)) // NULLS FIRST is default in PostgreSQL
+      .limit(1);
 
     if (credentials.length === 0) {
       console.info('[User Sync Cron] No users to sync');
@@ -75,7 +65,6 @@ export async function GET(request: Request) {
     };
 
     // Sync each user sequentially (to avoid overwhelming Aurora API)
-    // Each iteration acquires its own connections as needed
     for (const cred of credentials) {
       try {
         if (!cred.encryptedUsername || !cred.encryptedPassword || !cred.auroraUserId) {
@@ -105,25 +94,19 @@ export async function GET(request: Request) {
           });
 
           // Update status to error
-          const updateClient = await pool.connect();
-          try {
-            const updateDb = drizzle(updateClient);
-            await updateDb
-              .update(schema.auroraCredentials)
-              .set({
-                syncStatus: 'error',
-                syncError: errorMsg,
-                updatedAt: new Date(),
-              })
-              .where(
-                and(
-                  eq(schema.auroraCredentials.userId, cred.userId),
-                  eq(schema.auroraCredentials.boardType, cred.boardType),
-                ),
-              );
-          } finally {
-            updateClient.release();
-          }
+          await db
+            .update(schema.auroraCredentials)
+            .set({
+              syncStatus: 'error',
+              syncError: errorMsg,
+              updatedAt: new Date(),
+            })
+            .where(
+              and(
+                eq(schema.auroraCredentials.userId, cred.userId),
+                eq(schema.auroraCredentials.boardType, cred.boardType),
+              ),
+            );
 
           continue;
         }
@@ -146,25 +129,19 @@ export async function GET(request: Request) {
           });
 
           // Update status to error
-          const updateClient = await pool.connect();
-          try {
-            const updateDb = drizzle(updateClient);
-            await updateDb
-              .update(schema.auroraCredentials)
-              .set({
-                syncStatus: 'error',
-                syncError: errorMsg,
-                updatedAt: new Date(),
-              })
-              .where(
-                and(
-                  eq(schema.auroraCredentials.userId, cred.userId),
-                  eq(schema.auroraCredentials.boardType, cred.boardType),
-                ),
-              );
-          } finally {
-            updateClient.release();
-          }
+          await db
+            .update(schema.auroraCredentials)
+            .set({
+              syncStatus: 'error',
+              syncError: errorMsg,
+              updatedAt: new Date(),
+            })
+            .where(
+              and(
+                eq(schema.auroraCredentials.userId, cred.userId),
+                eq(schema.auroraCredentials.boardType, cred.boardType),
+              ),
+            );
 
           continue;
         }
@@ -181,24 +158,18 @@ export async function GET(request: Request) {
 
         // Update the stored token
         const encryptedToken = encrypt(token);
-        const tokenUpdateClient = await pool.connect();
-        try {
-          const tokenUpdateDb = drizzle(tokenUpdateClient);
-          await tokenUpdateDb
-            .update(schema.auroraCredentials)
-            .set({
-              auroraToken: encryptedToken,
-              updatedAt: new Date(),
-            })
-            .where(
-              and(
-                eq(schema.auroraCredentials.userId, cred.userId),
-                eq(schema.auroraCredentials.boardType, cred.boardType),
-              ),
-            );
-        } finally {
-          tokenUpdateClient.release();
-        }
+        await db
+          .update(schema.auroraCredentials)
+          .set({
+            auroraToken: encryptedToken,
+            updatedAt: new Date(),
+          })
+          .where(
+            and(
+              eq(schema.auroraCredentials.userId, cred.userId),
+              eq(schema.auroraCredentials.boardType, cred.boardType),
+            ),
+          );
 
         // Wait for Aurora session replication across their backend servers
         // Testing if this fixes the 404 errors on Vercel (works locally)
@@ -210,24 +181,18 @@ export async function GET(request: Request) {
         // syncUserData manages its own connections internally
         await syncUserData(boardType, token, cred.auroraUserId);
 
-        // Update last sync time on success - acquire new connection
-        const updateClient = await pool.connect();
-        try {
-          const updateDb = drizzle(updateClient);
-          await updateDb
-            .update(schema.auroraCredentials)
-            .set({
-              lastSyncAt: new Date(),
-              syncStatus: 'active',
-              syncError: null,
-              updatedAt: new Date(),
-            })
-            .where(
-              and(eq(schema.auroraCredentials.userId, cred.userId), eq(schema.auroraCredentials.boardType, boardType)),
-            );
-        } finally {
-          updateClient.release();
-        }
+        // Update last sync time on success
+        await db
+          .update(schema.auroraCredentials)
+          .set({
+            lastSyncAt: new Date(),
+            syncStatus: 'active',
+            syncError: null,
+            updatedAt: new Date(),
+          })
+          .where(
+            and(eq(schema.auroraCredentials.userId, cred.userId), eq(schema.auroraCredentials.boardType, boardType)),
+          );
 
         results.successful++;
         console.info(`[User Sync Cron] ✓ Successfully synced user ${cred.userId} for ${boardType}`);
@@ -240,11 +205,9 @@ export async function GET(request: Request) {
           error: errorMsg,
         });
 
-        // Update sync status to error - acquire new connection
-        const updateClient = await pool.connect();
+        // Update sync status to error
         try {
-          const updateDb = drizzle(updateClient);
-          await updateDb
+          await db
             .update(schema.auroraCredentials)
             .set({
               syncStatus: 'error',
@@ -259,8 +222,6 @@ export async function GET(request: Request) {
             );
         } catch (updateError) {
           console.error(`[User Sync Cron] Failed to update error status for user ${cred.userId}:`, updateError);
-        } finally {
-          updateClient.release();
         }
 
         console.error(`[User Sync Cron] ✗ Failed to sync user ${cred.userId} for ${cred.boardType}:`, errorMsg);

@@ -1,5 +1,6 @@
 import { eq, and, isNull, count, sql, inArray } from 'drizzle-orm';
 import type { ConnectionContext, NotificationEvent } from '@boardsesh/shared-schema';
+import { executeRows } from '@boardsesh/db/client';
 import { db } from '../../../db/client';
 import * as dbSchema from '@boardsesh/db/schema';
 import { requireAuthenticated, applyRateLimit, validateInput } from '../shared/helpers';
@@ -63,7 +64,12 @@ export const socialNotificationQueries = {
     // These must be computed over ALL user notifications (not filtered by unreadOnly),
     // so we use subqueries instead of window functions which would only count
     // the filtered result set.
-    const rawResult = await db.execute(sql`
+    const rows = await executeRows<
+      NotificationRow & {
+        totalCount: string;
+        unreadCount: string;
+      }
+    >(db, sql`
       SELECT
         n."uuid",
         n."type",
@@ -91,11 +97,6 @@ export const socialNotificationQueries = {
       OFFSET ${offset}
     `);
 
-    const rows = (
-      rawResult as unknown as {
-        rows: (NotificationRow & { totalCount: string; unreadCount: string })[];
-      }
-    ).rows;
     const notifications = rows.map(mapNotificationRow);
     const totalCount = rows.length > 0 ? Number(rows[0].totalCount) : 0;
     const unreadCount = rows.length > 0 ? Number(rows[0].unreadCount) : 0;
@@ -134,7 +135,7 @@ export const socialNotificationQueries = {
       totalGroupCount: string;
     };
 
-    const rawResult = await db.execute(sql`
+    const rows = await executeRows<GroupedRow>(db, sql`
       WITH all_groups AS (
         SELECT
           n."type",
@@ -176,8 +177,6 @@ export const socialNotificationQueries = {
         ) as "actorAvatarUrls"
       FROM paged p
     `);
-
-    const rows = (rawResult as unknown as { rows: GroupedRow[] }).rows;
 
     // Total group count from window function (same value on every row)
     const totalCount = rows.length > 0 ? Number(rows[0].totalGroupCount) : 0;

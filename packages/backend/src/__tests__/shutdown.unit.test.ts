@@ -12,21 +12,30 @@ function readSource(relativePath: string): string {
 }
 
 describe('shutdown: closePool wiring', () => {
-  it('index.ts imports and calls closePool from @boardsesh/db/client', () => {
+  it('index.ts imports closePool and closeReadPool from @boardsesh/db/client', () => {
     const source = readSource('src/index.ts');
-    expect(source).toContain("import { closePool } from '@boardsesh/db/client'");
+    expect(source).toContain("import { closePool, closeReadPool } from '@boardsesh/db/client'");
     expect(source).toContain('await closePool()');
+    expect(source).toContain('await closeReadPool()');
   });
 
-  it('index.ts logs when pool is closed', () => {
+  it('index.ts logs when pools are closed', () => {
     const source = readSource('src/index.ts');
-    expect(source).toContain("'Database pool closed'");
+    expect(source).toContain("'Database pools closed'");
   });
 
-  it('index.ts handles closePool errors gracefully', () => {
+  it('index.ts handles pool close errors gracefully', () => {
     const source = readSource('src/index.ts');
     // closePool should be in a try/catch
-    expect(source).toContain("'Error closing database pool:'");
+    expect(source).toContain("'Error closing database pools:'");
+  });
+
+  it('index.ts closes read pool before primary pool', () => {
+    const source = readSource('src/index.ts');
+    const readIdx = source.indexOf('await closeReadPool()');
+    const primaryIdx = source.indexOf('await closePool()');
+    expect(readIdx).toBeGreaterThanOrEqual(0);
+    expect(readIdx).toBeLessThan(primaryIdx);
   });
 });
 
@@ -75,45 +84,47 @@ describe('shutdown: ordering', () => {
 });
 
 describe('pool configuration', () => {
-  it('idleTimeoutMillis is 30 seconds (not the old 120s)', () => {
-    const neonSource = readFileSync(resolve(ROOT, '../db/src/client/neon.ts'), 'utf-8');
-    expect(neonSource).toContain('idleTimeoutMillis: 30000');
-    expect(neonSource).not.toContain('idleTimeoutMillis: 120000');
+  it('idle_timeout is 30 seconds', () => {
+    const source = readFileSync(resolve(ROOT, '../db/src/client/postgres.ts'), 'utf-8');
+    expect(source).toContain('idle_timeout: 30');
   });
 });
 
 describe('closePool implementation', () => {
-  const neonSource = readFileSync(resolve(ROOT, '../db/src/client/neon.ts'), 'utf-8');
+  const source = readFileSync(resolve(ROOT, '../db/src/client/postgres.ts'), 'utf-8');
 
-  it('is exported from neon.ts', () => {
-    expect(neonSource).toContain('export async function closePool()');
+  it('is exported from postgres.ts', () => {
+    expect(source).toContain('export async function closePool()');
   });
 
-  it('ends the pool and resets to null', () => {
-    expect(neonSource).toContain('await pool.end()');
-    expect(neonSource).toContain('pool = null');
+  it('ends the client and clears the cached pool', () => {
+    expect(source).toContain('await cache.client.end()');
+    expect(source).toContain('cache.client = undefined');
   });
 
-  it('ends postgresClient and resets to null', () => {
-    expect(neonSource).toContain('postgresClient.end()');
-    expect(neonSource).toContain('postgresClient = null');
-  });
-
-  it('resets db singleton to null', () => {
-    expect(neonSource).toContain('db = null');
+  it('clears the cached drizzle singleton', () => {
+    expect(source).toContain('cache.db = undefined');
   });
 
   it('uses try/finally to ensure singletons are nulled even if .end() throws', () => {
-    // Each .end() call should be in a try/finally so the singleton is always reset
-    const tryCount = (neonSource.match(/try\s*\{/g) ?? []).length;
-    const finallyCount = (neonSource.match(/finally\s*\{/g) ?? []).length;
-    // closePool should have at least 2 try/finally blocks (pool + postgresClient)
-    expect(finallyCount).toBeGreaterThanOrEqual(2);
+    const tryCount = (source.match(/try\s*\{/g) ?? []).length;
+    const finallyCount = (source.match(/finally\s*\{/g) ?? []).length;
+    expect(finallyCount).toBeGreaterThanOrEqual(1);
     expect(tryCount).toBeGreaterThanOrEqual(finallyCount);
   });
 
   it('is re-exported from client/index.ts', () => {
     const indexSource = readFileSync(resolve(ROOT, '../db/src/client/index.ts'), 'utf-8');
     expect(indexSource).toContain('closePool');
+  });
+
+  it('closeReadPool is exported and re-exported', () => {
+    expect(source).toContain('export async function closeReadPool()');
+    const indexSource = readFileSync(resolve(ROOT, '../db/src/client/index.ts'), 'utf-8');
+    expect(indexSource).toContain('closeReadPool');
+  });
+
+  it('postgres-js clients are configured with prepare:false for PgBouncer', () => {
+    expect(source).toContain('prepare: false');
   });
 });

@@ -1,6 +1,6 @@
 import { v5 as uuidv5 } from 'uuid';
 import { z } from 'zod';
-import { getDb } from '@/app/lib/db/db';
+import { getDb, rowsFromResult } from '@/app/lib/db/db';
 import { boardseshTicks, inferredSessions } from '@/app/lib/db/schema';
 import { sql, eq, and, isNull, desc, inArray } from 'drizzle-orm';
 
@@ -115,7 +115,7 @@ async function recalculateSessionStats(sessionId: string, conn: ReturnType<typeo
     WHERE inferred_session_id = ${sessionId}
   `);
 
-  const rawRows = (result as unknown as { rows: unknown[] }).rows;
+  const rawRows = rowsFromResult<unknown>(result);
   const parsed = rawRows.length > 0 ? SessionStatsRowSchema.safeParse(rawRows[0]) : null;
 
   if (!parsed || !parsed.success || parsed.data.first_tick_at === null) {

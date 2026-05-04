@@ -1,5 +1,6 @@
 import { eq, asc, and, sql } from 'drizzle-orm';
 import type { QueryResolvers } from '@boardsesh/shared-schema/generated';
+import { executeRows } from '@boardsesh/db/client';
 import { db } from '../../../db/client';
 import * as dbSchema from '@boardsesh/db/schema';
 import { validateInput } from '../shared/helpers';
@@ -29,7 +30,7 @@ export const boardQueries: Pick<QueryResolvers, 'grades' | 'angles'> = {
   angles: async (_, { boardName, layoutId }) => {
     validateInput(BoardNameSchema, boardName, 'boardName');
 
-    const result = await db.execute<{ angle: number }>(sql`
+    const result = await executeRows<{ angle: number }>(db, sql`
       SELECT DISTINCT pa.angle
       FROM board_products_angles pa
       JOIN board_layouts l
@@ -38,7 +39,6 @@ export const boardQueries: Pick<QueryResolvers, 'grades' | 'angles'> = {
       ORDER BY pa.angle ASC
     `);
 
-    const rows = Array.isArray(result) ? result : (result as { rows: { angle: number }[] }).rows;
-    return rows.map((r) => ({ angle: r.angle }));
+    return result.map((r) => ({ angle: r.angle }));
   },
 };

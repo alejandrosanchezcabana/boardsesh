@@ -4,7 +4,7 @@ import dotenv from 'dotenv';
 dotenv.config({ path: '.env.development.local', override: true });
 import { startServer } from './server';
 import { redisClientManager } from './redis/client';
-import { closePool } from '@boardsesh/db/client';
+import { closePool, closeReadPool } from '@boardsesh/db/client';
 
 async function main() {
   const { wss, httpServer, cleanupIntervals, shutdownServices } = await startServer();
@@ -53,12 +53,13 @@ async function main() {
     // Disconnect from Redis
     await redisClientManager.disconnect();
 
-    // Close database connection pool
+    // Close database connection pools (primary + read replica)
     try {
+      await closeReadPool();
       await closePool();
-      console.info('Database pool closed');
+      console.info('Database pools closed');
     } catch (error) {
-      console.warn('Error closing database pool:', error);
+      console.warn('Error closing database pools:', error);
     }
 
     console.info('Shutdown complete');

@@ -5,7 +5,7 @@ import { parseBoardRouteParamsWithSlugs } from '@/app/lib/url-utils.server';
 import { buildOgBoardRenderUrl } from '@/app/components/board-renderer/util';
 import { createOgImageHeaders } from '@/app/lib/seo/og';
 
-export const runtime = 'edge';
+export const runtime = 'nodejs';
 
 export async function GET(request: NextRequest) {
   const routeT0 = performance.now();

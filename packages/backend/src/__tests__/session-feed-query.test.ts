@@ -18,12 +18,18 @@ const sessionFeedTestState = vi.hoisted(() => {
   };
 });
 
-vi.mock('../db/client', () => ({
-  db: {
+vi.mock('../db/client', () => {
+  const fakeDb = {
     execute: sessionFeedTestState.executeMock,
     select: sessionFeedTestState.selectMock,
-  },
-}));
+  };
+  // sessionGroupedFeed reads from `dbRead`; alias it to the same fake so the
+  // existing call assertions still hit `executeMock` / `selectMock`.
+  return {
+    db: fakeDb,
+    dbRead: fakeDb,
+  };
+});
 
 const { sessionGroupedFeed } = await import('../graphql/resolvers/social/session-feed').then(
   (module) => module.sessionFeedQueries,
@@ -51,65 +57,57 @@ describe('sessionGroupedFeed user filtering', () => {
     vi.clearAllMocks();
 
     sessionFeedTestState.executeMock
-      .mockResolvedValueOnce({
-        rows: [
-          {
-            session_id: 'party-1',
-            session_type: 'party',
-            session_first_tick: '2024-01-15T10:00:00.000Z',
-            session_last_tick: '2024-01-15T12:00:00.000Z',
-            tick_count: 8,
-            total_sends: 5,
-            total_flashes: 2,
-            total_attempts: 6,
-            vote_score: 4,
-            vote_up: 5,
-            vote_down: 1,
-            comment_count: 2,
-          },
-        ],
-      })
-      .mockResolvedValueOnce({
-        rows: [
-          {
-            effective_session_id: 'party-1',
-            userId: 'user-1',
-            displayName: 'Alex',
-            avatarUrl: null,
-            sends: 3,
-            flashes: 1,
-            attempts: 2,
-          },
-          {
-            effective_session_id: 'party-1',
-            userId: 'user-2',
-            displayName: 'Sam',
-            avatarUrl: null,
-            sends: 2,
-            flashes: 1,
-            attempts: 4,
-          },
-        ],
-      })
-      .mockResolvedValueOnce({
-        rows: [
-          {
-            effective_session_id: 'party-1',
-            diff_num: 10,
-            flash: 2,
-            send: 3,
-            attempt: 6,
-          },
-        ],
-      })
-      .mockResolvedValueOnce({
-        rows: [
-          {
-            effective_session_id: 'party-1',
-            board_types: ['kilter'],
-          },
-        ],
-      });
+      .mockResolvedValueOnce([
+        {
+          session_id: 'party-1',
+          session_type: 'party',
+          session_first_tick: '2024-01-15T10:00:00.000Z',
+          session_last_tick: '2024-01-15T12:00:00.000Z',
+          tick_count: 8,
+          total_sends: 5,
+          total_flashes: 2,
+          total_attempts: 6,
+          vote_score: 4,
+          vote_up: 5,
+          vote_down: 1,
+          comment_count: 2,
+        },
+      ])
+      .mockResolvedValueOnce([
+        {
+          effective_session_id: 'party-1',
+          userId: 'user-1',
+          displayName: 'Alex',
+          avatarUrl: null,
+          sends: 3,
+          flashes: 1,
+          attempts: 2,
+        },
+        {
+          effective_session_id: 'party-1',
+          userId: 'user-2',
+          displayName: 'Sam',
+          avatarUrl: null,
+          sends: 2,
+          flashes: 1,
+          attempts: 4,
+        },
+      ])
+      .mockResolvedValueOnce([
+        {
+          effective_session_id: 'party-1',
+          diff_num: 10,
+          flash: 2,
+          send: 3,
+          attempt: 6,
+        },
+      ])
+      .mockResolvedValueOnce([
+        {
+          effective_session_id: 'party-1',
+          board_types: ['kilter'],
+        },
+      ]);
 
     sessionFeedTestState.selectWhereMock.mockResolvedValue([
       {

@@ -1,6 +1,7 @@
 import { v4 as uuidv4 } from 'uuid';
 import { eq, and, count, isNull, sql, ilike, or, desc, inArray } from 'drizzle-orm';
 import type { ConnectionContext } from '@boardsesh/shared-schema';
+import { rowsFromResult } from '@boardsesh/db/client';
 import { db } from '../../../db/client';
 import * as dbSchema from '@boardsesh/db/schema';
 import { requireAuthenticated, applyRateLimit, validateInput } from '../shared/helpers';
@@ -328,14 +329,14 @@ export const socialGymQueries = {
           ? sql`SELECT count(*)::int as count FROM gyms WHERE is_public = true AND deleted_at IS NULL AND location IS NOT NULL AND ST_DWithin(location, ST_MakePoint(${lon}, ${lat})::geography, ${radiusMeters}) AND (name ILIKE ${likePattern} OR address ILIKE ${likePattern})`
           : sql`SELECT count(*)::int as count FROM gyms WHERE is_public = true AND deleted_at IS NULL AND location IS NOT NULL AND ST_DWithin(location, ST_MakePoint(${lon}, ${lat})::geography, ${radiusMeters})`,
       );
-      const totalCount = Number((countRows as unknown as Array<Record<string, unknown>>)[0]?.count || 0);
+      const totalCount = Number(rowsFromResult<Record<string, unknown>>(countRows)[0]?.count || 0);
 
       const gymRows = await db.execute(
         likePattern
           ? sql`SELECT *, ST_Distance(location, ST_MakePoint(${lon}, ${lat})::geography) as distance_meters FROM gyms WHERE is_public = true AND deleted_at IS NULL AND location IS NOT NULL AND ST_DWithin(location, ST_MakePoint(${lon}, ${lat})::geography, ${radiusMeters}) AND (name ILIKE ${likePattern} OR address ILIKE ${likePattern}) ORDER BY distance_meters ASC LIMIT ${limit} OFFSET ${offset}`
           : sql`SELECT *, ST_Distance(location, ST_MakePoint(${lon}, ${lat})::geography) as distance_meters FROM gyms WHERE is_public = true AND deleted_at IS NULL AND location IS NOT NULL AND ST_DWithin(location, ST_MakePoint(${lon}, ${lat})::geography, ${radiusMeters}) ORDER BY distance_meters ASC LIMIT ${limit} OFFSET ${offset}`,
       );
-      const rows = gymRows as unknown as Array<Record<string, unknown>>;
+      const rows = rowsFromResult<Record<string, unknown>>(gymRows);
 
       const mappedGyms = rows.map(mapRawGymRow);
 

@@ -16,6 +16,21 @@ Boardsesh is a monorepo containing a Next.js 16 application for controlling stan
 - No buzzwords. Concrete numbers and simple language.
 - No unnecessary check-ins. Default to action. Full autonomy except no data deletion without asking.
 
+## Database Hosting (Railway)
+
+We host PostgreSQL on Railway. **Treat Railway as a portable stepping stone, not a permanent marriage.** Railway is currently better gravity than Neon (simpler, less magical, closer to "Docker + Postgres") but it is still a platform. The whole point of leaving Neon was to escape platform gravity — don't accidentally re-create it.
+
+When making infrastructure or backend changes:
+
+- **Keep Postgres vanilla.** Use standard PostgreSQL features. Don't reach for Railway-only addons, Railway-managed extensions, or Railway-flavoured wrappers. Anything you write should run unchanged on a `docker run postgres:17` instance.
+- **No Railway-specific service assumptions in app code.** No `RAILWAY_*` env vars threaded into business logic. No code paths that branch on the deploy target. The app should not be able to tell Railway from a self-hosted box from a developer laptop.
+- **Use standard Docker builds.** No Railway-only build steps, no `railway.toml`-encoded behaviour the app depends on. The Dockerfile should build and run anywhere.
+- **Keep migrations in-repo.** All schema changes live in `packages/db/drizzle/` and run via `bunx drizzle-kit generate` + `vp run db:migrate`. Never use Railway's UI / dashboard to mutate schema.
+- **`pg_dump` / `pg_restore` is the exit plan.** A vanilla logical dump must be sufficient to lift-and-shift Postgres to another host. If you ever need a Railway-specific tool to extract data, you've taken a wrong turn — back out.
+- **Keep object storage, video, and analytics deliberately portable.** Same rule for any other service we add: prefer S3-compatible APIs, OpenTelemetry-shaped exporters, standard connection strings. Avoid platform-specific managed primitives where a portable equivalent exists.
+
+The migration runbook (`docs/neon-migration.md`) documents how to move off Neon. Future migrations off Railway should be similarly straightforward — that's the test for whether we're staying portable.
+
 ## Documentation
 
 Before working on a specific part of the codebase, check the `docs/` directory for relevant documentation:

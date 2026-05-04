@@ -1,19 +1,15 @@
 import { userSync } from '../api/user-sync-api';
 import { type SyncOptions, type UserSyncData, type AuroraBoardName, USER_TABLES } from '../api/types';
 import { eq, and, inArray, sql } from 'drizzle-orm';
-import { drizzle, type NeonDatabase } from 'drizzle-orm/neon-serverless';
-import type { Pool } from '@neondatabase/serverless';
+import { drizzle, type PostgresJsDatabase } from 'drizzle-orm/postgres-js';
+import type postgres from 'postgres';
 import { UNIFIED_TABLES } from '../db/table-select';
 import { boardseshTicks, playlists, playlistClimbs, playlistOwnership } from '@boardsesh/db/schema/app';
 import { randomUUID } from 'crypto';
 import { convertQuality } from '@boardsesh/shared-schema';
 
-// Batch size for bulk inserts
 const BATCH_SIZE = 100;
 
-/**
- * Process data in batches
- */
 async function processBatches<T>(
   data: T[],
   batchSize: number,
@@ -33,8 +29,10 @@ type UpsertResult = {
 
 type AuroraApiRow = Record<string, string>;
 
+type DrizzleDb = PostgresJsDatabase<Record<string, never>>;
+
 async function upsertTableData(
-  db: NeonDatabase<Record<string, never>>,
+  db: DrizzleDb,
   boardName: AuroraBoardName,
   tableName: string,
   auroraUserId: number,
@@ -161,7 +159,6 @@ async function upsertTableData(
     }
 
     case 'ascents': {
-      // Ascents are now only written to boardsesh_ticks (legacy ascents tables have been dropped)
       if (nextAuthUserId) {
         const now = new Date().toISOString();
         await processBatches(data, BATCH_SIZE, async (batch) => {
@@ -214,7 +211,6 @@ async function upsertTableData(
     }
 
     case 'bids': {
-      // Bids are now only written to boardsesh_ticks (legacy bids tables have been dropped)
       if (nextAuthUserId) {
         const now = new Date().toISOString();
         await processBatches(data, BATCH_SIZE, async (batch) => {
@@ -263,11 +259,9 @@ async function upsertTableData(
     }
 
     case 'tags': {
-      // Tags have a composite key, need special handling
       const tagsSchema = UNIFIED_TABLES.tags;
       await processBatches(data, BATCH_SIZE, async (batch) => {
         for (const item of batch) {
-          // First try to update existing record
           const result = await db
             .update(tagsSchema)
             .set({
@@ -283,7 +277,6 @@ async function upsertTableData(
             )
             .returning();
 
-          // If no record was updated, insert a new one
           if (result.length === 0) {
             await db.insert(tagsSchema).values({
               boardType: boardName,
@@ -301,7 +294,6 @@ async function upsertTableData(
     case 'circuits': {
       const circuitsSchema = UNIFIED_TABLES.circuits;
 
-      // 1. Write to unified circuits table (batched)
       await processBatches(data, BATCH_SIZE, async (batch) => {
         const values = batch.map((item) => ({
           boardType: boardName,
@@ -329,19 +321,16 @@ async function upsertTableData(
           });
       });
 
-      // 2. Dual write to playlists table (only if NextAuth user exists)
       if (nextAuthUserId) {
         for (const item of data) {
-          // Format color - Aurora uses hex without #, we store with #
           const formattedColor = item.color ? `#${item.color}` : null;
 
-          // Insert/update playlist
           const [playlist] = await db
             .insert(playlists)
             .values({
-              uuid: item.uuid, // Use same UUID as Aurora circuit
+              uuid: item.uuid,
               boardType: boardName,
-              layoutId: null, // Nullable for Aurora-synced circuits
+              layoutId: null,
               name: item.name || 'Untitled Circuit',
               description: item.description || null,
               isPublic: Boolean(item.is_public),
@@ -365,7 +354,6 @@ async function upsertTableData(
             })
             .returning({ id: playlists.id });
 
-          // 3. Create ownership if not exists
           await db
             .insert(playlistOwnership)
             .values({
@@ -375,15 +363,11 @@ async function upsertTableData(
             })
             .onConflictDoNothing();
 
-          // 4. Sync playlist climbs (from nested climbs array)
           if (item.climbs && Array.isArray(item.climbs)) {
-            // Delete existing climbs for this playlist to handle removals
             await db.delete(playlistClimbs).where(eq(playlistClimbs.playlistId, playlist.id));
 
-            // Insert new climbs
             for (let i = 0; i < item.climbs.length; i++) {
               const climb = item.climbs[i];
-              // Handle different possible structures of climb data
               const climbUuid = climb.climb_uuid || climb.uuid || climb;
               const climbAngle = climb.angle ?? null;
               const climbPosition = climb.position ?? i;
@@ -416,11 +400,7 @@ async function upsertTableData(
   return { synced: data.length, skipped: 0 };
 }
 
-async function updateUserSyncs(
-  tx: NeonDatabase<Record<string, never>>,
-  boardName: AuroraBoardName,
-  userSyncs: UserSyncData[],
-) {
+async function updateUserSyncs(tx: DrizzleDb, boardName: AuroraBoardName, userSyncs: UserSyncData[]) {
   const userSyncsSchema = UNIFIED_TABLES.userSyncs;
 
   for (const sync of userSyncs) {
@@ -441,44 +421,37 @@ async function updateUserSyncs(
   }
 }
 
-export async function getLastSyncTimes(pool: Pool, boardName: AuroraBoardName, userId: number, tableNames: string[]) {
+export async function getLastSyncTimes(
+  pgClient: ReturnType<typeof postgres>,
+  boardName: AuroraBoardName,
+  userId: number,
+  tableNames: string[],
+) {
   const userSyncsSchema = UNIFIED_TABLES.userSyncs;
-  const client = await pool.connect();
-
-  try {
-    const db = drizzle(client);
-    const result = await db
-      .select()
-      .from(userSyncsSchema)
-      .where(
-        and(
-          eq(userSyncsSchema.boardType, boardName),
-          eq(userSyncsSchema.userId, Number(userId)),
-          inArray(userSyncsSchema.tableName, tableNames),
-        ),
-      );
-
-    return result;
-  } finally {
-    client.release();
-  }
+  const db = drizzle(pgClient);
+  return db
+    .select()
+    .from(userSyncsSchema)
+    .where(
+      and(
+        eq(userSyncsSchema.boardType, boardName),
+        eq(userSyncsSchema.userId, Number(userId)),
+        inArray(userSyncsSchema.tableName, tableNames),
+      ),
+    );
 }
 
-export async function getLastSharedSyncTimes(pool: Pool, boardName: AuroraBoardName, tableNames: string[]) {
+export async function getLastSharedSyncTimes(
+  pgClient: ReturnType<typeof postgres>,
+  boardName: AuroraBoardName,
+  tableNames: string[],
+) {
   const sharedSyncsSchema = UNIFIED_TABLES.sharedSyncs;
-  const client = await pool.connect();
-
-  try {
-    const db = drizzle(client);
-    const result = await db
-      .select()
-      .from(sharedSyncsSchema)
-      .where(and(eq(sharedSyncsSchema.boardType, boardName), inArray(sharedSyncsSchema.tableName, tableNames)));
-
-    return result;
-  } finally {
-    client.release();
-  }
+  const db = drizzle(pgClient);
+  return db
+    .select()
+    .from(sharedSyncsSchema)
+    .where(and(eq(sharedSyncsSchema.boardType, boardName), inArray(sharedSyncsSchema.tableName, tableNames)));
 }
 
 export type SyncTableResult = {
@@ -490,7 +463,7 @@ export type SyncTableResult = {
 export type SyncUserDataResult = Record<string, SyncTableResult>;
 
 export async function syncUserData(
-  pool: Pool,
+  pgClient: ReturnType<typeof postgres>,
   board: AuroraBoardName,
   token: string,
   auroraUserId: number,
@@ -503,13 +476,9 @@ export async function syncUserData(
       tables,
     };
 
-    // Get user sync times
-    const allSyncTimes = await getLastSyncTimes(pool, board, auroraUserId, tables);
-
-    // Create a map of existing sync times
+    const allSyncTimes = await getLastSyncTimes(pgClient, board, auroraUserId, tables);
     const userSyncMap = new Map(allSyncTimes.map((sync) => [sync.tableName, sync.lastSynchronizedAt]));
 
-    // Ensure all user tables have a sync entry (default to 1970 if not synced)
     const defaultTimestamp = '1970-01-01 00:00:00.000000';
 
     syncParams.userSyncs = tables.map((tableName) => ({
@@ -520,14 +489,14 @@ export async function syncUserData(
 
     log(`Syncing ${tables.length} tables for user ${auroraUserId}`);
 
-    // Initialize results tracking
     const totalResults: SyncUserDataResult = {};
 
-    // Recursive sync until _complete is true
     let currentSyncParams = syncParams;
     let isComplete = false;
     let syncAttempts = 0;
-    const maxSyncAttempts = 50; // Prevent infinite loops
+    const maxSyncAttempts = 50;
+
+    const db = drizzle(pgClient);
 
     while (!isComplete && syncAttempts < maxSyncAttempts) {
       syncAttempts++;
@@ -535,59 +504,54 @@ export async function syncUserData(
 
       const syncResults = await userSync(board, auroraUserId, currentSyncParams, token);
 
-      // Process this batch in a transaction
-      const client = await pool.connect();
       try {
-        await client.query('BEGIN');
+        await db.transaction(async (tx) => {
+          for (const tableName of tables) {
+            log(`Syncing ${tableName} for user ${auroraUserId} (batch ${syncAttempts})`);
+            if (syncResults[tableName] && Array.isArray(syncResults[tableName])) {
+              const data = syncResults[tableName];
 
-        // Create a drizzle instance for this transaction
-        const tx = drizzle(client);
+              const upsertResult = await upsertTableData(
+                tx as unknown as DrizzleDb,
+                board,
+                tableName,
+                auroraUserId,
+                nextAuthUserId,
+                data,
+                log,
+              );
 
-        // Process each table - data is directly under table names
-        for (const tableName of tables) {
-          log(`Syncing ${tableName} for user ${auroraUserId} (batch ${syncAttempts})`);
-          if (syncResults[tableName] && Array.isArray(syncResults[tableName])) {
-            const data = syncResults[tableName];
-
-            const upsertResult = await upsertTableData(tx, board, tableName, auroraUserId, nextAuthUserId, data, log);
-
-            // Accumulate results
-            if (!totalResults[tableName]) {
+              if (!totalResults[tableName]) {
+                totalResults[tableName] = { synced: 0 };
+              }
+              totalResults[tableName].synced += upsertResult.synced;
+              if (upsertResult.skipped > 0) {
+                totalResults[tableName].skipped = (totalResults[tableName].skipped || 0) + upsertResult.skipped;
+                totalResults[tableName].skippedReason = upsertResult.skippedReason;
+              }
+            } else if (!totalResults[tableName]) {
               totalResults[tableName] = { synced: 0 };
             }
-            totalResults[tableName].synced += upsertResult.synced;
-            if (upsertResult.skipped > 0) {
-              totalResults[tableName].skipped = (totalResults[tableName].skipped || 0) + upsertResult.skipped;
-              totalResults[tableName].skippedReason = upsertResult.skippedReason;
-            }
-          } else if (!totalResults[tableName]) {
-            totalResults[tableName] = { synced: 0 };
           }
-        }
 
-        // Update user_syncs table with new sync times from this batch
-        if (syncResults['user_syncs']) {
-          await updateUserSyncs(tx, board, syncResults['user_syncs']);
+          if (syncResults['user_syncs']) {
+            await updateUserSyncs(tx as unknown as DrizzleDb, board, syncResults['user_syncs']);
 
-          // Update sync params for next iteration with new timestamps
-          const newUserSyncs = syncResults['user_syncs'].map(
-            (sync: { table_name: string; last_synchronized_at: string }) => ({
-              table_name: sync.table_name,
-              last_synchronized_at: sync.last_synchronized_at,
-              user_id: Number(auroraUserId),
-            }),
-          );
+            const newUserSyncs = syncResults['user_syncs'].map(
+              (sync: { table_name: string; last_synchronized_at: string }) => ({
+                table_name: sync.table_name,
+                last_synchronized_at: sync.last_synchronized_at,
+                user_id: Number(auroraUserId),
+              }),
+            );
 
-          currentSyncParams = {
-            ...currentSyncParams,
-            userSyncs: newUserSyncs,
-          };
-        }
-
-        await client.query('COMMIT');
+            currentSyncParams = {
+              ...currentSyncParams,
+              userSyncs: newUserSyncs,
+            };
+          }
+        });
       } catch (error) {
-        await client.query('ROLLBACK');
-        // Extract meaningful error message from PostgreSQL/Drizzle errors
         let errorMessage: string;
         if (error instanceof Error) {
           if (error.message.includes('violates foreign key constraint')) {
@@ -600,11 +564,8 @@ export async function syncUserData(
         }
         log(`Database error: ${errorMessage}`);
         throw new Error(`Database error: ${errorMessage}`);
-      } finally {
-        client.release();
       }
 
-      // Check if sync is complete
       isComplete = syncResults._complete !== false;
 
       if (!isComplete) {

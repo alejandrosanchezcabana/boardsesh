@@ -1,5 +1,5 @@
 import { and, sql } from 'drizzle-orm';
-import { dbz as db } from '@/app/lib/db/db';
+import { dbzRead as db, executeRows } from '@/app/lib/db/db';
 import type { ParsedBoardRouteParameters, SearchRequestPagination } from '@/app/lib/types';
 import { UNIFIED_TABLES } from '@/lib/db/queries/util/table-select';
 import { createClimbFilters } from '@boardsesh/db/queries';
@@ -101,7 +101,7 @@ export const getHoldHeatmapData = async (
 
       // Query for user ascents and attempts per hold in parallel
       const [userAscentsQuery, userAttemptsQuery] = await Promise.all([
-        db.execute(sql`
+        executeRows<{ hold_id: number; user_ascents: number }>(db, sql`
           SELECT ch.hold_id, COUNT(*) as user_ascents
           FROM ${boardseshTicks} t
           JOIN board_climb_holds ch ON t.climb_uuid = ch.climb_uuid AND ch.board_type = ${params.board_name}
@@ -111,7 +111,7 @@ export const getHoldHeatmapData = async (
             AND t.status IN ('flash', 'send')
           GROUP BY ch.hold_id
         `),
-        db.execute(sql`
+        executeRows<{ hold_id: number; user_attempts: number }>(db, sql`
           SELECT ch.hold_id, SUM(t.attempt_count) as user_attempts
           FROM ${boardseshTicks} t
           JOIN board_climb_holds ch ON t.climb_uuid = ch.climb_uuid AND ch.board_type = ${params.board_name}
@@ -126,11 +126,11 @@ export const getHoldHeatmapData = async (
       const ascentsMap = new Map();
       const attemptsMap = new Map();
 
-      for (const row of userAscentsQuery.rows) {
+      for (const row of userAscentsQuery) {
         ascentsMap.set(Number(row.hold_id), Number(row.user_ascents));
       }
 
-      for (const row of userAttemptsQuery.rows) {
+      for (const row of userAttemptsQuery) {
         attemptsMap.set(Number(row.hold_id), Number(row.user_attempts));
       }
 
