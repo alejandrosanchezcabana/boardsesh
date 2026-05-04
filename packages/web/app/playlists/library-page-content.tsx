@@ -27,6 +27,7 @@ import { findMatchingBoard } from '@/app/lib/find-matching-board';
 import { deriveIsAuthenticated } from '@/app/lib/derive-auth-status';
 import type { UserBoard, PopularBoardConfig } from '@boardsesh/shared-schema';
 import { useAuthModal } from '@/app/components/providers/auth-modal-provider';
+import { useSnackbar } from '@/app/components/providers/snackbar-provider';
 import PlaylistCardGrid from '@/app/components/library/playlist-card-grid';
 import PlaylistScrollSection from '@/app/components/library/playlist-scroll-section';
 import PlaylistCard from '@/app/components/library/playlist-card';
@@ -84,6 +85,7 @@ export default function LibraryPageContent({
     findMatchingBoard(initialMyBoards, boardSlug),
   );
   const { openAuthModal } = useAuthModal();
+  const { showMessage } = useSnackbar();
   const defaultBoardAppliedRef = useRef(!!selectedBoard);
 
   // Fetch user's boards for the board selector (with SSR initial data)
@@ -321,8 +323,12 @@ export default function LibraryPageContent({
     if (boardConfigs) {
       setIsCustomBoardRendered(true);
       setIsCustomBoardOpen(true);
+      return;
     }
-  }, [boardConfigs]);
+    // Defensive: every parent route passes boardConfigs, so this is unexpected.
+    // Tell the user instead of swallowing the tap silently.
+    showMessage(t('library.customUnavailable'), 'error');
+  }, [boardConfigs, showMessage, t]);
 
   const handleCustomBoardSelected = useCallback(
     (_url: string, config?: StoredBoardConfig) => {

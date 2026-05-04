@@ -79,6 +79,11 @@ export default function CreatePlaylistDrawer({
   const handleSubmit = useCallback(async () => {
     if (!validate()) return;
 
+    if (!token) {
+      showMessage(t('climbs:actions.playlist.auth.title'), 'error');
+      return;
+    }
+
     if (!boardName || layoutId <= 0) {
       showMessage(t('bottomTabBar.selectBoardForPlaylist'), 'error');
       return;
@@ -153,7 +158,7 @@ export default function CreatePlaylistDrawer({
             }}
             error={!!formErrors.name}
             helperText={formErrors.name}
-            slotProps={{ htmlInput: { maxLength: 100 } }}
+            slotProps={{ htmlInput: { maxLength: 100, 'aria-label': t('create.fields.name') } }}
           />
         </Box>
         <Box>
@@ -166,7 +171,7 @@ export default function CreatePlaylistDrawer({
             rows={2}
             fullWidth
             size="small"
-            slotProps={{ htmlInput: { maxLength: 500 } }}
+            slotProps={{ htmlInput: { maxLength: 500, 'aria-label': t('create.fields.description') } }}
             value={formValues.description}
             onChange={(e) => {
               setFormValues((prev) => ({ ...prev, description: e.target.value }));

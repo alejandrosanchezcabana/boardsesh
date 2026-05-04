@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vite-plus/test';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, within } from '@testing-library/react';
 import React from 'react';
 import { tFromCatalog } from '@/app/__test-helpers__/i18n-mock';
 import CreatePlaylistDrawer from '../create-playlist-drawer';
@@ -33,10 +33,8 @@ vi.mock('@vercel/analytics', () => ({
   track: (...args: unknown[]) => mockTrack(...args),
 }));
 
-const mockSwipeableDrawer = vi.fn();
 vi.mock('@/app/components/swipeable-drawer/swipeable-drawer', () => ({
   default: (props: { open: boolean; extra?: React.ReactNode; children?: React.ReactNode }) => {
-    mockSwipeableDrawer(props);
     if (!props.open) return null;
     return (
       <div data-testid="drawer">
@@ -73,6 +71,10 @@ const baseProps = {
   onCreated: vi.fn(),
 };
 
+const getNameField = () => screen.getByRole('textbox', { name: /^name$/i });
+const getDescriptionField = () => screen.getByRole('textbox', { name: /description/i });
+const getSubmit = () => within(screen.getByTestId('drawer-extra')).getByRole('button');
+
 describe('CreatePlaylistDrawer', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -83,16 +85,15 @@ describe('CreatePlaylistDrawer', () => {
 
   it('renders the form when open', () => {
     render(<CreatePlaylistDrawer {...baseProps} />);
-    expect(screen.getByPlaceholderText('e.g., Hard Crimps')).toBeDefined();
-    expect(screen.getByPlaceholderText('Optional description...')).toBeDefined();
+    expect(getNameField()).toBeDefined();
+    expect(getDescriptionField()).toBeDefined();
   });
 
   it('does not submit when name is empty and shows a name error', async () => {
     render(<CreatePlaylistDrawer {...baseProps} />);
-    const submit = screen.getByRole('button', { name: /create/i });
-    fireEvent.click(submit);
+    fireEvent.click(getSubmit());
     await waitFor(() => {
-      expect(screen.getByText(/please enter a playlist name/i)).toBeDefined();
+      expect(screen.getByText(tFromCatalog('climbs', 'actions.playlist.validation.nameRequired'))).toBeDefined();
     });
     expect(mockExecuteGraphQL).not.toHaveBeenCalled();
     expect(baseProps.onCreated).not.toHaveBeenCalled();
@@ -100,27 +101,40 @@ describe('CreatePlaylistDrawer', () => {
 
   it('does not submit when description exceeds 500 chars', async () => {
     render(<CreatePlaylistDrawer {...baseProps} />);
-    const nameInput = screen.getByPlaceholderText('e.g., Hard Crimps');
-    fireEvent.change(nameInput, { target: { value: 'Valid Name' } });
+    fireEvent.change(getNameField(), { target: { value: 'Valid Name' } });
 
-    const descInput = screen.getByPlaceholderText('Optional description...') as HTMLTextAreaElement;
+    const descInput = getDescriptionField() as HTMLTextAreaElement;
     // Drop the maxLength prop on the underlying element so we can simulate over-long input.
     descInput.removeAttribute('maxLength');
     fireEvent.change(descInput, { target: { value: 'a'.repeat(501) } });
 
-    fireEvent.click(screen.getByRole('button', { name: /create/i }));
+    fireEvent.click(getSubmit());
     await waitFor(() => {
-      expect(screen.getByText(/description too long/i)).toBeDefined();
+      expect(screen.getByText(tFromCatalog('climbs', 'actions.playlist.validation.descriptionTooLong'))).toBeDefined();
+    });
+    expect(mockExecuteGraphQL).not.toHaveBeenCalled();
+  });
+
+  it('refuses to submit when no auth token is available', async () => {
+    mockUseWsAuthToken.mockReturnValue({ token: null, isAuthenticated: false, isLoading: false });
+    render(<CreatePlaylistDrawer {...baseProps} />);
+    fireEvent.change(getNameField(), { target: { value: 'Valid' } });
+    fireEvent.click(getSubmit());
+    await waitFor(() => {
+      expect(mockShowMessage).toHaveBeenCalledWith(tFromCatalog('climbs', 'actions.playlist.auth.title'), 'error');
     });
     expect(mockExecuteGraphQL).not.toHaveBeenCalled();
   });
 
   it('refuses to submit when no board context is provided', async () => {
     render(<CreatePlaylistDrawer {...baseProps} boardName="" layoutId={0} />);
-    fireEvent.change(screen.getByPlaceholderText('e.g., Hard Crimps'), { target: { value: 'Valid' } });
-    fireEvent.click(screen.getByRole('button', { name: /create/i }));
+    fireEvent.change(getNameField(), { target: { value: 'Valid' } });
+    fireEvent.click(getSubmit());
     await waitFor(() => {
-      expect(mockShowMessage).toHaveBeenCalledWith(expect.stringMatching(/select a board/i), 'error');
+      expect(mockShowMessage).toHaveBeenCalledWith(
+        tFromCatalog('playlists', 'bottomTabBar.selectBoardForPlaylist'),
+        'error',
+      );
     });
     expect(mockExecuteGraphQL).not.toHaveBeenCalled();
   });
@@ -130,8 +144,8 @@ describe('CreatePlaylistDrawer', () => {
     mockExecuteGraphQL.mockResolvedValueOnce({ createPlaylist: created });
 
     render(<CreatePlaylistDrawer {...baseProps} />);
-    fireEvent.change(screen.getByPlaceholderText('e.g., Hard Crimps'), { target: { value: 'My List' } });
-    fireEvent.click(screen.getByRole('button', { name: /create/i }));
+    fireEvent.change(getNameField(), { target: { value: 'My List' } });
+    fireEvent.click(getSubmit());
 
     await waitFor(() => expect(mockExecuteGraphQL).toHaveBeenCalledTimes(1));
 
@@ -143,7 +157,10 @@ describe('CreatePlaylistDrawer', () => {
 
     expect(baseProps.onCreated).toHaveBeenCalledWith(created);
     expect(baseProps.onClose).toHaveBeenCalledTimes(1);
-    expect(mockShowMessage).toHaveBeenCalledWith(expect.stringMatching(/created playlist "My List"/i), 'success');
+    expect(mockShowMessage).toHaveBeenCalledWith(
+      tFromCatalog('playlists', 'bottomTabBar.createdPlaylistToast', { name: 'My List' }),
+      'success',
+    );
     expect(mockTrack).toHaveBeenCalledWith(
       'Create Playlist',
       expect.objectContaining({ boardName: 'kilter', playlistName: 'My List', source: 'test-source' }),
@@ -154,12 +171,15 @@ describe('CreatePlaylistDrawer', () => {
     mockExecuteGraphQL.mockRejectedValueOnce(new Error('boom'));
 
     render(<CreatePlaylistDrawer {...baseProps} />);
-    fireEvent.change(screen.getByPlaceholderText('e.g., Hard Crimps'), { target: { value: 'Will fail' } });
-    fireEvent.click(screen.getByRole('button', { name: /create/i }));
+    fireEvent.change(getNameField(), { target: { value: 'Will fail' } });
+    fireEvent.click(getSubmit());
 
     await waitFor(() => expect(mockExecuteGraphQL).toHaveBeenCalledTimes(1));
     await waitFor(() => {
-      expect(mockShowMessage).toHaveBeenCalledWith(expect.stringMatching(/failed to create playlist/i), 'error');
+      expect(mockShowMessage).toHaveBeenCalledWith(
+        tFromCatalog('playlists', 'bottomTabBar.createPlaylistFailed'),
+        'error',
+      );
     });
     expect(baseProps.onCreated).not.toHaveBeenCalled();
     expect(baseProps.onClose).not.toHaveBeenCalled();
