@@ -7,8 +7,11 @@ const VERCEL_PREVIEW_REGEX = /^https:\/\/boardsesh-[a-z0-9]+-marcodejonghs-proje
 // Homelab branch deploy pattern: https://{N}.preview.boardsesh.com
 const PREVIEW_ORIGIN_REGEX = /^https:\/\/\d+\.preview\.boardsesh\.com$/;
 const DEV_PRIVATE_LAN_ORIGIN_REGEX =
-  /^http:\/\/(?:(?:10(?:\.\d{1,3}){3})|(?:192\.168(?:\.\d{1,3}){2})|(?:172\.(?:1[6-9]|2\d|3[0-1])(?:\.\d{1,3}){2})):(?:3000|3001)$/;
-const DEV_WEB_PORTS = [3000, 3001];
+  /^http:\/\/(?:(?:10(?:\.\d{1,3}){3})|(?:192\.168(?:\.\d{1,3}){2})|(?:172\.(?:1[6-9]|2\d|3[0-1])(?:\.\d{1,3}){2})):(?:300[0-9])$/;
+// Match the dev orchestrator's findAvailablePort range — it auto-increments from 3000
+// up to 3009 so multiple worktrees can run side-by-side. Anything in that window is a
+// legitimate dev origin.
+const DEV_WEB_PORTS = [3000, 3001, 3002, 3003, 3004, 3005, 3006, 3007, 3008, 3009];
 const TAILSCALE_STATUS_TIMEOUT_MS = 1500;
 
 let allowedOrigins: string[] = [];

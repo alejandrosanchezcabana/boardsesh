@@ -92,6 +92,15 @@ function setDefaultEnv(key: string, value: string): void {
   }
 }
 
+// Force-override even if .env.local set the value. The committed .env.local pins
+// localhost:3000 as a generic dev default, which is wrong for Tailscale + auto-
+// incremented ports — next-auth's client tries to fetch a session URL that
+// doesn't match the page origin and Safari throws "string did not match the
+// expected pattern" on URL parsing.
+function overrideEnv(key: string, value: string): void {
+  process.env[key] = value;
+}
+
 function main(): void {
   const webPort = process.env.PORT || DEFAULT_WEB_PORT;
   const backendPort = process.env.BACKEND_PORT || DEFAULT_BACKEND_PORT;
@@ -106,9 +115,12 @@ function main(): void {
   const httpScheme = tlsEnabled ? 'https' : 'http';
   const wsScheme = tlsEnabled ? 'wss' : 'ws';
 
+  const webOrigin = `${httpScheme}://${resolution.hostname}:${webPort}`;
   setDefaultEnv('NEXT_PUBLIC_WS_URL', `${wsScheme}://${resolution.hostname}:${backendPort}/graphql`);
-  setDefaultEnv('NEXTAUTH_URL', `${httpScheme}://${resolution.hostname}:${webPort}`);
-  setDefaultEnv('BASE_URL', `${httpScheme}://${resolution.hostname}:${webPort}`);
+  // Override (not setDefault) — the .env.local localhost:3000 default mismatches
+  // the actual page origin in Tailscale / auto-incremented-port mode.
+  overrideEnv('NEXTAUTH_URL', webOrigin);
+  overrideEnv('BASE_URL', webOrigin);
 
   console.info(`[dev] Hostname: ${resolution.hostname} (${resolution.source})`);
   if (resolution.reason) {
