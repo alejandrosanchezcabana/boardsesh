@@ -39,7 +39,7 @@
   padding: 6px 0;
 }
 
-.filterButton {
+.iconButtonWrapper {
   position: relative;
   flex-shrink: 0;
 }

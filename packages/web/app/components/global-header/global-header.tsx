@@ -35,7 +35,10 @@ import { useProfileHeaderShare } from '@/app/components/profile-header-bridge/pr
 import { useSnackbar } from '@/app/components/providers/snackbar-provider';
 import { useQueueBridgeBoardInfo } from '@/app/components/queue-control/queue-bridge-board-info-context';
 import { useQueueList } from '@/app/components/graphql-queue';
+import { themeTokens } from '@/app/theme/theme-config';
 import styles from './global-header.module.css';
+
+const BADGE_SMALL_SX = { '& .MuiBadge-badge': themeTokens.badge.small } as const;
 
 const QueueDrawer = dynamic(() => import('@/app/components/play-view/queue-drawer'), { ssr: false });
 
@@ -180,7 +183,7 @@ export default function GlobalHeader({ boardConfigs }: GlobalHeaderProps) {
   } = useSearchDrawerBridge();
   const statsFilterBridge = useStatsFilterBridge();
   const profileHeaderShare = useProfileHeaderShare();
-  const { boardDetails } = useQueueBridgeBoardInfo();
+  const { boardDetails, isHydrated: isQueueBridgeHydrated } = useQueueBridgeBoardInfo();
   const { queue } = useQueueList();
   const pathname = usePathnameWithoutLocale();
   const inputRef = useRef<HTMLInputElement>(null);
@@ -193,9 +196,10 @@ export default function GlobalHeader({ boardConfigs }: GlobalHeaderProps) {
   }, []);
 
   const handleOpenQueue = useCallback(() => {
+    if (!boardDetails) return;
     setIsQueueRendered(true);
     setIsQueueOpen(true);
-  }, []);
+  }, [boardDetails]);
 
   const handleCloseQueue = useCallback(() => {
     setIsQueueOpen(false);
@@ -242,12 +246,7 @@ export default function GlobalHeader({ boardConfigs }: GlobalHeaderProps) {
 
   const notificationButton = (
     <IconButton component={LocaleLink} href="/notifications" aria-label={t('ariaLabels.notifications')} size="small">
-      <Badge
-        badgeContent={notificationUnreadCount}
-        color="error"
-        max={99}
-        sx={{ '& .MuiBadge-badge': { fontSize: 10, height: 16, minWidth: 16 } }}
-      >
+      <Badge badgeContent={notificationUnreadCount} color="error" max={99} sx={BADGE_SMALL_SX}>
         <NotificationsOutlined />
       </Badge>
     </IconButton>
@@ -274,7 +273,7 @@ export default function GlobalHeader({ boardConfigs }: GlobalHeaderProps) {
         right={
           <div className={styles.headerActions}>
             {statsFilterBridge.isActive && (
-              <div className={styles.filterButton}>
+              <div className={styles.iconButtonWrapper}>
                 <IconButton
                   onClick={() => statsFilterBridge.openFilterDrawer?.()}
                   aria-label={t('ariaLabels.openStatsFilters')}
@@ -342,7 +341,7 @@ export default function GlobalHeader({ boardConfigs }: GlobalHeaderProps) {
         right={
           <div className={styles.headerActions}>
             {statsFilterBridge.isActive && (
-              <div className={styles.filterButton}>
+              <div className={styles.iconButtonWrapper}>
                 <IconButton
                   onClick={() => statsFilterBridge.openFilterDrawer?.()}
                   aria-label={t('ariaLabels.openStatsFilters')}
@@ -452,8 +451,13 @@ export default function GlobalHeader({ boardConfigs }: GlobalHeaderProps) {
         </div>
 
         {isClimbListPage && (
-          <div className={styles.filterButton}>
-            <IconButton onClick={handleFilterClick} aria-label={t('ariaLabels.openFilters')} size="small">
+          <div className={styles.iconButtonWrapper}>
+            <IconButton
+              onClick={handleFilterClick}
+              aria-label={t('ariaLabels.openFilters')}
+              size="small"
+              disabled={!useClimbSearchBridge}
+            >
               <FilterListOutlined />
             </IconButton>
             {nonNameFiltersActive && <span className={styles.filterActiveIndicator} />}
@@ -461,14 +465,19 @@ export default function GlobalHeader({ boardConfigs }: GlobalHeaderProps) {
         )}
 
         {isClimbListPage && (
-          <div className={styles.filterButton}>
-            <IconButton onClick={handleOpenQueue} aria-label={t('ariaLabels.openQueue')} size="small">
+          <div className={styles.iconButtonWrapper}>
+            <IconButton
+              onClick={handleOpenQueue}
+              aria-label={t('ariaLabels.openQueue')}
+              size="small"
+              disabled={!isQueueBridgeHydrated || !boardDetails}
+            >
               <Badge
                 badgeContent={queue.length}
                 max={99}
                 color="primary"
                 invisible={queue.length === 0}
-                sx={{ '& .MuiBadge-badge': { fontSize: 10, height: 16, minWidth: 16 } }}
+                sx={BADGE_SMALL_SX}
               >
                 <FormatListBulletedOutlined />
               </Badge>
