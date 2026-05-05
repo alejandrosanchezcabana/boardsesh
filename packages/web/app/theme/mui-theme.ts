@@ -345,7 +345,12 @@ const darkComponents: Components<Theme> = {
   MuiInputLabel: {
     styleOverrides: {
       root: {
-        color: themeTokens.neutral[500],
+        // Resting label sits inside the white input — needs dark text.
+        color: themeTokens.neutral[700],
+        // Shrunk label floats over the dark page bg — needs light text.
+        '&.MuiInputLabel-shrink': {
+          color: darkTokens.neutral[700],
+        },
         '&.Mui-focused': {
           color: themeTokens.colors.primary,
         },
@@ -362,7 +367,13 @@ const darkComponents: Components<Theme> = {
           color: themeTokens.neutral[800],
         },
         '& .MuiInputLabel-root': {
-          color: themeTokens.neutral[500],
+          color: themeTokens.neutral[700],
+        },
+        '& .MuiInputLabel-root.MuiInputLabel-shrink': {
+          color: darkTokens.neutral[700],
+        },
+        '& .MuiInputLabel-root.Mui-focused': {
+          color: themeTokens.colors.primary,
         },
       },
     },
