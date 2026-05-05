@@ -855,30 +855,39 @@ const QueueControlBar: React.FC<QueueControlBarProps> = ({ boardDetails, angle }
     offlineBannerText = 'Offline. Changes will sync when you reconnect.';
   }
 
-  const openQueueDrawer = () => setActiveDrawer('queue');
-  const queueIconButton = (
-    <div
-      className={styles.queueIconWrapper}
-      onClick={(e) => {
-        e.stopPropagation();
-        openQueueDrawer();
-      }}
-      onKeyDown={(e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
+  const openQueueDrawer = useCallback(() => setActiveDrawer('queue'), []);
+  const queueIconButton = useMemo(
+    () => (
+      <div
+        className={styles.queueIconWrapper}
+        onClick={(e) => {
           e.stopPropagation();
           openQueueDrawer();
-        }
-      }}
-      role="button"
-      tabIndex={0}
-      aria-label={t('common:ariaLabels.openQueue')}
-    >
-      <IconButton size="small" component="span" tabIndex={-1} sx={{ p: 0.25 }}>
-        <Badge badgeContent={queue.length} max={99} color="primary" invisible={queue.length === 0} sx={QUEUE_BADGE_SX}>
-          <FormatListBulletedOutlined sx={{ fontSize: 18 }} />
-        </Badge>
-      </IconButton>
-    </div>
+        }}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.stopPropagation();
+            openQueueDrawer();
+          }
+        }}
+        role="button"
+        tabIndex={0}
+        aria-label={t('common:ariaLabels.openQueue')}
+      >
+        <IconButton size="small" component="span" tabIndex={-1} sx={{ p: 0.25 }}>
+          <Badge
+            badgeContent={queue.length}
+            max={99}
+            color="primary"
+            invisible={queue.length === 0}
+            sx={QUEUE_BADGE_SX}
+          >
+            <FormatListBulletedOutlined sx={{ fontSize: 18 }} />
+          </Badge>
+        </IconButton>
+      </div>
+    ),
+    [openQueueDrawer, queue.length, t],
   );
 
   return (
