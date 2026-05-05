@@ -194,6 +194,10 @@ export const BOARD_IMAGE_DIMENSIONS: Record<BoardName, ImageDimensions> = {
     'product_sizes_layouts_sets/8x12-2020-power.png': { width: 1080, height: 1767 },
     'product_sizes_layouts_sets/8x12-2020-tweeners-v2.png': { width: 1080, height: 1767 },
   },
+  soill: {
+    'product_sizes_layouts_sets/1-v3.png': { width: 1080, height: 1800 },
+    'product_sizes_layouts_sets/2-v2.png': { width: 1080, height: 1200 },
+  },
 };
 
 export const ANGLES: Record<BoardName, Angle[]> = {
@@ -204,6 +208,7 @@ export const ANGLES: Record<BoardName, Angle[]> = {
   decoy: [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70],
   touchstone: [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70],
   grasshopper: [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70],
+  soill: [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70],
 };
 
 // Unified grade system used by all boards

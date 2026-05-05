@@ -5,7 +5,7 @@ import { authOptions } from '@/app/lib/auth/auth-options';
 import { revalidateClimbSearchTags } from '@/app/lib/climb-search-cache.server';
 
 const revalidateClimbSearchSchema = z.object({
-  boardName: z.enum(['kilter', 'moonboard', 'tension']),
+  boardName: z.enum(['kilter', 'moonboard', 'tension', 'soill']),
   layoutId: z.number().int().positive().optional(),
 });
 

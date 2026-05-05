@@ -83,6 +83,7 @@ export const HOST_BASES: Record<AuroraBoardName, string> = {
   decoy: 'decoyboardapp',
   touchstone: 'touchstoneboardapp',
   grasshopper: 'grasshopperboardapp',
+  soill: 'soillboardapp',
 };
 
 export const API_HOSTS: Record<AuroraBoardName, string> = Object.fromEntries(

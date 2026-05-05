@@ -65,6 +65,7 @@ export const ALL_LAYOUT_SELECTIONS: Record<Exclude<BoardFilter, 'all'>, number[]
   decoy: getAllLayouts('decoy').map((layout) => layout.id),
   touchstone: getAllLayouts('touchstone').map((layout) => layout.id),
   grasshopper: getAllLayouts('grasshopper').map((layout) => layout.id),
+  soill: getAllLayouts('soill').map((layout) => layout.id),
 };
 
 export const DEFAULT_LOGBOOK_PREFERENCES: LogbookPreferences = {
@@ -122,6 +123,7 @@ function sanitizeLayoutSelections(value: unknown): Record<Exclude<BoardFilter, '
     decoy: sanitizeBoardLayouts(source.decoy, 'decoy'),
     touchstone: sanitizeBoardLayouts(source.touchstone, 'touchstone'),
     grasshopper: sanitizeBoardLayouts(source.grasshopper, 'grasshopper'),
+    soill: sanitizeBoardLayouts(source.soill, 'soill'),
   };
 }
 

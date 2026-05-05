@@ -68,13 +68,14 @@ export const parseSerialNumber = (deviceName?: string): string | undefined => {
 
 /**
  * Infer the board type from a BLE device name.
- * e.g. "Kilter Board#751737@3" → 'kilter', "Tension Board#123@2" → 'tension'
- * Supports all Aurora boards: kilter, tension, decoy, touchstone, grasshopper.
+ * e.g. "Kilter Board#751737@3" → 'kilter', "Tension Board#123@2" → 'tension', "So iLL Board#42@3" → 'soill'.
+ * Supports all Aurora boards: kilter, tension, decoy, touchstone, grasshopper, soill.
+ * Whitespace and hyphens are stripped before matching so the multi-word "So iLL Board" name resolves.
  */
 export const parseBoardTypeFromDeviceName = (deviceName?: string): AuroraBoardName | undefined => {
   if (!deviceName) return undefined;
-  const lower = deviceName.toLowerCase();
-  return AURORA_BOARDS.find((board) => lower.startsWith(board));
+  const normalized = deviceName.toLowerCase().replace(/[\s-]/g, '');
+  return AURORA_BOARDS.find((board) => normalized.startsWith(board));
 };
 
 // --- v3 encoding (API level >= 3) ---

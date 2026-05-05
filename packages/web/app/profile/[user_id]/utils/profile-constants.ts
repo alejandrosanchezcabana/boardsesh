@@ -2,6 +2,7 @@ import { V_GRADE_COLORS, FONT_GRADE_COLORS, type GradeDisplayFormat } from '@/ap
 import { SUPPORTED_BOARDS, BOULDER_GRADES } from '@/app/lib/board-data';
 import { getLayout, ORPHANED_KILTER_LAYOUT_DEFAULTS } from '@boardsesh/board-constants/product-sizes';
 import { MOONBOARD_LAYOUTS } from '@/app/lib/moonboard-config';
+import { formatBoardDisplayName } from '@/app/lib/string-utils';
 import type { BoardName } from '@/app/lib/types';
 
 export type UserProfile = {
@@ -123,7 +124,7 @@ export const getLayoutKey = (boardType: string, layoutId: number | null | undefi
 
 export const getLayoutDisplayName = (boardType: string, layoutId: number | null | undefined): string => {
   if (layoutId === null || layoutId === undefined) {
-    return `${boardType.charAt(0).toUpperCase() + boardType.slice(1)} (Unknown Layout)`;
+    return `${formatBoardDisplayName(boardType)} (Unknown Layout)`;
   }
 
   const key = getLayoutKey(boardType, layoutId);
@@ -150,7 +151,7 @@ export const getLayoutDisplayName = (boardType: string, layoutId: number | null 
     }
   }
 
-  return `${boardType.charAt(0).toUpperCase() + boardType.slice(1)} (Layout ${layoutId})`;
+  return `${formatBoardDisplayName(boardType)} (Layout ${layoutId})`;
 };
 
 export const getLayoutColor = (boardType: string, layoutId: number | null | undefined): string => {
@@ -196,7 +197,7 @@ export const getGradeChartColor = (grade: string): string => {
 export const boardOptions = [
   { label: 'All', value: 'all' },
   ...BOARD_TYPES.map((boardType) => ({
-    label: boardType.charAt(0).toUpperCase() + boardType.slice(1),
+    label: formatBoardDisplayName(boardType),
     value: boardType,
   })),
 ];

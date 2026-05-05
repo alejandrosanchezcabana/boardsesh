@@ -6,6 +6,7 @@ export const HOST_BASES: Record<AuroraBoardName, string> = {
   decoy: 'decoyboardapp',
   touchstone: 'touchstoneboardapp',
   grasshopper: 'grasshopperboardapp',
+  soill: 'soillboardapp',
 };
 
 /**

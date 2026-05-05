@@ -395,7 +395,7 @@ describe('streamImport', () => {
     });
   });
 
-  describe('new Aurora boards (decoy, touchstone, grasshopper)', () => {
+  describe('new Aurora boards (decoy, touchstone, grasshopper, soill)', () => {
     it('passes decoy boardType to the import endpoint', async () => {
       const stream = makeCompleteStream(emptyResult);
       const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue(mockFetchResponse(stream));
@@ -424,6 +424,16 @@ describe('streamImport', () => {
 
       const body = JSON.parse(fetchSpy.mock.calls[0][1]?.body as string);
       expect(body.boardType).toBe('grasshopper');
+    });
+
+    it('passes soill boardType to the import endpoint', async () => {
+      const stream = makeCompleteStream(emptyResult);
+      const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue(mockFetchResponse(stream));
+
+      await streamImport('soill', { user: { username: 'test' } }, vi.fn());
+
+      const body = JSON.parse(fetchSpy.mock.calls[0][1]?.body as string);
+      expect(body.boardType).toBe('soill');
     });
   });
 });

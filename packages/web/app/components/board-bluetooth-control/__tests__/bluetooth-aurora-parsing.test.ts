@@ -60,6 +60,14 @@ describe('parseBoardTypeFromDeviceName', () => {
     expect(parseBoardTypeFromDeviceName('Grasshopper Board#789@1')).toBe('grasshopper');
   });
 
+  it('identifies so-ill boards with a space ("So iLL Board")', () => {
+    expect(parseBoardTypeFromDeviceName('So iLL Board#42@3')).toBe('soill');
+  });
+
+  it('identifies so-ill boards with a hyphen ("So-iLL Board")', () => {
+    expect(parseBoardTypeFromDeviceName('So-iLL Board#42@3')).toBe('soill');
+  });
+
   it('returns undefined for moonboard (not handled by this function)', () => {
     expect(parseBoardTypeFromDeviceName('MoonBoard 123')).toBeUndefined();
   });

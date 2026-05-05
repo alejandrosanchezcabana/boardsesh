@@ -25,6 +25,7 @@ export const FALLBACK_BOARD_PREVIEW_CONFIGS: Record<string, { layout_id: number;
     decoy: { layout_id: 2, size_id: 1, set_ids: [1, 2] },
     touchstone: { layout_id: 1, size_id: 1, set_ids: [1] },
     grasshopper: { layout_id: 1, size_id: 4, set_ids: [1, 2] },
+    soill: { layout_id: 1, size_id: 1, set_ids: [1] },
   };
 export const KILTER_HOMEWALL_LAYOUT_ID = 8;
 export const KILTER_HOMEWALL_PRODUCT_ID = 7;

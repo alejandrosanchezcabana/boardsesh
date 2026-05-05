@@ -265,6 +265,7 @@ export default function LogbookFeed({ layoutStats, loadingLayoutStats }: Logbook
         decoy: [],
         touchstone: [],
         grasshopper: [],
+        soill: [],
       },
       filters,
       sort: sortState,

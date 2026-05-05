@@ -1,5 +1,5 @@
 // Aurora boards only - different from main BoardName which includes moonboard
-export type AuroraBoardName = 'kilter' | 'tension' | 'decoy' | 'touchstone' | 'grasshopper';
+export type AuroraBoardName = 'kilter' | 'tension' | 'decoy' | 'touchstone' | 'grasshopper' | 'soill';
 
 export type BoardUser = {
   id: number;
@@ -109,6 +109,7 @@ export const HOST_BASES: Record<AuroraBoardName, string> = {
   decoy: 'decoyboardapp',
   touchstone: 'touchstoneboardapp',
   grasshopper: 'grasshopperboardapp',
+  soill: 'soillboardapp',
 };
 
 export const WEB_HOSTS: Record<AuroraBoardName, string> = Object.fromEntries(

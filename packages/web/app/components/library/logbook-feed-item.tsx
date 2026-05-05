@@ -40,6 +40,7 @@ import { useIsDarkMode } from '@/app/hooks/use-is-dark-mode';
 import { useGradeFormat } from '@/app/hooks/use-grade-format';
 import { useUpdateTick } from '@/app/hooks/use-update-tick';
 import { themeTokens } from '@/app/theme/theme-config';
+import { formatBoardDisplayName } from '@/app/lib/string-utils';
 import { getDefaultBoardConfig } from '@/app/lib/default-board-configs';
 import { getBoardDetailsForBoard } from '@/app/lib/board-utils';
 import { getExcludedClimbActions } from '@/app/lib/climb-action-utils';
@@ -78,9 +79,9 @@ const layoutNames: Record<string, string> = {
 };
 
 const getLayoutDisplayName = (boardType: string, layoutId: number | null): string => {
-  if (layoutId === null) return boardType.charAt(0).toUpperCase() + boardType.slice(1);
+  if (layoutId === null) return formatBoardDisplayName(boardType);
   const key = `${boardType}-${layoutId}`;
-  return layoutNames[key] || boardType.charAt(0).toUpperCase() + boardType.slice(1);
+  return layoutNames[key] || formatBoardDisplayName(boardType);
 };
 
 // Swipe thresholds

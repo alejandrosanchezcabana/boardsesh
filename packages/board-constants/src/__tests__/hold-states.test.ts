@@ -3,7 +3,7 @@ import { HOLD_STATE_MAP, STATE_TO_PRIMARY_CODE, convertLitUpHoldsStringToMap } f
 import type { BoardName } from '@boardsesh/shared-schema';
 
 describe('HOLD_STATE_MAP', () => {
-  const boards: BoardName[] = ['kilter', 'tension', 'moonboard', 'decoy', 'touchstone', 'grasshopper'];
+  const boards: BoardName[] = ['kilter', 'tension', 'moonboard', 'decoy', 'touchstone', 'grasshopper', 'soill'];
 
   it('has entries for every supported board', () => {
     for (const board of boards) {

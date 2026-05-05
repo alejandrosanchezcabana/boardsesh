@@ -1,4 +1,4 @@
-export const DIRECT_AURORA_BOARDS = ['decoy', 'touchstone', 'grasshopper'] as const;
+export const DIRECT_AURORA_BOARDS = ['decoy', 'touchstone', 'grasshopper', 'soill'] as const;
 
 export type DirectAuroraBoard = (typeof DIRECT_AURORA_BOARDS)[number];
 export type ImportedHoldState = 'STARTING' | 'HAND' | 'FINISH' | 'FOOT' | 'OFF';
@@ -37,6 +37,12 @@ const AURORA_HOLD_STATE_MAP: Record<DirectAuroraBoard, Record<number, ImportedHo
     4: 'FOOT',
   },
   grasshopper: {
+    1: 'STARTING',
+    2: 'HAND',
+    3: 'FINISH',
+    4: 'FOOT',
+  },
+  soill: {
     1: 'STARTING',
     2: 'HAND',
     3: 'FINISH',
