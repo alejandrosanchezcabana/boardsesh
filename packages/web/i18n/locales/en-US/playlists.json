@@ -28,7 +28,7 @@
     "createFab": {
       "ariaLabel": "Create playlist"
     },
-    "customUnavailable": "Custom boards aren't available here yet. Pick one of your boards or a popular config from the list.",
+    "customUnavailable": "Pick one of your boards or a popular config to get started.",
     "errors": {
       "loadTitle": "Unable to Load Library",
       "loadDescription": "There was an error loading your library. Please try again.",
