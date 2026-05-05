@@ -43,6 +43,8 @@ import styles from '@/app/components/library/library.module.css';
 
 type SelectedBoardForCreate = { boardType: string; layoutId: number };
 
+type PendingDrawerAction = { type: 'create'; context: SelectedBoardForCreate } | { type: 'custom' } | null;
+
 type LibraryPageContentProps = {
   /** When set, the page was rendered from a board route and this board is pre-selected. */
   boardSlug?: string;
@@ -282,7 +284,6 @@ export default function LibraryPageContent({
 
   // Pending action to fire once the currently-closing drawer finishes its
   // slide-out, so two drawers are never mounted-and-animating at once.
-  type PendingDrawerAction = { type: 'create'; context: SelectedBoardForCreate } | { type: 'custom' } | null;
   const [pendingDrawer, setPendingDrawer] = useState<PendingDrawerAction>(null);
 
   const openCreateDrawerFor = useCallback((boardType: string, layoutId: number) => {
@@ -518,10 +519,9 @@ export default function LibraryPageContent({
           aria-label={t('library.createFab.ariaLabel')}
           sx={{
             position: 'fixed',
-            // On wide viewports the page container is centred at max-width 800px
-            // (see library.module.css .pageContainer). Anchor the FAB to the right
-            // edge of that column so it doesn't drift to the browser edge.
-            right: `max(${themeTokens.spacing[4]}px, calc((100vw - 800px) / 2 + ${themeTokens.spacing[4]}px))`,
+            // Anchor the FAB to the right edge of .pageContainer (see --library-page-max-width
+            // in library.module.css) so it doesn't drift to the browser edge on wide viewports.
+            right: `max(${themeTokens.spacing[4]}px, calc((100vw - var(--library-page-max-width)) / 2 + ${themeTokens.spacing[4]}px))`,
             // --bottom-bar-height is set by persistent-session-wrapper after hydration with the
             // measured queue-control + tab-bar height; the 145px fallback matches the SSR estimate
             // declared in app/components/index.css and is what users see during first paint only.

@@ -1,10 +1,15 @@
 /* Library View Styles */
 
+/* Shared max-width token; also referenced by the FAB right-offset in library-page-content.tsx */
+:global(:root) {
+  --library-page-max-width: 800px;
+}
+
 .pageContainer {
   padding: 16px;
   min-height: 100vh;
   background-color: var(--neutral-50);
-  max-width: 800px;
+  max-width: var(--library-page-max-width);
   margin: 0 auto;
   padding-bottom: 96px;
 }

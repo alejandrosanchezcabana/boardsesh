@@ -287,6 +287,31 @@ describe('BottomTabBar create flow', () => {
 
     expect(mockPush).toHaveBeenCalledWith(expect.stringContaining('/create'));
   });
+
+  it('routes to /create (not /list) when board is selected via isCreateClimbFlow', () => {
+    // createClimbUrl is null (no boardDetails/angle); boardConfigs is set so the board selector opens
+    render(<BottomTabBar boardConfigs={boardConfigs} />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Create' }));
+    expect(screen.getByTestId('drawer-Pick a board')).toBeTruthy();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Select Board' }));
+
+    // Should navigate to the create path, not the list path the mock returns
+    const pushedUrl = mockPush.mock.calls[0][0] as string;
+    expect(pushedUrl).toContain('/create');
+    expect(pushedUrl).not.toContain('/list');
+  });
+
+  it('does nothing when createClimbUrl is null and boardConfigs is not provided', () => {
+    // No boardDetails, no boardConfigs — Create tab should not navigate or open any drawer
+    render(<BottomTabBar />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Create' }));
+
+    expect(mockPush).not.toHaveBeenCalled();
+    expect(screen.queryByTestId('drawer-Pick a board')).toBeNull();
+  });
 });
 
 describe('BottomTabBar You tab', () => {
