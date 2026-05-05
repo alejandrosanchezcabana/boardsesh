@@ -1,4 +1,4 @@
-import { eq, and, desc, sql, inArray, notInArray, max } from 'drizzle-orm';
+import { eq, and, desc, sql, inArray, notInArray, max, type SQL } from 'drizzle-orm';
 import { type ConnectionContext, type Climb, type BoardName } from '@boardsesh/shared-schema';
 import { db } from '../../../../db/client';
 import * as dbSchema from '@boardsesh/db/schema';
@@ -24,22 +24,53 @@ type SmartPlaylistInput = {
 type SmartClimbRef = {
   climbUuid: string;
   boardType: string;
-  rank: number;
 };
 
 /**
- * Build a list of (climbUuid, boardType, rank) for a smart playlist, filtered by
- * the optional board context. The rank determines display order.
+ * Build the WHERE conditions shared by every smart-playlist query path:
+ * `userId = ?` plus, when scoped, `boardType = ?`.
+ */
+function smartBaseConditions(userId: string, boardName: string | undefined): SQL[] {
+  const conditions: SQL[] = [eq(dbSchema.boardseshTicks.userId, userId)];
+  if (boardName) {
+    conditions.push(eq(dbSchema.boardseshTicks.boardType, boardName));
+  }
+  return conditions;
+}
+
+/**
+ * Subquery of climbUuids the user has flashed or sent. Scoped by boardType when
+ * a board filter is active so that, e.g., a sent climb on Kilter doesn't
+ * accidentally exclude an unrelated UUID-collision climb on Tension.
+ */
+function sentClimbsSubquery(userId: string, boardName: string | undefined) {
+  const conditions: SQL[] = [
+    eq(dbSchema.boardseshTicks.userId, userId),
+    inArray(dbSchema.boardseshTicks.status, ['flash', 'send']),
+  ];
+  if (boardName) {
+    conditions.push(eq(dbSchema.boardseshTicks.boardType, boardName));
+  }
+  return db
+    .select({ climbUuid: dbSchema.boardseshTicks.climbUuid })
+    .from(dbSchema.boardseshTicks)
+    .where(and(...conditions));
+}
+
+/**
+ * Page of (climbUuid, boardType) pairs for the smart playlist, ordered by the
+ * type's natural ranking (latest 5-star, most attempts, etc.). Pagination is
+ * pushed into the database — we never materialize the full list in memory.
  */
 async function selectSmartClimbRefs(
   type: SmartPlaylistType,
   userId: string,
   boardName: string | undefined,
+  page: number,
+  pageSize: number,
 ): Promise<SmartClimbRef[]> {
-  const conditions = [eq(dbSchema.boardseshTicks.userId, userId)];
-  if (boardName) {
-    conditions.push(eq(dbSchema.boardseshTicks.boardType, boardName));
-  }
+  const conditions = smartBaseConditions(userId, boardName);
+  const offset = page * pageSize;
 
   if (type === 'FIVE_STARS') {
     const rows = await db
@@ -51,12 +82,10 @@ async function selectSmartClimbRefs(
       .from(dbSchema.boardseshTicks)
       .where(and(...conditions, eq(dbSchema.boardseshTicks.quality, 5)))
       .groupBy(dbSchema.boardseshTicks.climbUuid, dbSchema.boardseshTicks.boardType)
-      .orderBy(desc(max(dbSchema.boardseshTicks.climbedAt)));
-    return rows.map((row, idx) => ({
-      climbUuid: row.climbUuid,
-      boardType: row.boardType,
-      rank: idx,
-    }));
+      .orderBy(desc(max(dbSchema.boardseshTicks.climbedAt)))
+      .limit(pageSize)
+      .offset(offset);
+    return rows.map((row) => ({ climbUuid: row.climbUuid, boardType: row.boardType }));
   }
 
   if (type === 'MOST_REPEATED') {
@@ -70,22 +99,13 @@ async function selectSmartClimbRefs(
       .where(and(...conditions))
       .groupBy(dbSchema.boardseshTicks.climbUuid, dbSchema.boardseshTicks.boardType)
       .having(sql`SUM(${dbSchema.boardseshTicks.attemptCount}) > 1`)
-      .orderBy(desc(sql`SUM(${dbSchema.boardseshTicks.attemptCount})`));
-    return rows.map((row, idx) => ({
-      climbUuid: row.climbUuid,
-      boardType: row.boardType,
-      rank: idx,
-    }));
+      .orderBy(desc(sql`SUM(${dbSchema.boardseshTicks.attemptCount})`))
+      .limit(pageSize)
+      .offset(offset);
+    return rows.map((row) => ({ climbUuid: row.climbUuid, boardType: row.boardType }));
   }
 
-  // PROJECTS — climbs with attempts but never sent (status flash/send absent for the user+climb).
-  const sentSubquery = db
-    .select({
-      climbUuid: dbSchema.boardseshTicks.climbUuid,
-    })
-    .from(dbSchema.boardseshTicks)
-    .where(and(eq(dbSchema.boardseshTicks.userId, userId), inArray(dbSchema.boardseshTicks.status, ['flash', 'send'])));
-
+  // PROJECTS — climbs with attempts but never sent on this board.
   const rows = await db
     .select({
       climbUuid: dbSchema.boardseshTicks.climbUuid,
@@ -97,16 +117,65 @@ async function selectSmartClimbRefs(
       and(
         ...conditions,
         eq(dbSchema.boardseshTicks.status, 'attempt'),
-        notInArray(dbSchema.boardseshTicks.climbUuid, sentSubquery),
+        notInArray(dbSchema.boardseshTicks.climbUuid, sentClimbsSubquery(userId, boardName)),
       ),
     )
     .groupBy(dbSchema.boardseshTicks.climbUuid, dbSchema.boardseshTicks.boardType)
-    .orderBy(desc(sql`SUM(${dbSchema.boardseshTicks.attemptCount})`));
-  return rows.map((row, idx) => ({
-    climbUuid: row.climbUuid,
-    boardType: row.boardType,
-    rank: idx,
-  }));
+    .orderBy(desc(sql`SUM(${dbSchema.boardseshTicks.attemptCount})`))
+    .limit(pageSize)
+    .offset(offset);
+  return rows.map((row) => ({ climbUuid: row.climbUuid, boardType: row.boardType }));
+}
+
+/**
+ * Total number of climbs the smart playlist would contain. Computed against
+ * the same conditions as selectSmartClimbRefs so that paging is consistent.
+ */
+async function countSmartClimbRefs(
+  type: SmartPlaylistType,
+  userId: string,
+  boardName: string | undefined,
+): Promise<number> {
+  const conditions = smartBaseConditions(userId, boardName);
+
+  if (type === 'FIVE_STARS') {
+    const [row] = await db
+      .select({
+        count: sql<number>`COUNT(DISTINCT (${dbSchema.boardseshTicks.boardType}, ${dbSchema.boardseshTicks.climbUuid}))::int`,
+      })
+      .from(dbSchema.boardseshTicks)
+      .where(and(...conditions, eq(dbSchema.boardseshTicks.quality, 5)));
+    return row?.count ?? 0;
+  }
+
+  if (type === 'MOST_REPEATED') {
+    const subquery = db
+      .select({
+        climbUuid: dbSchema.boardseshTicks.climbUuid,
+        boardType: dbSchema.boardseshTicks.boardType,
+      })
+      .from(dbSchema.boardseshTicks)
+      .where(and(...conditions))
+      .groupBy(dbSchema.boardseshTicks.climbUuid, dbSchema.boardseshTicks.boardType)
+      .having(sql`SUM(${dbSchema.boardseshTicks.attemptCount}) > 1`)
+      .as('repeated');
+    const [row] = await db.select({ count: sql<number>`COUNT(*)::int` }).from(subquery);
+    return row?.count ?? 0;
+  }
+
+  const [row] = await db
+    .select({
+      count: sql<number>`COUNT(DISTINCT (${dbSchema.boardseshTicks.boardType}, ${dbSchema.boardseshTicks.climbUuid}))::int`,
+    })
+    .from(dbSchema.boardseshTicks)
+    .where(
+      and(
+        ...conditions,
+        eq(dbSchema.boardseshTicks.status, 'attempt'),
+        notInArray(dbSchema.boardseshTicks.climbUuid, sentClimbsSubquery(userId, boardName)),
+      ),
+    );
+  return row?.count ?? 0;
 }
 
 /**
@@ -144,7 +213,7 @@ async function hydrateClimbs(refs: SmartClimbRef[]): Promise<Climb[]> {
         eq(
           tables.climbStats.angle,
           sql`(
-            SELECT s.angle FROM board_climb_stats s
+            SELECT s.angle FROM ${tables.climbStats} s
             WHERE s.board_type = ${tables.climbs.boardType}
               AND s.climb_uuid = ${tables.climbs.uuid}
             ORDER BY s.ascensionist_count DESC NULLS LAST
@@ -232,13 +301,11 @@ export const smartPlaylist = async (
     throw new Error('User not found');
   }
 
-  const allRefs = await selectSmartClimbRefs(input.type, input.userId, input.boardName);
-  const totalCount = allRefs.length;
-  const start = page * pageSize;
-  const end = start + pageSize;
-  const pageRefs = allRefs.slice(start, end);
-  const hasMore = end < totalCount;
-
+  const [pageRefs, totalCount] = await Promise.all([
+    selectSmartClimbRefs(input.type, input.userId, input.boardName, page, pageSize),
+    countSmartClimbRefs(input.type, input.userId, input.boardName),
+  ]);
+  const hasMore = (page + 1) * pageSize < totalCount;
   const climbs = await hydrateClimbs(pageRefs);
 
   return {
@@ -267,53 +334,15 @@ export const mySmartPlaylistCounts = async (
   requireAuthenticated(ctx);
   const userId = ctx.userId!;
 
-  const [fiveStars] = await db
-    .select({
-      count: sql<number>`COUNT(DISTINCT (${dbSchema.boardseshTicks.boardType}, ${dbSchema.boardseshTicks.climbUuid}))::int`,
-    })
-    .from(dbSchema.boardseshTicks)
-    .where(and(eq(dbSchema.boardseshTicks.userId, userId), eq(dbSchema.boardseshTicks.quality, 5)));
-
-  const [mostRepeated] = await db
-    .select({
-      count: sql<number>`COUNT(*)::int`,
-    })
-    .from(
-      db
-        .select({
-          climbUuid: dbSchema.boardseshTicks.climbUuid,
-          boardType: dbSchema.boardseshTicks.boardType,
-        })
-        .from(dbSchema.boardseshTicks)
-        .where(eq(dbSchema.boardseshTicks.userId, userId))
-        .groupBy(dbSchema.boardseshTicks.climbUuid, dbSchema.boardseshTicks.boardType)
-        .having(sql`SUM(${dbSchema.boardseshTicks.attemptCount}) > 1`)
-        .as('repeated'),
-    );
-
-  const sentSubquery = db
-    .select({
-      climbUuid: dbSchema.boardseshTicks.climbUuid,
-    })
-    .from(dbSchema.boardseshTicks)
-    .where(and(eq(dbSchema.boardseshTicks.userId, userId), inArray(dbSchema.boardseshTicks.status, ['flash', 'send'])));
-
-  const [projects] = await db
-    .select({
-      count: sql<number>`COUNT(DISTINCT (${dbSchema.boardseshTicks.boardType}, ${dbSchema.boardseshTicks.climbUuid}))::int`,
-    })
-    .from(dbSchema.boardseshTicks)
-    .where(
-      and(
-        eq(dbSchema.boardseshTicks.userId, userId),
-        eq(dbSchema.boardseshTicks.status, 'attempt'),
-        notInArray(dbSchema.boardseshTicks.climbUuid, sentSubquery),
-      ),
-    );
+  const [fiveStars, mostRepeated, projects] = await Promise.all([
+    countSmartClimbRefs('FIVE_STARS', userId, undefined),
+    countSmartClimbRefs('MOST_REPEATED', userId, undefined),
+    countSmartClimbRefs('PROJECTS', userId, undefined),
+  ]);
 
   return [
-    { type: 'FIVE_STARS', count: fiveStars?.count ?? 0 },
-    { type: 'MOST_REPEATED', count: mostRepeated?.count ?? 0 },
-    { type: 'PROJECTS', count: projects?.count ?? 0 },
+    { type: 'FIVE_STARS', count: fiveStars },
+    { type: 'MOST_REPEATED', count: mostRepeated },
+    { type: 'PROJECTS', count: projects },
   ];
 };
