@@ -23,6 +23,7 @@ import {
   boardTags,
   boardUserSyncs,
   boardSharedSyncs,
+  boardKits,
 } from '@/lib/db/schema';
 import type { AuroraBoardName } from '@/app/lib/api-wrappers/aurora/types';
 
@@ -60,6 +61,7 @@ export const UNIFIED_TABLES = {
   tags: boardTags,
   userSyncs: boardUserSyncs,
   sharedSyncs: boardSharedSyncs,
+  kits: boardKits,
 } as const;
 
 export type UnifiedTableSet = typeof UNIFIED_TABLES;

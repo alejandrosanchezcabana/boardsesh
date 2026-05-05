@@ -176,6 +176,23 @@ export type ProductSizesLayoutsSet = {
   is_listed: boolean;
 };
 
+export type Placement = {
+  id: number;
+  layout_id: number;
+  hole_id: number;
+  set_id: number;
+  default_placement_role_id: number | null;
+};
+
+export type Kit = {
+  serial_number: string;
+  name: string | null;
+  is_autoconnect: boolean;
+  is_listed: boolean;
+  created_at: string;
+  updated_at: string;
+};
+
 export type SharedSync = {
   table_name: string;
   last_synchronized_at: string;
@@ -199,7 +216,9 @@ export type SyncPutFields =
   | Set
   | ProductsAngle
   | BetaLink
-  | ProductSizesLayoutsSet;
+  | ProductSizesLayoutsSet
+  | Placement
+  | Kit;
 
 export type SyncDataPUT = {
   users: User[];
@@ -221,6 +240,8 @@ export type SyncDataPUT = {
   products_angles: ProductsAngle[];
   beta_links: BetaLink[];
   product_sizes_layouts_sets: ProductSizesLayoutsSet[];
+  placements: Placement[];
+  kits: Kit[];
 } & Record<string, Array<SyncPutFields>>;
 
 export type Climb = {
@@ -267,4 +288,6 @@ export type SyncData = {
   products_angles?: ProductsAngle[];
   beta_links?: BetaLink[];
   product_sizes_layouts_sets?: ProductSizesLayoutsSet[];
+  placements?: Placement[];
+  kits?: Kit[];
 } & Record<string, unknown>;

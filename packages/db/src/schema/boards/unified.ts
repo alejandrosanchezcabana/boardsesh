@@ -604,6 +604,22 @@ export const boardSharedSyncs = pgTable(
   }),
 );
 
+export const boardKits = pgTable(
+  'board_kits',
+  {
+    boardType: text('board_type').notNull(),
+    serialNumber: text('serial_number').notNull(),
+    name: text('name'),
+    isAutoconnect: boolean('is_autoconnect').notNull(),
+    isListed: boolean('is_listed').notNull(),
+    createdAt: text('created_at').notNull(),
+    updatedAt: text('updated_at').notNull(),
+  },
+  (table) => ({
+    pk: primaryKey({ columns: [table.boardType, table.serialNumber] }),
+  }),
+);
+
 // =============================================================================
 // Type Exports
 // =============================================================================
@@ -676,3 +692,6 @@ export type NewBoardUserSync = typeof boardUserSyncs.$inferInsert;
 
 export type BoardSharedSync = typeof boardSharedSyncs.$inferSelect;
 export type NewBoardSharedSync = typeof boardSharedSyncs.$inferInsert;
+
+export type BoardKit = typeof boardKits.$inferSelect;
+export type NewBoardKit = typeof boardKits.$inferInsert;
