@@ -23,8 +23,12 @@
     },
     "empty": {
       "title": "No playlists yet",
-      "description": "Create your first playlist by adding climbs from the climb list."
+      "description": "Tap the + button to create your first playlist."
     },
+    "createFab": {
+      "ariaLabel": "Create playlist"
+    },
+    "customUnavailable": "Custom boards aren't available here yet. Pick one of your boards or a popular config from the list.",
     "errors": {
       "loadTitle": "Unable to Load Library",
       "loadDescription": "There was an error loading your library. Please try again.",
@@ -197,7 +201,6 @@
     "youSignInTitle": "Sign in to see your progress",
     "youSignInDescription": "Sign in to track your climbing stats, sessions, and logbook.",
     "selectBoardForPlaylist": "Select a board before creating a playlist",
-    "boardDetailsMissing": "Unable to determine board details for playlist creation",
     "createdPlaylistToast": "Created playlist \"{{name}}\"",
     "createPlaylistFailed": "Failed to create playlist"
   }

@@ -23,8 +23,12 @@
     },
     "empty": {
       "title": "Aucune playlist pour l'instant",
-      "description": "Créez votre première playlist en ajoutant des blocs depuis la liste."
+      "description": "Appuyez sur le bouton + pour créer votre première playlist."
     },
+    "createFab": {
+      "ariaLabel": "Créer une playlist"
+    },
+    "customUnavailable": "Les configurations personnalisées ne sont pas encore disponibles ici. Choisissez l'une de vos boards ou une configuration populaire dans la liste.",
     "errors": {
       "loadTitle": "Impossible de charger la bibliothèque",
       "loadDescription": "Erreur lors du chargement de votre bibliothèque. Réessayez.",
@@ -197,7 +201,6 @@
     "youSignInTitle": "Connectez-vous pour voir votre progression",
     "youSignInDescription": "Connectez-vous pour suivre vos stats, vos sessions et votre carnet.",
     "selectBoardForPlaylist": "Choisissez un board avant de créer une playlist",
-    "boardDetailsMissing": "Impossible de déterminer les détails du board pour créer la playlist",
     "createdPlaylistToast": "Playlist « {{name}} » créée",
     "createPlaylistFailed": "Impossible de créer la playlist"
   }

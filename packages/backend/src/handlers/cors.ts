@@ -12,6 +12,10 @@ const DEV_WEB_PORTS = [3000, 3001];
 const TAILSCALE_STATUS_TIMEOUT_MS = 1500;
 
 let allowedOrigins: string[] = [];
+// In dev, any port on the host's Tailscale hostname is allowed so a worktree
+// running on a non-default port (3005, 3010, …) doesn't get its requests
+// blocked by CORS / WS origin checks.
+let devTailscaleOriginRegex: RegExp | null = null;
 
 function normalizeHostname(hostname: string): string | null {
   const trimmed = hostname.trim().replace(/\.$/, '');
@@ -110,10 +114,17 @@ export function initCors(boardseshUrl: string): void {
         allowedOrigins.push(`http://${tailscale.hostname}:${port}`);
         allowedOrigins.push(`https://${tailscale.hostname}:${port}`);
       });
+      // Allow ANY port on this Tailscale hostname so parallel worktree dev
+      // servers on auto-incremented ports (3005, 3010, …) work without env tweaks.
+      const escaped = tailscale.hostname.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      devTailscaleOriginRegex = new RegExp(`^https?:\\/\\/${escaped}(?::\\d+)?$`);
       console.info(`[CORS] Added Tailscale dev origins for ${tailscale.hostname} (${tailscale.reason})`);
     } else {
+      devTailscaleOriginRegex = null;
       console.info(`[CORS] Skipping Tailscale dev origins: ${tailscale.reason}`);
     }
+  } else {
+    devTailscaleOriginRegex = null;
   }
 
   allowedOrigins = [...new Set(allowedOrigins)];
@@ -126,7 +137,10 @@ export function isOriginAllowed(origin: string): boolean {
   if (allowedOrigins.includes(origin)) return true;
   if (VERCEL_PREVIEW_REGEX.test(origin)) return true;
   if (PREVIEW_ORIGIN_REGEX.test(origin)) return true;
-  if (process.env.NODE_ENV !== 'production' && DEV_PRIVATE_LAN_ORIGIN_REGEX.test(origin)) return true;
+  if (process.env.NODE_ENV !== 'production') {
+    if (DEV_PRIVATE_LAN_ORIGIN_REGEX.test(origin)) return true;
+    if (devTailscaleOriginRegex?.test(origin)) return true;
+  }
   return false;
 }
 
