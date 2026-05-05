@@ -82,6 +82,8 @@ export const BOARD_IMAGE_DIMENSIONS: Record<BoardName, ImageDimensions> = {
     'product_sizes_layouts_sets/39.png': { width: 1461, height: 1144 },
     'product_sizes_layouts_sets/4.png': { width: 1080, height: 1755 },
     'product_sizes_layouts_sets/40.png': { width: 1461, height: 1144 },
+    'product_sizes_layouts_sets/41.png': { width: 1461, height: 1144 },
+    'product_sizes_layouts_sets/42.png': { width: 1461, height: 1144 },
     'product_sizes_layouts_sets/5.png': { width: 1080, height: 1710 },
     'product_sizes_layouts_sets/6.png': { width: 1080, height: 1710 },
     'product_sizes_layouts_sets/7.png': { width: 1080, height: 1710 },
