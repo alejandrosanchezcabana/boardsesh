@@ -102,7 +102,7 @@ const ClimbSearchForm: React.FC<ClimbSearchFormProps> = ({ boardDetails }) => {
   );
 
   const defaultZone = useMemo(() => buildDefaultZone(dims), [dims]);
-  const handleRadius = computeHandleRadius(dims);
+  const handleRadius = useMemo(() => computeHandleRadius(dims), [dims]);
 
   // Local zone mirrors the URL param so dragging stays smooth without
   // hammering the search debounce on every pointermove.
@@ -431,6 +431,7 @@ const ClimbSearchForm: React.FC<ClimbSearchFormProps> = ({ boardDetails }) => {
                 under the zone fill stay tappable. Sized to match the corner
                 handles so it's a proper touch target on mobile. */}
             <circle
+              data-testid="zone-handle-move"
               cx={rectSvg.centerX}
               cy={rectSvg.centerY}
               r={handleRadius}
@@ -451,6 +452,7 @@ const ClimbSearchForm: React.FC<ClimbSearchFormProps> = ({ boardDetails }) => {
               return (
                 <circle
                   key={corner}
+                  data-testid={`zone-handle-${corner}`}
                   cx={handlePos.x}
                   cy={handlePos.y}
                   r={handleRadius}

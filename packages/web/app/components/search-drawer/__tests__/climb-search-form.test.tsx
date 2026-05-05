@@ -330,14 +330,9 @@ describe('ClimbSearchForm — drag handles', () => {
       holdsFilter: filterAllThreeHolds,
       zoneBox: startZone,
     };
-    const { container } = render(<ClimbSearchForm boardDetails={boardDetails} />);
+    render(<ClimbSearchForm boardDetails={boardDetails} />);
 
-    // JSX renders handles in the order: rect (pointer-events: none, skipped
-    // by the `circle` selector), then move, nw, ne, sw, se. The SE corner
-    // handle is therefore the 5th circle in the zone overlay.
-    const handles = container.querySelectorAll<SVGCircleElement>('svg circle');
-    expect(handles.length).toBe(5);
-    const seHandle = handles[4]!;
+    const seHandle = screen.getByTestId('zone-handle-se');
 
     // SE corner starts at grid (115, 31) → SVG (862.5, 937.5).
     fireEvent.pointerDown(seHandle, { clientX: 862.5, clientY: 937.5, pointerId: 1 });
