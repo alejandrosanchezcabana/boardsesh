@@ -62,10 +62,18 @@ const ClimbHoldSearchForm: React.FC<ClimbHoldSearchFormProps> = ({ boardDetails 
   const setHoldFilter = useCallback(
     (holdId: number, type: HoldFilterType, nextMode: HoldFilterMode | undefined) => {
       const next: HoldsFilter = { ...holdsFilter };
-      const existing: HoldFilterEntry = { ...next[holdId] };
+      let existing: HoldFilterEntry = { ...next[holdId] };
       if (nextMode === undefined) {
         delete existing[type];
       } else {
+        // Don't allow mixing include and exclude on the same hold — switching
+        // modes wipes any previously-set entries in the other mode so the
+        // hold ends up consistently include-only or exclude-only.
+        const otherMode: HoldFilterMode = nextMode === 'include' ? 'exclude' : 'include';
+        const conflicts = Object.entries(existing).some(([, m]) => m === otherMode);
+        if (conflicts) {
+          existing = Object.fromEntries(Object.entries(existing).filter(([, m]) => m !== otherMode));
+        }
         existing[type] = nextMode;
       }
       if (Object.keys(existing).length === 0) {

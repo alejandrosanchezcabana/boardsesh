@@ -177,11 +177,13 @@
       "noSetters": "No se encontraron aperturistas"
     },
     "holds": {
-      "tapTo": "Toca para:",
+      "tapToToggle": "Toca una presa para incluirla o excluirla",
       "include": "Incluir",
       "exclude": "Excluir",
       "included": "{{count}} incluidas",
-      "excluded": "{{count}} excluidas"
+      "excluded": "{{count}} excluidas",
+      "showHeatmap": "Mostrar mapa de calor",
+      "hideHeatmap": "Ocultar mapa de calor"
     },
     "sortToggle": "Ordenar"
   },
@@ -423,12 +425,17 @@
   },
   "holdTypePicker": {
     "toolbarAriaLabel": "Tipo de presa",
+    "applyModeAriaLabel": "Aplicar como incluir o excluir",
     "clear": "Borrar",
+    "searchHelp": "Selecciona uno o más tipos de presa, luego toca en cualquier otra parte para cerrar el selector",
+    "includeAriaSuffix": "incluir",
+    "excludeAriaSuffix": "excluir",
     "states": {
       "starting": "Salida",
       "hand": "Media",
       "finish": "Final",
-      "foot": "Pie"
+      "foot": "Pie",
+      "any": "Cualquiera"
     }
   },
   "directionPicker": {
