@@ -23,13 +23,17 @@ const config: CapacitorConfig = {
     SystemBars: {
       insetsHandling: 'disable',
     },
-    // Resize the Android WebView when the soft keyboard opens so 100dvh/100%
-    // layouts (e.g. the climb-name filter drawer) shrink to fit above it,
-    // matching how mobile Chrome behaves natively.
-    Keyboard: {
-      resize: 'native',
-      resizeOnFullScreen: true,
-    },
+    // Do not install @capacitor/keyboard or set a `Keyboard` plugin config
+    // here. @capacitor-community/safe-area pads the WebView decorView by
+    // imeInsets.bottom on Chromium >= 140 with viewport-fit=cover, so the
+    // keyboard already lifts content as expected. Combined with
+    // `interactiveWidget: 'resizes-visual'` (packages/web/app/layout.tsx) and
+    // `100dvh` drawers, this matches mobile Chrome. Adding @capacitor/keyboard
+    // with `resize: 'native'` plus `windowSoftInputMode="adjustResize"` (PRs
+    // #1796 + commit 6e748c0d5) physically shrinks the WebView when the IME
+    // opens, collapsing the dvh-based layout on top of a fixed-height bottom
+    // bar — see #1808. The safe-area plugin also explicitly logs an error if
+    // `Keyboard.resizeOnFullScreen: true` is set.
   },
 };
 
