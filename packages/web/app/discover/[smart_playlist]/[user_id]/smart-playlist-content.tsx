@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useCallback, useMemo, useState } from 'react';
-import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import IconButton from '@mui/material/IconButton';
 import MuiButton from '@mui/material/Button';
@@ -171,20 +170,11 @@ export default function SmartPlaylistContent({ smartPlaylistType, smartPlaylistS
             </div>
           </div>
 
-          <Box
-            sx={{
-              position: 'absolute',
-              top: 1.5,
-              right: 1.5,
-              display: 'flex',
-              flexDirection: 'row',
-              gap: 0.5,
-            }}
-          >
+          <div className={styles.heroActions}>
             <IconButton onClick={handleShare} aria-label={t('detail.share')}>
               <IosShare />
             </IconButton>
-          </Box>
+          </div>
         </div>
 
         <div className={styles.climbsSection}>

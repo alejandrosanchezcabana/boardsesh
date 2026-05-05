@@ -1,8 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from 'vite-plus/test';
 import type { ConnectionContext } from '@boardsesh/shared-schema';
+import * as dbSchema from '@boardsesh/db/schema';
 import { playlistQueries } from '../graphql/resolvers/playlists/queries';
 
-const { mockDb } = vi.hoisted(() => {
+const { mockDb, eqSpy, notInArraySpy } = vi.hoisted(() => {
   const mockDb = {
     execute: vi.fn(),
     select: vi.fn(),
@@ -10,10 +11,29 @@ const { mockDb } = vi.hoisted(() => {
     delete: vi.fn(),
     update: vi.fn(),
   };
-  return { mockDb };
+  return {
+    mockDb,
+    eqSpy: vi.fn(),
+    notInArraySpy: vi.fn(),
+  };
 });
 
 vi.mock('../db/client', () => ({ db: mockDb }));
+
+vi.mock('drizzle-orm', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('drizzle-orm')>();
+  return {
+    ...actual,
+    eq: (...args: Parameters<typeof actual.eq>) => {
+      eqSpy(...args);
+      return actual.eq(...args);
+    },
+    notInArray: (...args: Parameters<typeof actual.notInArray>) => {
+      notInArraySpy(...args);
+      return actual.notInArray(...args);
+    },
+  };
+});
 
 vi.mock('../db/queries/util/table-select', () => ({
   UNIFIED_TABLES: {
@@ -144,6 +164,11 @@ describe('smartPlaylist resolver', () => {
     expect(result.meta).toMatchObject({ userId: 'user-123', userName: 'Marco D', climbCount: 42 });
     expect(pageCalls.limit[0]).toEqual([10]);
     expect(pageCalls.offset[0]).toEqual([20]);
+    // The page and count queries must both filter by quality = 5.
+    const qualityFilters = eqSpy.mock.calls.filter(
+      ([col, val]) => col === dbSchema.boardseshTicks.quality && val === 5,
+    );
+    expect(qualityFilters.length).toBeGreaterThanOrEqual(2);
   });
 
   it('MOST_REPEATED applies HAVING SUM > 1 and orders by total attempts', async () => {
@@ -197,6 +222,10 @@ describe('smartPlaylist resolver', () => {
     // to the inArray status), so where() has been called once with one composed argument.
     expect(sentCallsPage.where.length).toBe(1);
     expect(sentCallsCount.where.length).toBe(1);
+    // The outer page + count queries must each apply notInArray(climbUuid, sentSubquery)
+    // — without it, sent climbs would leak into the projects list.
+    const notInArrayClimbCalls = notInArraySpy.mock.calls.filter(([col]) => col === dbSchema.boardseshTicks.climbUuid);
+    expect(notInArrayClimbCalls.length).toBe(2);
   });
 
   it('throws when user does not exist', async () => {

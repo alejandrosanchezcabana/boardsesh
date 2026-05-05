@@ -105,7 +105,11 @@ async function selectSmartClimbRefs(
     return rows.map((row) => ({ climbUuid: row.climbUuid, boardType: row.boardType }));
   }
 
-  // PROJECTS — climbs with attempts but never sent on this board.
+  // PROJECTS — climbs the user has logged but never sent on this board.
+  // notInArray(sentSubquery) is the necessary check: any climb the user has
+  // flashed or sent gets excluded entirely. We don't add `status = 'attempt'`
+  // because a climb that survives notInArray has no flash/send rows by
+  // definition, so the additional row filter is redundant.
   const rows = await db
     .select({
       climbUuid: dbSchema.boardseshTicks.climbUuid,
@@ -113,13 +117,7 @@ async function selectSmartClimbRefs(
       total: sql<number>`SUM(${dbSchema.boardseshTicks.attemptCount})::int`,
     })
     .from(dbSchema.boardseshTicks)
-    .where(
-      and(
-        ...conditions,
-        eq(dbSchema.boardseshTicks.status, 'attempt'),
-        notInArray(dbSchema.boardseshTicks.climbUuid, sentClimbsSubquery(userId, boardName)),
-      ),
-    )
+    .where(and(...conditions, notInArray(dbSchema.boardseshTicks.climbUuid, sentClimbsSubquery(userId, boardName))))
     .groupBy(dbSchema.boardseshTicks.climbUuid, dbSchema.boardseshTicks.boardType)
     .orderBy(desc(sql`SUM(${dbSchema.boardseshTicks.attemptCount})`))
     .limit(pageSize)
@@ -168,19 +166,18 @@ async function countSmartClimbRefs(
       count: sql<number>`COUNT(DISTINCT (${dbSchema.boardseshTicks.boardType}, ${dbSchema.boardseshTicks.climbUuid}))::int`,
     })
     .from(dbSchema.boardseshTicks)
-    .where(
-      and(
-        ...conditions,
-        eq(dbSchema.boardseshTicks.status, 'attempt'),
-        notInArray(dbSchema.boardseshTicks.climbUuid, sentClimbsSubquery(userId, boardName)),
-      ),
-    );
+    .where(and(...conditions, notInArray(dbSchema.boardseshTicks.climbUuid, sentClimbsSubquery(userId, boardName))));
   return row?.count ?? 0;
 }
 
 /**
  * Hydrate a page of (climbUuid, boardType) pairs into full Climb objects, joining
  * climbs and climbStats. Mirrors the all-boards mode of the playlistClimbs resolver.
+ *
+ * TODO: deduplicate with `fetchAllBoardsClimbs` in `playlist-climbs.ts` — both
+ * paths build the same SELECT + LEFT JOIN angle subselect against UNIFIED_TABLES
+ * and emit the same Climb shape. A schema change to climbStats currently has to
+ * be made in both files in lockstep.
  */
 async function hydrateClimbs(refs: SmartClimbRef[]): Promise<Climb[]> {
   if (refs.length === 0) return [];
@@ -325,6 +322,12 @@ export const smartPlaylist = async (
 /**
  * Climb counts for the current user's smart playlists, used to render
  * the cards on the library page.
+ *
+ * TODO: collapse into a single SQL roundtrip. Today this fires three queries
+ * in parallel (FIVE_STARS, MOST_REPEATED, PROJECTS), and the MOST_REPEATED
+ * helper uses a wrapped subquery so its branch costs two roundtrips on its
+ * own. Cheap at current scale; consider a single CTE-backed query if it
+ * shows up in profiling.
  */
 export const mySmartPlaylistCounts = async (
   _: unknown,

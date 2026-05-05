@@ -115,6 +115,15 @@
   right: 12px;
 }
 
+.heroActions {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  display: flex;
+  flex-direction: row;
+  gap: 4px;
+}
+
 /* Visibility badge */
 .visibilityBadge {
   display: inline-flex;
