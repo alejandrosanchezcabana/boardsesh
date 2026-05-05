@@ -68,37 +68,94 @@ export const searchClimbs = async (
   const sortOrder = searchParams.sortOrder === 'asc' ? 'asc' : 'desc';
   const isDraftsQuery = !!searchParams.onlyDrafts;
 
-  // For the default hot path (ascents DESC with stats filters active), drive from
-  // board_climb_stats so PostgreSQL reads the covering index in sorted order and
-  // stops after pageSize+1 qualifying rows — avoids scanning all 15K+ matching
-  // climbs just to sort and take 21.
-  //
-  // Only safe when stats filters are active (e.g., minAscents >= 1) because the
-  // INNER JOIN excludes climbs without stats rows. When stats filters are active,
-  // those climbs would be excluded by the WHERE clause anyway (NULL fails >= 1),
-  // making LEFT JOIN and INNER JOIN equivalent.
-  // When no stats filters are active, fall through to the LEFT JOIN path.
   const hasStatsFilters = filters.getClimbStatsConditions().length > 0;
-  // projectsOnly includes climbs with NO stats row (ascents NULL), so the INNER-JOIN
-  // stats-driven path would drop exactly the climbs we want. Force the LEFT-JOIN path.
-  const useStatsDriven =
-    sortBy === 'ascents' && sortOrder === 'desc' && !isDraftsQuery && hasStatsFilters && !searchParams.projectsOnly;
+  const path = chooseSearchPath({
+    sortBy,
+    sortOrder,
+    isDraftsQuery,
+    projectsOnly: !!searchParams.projectsOnly,
+    page,
+    hasStatsFilters,
+  });
 
-  if (useStatsDriven) {
-    return statsDrivenSearch(db, params, filters, page, pageSize);
+  if (path === 'standard-only') {
+    return standardSearch(db, params, searchParams, filters, sortBy, sortOrder, isDraftsQuery, page, pageSize);
   }
 
-  return standardSearch(db, params, searchParams, filters, sortBy, sortOrder, isDraftsQuery, page, pageSize);
+  // Both 'stats-driven-only' and 'stats-driven-with-fallback' start with statsDriven.
+  const statsResult = await statsDrivenSearch(db, params, filters, page, pageSize);
+  if (statsResult.hasMore) {
+    return statsResult;
+  }
+
+  // statsDriven returned a partial page. Fall back to standardSearch only on page 0
+  // without stats filters, where stats-less climbs (projects) need to fill out
+  // narrow-filter results. The fallback's dataset is small enough that the planner
+  // picks a serial plan and doesn't allocate parallel-sort DSM segments.
+  //
+  // KNOWN TRADE-OFF (search-climbs.ts:80-91 review feedback): when the page-0
+  // fallback returns hasMore=true but the user navigates to page 1, statsDriven on
+  // page 1 returns 0 and we don't fall back (page > 0). The user sees an empty
+  // next page. Accepted because:
+  //   - The narrow-filter case where this is visible is a small fraction of traffic.
+  //   - Running standardSearch on page > 0 with deep OFFSET re-creates the parallel
+  //     plan and /dev/shm pressure that PR #1969 fixes for the hot path.
+  //   - A properly correct fix needs server-side state across pages (count of
+  //     stats-having for the filter) which itself takes a parallel plan on broad
+  //     filters — verified ~862ms via EXPLAIN ANALYZE.
+  // Future work: track in production via cache-miss telemetry; consider keyset
+  // pagination or a popular_climbs materialized view as the next scale move.
+  if (path === 'stats-driven-with-fallback') {
+    return standardSearch(db, params, searchParams, filters, sortBy, sortOrder, isDraftsQuery, page, pageSize);
+  }
+  return statsResult;
 };
+
+/**
+ * Three search paths, distinguished by post-statsDriven behavior:
+ *   - 'standard-only'              — skip statsDriven entirely (LEFT JOIN path)
+ *   - 'stats-driven-only'          — run statsDriven; whatever it returns is final
+ *   - 'stats-driven-with-fallback' — run statsDriven; if partial page, retry via
+ *                                    standardSearch to surface stats-less climbs
+ */
+export type SearchPath = 'standard-only' | 'stats-driven-only' | 'stats-driven-with-fallback';
+
+/**
+ * Pure routing decision for `searchClimbs`. Exported for unit testing — exercising
+ * each branch via SQL integration tests would require seeded data and is brittle
+ * compared to direct assertions on the routing logic.
+ *
+ * Decision tree:
+ *   - non-ascents-DESC sort → standard-only (only ascents-DESC has the index-driven plan)
+ *   - drafts query          → standard-only (drafts have no stats rows)
+ *   - projectsOnly          → standard-only (the user explicitly wants stats-less climbs)
+ *   - page === 0 && !hasStatsFilters → stats-driven-with-fallback
+ *   - otherwise             → stats-driven-only
+ */
+export function chooseSearchPath(input: {
+  sortBy: string;
+  sortOrder: 'asc' | 'desc';
+  isDraftsQuery: boolean;
+  projectsOnly: boolean;
+  page: number;
+  hasStatsFilters: boolean;
+}): SearchPath {
+  if (input.sortBy !== 'ascents' || input.sortOrder !== 'desc') return 'standard-only';
+  if (input.isDraftsQuery) return 'standard-only';
+  if (input.projectsOnly) return 'standard-only';
+  if (input.page === 0 && !input.hasStatsFilters) return 'stats-driven-with-fallback';
+  return 'stats-driven-only';
+}
 
 /**
  * Stats-driven search: FROM board_climb_stats INNER JOIN board_climbs.
  * PostgreSQL reads the stats covering index in ascensionist_count DESC order
  * and stops after pageSize+1 qualifying rows.
  *
- * Only used when stats filters are active (checked by caller), so the INNER JOIN
- * is equivalent to LEFT JOIN — climbs without stats would be excluded by stats
- * filters (e.g., minAscents >= 1) in the WHERE clause anyway.
+ * The INNER JOIN excludes climbs without a stats row at this angle. The caller
+ * (`searchClimbs`) compensates only on page 0 without stats filters, where
+ * stats-less climbs (projects) need to fill out narrow-filter results. See the
+ * comment in `searchClimbs` for the full reasoning.
  *
  * All climb filters (including personal progress like hideCompleted) are in
  * the WHERE clause — not the JOIN ON — so they apply correctly to the result set.
