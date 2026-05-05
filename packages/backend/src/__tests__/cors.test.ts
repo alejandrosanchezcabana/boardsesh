@@ -1,6 +1,6 @@
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import { execFileSync } from 'node:child_process';
-import { describe, it, expect, beforeEach, vi } from 'vite-plus/test';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vite-plus/test';
 import { initCors, isOriginAllowed, applyCorsHeaders, getAllowedOrigins } from '../handlers/cors';
 
 vi.mock('node:child_process', () => ({
@@ -174,6 +174,12 @@ describe('CORS Handler', () => {
       beforeEach(() => {
         process.env.TAILSCALE_HOSTNAME = 'My-Laptop.tailnet123.ts.net';
         initCors('https://boardsesh.com');
+      });
+
+      afterEach(() => {
+        // Belt-and-braces: outer beforeEach also wipes this, but isolating
+        // here protects sibling describes from accidental ordering changes.
+        delete process.env.TAILSCALE_HOSTNAME;
       });
 
       it('allows the resolved Tailscale host on a non-default port over https', () => {

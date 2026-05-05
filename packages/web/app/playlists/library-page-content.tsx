@@ -280,15 +280,10 @@ export default function LibraryPageContent({
   const [isCustomBoardRendered, setIsCustomBoardRendered] = useState(false);
   const [createBoardContext, setCreateBoardContext] = useState<SelectedBoardForCreate | null>(null);
 
-  const handleCreateDrawerTransitionEnd = useCallback((open: boolean) => {
-    if (!open) setIsCreateDrawerRendered(false);
-  }, []);
-  const handleBoardPickerTransitionEnd = useCallback((open: boolean) => {
-    if (!open) setIsBoardPickerRendered(false);
-  }, []);
-  const handleCustomBoardTransitionEnd = useCallback((open: boolean) => {
-    if (!open) setIsCustomBoardRendered(false);
-  }, []);
+  // Pending action to fire once the currently-closing drawer finishes its
+  // slide-out, so two drawers are never mounted-and-animating at once.
+  type PendingDrawerAction = { type: 'create'; context: SelectedBoardForCreate } | { type: 'custom' } | null;
+  const [pendingDrawer, setPendingDrawer] = useState<PendingDrawerAction>(null);
 
   const openCreateDrawerFor = useCallback((boardType: string, layoutId: number) => {
     setCreateBoardContext({ boardType, layoutId });
@@ -296,56 +291,89 @@ export default function LibraryPageContent({
     setIsCreateDrawerOpen(true);
   }, []);
 
+  const fulfillPendingDrawer = useCallback(() => {
+    if (!pendingDrawer) return;
+    if (pendingDrawer.type === 'create') {
+      openCreateDrawerFor(pendingDrawer.context.boardType, pendingDrawer.context.layoutId);
+    } else if (pendingDrawer.type === 'custom') {
+      setIsCustomBoardRendered(true);
+      setIsCustomBoardOpen(true);
+    }
+    setPendingDrawer(null);
+  }, [pendingDrawer, openCreateDrawerFor]);
+
+  const handleCreateDrawerTransitionEnd = useCallback((open: boolean) => {
+    if (!open) setIsCreateDrawerRendered(false);
+  }, []);
+  const handleBoardPickerTransitionEnd = useCallback(
+    (open: boolean) => {
+      if (!open) {
+        setIsBoardPickerRendered(false);
+        fulfillPendingDrawer();
+      }
+    },
+    [fulfillPendingDrawer],
+  );
+  const handleCustomBoardTransitionEnd = useCallback(
+    (open: boolean) => {
+      if (!open) {
+        setIsCustomBoardRendered(false);
+        fulfillPendingDrawer();
+      }
+    },
+    [fulfillPendingDrawer],
+  );
+
   const handleCreateClick = useCallback(() => {
-    if (selectedBoard) {
-      openCreateDrawerFor(selectedBoard.boardType, selectedBoard.layoutId);
+    // Prefer the filter strip's selectedBoard, but fall back to a fresh slug
+    // lookup against myBoards: on board routes the auto-select effect runs
+    // after first paint, so a fast tap can still find selectedBoard === null
+    // even though the route already pins us to a specific board.
+    const board = selectedBoard ?? (boardSlug ? findMatchingBoard(myBoards, boardSlug) : null);
+    if (board) {
+      openCreateDrawerFor(board.boardType, board.layoutId);
       return;
     }
     setIsBoardPickerRendered(true);
     setIsBoardPickerOpen(true);
-  }, [selectedBoard, openCreateDrawerFor]);
+  }, [selectedBoard, boardSlug, myBoards, openCreateDrawerFor]);
 
-  const handlePickerBoardClick = useCallback(
-    (board: UserBoard) => {
-      setIsBoardPickerOpen(false);
-      openCreateDrawerFor(board.boardType, board.layoutId);
-    },
-    [openCreateDrawerFor],
-  );
+  const handlePickerBoardClick = useCallback((board: UserBoard) => {
+    setPendingDrawer({ type: 'create', context: { boardType: board.boardType, layoutId: board.layoutId } });
+    setIsBoardPickerOpen(false);
+  }, []);
 
-  const handlePickerConfigClick = useCallback(
-    (config: PopularBoardConfig) => {
-      setIsBoardPickerOpen(false);
-      openCreateDrawerFor(config.boardType, config.layoutId);
-    },
-    [openCreateDrawerFor],
-  );
+  const handlePickerConfigClick = useCallback((config: PopularBoardConfig) => {
+    setPendingDrawer({ type: 'create', context: { boardType: config.boardType, layoutId: config.layoutId } });
+    setIsBoardPickerOpen(false);
+  }, []);
 
   const handlePickerCustomClick = useCallback(() => {
-    setIsBoardPickerOpen(false);
-    if (boardConfigs) {
-      setIsCustomBoardRendered(true);
-      setIsCustomBoardOpen(true);
+    if (!boardConfigs) {
+      // Defensive: every parent route passes boardConfigs, so this is unexpected.
+      // Tell the user instead of swallowing the tap silently.
+      setIsBoardPickerOpen(false);
+      showMessage(t('library.customUnavailable'), 'error');
       return;
     }
-    // Defensive: every parent route passes boardConfigs, so this is unexpected.
-    // Tell the user instead of swallowing the tap silently.
-    showMessage(t('library.customUnavailable'), 'error');
+    setPendingDrawer({ type: 'custom' });
+    setIsBoardPickerOpen(false);
   }, [boardConfigs, showMessage, t]);
 
   const handleCustomBoardSelected = useCallback(
     (_url: string, config?: StoredBoardConfig) => {
-      setIsCustomBoardOpen(false);
       if (config && config.layoutId > 0) {
-        openCreateDrawerFor(config.board, config.layoutId);
+        setPendingDrawer({ type: 'create', context: { boardType: config.board, layoutId: config.layoutId } });
+        setIsCustomBoardOpen(false);
         return;
       }
       // BoardSelectorDrawer can fire onBoardSelected with no config (e.g. when it
       // navigates without a stored entry); we have nothing to feed the create
       // mutation, so surface the failure instead of dropping the tap.
+      setIsCustomBoardOpen(false);
       showMessage(t('bottomTabBar.selectBoardForPlaylist'), 'error');
     },
-    [openCreateDrawerFor, showMessage, t],
+    [showMessage, t],
   );
 
   const handlePlaylistCreated = useCallback(
@@ -490,7 +518,10 @@ export default function LibraryPageContent({
           aria-label={t('library.createFab.ariaLabel')}
           sx={{
             position: 'fixed',
-            right: `${themeTokens.spacing[4]}px`,
+            // On wide viewports the page container is centred at max-width 800px
+            // (see library.module.css .pageContainer). Anchor the FAB to the right
+            // edge of that column so it doesn't drift to the browser edge.
+            right: `max(${themeTokens.spacing[4]}px, calc((100vw - 800px) / 2 + ${themeTokens.spacing[4]}px))`,
             // --bottom-bar-height is set by persistent-session-wrapper after hydration with the
             // measured queue-control + tab-bar height; the 145px fallback matches the SSR estimate
             // declared in app/components/index.css and is what users see during first paint only.

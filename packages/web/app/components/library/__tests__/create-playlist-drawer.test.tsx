@@ -167,6 +167,24 @@ describe('CreatePlaylistDrawer', () => {
     );
   });
 
+  it('clears stale form state when the drawer is reopened', async () => {
+    const onClose = vi.fn();
+    const { rerender } = render(<CreatePlaylistDrawer {...baseProps} open={true} onClose={onClose} />);
+
+    fireEvent.change(getNameField(), { target: { value: 'First attempt' } });
+    fireEvent.change(getDescriptionField(), { target: { value: 'Some description' } });
+
+    // Caller closes the drawer via its own state.
+    rerender(<CreatePlaylistDrawer {...baseProps} open={false} onClose={onClose} />);
+    // Caller reopens it (same mounted instance).
+    rerender(<CreatePlaylistDrawer {...baseProps} open={true} onClose={onClose} />);
+
+    await waitFor(() => {
+      expect((getNameField() as HTMLInputElement).value).toBe('');
+      expect((getDescriptionField() as HTMLTextAreaElement).value).toBe('');
+    });
+  });
+
   it('shows an error snackbar and does not close when the mutation fails', async () => {
     mockExecuteGraphQL.mockRejectedValueOnce(new Error('boom'));
 

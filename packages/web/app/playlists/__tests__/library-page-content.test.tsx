@@ -108,8 +108,17 @@ vi.mock('@/app/components/board-scroll/board-discovery-scroll', () => ({
 }));
 
 // BoardSelectorDrawer — exposes onBoardSelected for the custom path.
+// Fires onTransitionEnd(false) synchronously when closed so the orchestrator's
+// pending-drawer chain fulfils within the test, mirroring real animation.
 vi.mock('@/app/components/board-selector-drawer/board-selector-drawer', () => ({
-  default: (props: { open: boolean; onBoardSelected?: (url: string, config?: StoredBoardConfig) => void }) => {
+  default: (props: {
+    open: boolean;
+    onBoardSelected?: (url: string, config?: StoredBoardConfig) => void;
+    onTransitionEnd?: (open: boolean) => void;
+  }) => {
+    React.useEffect(() => {
+      if (!props.open) props.onTransitionEnd?.(false);
+    }, [props.open]);
     if (!props.open) return null;
     return (
       <div data-testid="custom-board-drawer">
@@ -127,14 +136,19 @@ vi.mock('@/app/components/board-selector-drawer/board-selector-drawer', () => ({
   },
 }));
 
-// SwipeableDrawer — passthrough that respects `open`.
+// SwipeableDrawer — passthrough that respects `open` and fires onTransitionEnd
+// on close so the deferred-open pattern can resolve in tests.
 vi.mock('@/app/components/swipeable-drawer/swipeable-drawer', () => ({
   default: (props: {
     open?: boolean;
     children?: React.ReactNode;
     extra?: React.ReactNode;
     title?: React.ReactNode;
+    onTransitionEnd?: (open: boolean) => void;
   }) => {
+    React.useEffect(() => {
+      if (!props.open) props.onTransitionEnd?.(false);
+    }, [props.open]);
     if (!props.open) return null;
     return (
       <div data-testid="swipeable-drawer">
@@ -385,6 +399,49 @@ describe('LibraryPageContent FAB orchestration', () => {
     fireEvent.click(screen.getByTestId('create-fire-success'));
 
     expect(mockRouterPush).toHaveBeenCalledWith('/playlists/new-playlist-uuid');
+  });
+
+  it('falls back to a fresh slug lookup if selectedBoard has not synced yet', async () => {
+    // Simulate the first-paint race: filter strip's internal state hasn't
+    // resolved selectedBoard yet (initialMyBoards lacks the slug match), but
+    // myBoards has just loaded with the matching board.
+    const board = makeBoard('synced-board', { slug: 'kilter-route', boardType: 'kilter', layoutId: 99 });
+    render(
+      <LibraryPageContent
+        initialMyBoards={[board]}
+        initialPlaylists={[]}
+        initialDiscoverPlaylists={{ popular: [], recent: [] }}
+        boardConfigs={fakeBoardConfigs}
+        boardSlug="kilter-route"
+      />,
+    );
+
+    clickFab();
+    await waitFor(() => expect(screen.getByTestId('create-drawer')).toBeDefined());
+    // The picker should never have opened — we resolved board context directly.
+    expect(screen.queryByTestId('board-discovery')).toBeNull();
+    expect(screen.getByTestId('create-layout').textContent).toBe('99');
+  });
+
+  it('opens the create drawer only after the board picker finishes closing', async () => {
+    render(
+      <LibraryPageContent
+        initialMyBoards={[]}
+        initialPlaylists={[]}
+        initialDiscoverPlaylists={{ popular: [], recent: [] }}
+        boardConfigs={fakeBoardConfigs}
+      />,
+    );
+
+    clickFab();
+    await waitFor(() => expect(screen.getByTestId('board-discovery')).toBeDefined());
+    fireEvent.click(screen.getByTestId('discovery-pick-board'));
+
+    // After the click the picker has been told to close; the create drawer
+    // should appear once the picker's onTransitionEnd fires (fired by the
+    // mock SwipeableDrawer's useEffect on open=false).
+    await waitFor(() => expect(screen.getByTestId('create-drawer')).toBeDefined());
+    expect(screen.queryByTestId('board-discovery')).toBeNull();
   });
 
   it('does not render the FAB for unauthenticated users', () => {

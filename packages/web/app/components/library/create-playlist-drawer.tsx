@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { track } from '@vercel/analytics';
 import MuiButton from '@mui/material/Button';
@@ -70,6 +70,17 @@ export default function CreatePlaylistDrawer({
     setFormValues(INITIAL_FORM);
     setFormErrors({});
   }, []);
+
+  // The drawer is kept mounted across opens (rendered/open dual-flag pattern),
+  // so reset stale form state every time the drawer transitions from closed to
+  // open. Without this, name/description typed in a previous session linger.
+  const wasOpenRef = useRef(false);
+  useEffect(() => {
+    if (open && !wasOpenRef.current) {
+      resetForm();
+    }
+    wasOpenRef.current = open;
+  }, [open, resetForm]);
 
   const handleClose = useCallback(() => {
     resetForm();
@@ -190,7 +201,7 @@ export default function CreatePlaylistDrawer({
             value={formValues.color || '#000000'}
             onChange={(e) => setFormValues((prev) => ({ ...prev, color: e.target.value }))}
             size="small"
-            sx={{ width: 80 }}
+            sx={{ width: themeTokens.spacing[16] }}
             slotProps={{ htmlInput: { 'aria-label': t('create.fields.color') } }}
           />
         </Box>
