@@ -139,6 +139,7 @@
       "holds": "Prises",
       "holdsTitle": "Rechercher par prise",
       "zone": "Zone",
+      "holdsAndZone": "Prises et zone",
       "anyDefault": "Toutes",
       "allClimbs": "Tous les blocs"
     },
@@ -190,6 +191,9 @@
       "description": "Faites glisser la zone pour limiter les résultats aux voies qui s'y inscrivent.",
       "draw": "Dessiner la zone",
       "clear": "Effacer la zone"
+    },
+    "holdsAndZone": {
+      "description": "Touchez des prises pour filtrer, ou dessinez une zone pour limiter les résultats aux voies qui s'y inscrivent."
     },
     "sortToggle": "Trier"
   },

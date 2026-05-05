@@ -139,6 +139,7 @@
       "holds": "Presas",
       "holdsTitle": "Buscar por presa",
       "zone": "Zona",
+      "holdsAndZone": "Presas y zona",
       "anyDefault": "Cualquiera",
       "allClimbs": "Todos los bloques"
     },
@@ -190,6 +191,9 @@
       "description": "Arrastra el recuadro para limitar los resultados a bloques que entren en él.",
       "draw": "Dibujar zona",
       "clear": "Borrar zona"
+    },
+    "holdsAndZone": {
+      "description": "Toca presas para filtrar, o dibuja una zona para limitar los resultados a bloques que entren en ella."
     },
     "sortToggle": "Ordenar"
   },

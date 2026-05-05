@@ -19,8 +19,7 @@ import { useUISearchParams } from '@/app/components/queue-control/ui-searchparam
 import { useBoardProvider } from '@/app/components/board-provider/board-provider-context';
 import SearchClimbNameInput from './search-climb-name-input';
 import SetterNameSelect from './setter-name-select';
-import ClimbHoldSearchForm from './climb-hold-search-form';
-import ClimbZoneSearchForm from './climb-zone-search-form';
+import ClimbSearchForm from './climb-search-form';
 import type { BoardDetails } from '@/app/lib/types';
 import { buildGradeRangeUpdate } from './grade-range-utils';
 import { useAuthModal } from '@/app/components/providers/auth-modal-provider';
@@ -484,28 +483,18 @@ const AccordionSearchForm: React.FC<AccordionSearchFormProps> = ({ boardDetails,
       ),
     },
     {
-      key: 'holds',
-      label: 'Holds',
-      title: 'Search by Hold',
-      defaultSummary: 'Any',
-      getSummary: () => getHoldsPanelSummary(uiSearchParams),
-      lazy: true,
-      content: (
-        <div className={styles.holdSearchContainer}>
-          <ClimbHoldSearchForm boardDetails={boardDetails} />
-        </div>
-      ),
-    },
-    {
-      key: 'zone',
-      label: t('search.panels.zone'),
-      title: t('search.panels.zone'),
+      key: 'holdsAndZone',
+      label: t('search.panels.holdsAndZone'),
+      title: t('search.panels.holdsAndZone'),
       defaultSummary: t('search.panels.anyDefault'),
-      getSummary: () => getZonePanelSummary(uiSearchParams, t('search.panels.zone')),
+      getSummary: () => [
+        ...getHoldsPanelSummary(uiSearchParams),
+        ...getZonePanelSummary(uiSearchParams, t('search.panels.zone')),
+      ],
       lazy: true,
       content: (
         <div className={styles.holdSearchContainer}>
-          <ClimbZoneSearchForm boardDetails={boardDetails} />
+          <ClimbSearchForm boardDetails={boardDetails} />
         </div>
       ),
     },

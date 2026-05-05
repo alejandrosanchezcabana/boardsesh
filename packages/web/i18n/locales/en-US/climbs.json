@@ -139,6 +139,7 @@
       "holds": "Holds",
       "holdsTitle": "Search by Hold",
       "zone": "Zone",
+      "holdsAndZone": "Holds & Zone",
       "anyDefault": "Any",
       "allClimbs": "All climbs"
     },
@@ -190,6 +191,9 @@
       "description": "Drag the box to limit results to climbs that fit inside it.",
       "draw": "Draw zone",
       "clear": "Clear zone"
+    },
+    "holdsAndZone": {
+      "description": "Tap holds to filter, or draw a zone to limit results to climbs that fit inside it."
     },
     "sortToggle": "Sort"
   },
