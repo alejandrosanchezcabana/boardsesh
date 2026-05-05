@@ -70,18 +70,6 @@ const SearchHoldFilterOverlay: React.FC<SearchHoldFilterOverlayProps> = ({
         pointerEvents: 'none',
       }}
     >
-      {/* Subtle dot at every hold so users can see where the click targets
-          actually sit. Helps when the visible hold image and the data-driven
-          click position don't perfectly align. */}
-      {boardDetails.holdsData.map((hold) => (
-        <circle
-          key={`dot-${hold.id}`}
-          cx={hold.cx}
-          cy={hold.cy}
-          r={Math.max(2, hold.r * 0.18)}
-          fill="rgba(255, 255, 255, 0.45)"
-        />
-      ))}
       {Object.entries(holdsFilter).map(([holdIdRaw, entry]) => {
         const holdId = Number(holdIdRaw);
         const hold = holdsById.get(holdId);
