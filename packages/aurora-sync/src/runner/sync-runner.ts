@@ -294,11 +294,7 @@ export class SyncRunner {
     await this.maybeRunSharedSync(boardType, token, cred.userId);
   }
 
-  private async maybeRunSharedSync(
-    boardType: AuroraBoardName,
-    token: string,
-    userId: string,
-  ): Promise<void> {
+  private async maybeRunSharedSync(boardType: AuroraBoardName, token: string, userId: string): Promise<void> {
     const cooldownMs = this.getSharedSyncCooldownMs();
     const lastRunAt = this.lastSharedSyncAt.get(boardType);
     const now = Date.now();

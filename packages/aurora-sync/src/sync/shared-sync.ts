@@ -408,12 +408,7 @@ async function upsertAttempts(db: DrizzleDb, board: AuroraBoardName, data: Attem
   });
 }
 
-async function upsertClimbStats(
-  db: DrizzleDb,
-  board: AuroraBoardName,
-  data: ClimbStats[],
-  writeHistory: boolean,
-) {
+async function upsertClimbStats(db: DrizzleDb, board: AuroraBoardName, data: ClimbStats[], writeHistory: boolean) {
   const climbStatsSchema = UNIFIED_TABLES.climbStats;
   const climbStatHistorySchema = UNIFIED_TABLES.climbStatsHistory;
 
@@ -462,12 +457,7 @@ async function isClimbStatsHistorySnapshotDue(db: DrizzleDb, board: AuroraBoardN
   const rows = await db
     .select({ lastSynchronizedAt: sharedSyncsSchema.lastSynchronizedAt })
     .from(sharedSyncsSchema)
-    .where(
-      and(
-        eq(sharedSyncsSchema.boardType, board),
-        eq(sharedSyncsSchema.tableName, HISTORY_CURSOR_TABLE_NAME),
-      ),
-    );
+    .where(and(eq(sharedSyncsSchema.boardType, board), eq(sharedSyncsSchema.tableName, HISTORY_CURSOR_TABLE_NAME)));
   if (rows.length === 0) return true;
 
   const raw = rows[0].lastSynchronizedAt;
@@ -884,7 +874,7 @@ export async function syncSharedData(
  * Create batched notifications for setter followers when new climbs are synced.
  * Mirrors the behavior previously in the web shared-sync route.
  */
-async function createSetterSyncNotifications(
+export async function createSetterSyncNotifications(
   db: DrizzleDb,
   boardName: AuroraBoardName,
   newClimbs: NewClimbInfo[],

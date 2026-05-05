@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { notifications, setterFollows, userBoardMappings, userFollows } from '@boardsesh/db/schema';
 import type { SyncData } from '../api/sync-api-types';
 import type { SyncOptions } from '../api/types';
 
@@ -31,7 +32,7 @@ vi.mock('drizzle-orm/postgres-js', async () => {
   };
 });
 
-import { syncSharedData } from './shared-sync';
+import { createSetterSyncNotifications, syncSharedData } from './shared-sync';
 
 /**
  * Minimal db shim. Drizzle's query builder is fluent — every call returns
@@ -92,9 +93,15 @@ describe('syncSharedData loop', () => {
 
   it('keeps looping while _complete is false', async () => {
     mockSharedSync
-      .mockResolvedValueOnce(partial({ shared_syncs: [{ table_name: 'climbs', last_synchronized_at: '2026-01-01 00:00:00' }] }))
-      .mockResolvedValueOnce(partial({ shared_syncs: [{ table_name: 'climbs', last_synchronized_at: '2026-02-01 00:00:00' }] }))
-      .mockResolvedValueOnce(complete({ shared_syncs: [{ table_name: 'climbs', last_synchronized_at: '2026-03-01 00:00:00' }] }));
+      .mockResolvedValueOnce(
+        partial({ shared_syncs: [{ table_name: 'climbs', last_synchronized_at: '2026-01-01 00:00:00' }] }),
+      )
+      .mockResolvedValueOnce(
+        partial({ shared_syncs: [{ table_name: 'climbs', last_synchronized_at: '2026-02-01 00:00:00' }] }),
+      )
+      .mockResolvedValueOnce(
+        complete({ shared_syncs: [{ table_name: 'climbs', last_synchronized_at: '2026-03-01 00:00:00' }] }),
+      );
 
     await syncSharedData(fakePostgresClient(), 'decoy', 'token');
 
@@ -136,9 +143,7 @@ describe('syncSharedData cursor merge', () => {
     // tables, with `climbs` advanced to 2026-04-01 and the rest at the
     // default floor (2024-05-01) since the in-memory map was seeded empty.
     const secondCallOptions = mockSharedSync.mock.calls[1][1] as SyncOptions;
-    const cursors = new Map(
-      (secondCallOptions.sharedSyncs ?? []).map((s) => [s.table_name, s.last_synchronized_at]),
-    );
+    const cursors = new Map((secondCallOptions.sharedSyncs ?? []).map((s) => [s.table_name, s.last_synchronized_at]));
     expect(cursors.get('climbs')).toBe('2026-04-01 00:00:00');
     expect(cursors.get('products')).toBe('2024-05-01 00:00:00.000000');
     expect(cursors.get('holes')).toBe('2024-05-01 00:00:00.000000');
@@ -196,3 +201,118 @@ describe('syncSharedData cursor merge', () => {
 function fakePostgresClient(): never {
   return {} as never;
 }
+
+type FollowerRow = { followerId: string; setterUsername: string };
+type MappingRow = { userId: string; boardUsername: string };
+type UserFollowRow = { followerId: string; followingId: string };
+type CapturedInsert = { table: unknown; rows: Array<Record<string, unknown>> };
+
+/**
+ * DB shim tailored to `createSetterSyncNotifications`. Returns seeded rows
+ * for the three SELECT call shapes the function makes (setterFollows,
+ * userBoardMappings, userFollows) and captures every insert chunk so tests
+ * can assert on chunking and per-row payloads.
+ */
+function createNotificationDbShim(opts: {
+  setterFollowsRows?: FollowerRow[];
+  userBoardMappingsRows?: MappingRow[];
+  userFollowsRows?: UserFollowRow[];
+}) {
+  const inserts: CapturedInsert[] = [];
+  const followerSeed = opts.setterFollowsRows ?? [];
+  const mappingSeed = opts.userBoardMappingsRows ?? [];
+  const userFollowSeed = opts.userFollowsRows ?? [];
+
+  const db = {
+    select(_cols: unknown) {
+      return {
+        from(table: unknown) {
+          let rows: unknown[];
+          if (table === setterFollows) rows = followerSeed;
+          else if (table === userBoardMappings) rows = mappingSeed;
+          else if (table === userFollows) rows = userFollowSeed;
+          else rows = [];
+
+          // Drizzle's chain is `.from(table).where(cond)` (awaited at the end).
+          // `createSetterSyncNotifications` always calls `.where()`, so we
+          // don't need to make `.from()` itself thenable.
+          return {
+            where: (_cond: unknown) => Promise.resolve(rows),
+          };
+        },
+      };
+    },
+    insert(table: unknown) {
+      return {
+        values: async (rows: Array<Record<string, unknown>>) => {
+          inserts.push({ table, rows });
+        },
+      };
+    },
+  };
+
+  type DbArg = Parameters<typeof createSetterSyncNotifications>[0];
+  return { db: db as unknown as DbArg, inserts };
+}
+
+describe('createSetterSyncNotifications', () => {
+  it('chunks notification inserts when followers exceed BATCH_SIZE', async () => {
+    const followers: FollowerRow[] = Array.from({ length: 2500 }, (_, i) => ({
+      followerId: `user-${i}`,
+      setterUsername: 'setter-a',
+    }));
+    const { db, inserts } = createNotificationDbShim({ setterFollowsRows: followers });
+
+    await createSetterSyncNotifications(
+      db,
+      'decoy',
+      [{ uuid: 'climb-1', setterUsername: 'setter-a', layoutId: 1 }],
+      () => {},
+    );
+
+    const notificationInserts = inserts.filter((i) => i.table === notifications);
+    expect(notificationInserts).toHaveLength(3);
+    expect(notificationInserts.map((i) => i.rows.length)).toEqual([1000, 1000, 500]);
+
+    const allRows = notificationInserts.flatMap((i) => i.rows);
+    expect(allRows).toHaveLength(2500);
+    const uuids = new Set(allRows.map((row) => row.uuid));
+    expect(uuids.size).toBe(2500);
+  });
+
+  it('uses the first climb uuid as entityId when a setter has multiple new climbs', async () => {
+    const followers: FollowerRow[] = Array.from({ length: 50 }, (_, i) => ({
+      followerId: `user-${i}`,
+      setterUsername: 'setter-a',
+    }));
+    const { db, inserts } = createNotificationDbShim({ setterFollowsRows: followers });
+
+    await createSetterSyncNotifications(
+      db,
+      'decoy',
+      [
+        { uuid: 'c1', setterUsername: 'setter-a', layoutId: 1 },
+        { uuid: 'c2', setterUsername: 'setter-a', layoutId: 1 },
+        { uuid: 'c3', setterUsername: 'setter-a', layoutId: 1 },
+      ],
+      () => {},
+    );
+
+    const allRows = inserts.filter((i) => i.table === notifications).flatMap((i) => i.rows);
+    expect(allRows).toHaveLength(50);
+    expect(allRows.every((row) => row.entityId === 'c1')).toBe(true);
+  });
+
+  it('skips setters with zero followers', async () => {
+    const { db, inserts } = createNotificationDbShim({ setterFollowsRows: [] });
+
+    await createSetterSyncNotifications(
+      db,
+      'decoy',
+      [{ uuid: 'climb-1', setterUsername: 'setter-a', layoutId: 1 }],
+      () => {},
+    );
+
+    expect(inserts.filter((i) => i.table === notifications)).toHaveLength(0);
+  });
+});

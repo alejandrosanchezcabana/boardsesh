@@ -80,10 +80,6 @@ curl -fsSL https://vite.plus | bash
 # .env.local contains generic config (tracked in git)
 # .env.development.local contains secrets (NOT tracked in git)
 
-# For shared sync to work, add Aurora API tokens to packages/web/.env.development.local:
-KILTER_SYNC_TOKEN=your_kilter_token_here
-TENSION_SYNC_TOKEN=your_tension_token_here
-
 # Note: VERCEL_URL is automatically set by Vercel for deployments
 # For local development, the app defaults to http://localhost:3000
 
