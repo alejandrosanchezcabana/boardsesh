@@ -133,6 +133,20 @@ export default function HoldTypePicker(props: HoldTypePickerProps) {
             overflow: 'visible',
           },
         },
+        // Show a visible backdrop while the picker is open so the rest of
+        // the board dims and it's obvious which hold the popover is editing.
+        // The backdrop already swallows outside clicks (Popover routes them
+        // to onClose) — we just make it visible in search mode.
+        ...(props.mode === 'search' && {
+          root: {
+            slotProps: {
+              backdrop: {
+                invisible: false,
+                sx: { backgroundColor: 'rgba(0, 0, 0, 0.45)' },
+              },
+            },
+          },
+        }),
       }}
     >
       <Box
@@ -219,7 +233,7 @@ function renderSearchToolbar(
     }
   };
 
-  const swatchForType = (type: SetterHoldState | 'ANY', color: string | string[]) => {
+  const swatchForType = (type: SetterHoldState | 'ANY', color: string) => {
     const mode = currentEntry[type];
     const ariaSuffix =
       mode === 'include'
@@ -231,8 +245,7 @@ function renderSearchToolbar(
       <Swatch
         key={type}
         label={localizedLabel(type)}
-        color={typeof color === 'string' ? color : undefined}
-        ringColors={Array.isArray(color) ? color : undefined}
+        color={color}
         isActive={mode !== undefined}
         excluded={mode === 'exclude'}
         ariaLabel={ariaSuffix ? `${localizedLabel(type)}, ${ariaSuffix}` : localizedLabel(type)}
@@ -240,11 +253,6 @@ function renderSearchToolbar(
       />
     );
   };
-
-  // ANY swatch shows one ring per board hold-type so the visual matches
-  // the semantics ("matches any of these states"). MoonBoard has fewer types,
-  // so the ring count varies per board.
-  const anyColors = setterOptions.map((opt) => opt.color);
 
   const isEmpty = Object.keys(currentEntry).length === 0;
 
@@ -291,7 +299,10 @@ function renderSearchToolbar(
       </ToggleButtonGroup>
       <Box sx={{ display: 'flex', gap: `${themeTokens.spacing[1]}px`, alignItems: 'flex-start' }}>
         {setterOptions.map((option) => swatchForType(option.state, option.color))}
-        {swatchForType('ANY', anyColors.length > 0 ? anyColors : themeTokens.neutral[400])}
+        {/* ANY swatch is a plain white circle to match the on-board overlay
+            (the SearchHoldFilterOverlay uses #FFFFFF for ANY because no
+            HOLD_STATE_MAP entry has name='ANY'). */}
+        {swatchForType('ANY', '#FFFFFF')}
         <Swatch
           key="clear"
           label={t('holdTypePicker.clear')}
@@ -303,16 +314,30 @@ function renderSearchToolbar(
           }}
         />
       </Box>
+      <Typography
+        variant="caption"
+        sx={{
+          fontSize: 11,
+          color: 'text.secondary',
+          textAlign: 'center',
+          marginTop: `${themeTokens.spacing[1]}px`,
+          paddingX: `${themeTokens.spacing[1]}px`,
+          maxWidth: 240,
+          alignSelf: 'center',
+          lineHeight: 1.3,
+        }}
+      >
+        {t('holdTypePicker.searchHelp')}
+      </Typography>
     </>
   );
 }
 
 type SwatchProps = {
   label: string;
-  // Single solid color. Used for setter mode and for individual type swatches in search mode.
+  // Single solid color. Used for setter mode and for every search-mode swatch
+  // (the ANY swatch passes plain white).
   color?: string;
-  // Multiple ring colors. Used by the ANY swatch to render concentric rings.
-  ringColors?: string[];
   isActive: boolean;
   isDisabled?: boolean;
   isClear?: boolean;
@@ -324,7 +349,6 @@ type SwatchProps = {
 function Swatch({
   label,
   color,
-  ringColors,
   isActive,
   isDisabled = false,
   isClear,
@@ -381,11 +405,7 @@ function Swatch({
           width: SWATCH_SIZE,
           height: SWATCH_SIZE,
           borderRadius: '50%',
-          // For multi-ring (ANY) swatches we use SVG concentric rings instead
-          // of a single CSS border. The outer wrapper still draws a faint
-          // outline so the swatch silhouette is preserved when no rings are
-          // showing.
-          border: ringColors ? 'none' : `2px solid ${ring}`,
+          border: `2px solid ${ring}`,
           backgroundColor,
           display: 'flex',
           alignItems: 'center',
@@ -395,7 +415,6 @@ function Swatch({
           position: 'relative',
         }}
       >
-        {ringColors && <ConcentricRings colors={ringColors} size={SWATCH_SIZE} excluded={excluded} active={isActive} />}
         {isClear && <CloseIcon sx={{ fontSize: 13 }} />}
         {excluded && <NotInterestedIcon sx={{ fontSize: 14, position: 'relative', zIndex: 1 }} />}
       </Box>
@@ -414,47 +433,3 @@ function Swatch({
   );
 }
 
-function ConcentricRings({
-  colors,
-  size,
-  excluded,
-  active,
-}: {
-  colors: string[];
-  size: number;
-  excluded?: boolean;
-  active?: boolean;
-}) {
-  // Draw nested rings: outermost first using the first color, each successive
-  // ring slightly smaller. When excluded, render a dim disc behind the rings
-  // to match the on-board treatment.
-  const cx = size / 2;
-  const cy = size / 2;
-  const ringWidth = 2;
-  return (
-    <svg
-      width={size}
-      height={size}
-      style={{ position: 'absolute', top: 0, left: 0, pointerEvents: 'none' }}
-      viewBox={`0 0 ${size} ${size}`}
-    >
-      {excluded && <circle cx={cx} cy={cy} r={size / 2 - 1} fill="rgba(0, 0, 0, 0.55)" />}
-      {colors.map((color, index) => {
-        const r = size / 2 - 1 - index * (ringWidth + 1);
-        if (r <= 1) return null;
-        return (
-          <circle
-            key={`${color}-${index}`}
-            cx={cx}
-            cy={cy}
-            r={r}
-            stroke={color}
-            strokeWidth={ringWidth}
-            fill={active && !excluded && index === 0 ? color : 'none'}
-            fillOpacity={active && !excluded && index === 0 ? 0.15 : undefined}
-          />
-        );
-      })}
-    </svg>
-  );
-}

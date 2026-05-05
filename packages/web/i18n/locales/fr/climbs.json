@@ -432,6 +432,7 @@
     "toolbarAriaLabel": "Type de prise",
     "applyModeAriaLabel": "Appliquer comme inclure ou exclure",
     "clear": "Effacer",
+    "searchHelp": "Sélectionnez un ou plusieurs types de prise, puis touchez ailleurs pour fermer le sélecteur",
     "includeAriaSuffix": "inclure",
     "excludeAriaSuffix": "exclure",
     "states": {
