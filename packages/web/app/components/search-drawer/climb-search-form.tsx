@@ -57,6 +57,10 @@ const HANDLE_OPACITY = 0.95;
 const RECT_FILL_OPACITY = 0.18;
 const RECT_STROKE_OPACITY = 0.9;
 
+// Stable empty fallback so the ref-syncing effect doesn't re-run every
+// render when the URL has no holds filter set.
+const EMPTY_HOLDS_FILTER: HoldsFilter = Object.freeze({}) as HoldsFilter;
+
 const ClimbSearchForm: React.FC<ClimbSearchFormProps> = ({ boardDetails }) => {
   const { t } = useTranslation('climbs');
   const { uiSearchParams, updateFilters } = useUISearchParams();
@@ -137,7 +141,7 @@ const ClimbSearchForm: React.FC<ClimbSearchFormProps> = ({ boardDetails }) => {
     [dims],
   );
 
-  const holdsFilter: HoldsFilter = uiSearchParams.holdsFilter || {};
+  const holdsFilter: HoldsFilter = uiSearchParams.holdsFilter ?? EMPTY_HOLDS_FILTER;
 
   // Latest-known holdsFilter snapshot for prune calculations during a drag.
   // The tap-a-hold path calls `updateFilters({ holdsFilter })` which is
@@ -302,14 +306,11 @@ const ClimbSearchForm: React.FC<ClimbSearchFormProps> = ({ boardDetails }) => {
   // unreliable once `setPointerCapture` re-routes the move/up events to
   // the captured handle. Binding the handlers to each handle makes the
   // capture self-contained.
-  const dragHandlers = useMemo(
-    () => ({
-      onPointerMove: handlePointerMove,
-      onPointerUp: endDrag,
-      onPointerCancel: endDrag,
-    }),
-    [endDrag, handlePointerMove],
-  );
+  const dragHandlers = {
+    onPointerMove: handlePointerMove,
+    onPointerUp: endDrag,
+    onPointerCancel: endDrag,
+  };
 
   const rectSvg = useMemo(() => {
     if (!localZone) return null;

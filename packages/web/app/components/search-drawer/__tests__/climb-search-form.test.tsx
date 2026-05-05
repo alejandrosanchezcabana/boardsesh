@@ -352,4 +352,31 @@ describe('ClimbSearchForm — drag handles', () => {
     // from endDrag (while keeping it in handleEnable) would fail here.
     expect(dragCall?.holdsFilter).toEqual({ 101: { STARTING: 'include' } });
   });
+
+  it('dragging the move handle translates the zone and prunes holds outside the new box', () => {
+    const startZone: ZoneBox = { edgeLeft: 29, edgeRight: 115, edgeBottom: 31, edgeTop: 125 };
+    mockUISearchParams = {
+      ...DEFAULT_SEARCH_PARAMS,
+      holdsFilter: filterAllThreeHolds,
+      zoneBox: startZone,
+    };
+    render(<ClimbSearchForm boardDetails={boardDetails} />);
+
+    const moveHandle = screen.getByTestId('zone-handle-move');
+
+    // Centre starts at grid (72, 78) → SVG (540, 585). Drag to grid (82, 88) → SVG (615, 510).
+    fireEvent.pointerDown(moveHandle, { clientX: 540, clientY: 585, pointerId: 1 });
+    fireEvent.pointerMove(moveHandle, { clientX: 615, clientY: 510, pointerId: 1 });
+    fireEvent.pointerUp(moveHandle, { clientX: 615, clientY: 510, pointerId: 1 });
+
+    const dragCall = mockUpdateFilters.mock.calls.at(-1)?.[0] as
+      | { zoneBox: ZoneBox; holdsFilter: HoldsFilter }
+      | undefined;
+    expect(dragCall).toBeDefined();
+    // Move-mode translates both edges on each axis by the same delta — width
+    // (86) and height (94) are preserved, unlike the SE-corner case.
+    expect(dragCall?.zoneBox).toEqual({ edgeLeft: 39, edgeRight: 125, edgeBottom: 41, edgeTop: 135 });
+    // Hold 101 at grid (60, 80) is still inside; the two outer holds are pruned.
+    expect(dragCall?.holdsFilter).toEqual({ 101: { STARTING: 'include' } });
+  });
 });
