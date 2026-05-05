@@ -1,6 +1,6 @@
 import { sharedSync } from '../api/shared-sync-api';
 import { type SyncOptions, type AuroraBoardName, SHARED_SYNC_TABLES } from '../api/types';
-import { sql, eq, inArray } from 'drizzle-orm';
+import { sql, eq, and, inArray } from 'drizzle-orm';
 import { drizzle } from 'drizzle-orm/postgres-js';
 import type { PgDatabase, PgQueryResultHKT } from 'drizzle-orm/pg-core';
 import type postgres from 'postgres';
@@ -33,6 +33,13 @@ import { randomUUID } from 'crypto';
 // query-builder surface (`insert`, `select`, `update`, `execute`), so we type
 // against the parent and avoid the `tx as unknown as …` cast at the call site.
 type DrizzleDb = PgDatabase<PgQueryResultHKT, Record<string, unknown>>;
+
+// Synthetic `board_shared_syncs.table_name` row that records the last time we
+// wrote a `board_climb_stats_history` snapshot for this board. The name
+// starts with `__local_` so it can never collide with an Aurora-side table
+// returned in the `shared_syncs` array of a `/sync` response.
+const HISTORY_CURSOR_TABLE_NAME = '__local_climb_stats_history__';
+const HISTORY_SNAPSHOT_INTERVAL_MS = 7 * 24 * 60 * 60 * 1000;
 
 export type NewClimbInfo = {
   uuid: string;
@@ -401,7 +408,12 @@ async function upsertAttempts(db: DrizzleDb, board: AuroraBoardName, data: Attem
   });
 }
 
-async function upsertClimbStats(db: DrizzleDb, board: AuroraBoardName, data: ClimbStats[]) {
+async function upsertClimbStats(
+  db: DrizzleDb,
+  board: AuroraBoardName,
+  data: ClimbStats[],
+  writeHistory: boolean,
+) {
   const climbStatsSchema = UNIFIED_TABLES.climbStats;
   const climbStatHistorySchema = UNIFIED_TABLES.climbStatsHistory;
 
@@ -435,9 +447,56 @@ async function upsertClimbStats(db: DrizzleDb, board: AuroraBoardName, data: Cli
         },
       });
 
-    // History is append-only; no conflict target needed.
-    await db.insert(climbStatHistorySchema).values(values);
+    // History snapshot is gated by a per-board cursor in `board_shared_syncs`
+    // so we only append a row every ~7 days. Without this gate the table
+    // would grow up to 24× faster than under the old daily Vercel cron, with
+    // most rows recording zero meaningful change.
+    if (writeHistory) {
+      await db.insert(climbStatHistorySchema).values(values);
+    }
   });
+}
+
+async function isClimbStatsHistorySnapshotDue(db: DrizzleDb, board: AuroraBoardName): Promise<boolean> {
+  const sharedSyncsSchema = UNIFIED_TABLES.sharedSyncs;
+  const rows = await db
+    .select({ lastSynchronizedAt: sharedSyncsSchema.lastSynchronizedAt })
+    .from(sharedSyncsSchema)
+    .where(
+      and(
+        eq(sharedSyncsSchema.boardType, board),
+        eq(sharedSyncsSchema.tableName, HISTORY_CURSOR_TABLE_NAME),
+      ),
+    );
+  if (rows.length === 0) return true;
+
+  const raw = rows[0].lastSynchronizedAt;
+  // last_synchronized_at is stored as a Postgres timestamp string (no zone);
+  // treat it as UTC for the comparison.
+  const lastMs = Date.parse(`${raw}Z`);
+  if (Number.isNaN(lastMs)) return true;
+  return Date.now() - lastMs >= HISTORY_SNAPSHOT_INTERVAL_MS;
+}
+
+async function markClimbStatsHistorySnapshotDone(db: DrizzleDb, board: AuroraBoardName): Promise<void> {
+  const sharedSyncsSchema = UNIFIED_TABLES.sharedSyncs;
+  // Match the `last_synchronized_at` text format Aurora uses elsewhere in
+  // this table (`YYYY-MM-DD HH:MM:SS.ffffff`, no timezone). It's interpreted
+  // as UTC by `isClimbStatsHistorySnapshotDue` above.
+  const nowText = new Date().toISOString().replace('T', ' ').replace('Z', '');
+  await db
+    .insert(sharedSyncsSchema)
+    .values({
+      boardType: board,
+      tableName: HISTORY_CURSOR_TABLE_NAME,
+      lastSynchronizedAt: nowText,
+    })
+    .onConflictDoUpdate({
+      target: [sharedSyncsSchema.boardType, sharedSyncsSchema.tableName],
+      set: {
+        lastSynchronizedAt: sql`excluded.last_synchronized_at`,
+      },
+    });
 }
 
 async function upsertBetaLinks(db: DrizzleDb, board: AuroraBoardName, data: BetaLink[]) {
@@ -483,10 +542,19 @@ async function upsertClimbs(db: DrizzleDb, board: AuroraBoardName, data: Climb[]
     .where(inArray(climbsSchema.uuid, uuids));
   const existingUuids = new Set(existingRows.map((r) => r.uuid));
 
-  // Climbs: chunked multi-row upsert. The conflict policy only allows isDraft
-  // and isListed to flip false → true; everything else preserves the existing
-  // row (Aurora is the source of truth on creation, but we don't trust remote
-  // re-edits to overwrite our copy of frames/edges/setter/etc).
+  // Climbs: chunked multi-row upsert. The conflict policy is asymmetric on
+  // the two boolean flags (inherited verbatim from the original web cron):
+  //   - isDraft (true = draft, false = published) is only allowed to flip
+  //     false → true, i.e. let Aurora pull a previously-published climb back
+  //     to draft. The reverse direction (draft → published) is NOT honored
+  //     here; a draft climb stays draft in our copy until it's seen as
+  //     published on insert (new row) or until this is reworked.
+  //   - isListed (true = visible, false = hidden) only flips false → true,
+  //     i.e. once a climb is publicly listed we keep it listed even if a
+  //     later remote re-edit tries to hide it.
+  // Everything else (frames/edges/setter/layout/angle) is preserved on
+  // conflict — Aurora seeds these on insert, but we don't trust remote
+  // re-edits to overwrite our copy.
   await processBatches(data, async (batch) => {
     await db
       .insert(climbsSchema)
@@ -566,6 +634,7 @@ async function upsertSharedTableData(
   tableName: string,
   data: SyncPutFields[],
   log: (message: string) => void,
+  writeClimbStatsHistory: boolean,
 ): Promise<NewClimbInfo[]> {
   switch (tableName) {
     case 'attempts':
@@ -602,7 +671,7 @@ async function upsertSharedTableData(
       await upsertKits(db, boardName, data as Kit[]);
       return [];
     case 'climb_stats':
-      await upsertClimbStats(db, boardName, data as ClimbStats[]);
+      await upsertClimbStats(db, boardName, data as ClimbStats[], writeClimbStatsHistory);
       return [];
     case 'beta_links':
       await upsertBetaLinks(db, boardName, data as BetaLink[]);
@@ -697,6 +766,16 @@ export async function syncSharedData(
     })),
   });
 
+  // Decide once per syncSharedData run whether this is the week's history
+  // snapshot. We commit the cursor at the end (only if we actually wrote
+  // history rows), so a crash mid-loop will retry on the next invocation
+  // rather than silently skip a week.
+  const writeClimbStatsHistory = await isClimbStatsHistorySnapshotDue(db, board);
+  let didWriteClimbStatsHistory = false;
+  if (writeClimbStatsHistory) {
+    log(`[SharedSync] Weekly climb_stats_history snapshot is due for ${board}`);
+  }
+
   const totalResults: Record<string, { synced: number; complete: boolean }> = {};
   const allNewClimbs: NewClimbInfo[] = [];
   let isComplete = false;
@@ -713,8 +792,18 @@ export async function syncSharedData(
         const data = syncResults[tableName];
         if (!Array.isArray(data)) continue;
         log(`[SharedSync] ${tableName}: ${data.length} records`);
-        const newClimbs = await upsertSharedTableData(tx, board, tableName, data as SyncPutFields[], log);
+        const newClimbs = await upsertSharedTableData(
+          tx,
+          board,
+          tableName,
+          data as SyncPutFields[],
+          log,
+          writeClimbStatsHistory,
+        );
         allNewClimbs.push(...newClimbs);
+        if (tableName === 'climb_stats' && writeClimbStatsHistory && data.length > 0) {
+          didWriteClimbStatsHistory = true;
+        }
         if (!totalResults[tableName]) {
           totalResults[tableName] = { synced: 0, complete: false };
         }
@@ -772,6 +861,11 @@ export async function syncSharedData(
         .join(', ') || 'no changes'
     }`,
   );
+
+  if (didWriteClimbStatsHistory) {
+    await markClimbStatsHistorySnapshotDone(db, board);
+    log(`[SharedSync] Recorded climb_stats_history snapshot timestamp for ${board}`);
+  }
 
   if (allNewClimbs.length > 0) {
     try {
@@ -873,7 +967,13 @@ async function createSetterSyncNotifications(
       entityId: firstClimbUuid,
     }));
 
-    await db.insert(notifications).values(notificationValues);
+    // Chunked to stay under Postgres's 65 535-parameter ceiling. The
+    // notifications insert touches 6 columns per row, so a single statement
+    // tops out around 10 900 rows — a popular setter with more followers
+    // than that would silently fail without the chunk.
+    await processBatches(notificationValues, async (chunk) => {
+      await db.insert(notifications).values(chunk);
+    });
     log(
       `[SharedSync] Created ${notificationValues.length} notifications for setter "${setterUsername}" (${climbs.length} new climbs on ${boardName})`,
     );
