@@ -677,7 +677,12 @@ export async function syncSharedData(
   // small tables back forever.
   const sharedSyncMap = new Map(allSyncTimes.map((sync) => [sync.table_name, sync.last_synchronized_at]));
 
-  const defaultTimestamp = '1970-01-01 00:00:00.000000';
+  // Floor for any cursor we don't yet have a row for. 2024-05-01 was the
+  // pre-existing default seeded across most boards; before that date, Aurora
+  // boards Boardsesh tracks weren't in production (or the data isn't worth
+  // re-fetching). Sending 1970 here would ask Aurora for ~50 years of changes
+  // a brand-new (board, table) tuple could go without ever being touched.
+  const defaultTimestamp = '2024-05-01 00:00:00.000000';
 
   const buildSyncParams = (): SyncOptions => ({
     sharedSyncs: SHARED_SYNC_TABLES.map((tableName) => ({
