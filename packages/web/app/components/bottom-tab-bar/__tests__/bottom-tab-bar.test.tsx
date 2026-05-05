@@ -449,4 +449,14 @@ describe('BottomTabBar locale-aware pathname matching', () => {
     const libraryTab = screen.getByRole('button', { name: 'Discover' });
     expect(libraryTab.classList.contains('Mui-selected')).toBe(true);
   });
+
+  it('Discover tab is selected on smart-playlist /discover/<slug>/<user-id> route', () => {
+    mockPathname = '/discover/five-stars/user-123';
+    render(<BottomTabBar boardConfigs={boardConfigs} />);
+
+    const libraryTab = screen.getByRole('button', { name: 'Discover' });
+    expect(libraryTab.classList.contains('Mui-selected')).toBe(true);
+    const climbsTab = screen.getByRole('button', { name: 'Climb' });
+    expect(climbsTab.classList.contains('Mui-selected')).toBe(false);
+  });
 });
