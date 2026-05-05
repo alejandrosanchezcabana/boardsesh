@@ -4,11 +4,11 @@ This document describes how Aurora board data (Kilter, Tension) is synced from t
 
 ## Overview
 
-The `@boardsesh/aurora-sync` package provides a shared sync implementation that can run:
+The `@boardsesh/aurora-sync` package provides the shared sync implementation. It can run:
 
 1. **CLI** - For local debugging and manual sync runs
-2. **Railway Backend** - HTTP endpoint triggered by external cron
-3. **Vercel** - (Legacy) Will be removed after Railway migration
+2. **OS-level service / Railway backend** - Long-running daemon that picks one user per cycle, syncs their per-user tables, then runs a board-wide shared sync using their fresh Aurora token
+3. **Vercel** - (Removed) Previously a daily `/api/internal/shared-sync/tension` cron; shared sync now piggybacks on user sync inside the daemon
 
 ## Architecture
 
@@ -54,6 +54,8 @@ The `@boardsesh/aurora-sync` package provides a shared sync implementation that 
 
 ### Tables Synced
 
+#### Per-user tables
+
 | Aurora Table | Local Table                        | Dual Write                 |
 | ------------ | ---------------------------------- | -------------------------- |
 | users        | kilter_users / tension_users       | -                          |
@@ -63,6 +65,29 @@ The `@boardsesh/aurora-sync` package provides a shared sync implementation that 
 | tags         | kilter_tags / tension_tags         | -                          |
 | circuits     | kilter_circuits / tension_circuits | playlists, playlist_climbs |
 | draft_climbs | kilter_climbs / tension_climbs     | -                          |
+
+#### Shared (board-wide) tables
+
+After every successful per-user sync, the daemon also runs a shared sync for that user's board, reusing the user's just-refreshed Aurora token. This replaces the old Vercel `/api/internal/shared-sync/<board>` cron and the per-board `*_SYNC_TOKEN` env vars (`KILTER_SYNC_TOKEN`, `TENSION_SYNC_TOKEN`, `DECOY_SYNC_TOKEN`, `TOUCHSTONE_SYNC_TOKEN`, `GRASSHOPPER_SYNC_TOKEN`) — those env vars can be removed from the Vercel project settings.
+
+| Aurora Table               | Local Table                        |
+| -------------------------- | ---------------------------------- |
+| products                   | board_products                     |
+| sets                       | board_sets                         |
+| product_sizes              | board_product_sizes                |
+| holes                      | board_holes                        |
+| layouts                    | board_layouts                      |
+| placement_roles            | board_placement_roles              |
+| leds                       | board_leds                         |
+| placements                 | board_placements                   |
+| product_sizes_layouts_sets | board_product_sizes_layouts_sets   |
+| climbs                     | board_climbs (+ board_climb_holds) |
+| climb_stats                | board_climb_stats (+ history)      |
+| beta_links                 | board_beta_links                   |
+| attempts                   | board_attempts                     |
+| kits                       | board_kits                         |
+
+When the climbs upsert sees previously-unseen UUIDs, the daemon also writes `new_climbs_synced` rows into the `notifications` table for each follower of the climb's setter (`setter_follows` and any linked `user_follows` accounts).
 
 ## CLI Usage
 

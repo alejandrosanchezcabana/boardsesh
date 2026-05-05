@@ -1,16 +1,19 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { AuroraRequestError } from '../api/errors';
 import { SyncRunner } from './sync-runner';
+import type { AuroraBoardName } from '../api/types';
 
 type SyncRunnerPrivates = {
   updateCredentialStatus: (userId: string, boardType: string, status: string, error?: string | null) => Promise<void>;
   syncSingleCredential: (cred: ReturnType<typeof createCredential>) => Promise<void>;
+  maybeRunSharedSync: (boardType: AuroraBoardName, token: string, userId: string) => Promise<void>;
 };
 
-const { mockDecrypt, mockEncrypt, mockSignIn } = vi.hoisted(() => ({
+const { mockDecrypt, mockEncrypt, mockSignIn, mockSyncSharedData } = vi.hoisted(() => ({
   mockDecrypt: vi.fn(),
   mockEncrypt: vi.fn(),
   mockSignIn: vi.fn(),
+  mockSyncSharedData: vi.fn(),
 }));
 
 vi.mock('@boardsesh/crypto', () => ({
@@ -20,6 +23,10 @@ vi.mock('@boardsesh/crypto', () => ({
 
 vi.mock('../sync/user-sync', () => ({
   syncUserData: vi.fn(),
+}));
+
+vi.mock('../sync/shared-sync', () => ({
+  syncSharedData: mockSyncSharedData,
 }));
 
 vi.mock('../api/aurora-client', () => ({
@@ -101,3 +108,80 @@ function createCredential() {
     lastSyncAt: null,
   };
 }
+
+describe('SyncRunner shared-sync per-board throttle', () => {
+  beforeEach(() => {
+    mockSyncSharedData.mockReset();
+    mockSyncSharedData.mockResolvedValue({ complete: true, results: {}, newClimbs: [] });
+    // postgres-js is lazy; getClient() builds a client object but won't open a
+    // connection until something runs a query. The throttle tests never get
+    // there because syncSharedData is mocked.
+    process.env.DATABASE_URL = process.env.DATABASE_URL ?? 'postgres://test:test@localhost:5432/test';
+  });
+
+  it('runs shared sync the first time it is asked for a board', async () => {
+    const runner = new SyncRunner();
+    const runnerPrivates = runner as unknown as SyncRunnerPrivates;
+
+    await runnerPrivates.maybeRunSharedSync('decoy', 'token-abc', 'user-1');
+
+    expect(mockSyncSharedData).toHaveBeenCalledTimes(1);
+    expect(mockSyncSharedData).toHaveBeenCalledWith(expect.anything(), 'decoy', 'token-abc', expect.any(Function));
+  });
+
+  it('skips shared sync when called again within the cooldown window', async () => {
+    const runner = new SyncRunner({ sharedSyncCooldownMs: 60_000 });
+    const runnerPrivates = runner as unknown as SyncRunnerPrivates;
+
+    await runnerPrivates.maybeRunSharedSync('decoy', 'token-1', 'user-1');
+    await runnerPrivates.maybeRunSharedSync('decoy', 'token-2', 'user-2');
+    await runnerPrivates.maybeRunSharedSync('decoy', 'token-3', 'user-3');
+
+    expect(mockSyncSharedData).toHaveBeenCalledTimes(1);
+  });
+
+  it('runs shared sync again once the cooldown has elapsed', async () => {
+    vi.useFakeTimers();
+    try {
+      const runner = new SyncRunner({ sharedSyncCooldownMs: 60_000 });
+      const runnerPrivates = runner as unknown as SyncRunnerPrivates;
+
+      await runnerPrivates.maybeRunSharedSync('decoy', 'token-1', 'user-1');
+      vi.advanceTimersByTime(30_000);
+      await runnerPrivates.maybeRunSharedSync('decoy', 'token-2', 'user-2');
+      vi.advanceTimersByTime(31_000);
+      await runnerPrivates.maybeRunSharedSync('decoy', 'token-3', 'user-3');
+
+      expect(mockSyncSharedData).toHaveBeenCalledTimes(2);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('throttles per board independently', async () => {
+    const runner = new SyncRunner({ sharedSyncCooldownMs: 60_000 });
+    const runnerPrivates = runner as unknown as SyncRunnerPrivates;
+
+    await runnerPrivates.maybeRunSharedSync('decoy', 'tok', 'u1');
+    await runnerPrivates.maybeRunSharedSync('tension', 'tok', 'u2');
+    await runnerPrivates.maybeRunSharedSync('grasshopper', 'tok', 'u3');
+    // re-trigger each board within cooldown
+    await runnerPrivates.maybeRunSharedSync('decoy', 'tok', 'u4');
+    await runnerPrivates.maybeRunSharedSync('tension', 'tok', 'u5');
+
+    expect(mockSyncSharedData).toHaveBeenCalledTimes(3);
+    expect(mockSyncSharedData.mock.calls.map((call) => call[1])).toEqual(['decoy', 'tension', 'grasshopper']);
+  });
+
+  it('still respects the cooldown when the previous run failed', async () => {
+    const runner = new SyncRunner({ sharedSyncCooldownMs: 60_000 });
+    const runnerPrivates = runner as unknown as SyncRunnerPrivates;
+
+    mockSyncSharedData.mockRejectedValueOnce(new Error('aurora down'));
+
+    await runnerPrivates.maybeRunSharedSync('decoy', 'tok', 'u1');
+    await runnerPrivates.maybeRunSharedSync('decoy', 'tok', 'u2');
+
+    expect(mockSyncSharedData).toHaveBeenCalledTimes(1);
+  });
+});

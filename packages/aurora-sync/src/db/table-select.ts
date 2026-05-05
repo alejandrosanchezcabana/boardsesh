@@ -15,6 +15,13 @@ import {
   boardBetaLinks,
   boardWalls,
   boardTags,
+  boardSets,
+  boardHoles,
+  boardPlacementRoles,
+  boardLeds,
+  boardPlacements,
+  boardProductSizesLayoutsSets,
+  boardKits,
 } from '@boardsesh/db/schema/boards';
 import { type AuroraBoardName, AURORA_BOARDS } from '../api/types';
 
@@ -41,6 +48,13 @@ export const UNIFIED_TABLES = {
   betaLinks: boardBetaLinks,
   walls: boardWalls,
   tags: boardTags,
+  sets: boardSets,
+  holes: boardHoles,
+  placementRoles: boardPlacementRoles,
+  leds: boardLeds,
+  placements: boardPlacements,
+  productSizesLayoutsSets: boardProductSizesLayoutsSets,
+  kits: boardKits,
 } as const;
 
 export type UnifiedTableSet = typeof UNIFIED_TABLES;

@@ -43,6 +43,7 @@
     "sync:user": "tsx src/cli/index.ts user"
   },
   "dependencies": {
+    "@boardsesh/board-constants": "*",
     "@boardsesh/crypto": "*",
     "@boardsesh/db": "*",
     "@boardsesh/shared-schema": "*",

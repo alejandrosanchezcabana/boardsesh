@@ -4,6 +4,7 @@ import { eq, ne, and, or, isNotNull, sql } from 'drizzle-orm';
 
 import { auroraCredentials } from '@boardsesh/db/schema/auth';
 import { syncUserData } from '../sync/user-sync';
+import { syncSharedData } from '../sync/shared-sync';
 import { AuroraClimbingClient } from '../api/aurora-client';
 import { isTransientAuroraError } from '../api/errors';
 import { decrypt, encrypt } from '@boardsesh/crypto';
@@ -14,14 +15,28 @@ import type { SyncRunnerConfig, SyncSummary, CredentialRecord, DaemonOptions } f
 type RunnerClient = ReturnType<typeof postgres>;
 type RunnerDb = ReturnType<typeof drizzle>;
 
+// Cooldown between shared-sync attempts on the same board, regardless of which
+// user-sync triggered them. Without this, if N users on the same board cycle
+// in quick succession, we'd fire N independent shared-sync loops against
+// Aurora and N independent setter-notification scans — all redundant, since
+// the per-table cursors mean only the first one would actually find new rows.
+// 1 hour matches the smallest unit of meaningful change for board-wide data
+// (climbs, climb_stats); tune via SyncRunnerConfig.sharedSyncCooldownMs.
+const DEFAULT_SHARED_SYNC_COOLDOWN_MS = 60 * 60 * 1000;
+
 export class SyncRunner {
   private config: SyncRunnerConfig;
   private daemonController: AbortController | null = null;
   private client: RunnerClient | null = null;
   private db: RunnerDb | null = null;
+  private lastSharedSyncAt = new Map<string, number>();
 
   constructor(config: SyncRunnerConfig = {}) {
     this.config = config;
+  }
+
+  private getSharedSyncCooldownMs(): number {
+    return this.config.sharedSyncCooldownMs ?? DEFAULT_SHARED_SYNC_COOLDOWN_MS;
   }
 
   private getClient(): { client: RunnerClient; db: RunnerDb } {
@@ -268,6 +283,56 @@ export class SyncRunner {
     this.log(`[SyncRunner] Syncing user ${cred.userId} for ${boardType}...`);
     await syncUserData(client, boardType, token, cred.auroraUserId, cred.userId, undefined, this.log.bind(this));
     await this.updateCredentialStatus(cred.userId, cred.boardType, 'active', null, new Date());
+
+    // Piggyback shared sync onto user sync — the user's fresh token
+    // authenticates the shared `/sync` request the same way the old Vercel
+    // cron's *_SYNC_TOKEN env vars used to. Throttled per board so that N
+    // consecutive user syncs for the same board don't fire N independent
+    // shared-sync loops (and N copies of setter notifications for the same
+    // pre-existing climbs). Failures here must not poison the user's
+    // credential status, since the user-half already succeeded.
+    await this.maybeRunSharedSync(boardType, token, cred.userId);
+  }
+
+  private async maybeRunSharedSync(
+    boardType: AuroraBoardName,
+    token: string,
+    userId: string,
+  ): Promise<void> {
+    const cooldownMs = this.getSharedSyncCooldownMs();
+    const lastRunAt = this.lastSharedSyncAt.get(boardType);
+    const now = Date.now();
+
+    if (lastRunAt !== undefined && now - lastRunAt < cooldownMs) {
+      const remainingMs = cooldownMs - (now - lastRunAt);
+      this.log(
+        `[SyncRunner] Skipping shared sync for ${boardType} (last run ${Math.round(
+          (now - lastRunAt) / 1000,
+        )}s ago; cooldown ${Math.round(cooldownMs / 1000)}s, ${Math.round(remainingMs / 1000)}s remaining)`,
+      );
+      return;
+    }
+
+    // Stamp the timestamp before running so a concurrent caller (or the next
+    // user-sync that lands while we're still working) doesn't also fire. Stamp
+    // again on success/failure so partial work counts toward the cooldown
+    // either way — a permanent failure shouldn't loop on every cycle.
+    this.lastSharedSyncAt.set(boardType, now);
+
+    const { client } = this.getClient();
+    try {
+      this.log(`[SyncRunner] Running shared sync for ${boardType} using ${userId}'s token...`);
+      await syncSharedData(client, boardType, token, this.log.bind(this));
+      this.lastSharedSyncAt.set(boardType, Date.now());
+    } catch (sharedError) {
+      this.lastSharedSyncAt.set(boardType, Date.now());
+      const sharedErrorMessage = this.formatErrorMessage(sharedError);
+      this.handleError(sharedError instanceof Error ? sharedError : new Error(sharedErrorMessage), {
+        board: boardType,
+        userId,
+      });
+      this.log(`[SyncRunner] Shared sync for ${boardType} failed (user sync was OK): ${sharedErrorMessage}`);
+    }
   }
 
   private async updateCredentialStatus(

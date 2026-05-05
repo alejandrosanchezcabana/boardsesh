@@ -28,6 +28,7 @@
         "aurora-sync": "./dist/cli/index.js",
       },
       "dependencies": {
+        "@boardsesh/board-constants": "*",
         "@boardsesh/crypto": "*",
         "@boardsesh/db": "*",
         "@boardsesh/shared-schema": "*",
