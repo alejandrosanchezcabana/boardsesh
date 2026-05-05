@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useCallback } from 'react';
-import QueueMusicOutlined from '@mui/icons-material/QueueMusicOutlined';
+import FormatListBulletedOutlined from '@mui/icons-material/FormatListBulletedOutlined';
 import type { ClimbActionProps, ClimbActionResult } from '../types';
 import { useOptionalQueueActions } from '../../graphql-queue';
 import { buildActionResult, computeActionDisplay } from '../action-view-renderer';
@@ -26,7 +26,7 @@ export function GoToQueueAction({
     [onGoToQueue],
   );
 
-  const icon = <QueueMusicOutlined sx={{ fontSize: iconSize }} />;
+  const icon = <FormatListBulletedOutlined sx={{ fontSize: iconSize }} />;
 
   return buildActionResult({
     key: 'goToQueue',
