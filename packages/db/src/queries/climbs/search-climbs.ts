@@ -74,13 +74,24 @@ export const searchClimbs = async (
   // them — that plan allocates 16MB DSM segments per parallel context and saturates
   // /dev/shm under concurrent traffic.
   //
-  // statsDrivenSearch's INNER JOIN drops climbs without a stats row at this angle,
-  // so when its result is short we fall back to standardSearch (LEFT JOIN) to
-  // include stats-less climbs. The fallback runs over a small slice of the result
-  // set, so the planner picks a serial plan and doesn't allocate parallel DSM.
+  // statsDrivenSearch's INNER JOIN drops climbs without a stats row at this angle.
+  // For page 0 without stats filters, that drops projects (climbs with no recorded
+  // ascents) which users expect to see at the bottom of narrow-filter results — so
+  // we fall back to standardSearch on that case only. The fallback runs over a small
+  // dataset (filter selective enough that statsDriven returned <pageSize), so the
+  // planner picks a serial plan and doesn't allocate parallel DSM.
+  //
+  // We deliberately do NOT fall back on pages > 0 or when stats filters are active:
+  //   - Pages > 0: standardSearch with deep OFFSET still scans the full filter
+  //     bitmap and parallel-sorts. Re-creates the /dev/shm pressure. Trade-off:
+  //     stats-less padding past the stats-having boundary on broad-filter pagination
+  //     is unreachable. Real users almost never paginate that deep on popularity sort.
+  //   - Stats filters active (e.g., minAscents >= 1): stats-less climbs would be
+  //     filtered out anyway, so statsDriven's INNER JOIN is already correct.
   //
   // projectsOnly explicitly wants climbs with NO stats row, so it can't use the
   // stats-driven path — straight to standardSearch.
+  const hasStatsFilters = filters.getClimbStatsConditions().length > 0;
   const useStatsDriven = sortBy === 'ascents' && sortOrder === 'desc' && !isDraftsQuery && !searchParams.projectsOnly;
 
   if (useStatsDriven) {
@@ -88,7 +99,10 @@ export const searchClimbs = async (
     if (statsResult.hasMore) {
       return statsResult;
     }
-    return standardSearch(db, params, searchParams, filters, sortBy, sortOrder, isDraftsQuery, page, pageSize);
+    if (page === 0 && !hasStatsFilters) {
+      return standardSearch(db, params, searchParams, filters, sortBy, sortOrder, isDraftsQuery, page, pageSize);
+    }
+    return statsResult;
   }
 
   return standardSearch(db, params, searchParams, filters, sortBy, sortOrder, isDraftsQuery, page, pageSize);
@@ -100,9 +114,9 @@ export const searchClimbs = async (
  * and stops after pageSize+1 qualifying rows.
  *
  * The INNER JOIN excludes climbs without a stats row at this angle. The caller
- * (`searchClimbs`) handles that by falling back to `standardSearch` whenever this
- * function reports `hasMore === false` — that signals we're at or past the boundary
- * of stats-having climbs and stats-less climbs may need to fill the page.
+ * (`searchClimbs`) compensates only on page 0 without stats filters, where
+ * stats-less climbs (projects) need to fill out narrow-filter results. See the
+ * comment in `searchClimbs` for the full reasoning.
  *
  * All climb filters (including personal progress like hideCompleted) are in
  * the WHERE clause — not the JOIN ON — so they apply correctly to the result set.
