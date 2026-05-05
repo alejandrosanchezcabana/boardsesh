@@ -9,8 +9,10 @@ import type {
   Climb,
   ClimbStats,
   Hole,
+  Kit,
   Layout,
   Led,
+  Placement,
   PlacementRole,
   Product,
   ProductSize,
@@ -58,9 +60,7 @@ export const SHARED_SYNC_TABLES: string[] = [
 // loop instead. The Aurora API request still uses SHARED_SYNC_TABLES.
 //
 // Out of scope here:
-// - `products_angles` and `kits`: no `board_*` schema to write to.
-// - `placements`: schema exists but `Placement` has no Aurora API type, and the API's
-//   SyncDataPUT does not include placements rows.
+// - `products_angles`: angles are hardcoded in the `ANGLES` constant in board-data.ts.
 const PROCESSING_ORDER: string[] = [
   'products',
   'sets',
@@ -69,11 +69,13 @@ const PROCESSING_ORDER: string[] = [
   'layouts',
   'placement_roles',
   'leds',
+  'placements',
   'product_sizes_layouts_sets',
   'climbs',
   'climb_stats',
   'beta_links',
   'attempts',
+  'kits',
 ];
 
 const TABLES_TO_PROCESS = new Set([...PROCESSING_ORDER, 'shared_syncs']);
@@ -252,6 +254,65 @@ const upsertLeds = (db: PgDatabase<PgQueryResultHKT, Record<string, unknown>>, b
             productSizeId: Number(item.product_size_id),
             holeId: Number(item.hole_id),
             position: Number(item.position),
+          },
+        });
+    }),
+  );
+
+const upsertPlacements = (
+  db: PgDatabase<PgQueryResultHKT, Record<string, unknown>>,
+  board: AuroraBoardName,
+  data: Placement[],
+) =>
+  Promise.all(
+    data.map((item) => {
+      const placementsSchema = UNIFIED_TABLES.placements;
+      return db
+        .insert(placementsSchema)
+        .values({
+          boardType: board,
+          id: Number(item.id),
+          layoutId: Number(item.layout_id),
+          holeId: Number(item.hole_id),
+          setId: Number(item.set_id),
+          defaultPlacementRoleId:
+            item.default_placement_role_id != null ? Number(item.default_placement_role_id) : null,
+        })
+        .onConflictDoUpdate({
+          target: [placementsSchema.boardType, placementsSchema.id],
+          set: {
+            layoutId: Number(item.layout_id),
+            holeId: Number(item.hole_id),
+            setId: Number(item.set_id),
+            defaultPlacementRoleId:
+              item.default_placement_role_id != null ? Number(item.default_placement_role_id) : null,
+          },
+        });
+    }),
+  );
+
+const upsertKits = (db: PgDatabase<PgQueryResultHKT, Record<string, unknown>>, board: AuroraBoardName, data: Kit[]) =>
+  Promise.all(
+    data.map((item) => {
+      const kitsSchema = UNIFIED_TABLES.kits;
+      return db
+        .insert(kitsSchema)
+        .values({
+          boardType: board,
+          serialNumber: item.serial_number,
+          name: item.name,
+          isAutoconnect: Boolean(item.is_autoconnect),
+          isListed: Boolean(item.is_listed),
+          createdAt: item.created_at,
+          updatedAt: item.updated_at,
+        })
+        .onConflictDoUpdate({
+          target: [kitsSchema.boardType, kitsSchema.serialNumber],
+          set: {
+            name: item.name,
+            isAutoconnect: Boolean(item.is_autoconnect),
+            isListed: Boolean(item.is_listed),
+            updatedAt: item.updated_at,
           },
         });
     }),
@@ -586,6 +647,12 @@ async function upsertSharedTableData(
       return [];
     case 'product_sizes_layouts_sets':
       await upsertProductSizesLayoutsSets(db, boardName, data as ProductSizesLayoutsSet[]);
+      return [];
+    case 'placements':
+      await upsertPlacements(db, boardName, data as Placement[]);
+      return [];
+    case 'kits':
+      await upsertKits(db, boardName, data as Kit[]);
       return [];
     case 'climb_stats':
       await upsertClimbStats(db, boardName, data as ClimbStats[]);

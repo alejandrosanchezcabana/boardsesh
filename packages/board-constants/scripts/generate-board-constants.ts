@@ -190,9 +190,21 @@ function queryLayouts(boardName: GeneratedBoardName): Layout[] {
   }));
 }
 
+// Skip PSLS rows whose (layout_id, set_id) combo has no rows in board_placements.
+// Aurora occasionally publishes a set in board_product_sizes_layouts_sets without
+// publishing the corresponding placements (e.g. tension's "Wood Expansion" / "Plastic
+// Expansion" sets — listed in PSLS but no holds on any layout). Without this filter,
+// those sets show up as selectable options that render an empty board.
+const HAS_PLACEMENTS_CLAUSE = `AND EXISTS (
+  SELECT 1 FROM board_placements p
+  WHERE p.board_type = psls.board_type
+    AND p.set_id = psls.set_id
+    AND p.layout_id = psls.layout_id
+)`;
+
 function querySets(boardName: GeneratedBoardName): SetMapping[] {
   const result = runPsqlQuery(
-    `SELECT sets.id, REPLACE(sets.name, E'\\n', ' '), psls.layout_id, psls.product_size_id FROM board_sets sets INNER JOIN board_product_sizes_layouts_sets psls ON sets.board_type = psls.board_type AND sets.id = psls.set_id WHERE sets.board_type = '${boardName}' ORDER BY psls.layout_id, psls.product_size_id, sets.id;`,
+    `SELECT sets.id, REPLACE(sets.name, E'\\n', ' '), psls.layout_id, psls.product_size_id FROM board_sets sets INNER JOIN board_product_sizes_layouts_sets psls ON sets.board_type = psls.board_type AND sets.id = psls.set_id WHERE sets.board_type = '${boardName}' ${HAS_PLACEMENTS_CLAUSE} ORDER BY psls.layout_id, psls.product_size_id, sets.id;`,
   );
 
   return parseRows(result, ([setId, setName, layoutId, sizeId]) => ({
@@ -205,7 +217,7 @@ function querySets(boardName: GeneratedBoardName): SetMapping[] {
 
 function queryImageFilenames(boardName: GeneratedBoardName): ImageFilenameMapping[] {
   const result = runPsqlQuery(
-    `SELECT layout_id, product_size_id, set_id, image_filename FROM board_product_sizes_layouts_sets WHERE board_type = '${boardName}' AND image_filename IS NOT NULL ORDER BY layout_id, product_size_id, set_id;`,
+    `SELECT psls.layout_id, psls.product_size_id, psls.set_id, psls.image_filename FROM board_product_sizes_layouts_sets psls WHERE psls.board_type = '${boardName}' AND psls.image_filename IS NOT NULL ${HAS_PLACEMENTS_CLAUSE} ORDER BY psls.layout_id, psls.product_size_id, psls.set_id;`,
   );
 
   return parseRows(result, ([layoutId, sizeId, setId, imageFilename]) => ({
