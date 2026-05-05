@@ -177,11 +177,13 @@
       "noSetters": "No setters found"
     },
     "holds": {
-      "tapTo": "Tap to:",
+      "tapToToggle": "Tap a hold to include or exclude it",
       "include": "Include",
       "exclude": "Exclude",
       "included": "{{count}} included",
-      "excluded": "{{count}} excluded"
+      "excluded": "{{count}} excluded",
+      "showHeatmap": "Show heatmap",
+      "hideHeatmap": "Hide heatmap"
     },
     "sortToggle": "Sort"
   },
@@ -428,12 +430,17 @@
   },
   "holdTypePicker": {
     "toolbarAriaLabel": "Hold type",
+    "applyModeAriaLabel": "Apply as include or exclude",
     "clear": "Clear",
+    "searchHelp": "Select 1 or more hold types, then press anywhere else to close the picker",
+    "includeAriaSuffix": "include",
+    "excludeAriaSuffix": "exclude",
     "states": {
       "starting": "Start",
       "hand": "Mid",
       "finish": "Finish",
-      "foot": "Foot"
+      "foot": "Foot",
+      "any": "Any"
     }
   },
   "directionPicker": {

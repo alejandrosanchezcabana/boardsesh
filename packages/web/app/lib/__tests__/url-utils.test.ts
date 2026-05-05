@@ -89,14 +89,13 @@ describe('searchParamsToUrlParams', () => {
     const result = searchParamsToUrlParams({
       ...DEFAULT_SEARCH_PARAMS,
       holdsFilter: {
-        red: { state: 'include' },
-        blue: { state: 'exclude' },
-      } as unknown as SearchRequestPagination['holdsFilter'],
+        142: { ANY: 'include' },
+        205: { STARTING: 'exclude', FOOT: 'include' },
+      },
     });
 
-    const params = result.toString();
-    expect(params).toContain('hold_red=include');
-    expect(params).toContain('hold_blue=exclude');
+    expect(result.get('hold_142')).toBe('ANY:include');
+    expect(result.get('hold_205')).toBe('STARTING:exclude,FOOT:include');
   });
 
   it('should not include holds filter when empty', () => {
@@ -291,7 +290,7 @@ describe('parsedRouteSearchParamsToSearchParams', () => {
       sortBy: 'difficulty' as SearchRequestPagination['sortBy'],
       sortOrder: 'asc' as SearchRequestPagination['sortOrder'],
       onlyClassics: true,
-      holdsFilter: { red: { state: 'include' } },
+      holdsFilter: { 142: { ANY: 'include' as const } },
     };
 
     const result = parsedRouteSearchParamsToSearchParams(input);
@@ -301,7 +300,7 @@ describe('parsedRouteSearchParamsToSearchParams', () => {
     expect(result.sortBy).toBe('difficulty');
     expect(result.sortOrder).toBe('asc');
     expect(result.onlyClassics).toBe(true);
-    expect(result.holdsFilter).toEqual({ red: { state: 'include' } });
+    expect(result.holdsFilter).toEqual({ 142: { ANY: 'include' } });
   });
 
   it('should handle mixed string and number inputs', () => {
@@ -361,8 +360,8 @@ describe('urlParamsToSearchParams', () => {
       name: 'test climb',
       onlyClassics: 'true',
       page: '2',
-      hold_red: 'include',
-      hold_blue: 'exclude',
+      hold_142: 'ANY:include',
+      hold_205: 'STARTING:exclude,FOOT:include',
     });
 
     const result = urlParamsToSearchParams(urlParams);
@@ -372,7 +371,39 @@ describe('urlParamsToSearchParams', () => {
     expect(result.name).toBe('test climb');
     expect(result.onlyClassics).toBe(true);
     expect(result.page).toBe(2);
-    expect(result.holdsFilter).toEqual({ red: 'include', blue: 'exclude' });
+    expect(result.holdsFilter).toEqual({
+      142: { ANY: 'include' },
+      205: { STARTING: 'exclude', FOOT: 'include' },
+    });
+  });
+
+  it('should accept legacy single-value hold params for backward compat', () => {
+    // Pre-#1841 URLs encoded each hold as a single state. The shim must keep
+    // these working so shared/bookmarked links don't silently drop filters.
+    const urlParams = new URLSearchParams({
+      hold_142: 'STARTING',
+      hold_205: 'NOT',
+      hold_300: 'ANY',
+    });
+
+    const result = urlParamsToSearchParams(urlParams);
+
+    expect(result.holdsFilter).toEqual({
+      142: { STARTING: 'include' },
+      205: { ANY: 'exclude' },
+      300: { ANY: 'include' },
+    });
+  });
+
+  it('should drop hold params with non-numeric IDs', () => {
+    const urlParams = new URLSearchParams({
+      hold_red: 'ANY:include',
+      hold_142: 'ANY:include',
+    });
+
+    const result = urlParamsToSearchParams(urlParams);
+
+    expect(result.holdsFilter).toEqual({ 142: { ANY: 'include' } });
   });
 
   it('should use defaults for missing parameters', () => {

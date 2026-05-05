@@ -1,5 +1,5 @@
 import { gql } from 'graphql-request';
-import type { Climb, HoldState } from '@/app/lib/types';
+import type { Climb, HoldsFilter } from '@/app/lib/types';
 
 // Slim fragment for search/list views. Intentionally omits `description` to
 // keep the list payload small — descriptions can be long and no list UI
@@ -129,7 +129,7 @@ export type ClimbSearchInputVariables = {
     name?: string;
     setter?: string[];
     onlyTallClimbs?: boolean;
-    holdsFilter?: Record<string, HoldState>;
+    holdsFilter?: HoldsFilter;
     hideAttempted?: boolean;
     hideCompleted?: boolean;
     showOnlyAttempted?: boolean;

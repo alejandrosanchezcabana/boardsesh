@@ -132,6 +132,10 @@
   width: 100%;
   max-width: 100%;
   margin: 0 auto;
+  /* The BoardRenderer is the underlay; SearchHoldFilterOverlay and the
+     heatmap overlay are positioned absolutely on top, so we need this
+     container to be the positioning ancestor. */
+  position: relative;
 }
 
 /* Search Results Footer Styles */

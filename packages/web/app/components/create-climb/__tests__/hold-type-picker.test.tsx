@@ -73,7 +73,10 @@ afterEach(() => {
  * in document.body across tests.
  */
 function PickerHarness(
-  props: Omit<React.ComponentProps<typeof HoldTypePicker>, 'anchorEl'> & {
+  // The tests in this file all exercise the setter-mode picker, so type the
+  // harness against SetterPickerProps directly. Search-mode coverage lives
+  // alongside the search form's tests.
+  props: Omit<import('../hold-type-picker').SetterPickerProps, 'anchorEl'> & {
     withAnchor: boolean;
   },
 ) {
@@ -95,7 +98,7 @@ function PickerHarness(
 }
 
 function renderPicker(
-  overrides: Partial<React.ComponentProps<typeof HoldTypePicker>> & {
+  overrides: Partial<import('../hold-type-picker').SetterPickerProps> & {
     withAnchor?: boolean;
   } = {},
 ) {

@@ -1,5 +1,5 @@
 import { type IDBPDatabase, openDB } from 'idb';
-import type { SearchRequestPagination } from '@/app/lib/types';
+import type { HoldFilterEntry, HoldFilterType, HoldsFilter, SearchRequestPagination } from '@/app/lib/types';
 import { DEFAULT_SEARCH_PARAMS } from '@/app/lib/url-utils';
 
 export type RecentSearch = {
@@ -21,11 +21,65 @@ const LEGACY_STORAGE_KEY = 'boardsesh_recent_searches';
 // that searchParamsToUrlParams used to crash on. Cleaned up on read.
 const NUMERIC_FILTER_FIELDS = ['minGrade', 'maxGrade', 'minAscents', 'minRating', 'gradeAccuracy'] as const;
 
+const LEGACY_HOLD_TYPES: ReadonlySet<HoldFilterType> = new Set(['STARTING', 'HAND', 'FINISH', 'FOOT', 'ANY']);
+
+/**
+ * Recent-search entries persisted before #1841 stored each hold as
+ * `{ state, color, displayColor }`. The new HoldsFilter shape is
+ * `{ holdId: { TYPE: 'include' | 'exclude' } }`. Migrate on read so old
+ * entries don't blow up Zod validation when the user taps a stale pill.
+ *
+ * Returns `{entry, migrated}` so the caller knows whether to write the
+ * cleaned shape back to IndexedDB.
+ */
+function migrateLegacyHoldsFilter(raw: SearchRequestPagination['holdsFilter'] | undefined): {
+  holdsFilter: HoldsFilter | undefined;
+  migrated: boolean;
+} {
+  if (!raw || typeof raw !== 'object') return { holdsFilter: raw as HoldsFilter | undefined, migrated: false };
+  const sourceKeyCount = Object.keys(raw).length;
+  let migrated = false;
+  const out: HoldsFilter = {};
+  for (const [holdIdRaw, value] of Object.entries(raw as Record<string, unknown>)) {
+    const holdId = Number(holdIdRaw);
+    if (!Number.isInteger(holdId) || holdId <= 0 || !value || typeof value !== 'object') continue;
+    const values = Object.values(value as Record<string, unknown>);
+    // `[].every()` is vacuously true, so an empty entry would pass the
+    // "new shape" check and stick around as noise. Require at least one
+    // include/exclude value before keeping it.
+    const valuesAreNewShape = values.length > 0 && values.every((v) => v === 'include' || v === 'exclude');
+    if (valuesAreNewShape) {
+      out[holdId] = value as HoldFilterEntry;
+      continue;
+    }
+    // Legacy: `{ state: 'STARTING' | 'HAND' | 'FINISH' | 'FOOT' | 'ANY' | 'NOT', color, displayColor }`.
+    const legacyState = (value as { state?: unknown }).state;
+    if (typeof legacyState !== 'string') continue;
+    const entry: HoldFilterEntry = {};
+    if (legacyState === 'NOT') {
+      entry.ANY = 'exclude';
+    } else if (LEGACY_HOLD_TYPES.has(legacyState as HoldFilterType)) {
+      entry[legacyState as HoldFilterType] = 'include';
+    } else {
+      continue;
+    }
+    out[holdId] = entry;
+    migrated = true;
+  }
+  // Treat dropped entries (empties / invalid IDs / unknown states) as a
+  // migration too — otherwise the caller keeps the original noisy shape.
+  if (Object.keys(out).length !== sourceKeyCount) migrated = true;
+  return { holdsFilter: out, migrated };
+}
+
 /**
  * Replace `undefined` numeric fields with their defaults. Older entries
  * persisted by the search drawer can contain `undefined` for these fields,
  * which violates the SearchRequestPagination type and crashed serialization
  * on iOS (see Sentry issues 7434008446 / 7435688419 / 7439815956).
+ *
+ * Also migrates legacy `holdsFilter` shapes (pre-#1841) to the new
+ * type→mode map so old recent-search pills don't blow up backend Zod.
  */
 function sanitizeFilters(filters: Partial<SearchRequestPagination>): {
   filters: Partial<SearchRequestPagination>;
@@ -36,6 +90,13 @@ function sanitizeFilters(filters: Partial<SearchRequestPagination>): {
   for (const field of NUMERIC_FILTER_FIELDS) {
     if (field in cleaned && cleaned[field] === undefined) {
       cleaned[field] = DEFAULT_SEARCH_PARAMS[field];
+      changed = true;
+    }
+  }
+  if (cleaned.holdsFilter) {
+    const { holdsFilter, migrated } = migrateLegacyHoldsFilter(cleaned.holdsFilter);
+    if (migrated) {
+      cleaned.holdsFilter = holdsFilter;
       changed = true;
     }
   }

@@ -102,8 +102,12 @@ describe('SearchCacheService', () => {
 
     it('sorts nested objects recursively for deterministic hashing', () => {
       const params = makeRouteParams();
-      const search1: ClimbSearchParams = { holdsFilter: { b: 'HAND', a: 'STARTING' } };
-      const search2: ClimbSearchParams = { holdsFilter: { a: 'STARTING', b: 'HAND' } };
+      const search1: ClimbSearchParams = {
+        holdsFilter: { b: { HAND: 'include' }, a: { STARTING: 'include' } },
+      };
+      const search2: ClimbSearchParams = {
+        holdsFilter: { a: { STARTING: 'include' }, b: { HAND: 'include' } },
+      };
 
       const key1 = service.buildCacheKey(params, search1, 'results');
       const key2 = service.buildCacheKey(params, search2, 'results');

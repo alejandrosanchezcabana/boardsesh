@@ -8,6 +8,10 @@ import type {
   BoardDetails,
   BoardRouteIdentity,
   BoardName,
+  HoldsFilter,
+  HoldFilterEntry,
+  HoldFilterType,
+  HoldFilterMode,
 } from '@/app/lib/types';
 import { BOARD_NAME_PREFIX_REGEX } from '@/app/lib/board-constants';
 import { getBoardDetailsForBoard } from '@/app/lib/board-utils';
@@ -157,10 +161,17 @@ export const searchParamsToUrlParams = (input: SearchRequestPagination): URLSear
     params.projectsOnly = projectsOnly.toString();
   }
 
-  // Add holds filter entries only if they exist
+  // Add holds filter entries only if they exist.
+  // Per-hold value is a comma-joined list of `{TYPE}:{include|exclude}` triples,
+  // e.g. `STARTING:include,FOOT:exclude`. ANY is just one of the types.
   if (holdsFilter && Object.keys(holdsFilter).length > 0) {
-    Object.entries(holdsFilter).forEach(([key, value]) => {
-      params[`hold_${key}`] = value.state;
+    Object.entries(holdsFilter).forEach(([holdId, entry]) => {
+      const parts = Object.entries(entry)
+        .filter(([, mode]) => mode === 'include' || mode === 'exclude')
+        .map(([type, mode]) => `${type}:${mode}`);
+      if (parts.length > 0) {
+        params[`hold_${holdId}`] = parts.join(',');
+      }
     });
   }
 
@@ -190,12 +201,60 @@ export const DEFAULT_SEARCH_PARAMS: SearchRequestPagination = {
   pageSize: PAGE_LIMIT,
 };
 
+// Parse `hold_*` URL params into the new HoldsFilter shape.
+//
+// Modern format: `hold_{id}={TYPE}:{include|exclude}[,{TYPE}:{mode}]*`,
+// e.g. `hold_142=STARTING:include,FOOT:exclude`.
+//
+// Legacy format (single value, pre-#1841): `hold_{id}={STATE}`, where STATE is
+// a HoldState enum value. We map `ANY` → `{ANY: include}`, `NOT` → `{ANY: exclude}`,
+// and `STARTING|HAND|FINISH|FOOT` → `{STATE: include}`. This shim exists so
+// shared/bookmarked URLs from before the redesign keep working.
+//
+// TODO(#1841 follow-up): once recent searches and shared links have aged out,
+// remove the legacy fallback in `parseSingleEntry`.
+const HOLD_FILTER_TYPES = new Set<HoldFilterType>(['STARTING', 'HAND', 'FINISH', 'FOOT', 'ANY']);
+
+function parseSingleEntry(raw: string): HoldFilterEntry {
+  const entry: HoldFilterEntry = {};
+  for (const part of raw.split(',')) {
+    if (!part) continue;
+    const [typeRaw, modeRaw] = part.split(':');
+    if (modeRaw === 'include' || modeRaw === 'exclude') {
+      if (HOLD_FILTER_TYPES.has(typeRaw as HoldFilterType)) {
+        entry[typeRaw as HoldFilterType] = modeRaw as HoldFilterMode;
+      }
+      continue;
+    }
+    // Legacy single-value form
+    if (typeRaw === 'NOT') {
+      entry.ANY = 'exclude';
+    } else if (HOLD_FILTER_TYPES.has(typeRaw as HoldFilterType)) {
+      entry[typeRaw as HoldFilterType] = 'include';
+    }
+  }
+  return entry;
+}
+
+function parseHoldsFilterFromUrl(urlParams: URLSearchParams): HoldsFilter {
+  const result: HoldsFilter = {};
+  for (const [key, value] of urlParams.entries()) {
+    if (!key.startsWith('hold_')) continue;
+    // Hold IDs in board_climb_holds are positive integers, so reject 0,
+    // negatives, NaN, and floats. Floats like `hold_1.5` would silently
+    // miss every climb in the SQL `LIKE '%1.5r%'` lookup.
+    const holdId = Number(key.slice('hold_'.length));
+    if (!Number.isInteger(holdId) || holdId <= 0) continue;
+    const entry = parseSingleEntry(value);
+    if (Object.keys(entry).length > 0) {
+      result[holdId] = entry;
+    }
+  }
+  return result;
+}
+
 export const urlParamsToSearchParams = (urlParams: URLSearchParams): SearchRequestPagination => {
-  const holdsFilter = Object.fromEntries(
-    Array.from(urlParams.entries())
-      .filter(([key]) => key.startsWith('hold_'))
-      .map(([key, value]) => [key.replace('hold_', ''), value]),
-  );
+  const holdsFilter = parseHoldsFilterFromUrl(urlParams);
 
   return {
     ...DEFAULT_SEARCH_PARAMS,
@@ -220,8 +279,7 @@ export const urlParamsToSearchParams = (urlParams: URLSearchParams): SearchReque
         ?.split(',')
         .filter((s) => s.length > 0) ?? DEFAULT_SEARCH_PARAMS.settername,
     setternameSuggestion: urlParams.get('setternameSuggestion') ?? DEFAULT_SEARCH_PARAMS.setternameSuggestion,
-    //@ts-expect-error fix later
-    holdsFilter: holdsFilter ?? DEFAULT_SEARCH_PARAMS.holdsFilter,
+    holdsFilter,
     hideAttempted: urlParams.get('hideAttempted') === 'true',
     hideCompleted: urlParams.get('hideCompleted') === 'true',
     showOnlyAttempted: urlParams.get('showOnlyAttempted') === 'true',

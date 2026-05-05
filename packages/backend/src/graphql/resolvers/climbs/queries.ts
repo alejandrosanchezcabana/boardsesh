@@ -82,7 +82,7 @@ export const climbQueries = {
       name: input.name,
       settername: input.setter && input.setter.length > 0 ? input.setter : undefined,
       onlyTallClimbs: input.onlyTallClimbs,
-      holdsFilter: input.holdsFilter as Record<string, 'ANY' | 'NOT'> | undefined,
+      holdsFilter: input.holdsFilter,
       hideAttempted: input.hideAttempted,
       hideCompleted: input.hideCompleted,
       showOnlyAttempted: input.showOnlyAttempted,

@@ -177,11 +177,13 @@
       "noSetters": "Aucun ouvreur trouvé"
     },
     "holds": {
-      "tapTo": "Appuyez pour :",
+      "tapToToggle": "Touchez une prise pour l'inclure ou l'exclure",
       "include": "Inclure",
       "exclude": "Exclure",
       "included": "{{count}} incluses",
-      "excluded": "{{count}} exclues"
+      "excluded": "{{count}} exclues",
+      "showHeatmap": "Afficher la carte de chaleur",
+      "hideHeatmap": "Masquer la carte de chaleur"
     },
     "sortToggle": "Trier"
   },
@@ -428,12 +430,17 @@
   },
   "holdTypePicker": {
     "toolbarAriaLabel": "Type de prise",
+    "applyModeAriaLabel": "Appliquer comme inclure ou exclure",
     "clear": "Effacer",
+    "searchHelp": "Sélectionnez un ou plusieurs types de prise, puis touchez ailleurs pour fermer le sélecteur",
+    "includeAriaSuffix": "inclure",
+    "excludeAriaSuffix": "exclure",
     "states": {
       "starting": "Départ",
       "hand": "Milieu",
       "finish": "Arrivée",
-      "foot": "Pied"
+      "foot": "Pied",
+      "any": "Toutes"
     }
   },
   "directionPicker": {

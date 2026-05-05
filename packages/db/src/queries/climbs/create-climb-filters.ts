@@ -15,29 +15,27 @@ const KILTER_HOMEWALL_PRODUCT_ID = 7;
  * @param userId Optional user ID for personal progress filters
  */
 export const createClimbFilters = (params: BoardRouteParams, searchParams: ClimbSearchParams, userId?: string) => {
-  // Process hold filters
-  // holdsFilter can have values like:
-  // - 'ANY': hold must be present in the climb
-  // - 'NOT': hold must NOT be present in the climb
-  // - { state: 'STARTING' | 'HAND' | 'FOOT' | 'FINISH' }: hold must be present with that specific state
-  // - 'STARTING' | 'HAND' | 'FOOT' | 'FINISH': (after URL parsing) same as above
-  const holdsToFilter = Object.entries(searchParams.holdsFilter || {}).map(([key, stateOrValue]) => {
-    const holdId = key.replace('hold_', '');
-    // Handle both object form { state: 'STARTING' } and string form 'STARTING'
-    const state =
-      typeof stateOrValue === 'object' && stateOrValue !== null
-        ? (stateOrValue as { state: string }).state
-        : stateOrValue;
-    return [holdId, state] as const;
-  });
+  // holdsFilter shape: Record<holdId, Partial<Record<HoldFilterType, 'include' | 'exclude'>>>.
+  // ANY means "hold present in any state" (the wildcard); STARTING / HAND /
+  // FOOT / FINISH require / forbid the hold appearing with that specific
+  // state in board_climb_holds.
+  const anyHolds: number[] = [];
+  const notHolds: number[] = [];
+  const holdStateFilters: Array<{ holdId: number; state: string; mode: 'include' | 'exclude' }> = [];
 
-  const anyHolds = holdsToFilter.filter(([, value]) => value === 'ANY').map(([key]) => Number(key));
-  const notHolds = holdsToFilter.filter(([, value]) => value === 'NOT').map(([key]) => Number(key));
-
-  // Hold state filters - hold must be present with specific state (STARTING, HAND, FOOT, FINISH)
-  const holdStateFilters = holdsToFilter
-    .filter(([, value]) => ['STARTING', 'HAND', 'FOOT', 'FINISH'].includes(value as string))
-    .map(([key, state]) => ({ holdId: Number(key), state: state as string }));
+  for (const [keyRaw, entry] of Object.entries(searchParams.holdsFilter || {})) {
+    const holdId = Number(keyRaw.replace('hold_', ''));
+    if (!Number.isInteger(holdId) || holdId <= 0 || !entry || typeof entry !== 'object') continue;
+    for (const [type, mode] of Object.entries(entry as Record<string, unknown>)) {
+      if (mode !== 'include' && mode !== 'exclude') continue;
+      if (type === 'ANY') {
+        if (mode === 'include') anyHolds.push(holdId);
+        else notHolds.push(holdId);
+      } else if (type === 'STARTING' || type === 'HAND' || type === 'FOOT' || type === 'FINISH') {
+        holdStateFilters.push({ holdId, state: type, mode });
+      }
+    }
+  }
 
   // When onlyDrafts is enabled, show ONLY the user's own draft climbs.
   // Draft climbs can be owned via userId (locally created or JSON-imported)
@@ -129,17 +127,45 @@ export const createClimbFilters = (params: BoardRouteParams, searchParams: Climb
     ...notHolds.map((holdId) => notLike(boardClimbs.frames, `%${holdId}r%`)),
   ];
 
-  // State-specific hold conditions - use board_climb_holds table
-  const holdStateConditions: SQL[] = holdStateFilters.map(
-    ({ holdId, state }) =>
-      sql`EXISTS (
+  // State-specific hold conditions — use board_climb_holds. Multiple types
+  // on the same hold are OR-combined within their mode: HAND:include +
+  // FOOT:include means "hold is HAND OR FOOT" (a hold has only one state in
+  // any given climb, so AND would always be empty). Same for excludes.
+  const includesByHold = new Map<number, string[]>();
+  const excludesByHold = new Map<number, string[]>();
+  for (const { holdId, state, mode } of holdStateFilters) {
+    const target = mode === 'include' ? includesByHold : excludesByHold;
+    const states = target.get(holdId) ?? [];
+    states.push(state);
+    target.set(holdId, states);
+  }
+  const holdStateConditions: SQL[] = [];
+  for (const [holdId, states] of includesByHold) {
+    const stateLiterals = sql.join(
+      states.map((s) => sql`${s}`),
+      sql`, `,
+    );
+    holdStateConditions.push(sql`EXISTS (
       SELECT 1 FROM ${boardClimbHolds} ch
       WHERE ch.board_type = ${params.board_name}
       AND ch.climb_uuid = ${boardClimbs.uuid}
       AND ch.hold_id = ${holdId}
-      AND ch.hold_state = ${state}
-    )`,
-  );
+      AND ch.hold_state IN (${stateLiterals})
+    )`);
+  }
+  for (const [holdId, states] of excludesByHold) {
+    const stateLiterals = sql.join(
+      states.map((s) => sql`${s}`),
+      sql`, `,
+    );
+    holdStateConditions.push(sql`NOT EXISTS (
+      SELECT 1 FROM ${boardClimbHolds} ch
+      WHERE ch.board_type = ${params.board_name}
+      AND ch.climb_uuid = ${boardClimbs.uuid}
+      AND ch.hold_id = ${holdId}
+      AND ch.hold_state IN (${stateLiterals})
+    )`);
+  }
 
   // Tall climbs filter condition
   const tallClimbsConditions: SQL[] = [];

@@ -71,9 +71,7 @@ export const useQueueDataFetching = ({
       onlyTallClimbs: searchParams.onlyTallClimbs || undefined,
       holdsFilter:
         searchParams.holdsFilter && Object.keys(searchParams.holdsFilter).length > 0
-          ? Object.fromEntries(
-              Object.entries(searchParams.holdsFilter).map(([key, value]) => [key.replace('hold_', ''), value.state]),
-            )
+          ? searchParams.holdsFilter
           : undefined,
       hideAttempted: searchParams.hideAttempted || undefined,
       hideCompleted: searchParams.hideCompleted || undefined,
@@ -153,12 +151,7 @@ export const useQueueDataFetching = ({
       onlyTallClimbs: countSearchParams.onlyTallClimbs || undefined,
       holdsFilter:
         countSearchParams.holdsFilter && Object.keys(countSearchParams.holdsFilter).length > 0
-          ? Object.fromEntries(
-              Object.entries(countSearchParams.holdsFilter).map(([key, value]) => [
-                key.replace('hold_', ''),
-                value.state,
-              ]),
-            )
+          ? countSearchParams.holdsFilter
           : undefined,
       hideAttempted: countSearchParams.hideAttempted || undefined,
       hideCompleted: countSearchParams.hideCompleted || undefined,
