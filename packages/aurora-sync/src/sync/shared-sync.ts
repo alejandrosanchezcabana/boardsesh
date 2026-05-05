@@ -1,8 +1,8 @@
-import { getDb } from '@/app/lib/db/db';
-import type { SyncOptions, AuroraBoardName } from '../../api-wrappers/aurora/types';
-import { sharedSync } from '../../api-wrappers/aurora/sharedSync';
+import { sharedSync } from '../api/shared-sync-api';
+import { type SyncOptions, type AuroraBoardName, SHARED_SYNC_TABLES } from '../api/types';
 import { sql, eq, inArray } from 'drizzle-orm';
-import type { PgDatabase, PgQueryResultHKT } from 'drizzle-orm/pg-core';
+import { drizzle, type PostgresJsDatabase } from 'drizzle-orm/postgres-js';
+import type postgres from 'postgres';
 import type {
   Attempt,
   BetaLink,
@@ -20,10 +20,14 @@ import type {
   Set as AuroraSet,
   SharedSync,
   SyncPutFields,
-} from '../../api-wrappers/sync-api-types';
-import { UNIFIED_TABLES } from '../../db/queries/util/table-select';
-import { convertLitUpHoldsStringToMap } from '@/app/components/board-renderer/util';
+} from '../api/sync-api-types';
+import { UNIFIED_TABLES } from '../db/table-select';
+import { convertLitUpHoldsStringToMap } from '@boardsesh/board-constants/hold-states';
 import { populateDenormalizedColumns } from '@boardsesh/db/queries';
+import { setterFollows, notifications, userBoardMappings, userFollows } from '@boardsesh/db/schema';
+import { randomUUID } from 'crypto';
+
+type DrizzleDb = PostgresJsDatabase<Record<string, never>>;
 
 export type NewClimbInfo = {
   uuid: string;
@@ -32,26 +36,6 @@ export type NewClimbInfo = {
   layoutId: number;
   name?: string;
 };
-
-// Define shared sync tables in correct dependency order
-// Order matches what the Android app sends - keep full list to remain indistinguishable
-export const SHARED_SYNC_TABLES: string[] = [
-  'products',
-  'product_sizes',
-  'holes',
-  'leds',
-  'products_angles',
-  'layouts',
-  'product_sizes_layouts_sets',
-  'placements',
-  'sets',
-  'placement_roles',
-  'climbs',
-  'climb_stats',
-  'beta_links',
-  'attempts',
-  'kits',
-];
 
 // Tables we actually want to process and store, in FK-safe upsert order.
 // SHARED_SYNC_TABLES matches the Android app's request order for indistinguishability,
@@ -80,11 +64,9 @@ const PROCESSING_ORDER: string[] = [
 
 const TABLES_TO_PROCESS = new Set([...PROCESSING_ORDER, 'shared_syncs']);
 
-const upsertProducts = (
-  db: PgDatabase<PgQueryResultHKT, Record<string, unknown>>,
-  board: AuroraBoardName,
-  data: Product[],
-) =>
+const MAX_SYNC_ATTEMPTS = 100;
+
+const upsertProducts = (db: DrizzleDb, board: AuroraBoardName, data: Product[]) =>
   Promise.all(
     data.map((item) => {
       const productsSchema = UNIFIED_TABLES.products;
@@ -112,11 +94,7 @@ const upsertProducts = (
     }),
   );
 
-const upsertSets = (
-  db: PgDatabase<PgQueryResultHKT, Record<string, unknown>>,
-  board: AuroraBoardName,
-  data: AuroraSet[],
-) =>
+const upsertSets = (db: DrizzleDb, board: AuroraBoardName, data: AuroraSet[]) =>
   Promise.all(
     data.map((item) => {
       const setsSchema = UNIFIED_TABLES.sets;
@@ -135,7 +113,7 @@ const upsertSets = (
     }),
   );
 
-const upsertHoles = (db: PgDatabase<PgQueryResultHKT, Record<string, unknown>>, board: AuroraBoardName, data: Hole[]) =>
+const upsertHoles = (db: DrizzleDb, board: AuroraBoardName, data: Hole[]) =>
   Promise.all(
     data.map((item) => {
       const holesSchema = UNIFIED_TABLES.holes;
@@ -165,11 +143,7 @@ const upsertHoles = (db: PgDatabase<PgQueryResultHKT, Record<string, unknown>>, 
     }),
   );
 
-const upsertLayouts = (
-  db: PgDatabase<PgQueryResultHKT, Record<string, unknown>>,
-  board: AuroraBoardName,
-  data: Layout[],
-) =>
+const upsertLayouts = (db: DrizzleDb, board: AuroraBoardName, data: Layout[]) =>
   Promise.all(
     data.map((item) => {
       const layoutsSchema = UNIFIED_TABLES.layouts;
@@ -201,11 +175,7 @@ const upsertLayouts = (
     }),
   );
 
-const upsertPlacementRoles = (
-  db: PgDatabase<PgQueryResultHKT, Record<string, unknown>>,
-  board: AuroraBoardName,
-  data: PlacementRole[],
-) =>
+const upsertPlacementRoles = (db: DrizzleDb, board: AuroraBoardName, data: PlacementRole[]) =>
   Promise.all(
     data.map((item) => {
       const placementRolesSchema = UNIFIED_TABLES.placementRoles;
@@ -235,7 +205,7 @@ const upsertPlacementRoles = (
     }),
   );
 
-const upsertLeds = (db: PgDatabase<PgQueryResultHKT, Record<string, unknown>>, board: AuroraBoardName, data: Led[]) =>
+const upsertLeds = (db: DrizzleDb, board: AuroraBoardName, data: Led[]) =>
   Promise.all(
     data.map((item) => {
       const ledsSchema = UNIFIED_TABLES.leds;
@@ -259,11 +229,7 @@ const upsertLeds = (db: PgDatabase<PgQueryResultHKT, Record<string, unknown>>, b
     }),
   );
 
-const upsertPlacements = (
-  db: PgDatabase<PgQueryResultHKT, Record<string, unknown>>,
-  board: AuroraBoardName,
-  data: Placement[],
-) =>
+const upsertPlacements = (db: DrizzleDb, board: AuroraBoardName, data: Placement[]) =>
   Promise.all(
     data.map((item) => {
       const placementsSchema = UNIFIED_TABLES.placements;
@@ -291,7 +257,7 @@ const upsertPlacements = (
     }),
   );
 
-const upsertKits = (db: PgDatabase<PgQueryResultHKT, Record<string, unknown>>, board: AuroraBoardName, data: Kit[]) =>
+const upsertKits = (db: DrizzleDb, board: AuroraBoardName, data: Kit[]) =>
   Promise.all(
     data.map((item) => {
       const kitsSchema = UNIFIED_TABLES.kits;
@@ -318,11 +284,7 @@ const upsertKits = (db: PgDatabase<PgQueryResultHKT, Record<string, unknown>>, b
     }),
   );
 
-const upsertProductSizesLayoutsSets = (
-  db: PgDatabase<PgQueryResultHKT, Record<string, unknown>>,
-  board: AuroraBoardName,
-  data: ProductSizesLayoutsSet[],
-) =>
+const upsertProductSizesLayoutsSets = (db: DrizzleDb, board: AuroraBoardName, data: ProductSizesLayoutsSet[]) =>
   Promise.all(
     data.map((item) => {
       const pslsSchema = UNIFIED_TABLES.productSizesLayoutsSets;
@@ -350,11 +312,7 @@ const upsertProductSizesLayoutsSets = (
     }),
   );
 
-const upsertProductSizes = (
-  db: PgDatabase<PgQueryResultHKT, Record<string, unknown>>,
-  board: AuroraBoardName,
-  data: ProductSize[],
-) =>
+const upsertProductSizes = (db: DrizzleDb, board: AuroraBoardName, data: ProductSize[]) =>
   Promise.all(
     data.map((item) => {
       const productSizesSchema = UNIFIED_TABLES.productSizes;
@@ -392,11 +350,7 @@ const upsertProductSizes = (
     }),
   );
 
-const upsertAttempts = (
-  db: PgDatabase<PgQueryResultHKT, Record<string, unknown>>,
-  board: AuroraBoardName,
-  data: Attempt[],
-) =>
+const upsertAttempts = (db: DrizzleDb, board: AuroraBoardName, data: Attempt[]) =>
   Promise.all(
     data.map(async (item) => {
       const attemptsSchema = UNIFIED_TABLES.attempts;
@@ -411,27 +365,21 @@ const upsertAttempts = (
         .onConflictDoUpdate({
           target: [attemptsSchema.boardType, attemptsSchema.id],
           set: {
-            // Only allow position updates if they're reasonable (0-100)
+            // Only allow position updates if they're reasonable (0-100); guard against hostile remote updates
             position: sql`CASE WHEN ${Number(item.position)} >= 0 AND ${Number(item.position)} <= 100 THEN ${Number(item.position)} ELSE ${attemptsSchema.position} END`,
-            // Allow name updates for display purposes
             name: item.name,
           },
         });
     }),
   );
 
-async function upsertClimbStats(
-  db: PgDatabase<PgQueryResultHKT, Record<string, unknown>>,
-  board: AuroraBoardName,
-  data: ClimbStats[],
-) {
+async function upsertClimbStats(db: DrizzleDb, board: AuroraBoardName, data: ClimbStats[]) {
   const climbStatsSchema = UNIFIED_TABLES.climbStats;
   const climbStatHistorySchema = UNIFIED_TABLES.climbStatsHistory;
 
   await Promise.all(
-    data.map((item) => {
-      return Promise.all([
-        // Update current stats
+    data.map((item) =>
+      Promise.all([
         db
           .insert(climbStatsSchema)
           .values({
@@ -459,7 +407,6 @@ async function upsertClimbStats(
             },
           }),
 
-        // Also insert into history table
         db.insert(climbStatHistorySchema).values({
           boardType: board,
           climbUuid: item.climb_uuid,
@@ -472,21 +419,17 @@ async function upsertClimbStats(
           faUsername: item.fa_username,
           faAt: item.fa_at,
         }),
-      ]);
-    }),
+      ]),
+    ),
   );
 }
 
-async function upsertBetaLinks(
-  db: PgDatabase<PgQueryResultHKT, Record<string, unknown>>,
-  board: AuroraBoardName,
-  data: BetaLink[],
-) {
+async function upsertBetaLinks(db: DrizzleDb, board: AuroraBoardName, data: BetaLink[]) {
   const betaLinksSchema = UNIFIED_TABLES.betaLinks;
 
   await Promise.all(
-    data.map((item) => {
-      return db
+    data.map((item) =>
+      db
         .insert(betaLinksSchema)
         .values({
           boardType: board,
@@ -507,22 +450,17 @@ async function upsertBetaLinks(
             isListed: item.is_listed,
             createdAt: item.created_at,
           },
-        });
-    }),
+        }),
+    ),
   );
 }
 
-async function upsertClimbs(
-  db: PgDatabase<PgQueryResultHKT, Record<string, unknown>>,
-  board: AuroraBoardName,
-  data: Climb[],
-): Promise<NewClimbInfo[]> {
+async function upsertClimbs(db: DrizzleDb, board: AuroraBoardName, data: Climb[]): Promise<NewClimbInfo[]> {
   const climbsSchema = UNIFIED_TABLES.climbs;
   const climbHoldsSchema = UNIFIED_TABLES.climbHolds;
 
   if (data.length === 0) return [];
 
-  // Check which UUIDs already exist to track new climbs
   const uuids = data.map((c) => c.uuid);
   const existingRows = await db
     .select({ uuid: climbsSchema.uuid })
@@ -532,7 +470,6 @@ async function upsertClimbs(
 
   await Promise.all(
     data.map(async (item: Climb) => {
-      // Insert or update the climb
       await db
         .insert(climbsSchema)
         .values({
@@ -559,14 +496,13 @@ async function upsertClimbs(
         .onConflictDoUpdate({
           target: [climbsSchema.uuid],
           set: {
-            // Only allow isDraft to change from false to true (publishing)
+            // Only allow isDraft to flip false -> true (publishing)
             isDraft: sql`CASE WHEN ${climbsSchema.isDraft} = false AND ${item.is_draft} = true THEN true ELSE ${climbsSchema.isDraft} END`,
-            // Only allow isListed to change from false to true (making public)
+            // Only allow isListed to flip false -> true (making public)
             isListed: sql`CASE WHEN ${climbsSchema.isListed} = false AND ${item.is_listed} = true THEN true ELSE ${climbsSchema.isListed} END`,
-            // Allow updates to descriptive fields
             name: item.name,
             description: item.description,
-            // Preserve all core climb data - never allow hostile updates to these critical fields
+            // Preserve all core climb data — never allow hostile updates to these critical fields
             hsm: climbsSchema.hsm,
             edgeLeft: climbsSchema.edgeLeft,
             edgeRight: climbsSchema.edgeRight,
@@ -594,15 +530,14 @@ async function upsertClimbs(
         })),
       );
 
-      await db.insert(climbHoldsSchema).values(holdsToInsert).onConflictDoNothing(); // Avoid duplicate inserts
+      if (holdsToInsert.length > 0) {
+        await db.insert(climbHoldsSchema).values(holdsToInsert).onConflictDoNothing();
+      }
     }),
   );
 
-  // Populate denormalized required_set_ids and compatible_size_ids for the synced climbs
-  const uuids_to_populate = data.map((c) => c.uuid);
-  await populateDenormalizedColumns(db, board, uuids_to_populate);
+  await populateDenormalizedColumns(db, board, uuids);
 
-  // Return info about newly inserted climbs
   return data
     .filter((c) => !existingUuids.has(c.uuid))
     .map((c) => ({
@@ -615,10 +550,11 @@ async function upsertClimbs(
 }
 
 async function upsertSharedTableData(
-  db: PgDatabase<PgQueryResultHKT, Record<string, unknown>>,
+  db: DrizzleDb,
   boardName: AuroraBoardName,
   tableName: string,
   data: SyncPutFields[],
+  log: (message: string) => void,
 ): Promise<NewClimbInfo[]> {
   switch (tableName) {
     case 'attempts':
@@ -666,16 +602,12 @@ async function upsertSharedTableData(
       await updateSharedSyncs(db, boardName, data as SharedSync[]);
       return [];
     default:
-      // Tables not in TABLES_TO_PROCESS are handled in the main sync loop
-      console.info(`Table ${tableName} not handled in upsertSharedTableData`);
+      log(`Table ${tableName} not handled in upsertSharedTableData`);
       return [];
   }
 }
-async function updateSharedSyncs(
-  tx: PgDatabase<PgQueryResultHKT, Record<string, unknown>>,
-  boardName: AuroraBoardName,
-  sharedSyncs: SharedSync[],
-) {
+
+async function updateSharedSyncs(tx: DrizzleDb, boardName: AuroraBoardName, sharedSyncs: SharedSync[]) {
   const sharedSyncsSchema = UNIFIED_TABLES.sharedSyncs;
 
   for (const sync of sharedSyncs) {
@@ -695,63 +627,72 @@ async function updateSharedSyncs(
   }
 }
 
-export async function getLastSharedSyncTimes(boardName: AuroraBoardName) {
+async function getAllSharedSyncTimes(db: DrizzleDb, boardName: AuroraBoardName) {
   const sharedSyncsSchema = UNIFIED_TABLES.sharedSyncs;
-  const db = getDb();
 
-  const result = await db
+  return db
     .select({
       table_name: sharedSyncsSchema.tableName,
       last_synchronized_at: sharedSyncsSchema.lastSynchronizedAt,
     })
     .from(sharedSyncsSchema)
     .where(eq(sharedSyncsSchema.boardType, boardName));
-
-  return result;
 }
 
-export async function syncSharedData(
-  board: AuroraBoardName,
-  token: string,
-): Promise<{
+export type SharedSyncResult = {
   complete: boolean;
   results: Record<string, { synced: number; complete: boolean }>;
   newClimbs: NewClimbInfo[];
-}> {
-  try {
-    // Get shared sync times
-    const allSyncTimes = await getLastSharedSyncTimes(board);
+};
 
-    // Create a map of existing sync times
-    const sharedSyncMap = new Map(allSyncTimes.map((sync) => [sync.table_name, sync.last_synchronized_at]));
+/**
+ * Sync shared (non-user-specific) board data — products, sizes, layouts, climbs,
+ * climb stats, beta links, etc. Uses the supplied `token` (typically a fresh
+ * user token from the daemon) to authenticate against Aurora's `/sync` endpoint.
+ *
+ * Loops until the response's `_complete` flag is true, persisting each batch
+ * before requesting the next. After a successful sync, fires setter-follow
+ * notifications for any newly-published climbs.
+ */
+export async function syncSharedData(
+  pgClient: ReturnType<typeof postgres>,
+  board: AuroraBoardName,
+  token: string,
+  log: (message: string) => void = console.info,
+): Promise<SharedSyncResult> {
+  const db = drizzle(pgClient);
 
-    // Ensure all shared tables have a sync entry (default to 1970 if not synced)
-    const defaultTimestamp = '1970-01-01 00:00:00.000000';
+  const allSyncTimes = await getAllSharedSyncTimes(db, board);
+  const sharedSyncMap = new Map(allSyncTimes.map((sync) => [sync.table_name, sync.last_synchronized_at]));
 
-    const syncParams: SyncOptions = {
-      tables: [...SHARED_SYNC_TABLES],
-      sharedSyncs: SHARED_SYNC_TABLES.map((tableName) => ({
-        table_name: tableName,
-        last_synchronized_at: sharedSyncMap.get(tableName) || defaultTimestamp,
-      })),
-    };
+  const defaultTimestamp = '1970-01-01 00:00:00.000000';
 
-    // Initialize results tracking
-    const totalResults: Record<string, { synced: number; complete: boolean }> = {};
-    const allNewClimbs: NewClimbInfo[] = [];
-    let isComplete = false;
+  let currentSyncParams: SyncOptions = {
+    sharedSyncs: SHARED_SYNC_TABLES.map((tableName) => ({
+      table_name: tableName,
+      last_synchronized_at: sharedSyncMap.get(tableName) || defaultTimestamp,
+    })),
+  };
 
-    const syncResults = await sharedSync(board, syncParams, token);
+  const totalResults: Record<string, { synced: number; complete: boolean }> = {};
+  const allNewClimbs: NewClimbInfo[] = [];
+  let isComplete = false;
+  let attempts = 0;
 
-    // Process this batch in a transaction
-    const db = getDb();
+  while (!isComplete && attempts < MAX_SYNC_ATTEMPTS) {
+    attempts++;
+    log(`[SharedSync] Batch ${attempts} for ${board}`);
+
+    const syncResults = await sharedSync(board, currentSyncParams, token);
+
     await db.transaction(async (tx) => {
-      // Upsert in FK-safe PROCESSING_ORDER, not SHARED_SYNC_TABLES (request) order.
+      const txDb = tx as unknown as DrizzleDb;
+
       for (const tableName of PROCESSING_ORDER) {
         const data = syncResults[tableName];
         if (!Array.isArray(data)) continue;
-        console.info(`Syncing ${tableName}: ${data.length} records`);
-        const newClimbs = await upsertSharedTableData(tx, board, tableName, data);
+        log(`[SharedSync] ${tableName}: ${data.length} records`);
+        const newClimbs = await upsertSharedTableData(txDb, board, tableName, data as SyncPutFields[], log);
         allNewClimbs.push(...newClimbs);
         if (!totalResults[tableName]) {
           totalResults[tableName] = { synced: 0, complete: false };
@@ -759,72 +700,163 @@ export async function syncSharedData(
         totalResults[tableName].synced += data.length;
       }
 
-      // Track every table the API responded with — including ones we don't process —
-      // so totalResults stays comparable across runs and skipped tables are visible.
+      // Track every requested table so totalResults stays comparable across runs.
       for (const tableName of SHARED_SYNC_TABLES) {
-        const data = syncResults[tableName];
         if (TABLES_TO_PROCESS.has(tableName)) {
           if (!totalResults[tableName]) {
             totalResults[tableName] = { synced: 0, complete: false };
           }
           continue;
         }
-        if (Array.isArray(data)) {
-          console.info(`Skipping ${tableName}: ${data.length} records (not processed)`);
+        const data = syncResults[tableName];
+        if (Array.isArray(data) && data.length > 0) {
+          log(`[SharedSync] Skipping ${tableName}: ${data.length} records (not processed)`);
         }
         if (!totalResults[tableName]) {
           totalResults[tableName] = { synced: 0, complete: false };
         }
       }
 
-      // Update shared_syncs table with new sync times from this batch
-      if (syncResults['shared_syncs']) {
-        console.info('Updating shared_syncs with data:', syncResults['shared_syncs']);
-        await updateSharedSyncs(tx, board, syncResults['shared_syncs']);
+      const newSharedSyncs = syncResults['shared_syncs'];
+      if (Array.isArray(newSharedSyncs)) {
+        await updateSharedSyncs(txDb, board, newSharedSyncs as SharedSync[]);
 
-        // Update sync params for next iteration with new timestamps
-        const newSharedSyncs = syncResults['shared_syncs'].map(
-          (sync: { table_name: string; last_synchronized_at: string }) => ({
+        currentSyncParams = {
+          ...currentSyncParams,
+          sharedSyncs: (newSharedSyncs as SharedSync[]).map((sync) => ({
             table_name: sync.table_name,
             last_synchronized_at: sync.last_synchronized_at,
-          }),
-        );
-
-        // Log timestamp updates for debugging
-        const climbsSync = newSharedSyncs.find((s: { table_name: string }) => s.table_name === 'climbs');
-        if (climbsSync) {
-          console.info(`Climbs table sync timestamp updated to: ${climbsSync.last_synchronized_at}`);
-        }
-
-        // Update syncParams for next batch
-        syncParams.sharedSyncs = newSharedSyncs;
-      } else {
-        console.info('No shared_syncs data in sync results');
+          })),
+        };
       }
     });
 
-    // Check if sync is complete - default to true if _complete is not present (matches Android app behavior)
     isComplete = syncResults._complete !== false;
+    if (!isComplete) {
+      log(`[SharedSync] Batch ${attempts} not complete, continuing...`);
+    }
+  }
 
-    console.info(`Sync complete. _complete flag: ${syncResults._complete}, isComplete: ${isComplete}`);
+  if (attempts >= MAX_SYNC_ATTEMPTS && !isComplete) {
+    log(`[SharedSync] Reached max attempts (${MAX_SYNC_ATTEMPTS}) for ${board} without seeing _complete`);
+  }
 
-    // Mark completion status for all tables
-    Object.keys(totalResults).forEach((table) => {
-      totalResults[table].complete = isComplete;
-    });
+  Object.keys(totalResults).forEach((table) => {
+    totalResults[table].complete = isComplete;
+  });
 
-    // Log summary of what was synced
-    console.info('Sync batch summary:');
-    Object.entries(totalResults).forEach(([table, result]) => {
-      if (result.synced > 0) {
-        console.info(`  ${table}: ${result.synced} records synced`);
+  log(
+    `[SharedSync] ${board} complete in ${attempts} batch(es); ${allNewClimbs.length} new climb(s); per-table: ${
+      Object.entries(totalResults)
+        .filter(([, r]) => r.synced > 0)
+        .map(([t, r]) => `${t}=${r.synced}`)
+        .join(', ') || 'no changes'
+    }`,
+  );
+
+  if (allNewClimbs.length > 0) {
+    try {
+      await createSetterSyncNotifications(db, board, allNewClimbs, log);
+    } catch (error) {
+      log(
+        `[SharedSync] Failed to create setter notifications: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
+  }
+
+  return { complete: isComplete, results: totalResults, newClimbs: allNewClimbs };
+}
+
+/**
+ * Create batched notifications for setter followers when new climbs are synced.
+ * Mirrors the behavior previously in the web shared-sync route.
+ */
+async function createSetterSyncNotifications(
+  db: DrizzleDb,
+  boardName: AuroraBoardName,
+  newClimbs: NewClimbInfo[],
+  log: (message: string) => void,
+): Promise<void> {
+  const climbsBySetter = new Map<string, NewClimbInfo[]>();
+  for (const climb of newClimbs) {
+    if (!climb.setterUsername) continue;
+    const existing = climbsBySetter.get(climb.setterUsername) ?? [];
+    existing.push(climb);
+    climbsBySetter.set(climb.setterUsername, existing);
+  }
+
+  if (climbsBySetter.size === 0) return;
+
+  const setterUsernames = Array.from(climbsBySetter.keys());
+
+  const followers = await db
+    .select({
+      followerId: setterFollows.followerId,
+      setterUsername: setterFollows.setterUsername,
+    })
+    .from(setterFollows)
+    .where(inArray(setterFollows.setterUsername, setterUsernames));
+
+  const linkedMappings = await db
+    .select({
+      userId: userBoardMappings.userId,
+      boardUsername: userBoardMappings.boardUsername,
+    })
+    .from(userBoardMappings)
+    .where(inArray(userBoardMappings.boardUsername, setterUsernames));
+
+  const linkedUsernameToUserId = new Map<string, string>();
+  for (const mapping of linkedMappings) {
+    if (mapping.boardUsername) {
+      linkedUsernameToUserId.set(mapping.boardUsername, mapping.userId);
+    }
+  }
+
+  const linkedUserIds = Array.from(linkedUsernameToUserId.values());
+  let userFollowsList: Array<{ followerId: string; followingId: string }> = [];
+  if (linkedUserIds.length > 0) {
+    userFollowsList = await db
+      .select({
+        followerId: userFollows.followerId,
+        followingId: userFollows.followingId,
+      })
+      .from(userFollows)
+      .where(inArray(userFollows.followingId, linkedUserIds));
+  }
+
+  for (const [setterUsername, climbs] of climbsBySetter) {
+    const recipientIds = new Set<string>();
+
+    for (const follow of followers) {
+      if (follow.setterUsername === setterUsername) {
+        recipientIds.add(follow.followerId);
       }
-    });
-    console.info(`Sync complete: ${isComplete}`);
+    }
 
-    return { complete: isComplete, results: totalResults, newClimbs: allNewClimbs };
-  } catch (error) {
-    console.error('Error syncing shared data:', error);
-    throw error;
+    const linkedUserId = linkedUsernameToUserId.get(setterUsername);
+    if (linkedUserId) {
+      for (const follow of userFollowsList) {
+        if (follow.followingId === linkedUserId) {
+          recipientIds.add(follow.followerId);
+        }
+      }
+    }
+
+    if (recipientIds.size === 0) continue;
+
+    const firstClimbUuid = climbs[0].uuid;
+    const notificationValues = Array.from(recipientIds).map((recipientId) => ({
+      uuid: randomUUID(),
+      recipientId,
+      actorId: linkedUserId ?? null,
+      type: 'new_climbs_synced' as const,
+      entityType: 'climb' as const,
+      entityId: firstClimbUuid,
+    }));
+
+    await db.insert(notifications).values(notificationValues);
+    log(
+      `[SharedSync] Created ${notificationValues.length} notifications for setter "${setterUsername}" (${climbs.length} new climbs on ${boardName})`,
+    );
   }
 }

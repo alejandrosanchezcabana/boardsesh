@@ -1,3 +1,5 @@
 export { syncUserData, getLastSyncTimes, getLastSharedSyncTimes } from './user-sync';
 export type { SyncUserDataResult } from './user-sync';
+export { syncSharedData } from './shared-sync';
+export type { SharedSyncResult, NewClimbInfo } from './shared-sync';
 export { convertQuality } from '@boardsesh/shared-schema';

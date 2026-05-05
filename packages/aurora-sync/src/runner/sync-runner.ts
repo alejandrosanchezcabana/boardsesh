@@ -4,6 +4,7 @@ import { eq, ne, and, or, isNotNull, sql } from 'drizzle-orm';
 
 import { auroraCredentials } from '@boardsesh/db/schema/auth';
 import { syncUserData } from '../sync/user-sync';
+import { syncSharedData } from '../sync/shared-sync';
 import { AuroraClimbingClient } from '../api/aurora-client';
 import { isTransientAuroraError } from '../api/errors';
 import { decrypt, encrypt } from '@boardsesh/crypto';
@@ -268,6 +269,23 @@ export class SyncRunner {
     this.log(`[SyncRunner] Syncing user ${cred.userId} for ${boardType}...`);
     await syncUserData(client, boardType, token, cred.auroraUserId, cred.userId, undefined, this.log.bind(this));
     await this.updateCredentialStatus(cred.userId, cred.boardType, 'active', null, new Date());
+
+    // Piggyback shared sync onto every successful user sync — the user's fresh
+    // token authenticates the shared `/sync` request the same way the old
+    // Vercel cron's *_SYNC_TOKEN env vars used to. Failures here must not
+    // poison the user's credential status, since the user-half already
+    // succeeded; log and move on.
+    try {
+      this.log(`[SyncRunner] Running shared sync for ${boardType} using ${cred.userId}'s token...`);
+      await syncSharedData(client, boardType, token, this.log.bind(this));
+    } catch (sharedError) {
+      const sharedErrorMessage = this.formatErrorMessage(sharedError);
+      this.handleError(sharedError instanceof Error ? sharedError : new Error(sharedErrorMessage), {
+        board: boardType,
+        userId: cred.userId,
+      });
+      this.log(`[SyncRunner] Shared sync for ${boardType} failed (user sync was OK): ${sharedErrorMessage}`);
+    }
   }
 
   private async updateCredentialStatus(
