@@ -66,13 +66,25 @@ const TABLES_TO_PROCESS = new Set([...PROCESSING_ORDER, 'shared_syncs']);
 
 const MAX_SYNC_ATTEMPTS = 100;
 
-const upsertProducts = (db: DrizzleDb, board: AuroraBoardName, data: Product[]) =>
-  Promise.all(
-    data.map((item) => {
-      const productsSchema = UNIFIED_TABLES.products;
-      return db
-        .insert(productsSchema)
-        .values({
+// Chunk multi-row INSERTs to keep statement size bounded. The parameter limit
+// in postgres-js (default 65535) is the real ceiling — at ~20 columns per row
+// we can fit ~3000 rows per statement, but 100 keeps statements short and is
+// already 100× faster than per-row inserts over a high-latency proxy.
+const BATCH_SIZE = 100;
+
+async function processBatches<T>(data: T[], processor: (batch: T[]) => Promise<void>): Promise<void> {
+  for (let i = 0; i < data.length; i += BATCH_SIZE) {
+    await processor(data.slice(i, i + BATCH_SIZE));
+  }
+}
+
+async function upsertProducts(db: DrizzleDb, board: AuroraBoardName, data: Product[]) {
+  const productsSchema = UNIFIED_TABLES.products;
+  await processBatches(data, async (batch) => {
+    await db
+      .insert(productsSchema)
+      .values(
+        batch.map((item) => ({
           boardType: board,
           id: Number(item.id),
           name: item.name,
@@ -80,46 +92,48 @@ const upsertProducts = (db: DrizzleDb, board: AuroraBoardName, data: Product[]) 
           password: item.password,
           minCountInFrame: Number(item.min_count_in_frame),
           maxCountInFrame: Number(item.max_count_in_frame),
-        })
-        .onConflictDoUpdate({
-          target: [productsSchema.boardType, productsSchema.id],
-          set: {
-            name: item.name,
-            isListed: Boolean(item.is_listed),
-            password: item.password,
-            minCountInFrame: Number(item.min_count_in_frame),
-            maxCountInFrame: Number(item.max_count_in_frame),
-          },
-        });
-    }),
-  );
+        })),
+      )
+      .onConflictDoUpdate({
+        target: [productsSchema.boardType, productsSchema.id],
+        set: {
+          name: sql`excluded.name`,
+          isListed: sql`excluded.is_listed`,
+          password: sql`excluded.password`,
+          minCountInFrame: sql`excluded.min_count_in_frame`,
+          maxCountInFrame: sql`excluded.max_count_in_frame`,
+        },
+      });
+  });
+}
 
-const upsertSets = (db: DrizzleDb, board: AuroraBoardName, data: AuroraSet[]) =>
-  Promise.all(
-    data.map((item) => {
-      const setsSchema = UNIFIED_TABLES.sets;
-      return db
-        .insert(setsSchema)
-        .values({
+async function upsertSets(db: DrizzleDb, board: AuroraBoardName, data: AuroraSet[]) {
+  const setsSchema = UNIFIED_TABLES.sets;
+  await processBatches(data, async (batch) => {
+    await db
+      .insert(setsSchema)
+      .values(
+        batch.map((item) => ({
           boardType: board,
           id: Number(item.id),
           name: item.name,
           hsm: Number(item.hsm),
-        })
-        .onConflictDoUpdate({
-          target: [setsSchema.boardType, setsSchema.id],
-          set: { name: item.name, hsm: Number(item.hsm) },
-        });
-    }),
-  );
+        })),
+      )
+      .onConflictDoUpdate({
+        target: [setsSchema.boardType, setsSchema.id],
+        set: { name: sql`excluded.name`, hsm: sql`excluded.hsm` },
+      });
+  });
+}
 
-const upsertHoles = (db: DrizzleDb, board: AuroraBoardName, data: Hole[]) =>
-  Promise.all(
-    data.map((item) => {
-      const holesSchema = UNIFIED_TABLES.holes;
-      return db
-        .insert(holesSchema)
-        .values({
+async function upsertHoles(db: DrizzleDb, board: AuroraBoardName, data: Hole[]) {
+  const holesSchema = UNIFIED_TABLES.holes;
+  await processBatches(data, async (batch) => {
+    await db
+      .insert(holesSchema)
+      .values(
+        batch.map((item) => ({
           boardType: board,
           id: Number(item.id),
           productId: Number(item.product_id),
@@ -128,28 +142,29 @@ const upsertHoles = (db: DrizzleDb, board: AuroraBoardName, data: Hole[]) =>
           y: Number(item.y),
           mirroredHoleId: item.mirrored_hole_id != null ? Number(item.mirrored_hole_id) : null,
           mirrorGroup: Number(item.mirror_group),
-        })
-        .onConflictDoUpdate({
-          target: [holesSchema.boardType, holesSchema.id],
-          set: {
-            productId: Number(item.product_id),
-            name: item.name,
-            x: Number(item.x),
-            y: Number(item.y),
-            mirroredHoleId: item.mirrored_hole_id != null ? Number(item.mirrored_hole_id) : null,
-            mirrorGroup: Number(item.mirror_group),
-          },
-        });
-    }),
-  );
+        })),
+      )
+      .onConflictDoUpdate({
+        target: [holesSchema.boardType, holesSchema.id],
+        set: {
+          productId: sql`excluded.product_id`,
+          name: sql`excluded.name`,
+          x: sql`excluded.x`,
+          y: sql`excluded.y`,
+          mirroredHoleId: sql`excluded.mirrored_hole_id`,
+          mirrorGroup: sql`excluded.mirror_group`,
+        },
+      });
+  });
+}
 
-const upsertLayouts = (db: DrizzleDb, board: AuroraBoardName, data: Layout[]) =>
-  Promise.all(
-    data.map((item) => {
-      const layoutsSchema = UNIFIED_TABLES.layouts;
-      return db
-        .insert(layoutsSchema)
-        .values({
+async function upsertLayouts(db: DrizzleDb, board: AuroraBoardName, data: Layout[]) {
+  const layoutsSchema = UNIFIED_TABLES.layouts;
+  await processBatches(data, async (batch) => {
+    await db
+      .insert(layoutsSchema)
+      .values(
+        batch.map((item) => ({
           boardType: board,
           id: Number(item.id),
           productId: Number(item.product_id),
@@ -159,29 +174,30 @@ const upsertLayouts = (db: DrizzleDb, board: AuroraBoardName, data: Layout[]) =>
           isListed: Boolean(item.is_listed),
           password: item.password,
           createdAt: item.created_at,
-        })
-        .onConflictDoUpdate({
-          target: [layoutsSchema.boardType, layoutsSchema.id],
-          set: {
-            productId: Number(item.product_id),
-            name: item.name,
-            instagramCaption: item.instagram_caption,
-            isMirrored: Boolean(item.is_mirrored),
-            isListed: Boolean(item.is_listed),
-            password: item.password,
-            createdAt: item.created_at,
-          },
-        });
-    }),
-  );
+        })),
+      )
+      .onConflictDoUpdate({
+        target: [layoutsSchema.boardType, layoutsSchema.id],
+        set: {
+          productId: sql`excluded.product_id`,
+          name: sql`excluded.name`,
+          instagramCaption: sql`excluded.instagram_caption`,
+          isMirrored: sql`excluded.is_mirrored`,
+          isListed: sql`excluded.is_listed`,
+          password: sql`excluded.password`,
+          createdAt: sql`excluded.created_at`,
+        },
+      });
+  });
+}
 
-const upsertPlacementRoles = (db: DrizzleDb, board: AuroraBoardName, data: PlacementRole[]) =>
-  Promise.all(
-    data.map((item) => {
-      const placementRolesSchema = UNIFIED_TABLES.placementRoles;
-      return db
-        .insert(placementRolesSchema)
-        .values({
+async function upsertPlacementRoles(db: DrizzleDb, board: AuroraBoardName, data: PlacementRole[]) {
+  const placementRolesSchema = UNIFIED_TABLES.placementRoles;
+  await processBatches(data, async (batch) => {
+    await db
+      .insert(placementRolesSchema)
+      .values(
+        batch.map((item) => ({
           boardType: board,
           id: Number(item.id),
           productId: Number(item.product_id),
@@ -190,52 +206,54 @@ const upsertPlacementRoles = (db: DrizzleDb, board: AuroraBoardName, data: Place
           fullName: item.full_name,
           ledColor: item.led_color,
           screenColor: item.screen_color,
-        })
-        .onConflictDoUpdate({
-          target: [placementRolesSchema.boardType, placementRolesSchema.id],
-          set: {
-            productId: Number(item.product_id),
-            position: Number(item.position),
-            name: item.name,
-            fullName: item.full_name,
-            ledColor: item.led_color,
-            screenColor: item.screen_color,
-          },
-        });
-    }),
-  );
+        })),
+      )
+      .onConflictDoUpdate({
+        target: [placementRolesSchema.boardType, placementRolesSchema.id],
+        set: {
+          productId: sql`excluded.product_id`,
+          position: sql`excluded.position`,
+          name: sql`excluded.name`,
+          fullName: sql`excluded.full_name`,
+          ledColor: sql`excluded.led_color`,
+          screenColor: sql`excluded.screen_color`,
+        },
+      });
+  });
+}
 
-const upsertLeds = (db: DrizzleDb, board: AuroraBoardName, data: Led[]) =>
-  Promise.all(
-    data.map((item) => {
-      const ledsSchema = UNIFIED_TABLES.leds;
-      return db
-        .insert(ledsSchema)
-        .values({
+async function upsertLeds(db: DrizzleDb, board: AuroraBoardName, data: Led[]) {
+  const ledsSchema = UNIFIED_TABLES.leds;
+  await processBatches(data, async (batch) => {
+    await db
+      .insert(ledsSchema)
+      .values(
+        batch.map((item) => ({
           boardType: board,
           id: Number(item.id),
           productSizeId: Number(item.product_size_id),
           holeId: Number(item.hole_id),
           position: Number(item.position),
-        })
-        .onConflictDoUpdate({
-          target: [ledsSchema.boardType, ledsSchema.id],
-          set: {
-            productSizeId: Number(item.product_size_id),
-            holeId: Number(item.hole_id),
-            position: Number(item.position),
-          },
-        });
-    }),
-  );
+        })),
+      )
+      .onConflictDoUpdate({
+        target: [ledsSchema.boardType, ledsSchema.id],
+        set: {
+          productSizeId: sql`excluded.product_size_id`,
+          holeId: sql`excluded.hole_id`,
+          position: sql`excluded.position`,
+        },
+      });
+  });
+}
 
-const upsertPlacements = (db: DrizzleDb, board: AuroraBoardName, data: Placement[]) =>
-  Promise.all(
-    data.map((item) => {
-      const placementsSchema = UNIFIED_TABLES.placements;
-      return db
-        .insert(placementsSchema)
-        .values({
+async function upsertPlacements(db: DrizzleDb, board: AuroraBoardName, data: Placement[]) {
+  const placementsSchema = UNIFIED_TABLES.placements;
+  await processBatches(data, async (batch) => {
+    await db
+      .insert(placementsSchema)
+      .values(
+        batch.map((item) => ({
           boardType: board,
           id: Number(item.id),
           layoutId: Number(item.layout_id),
@@ -243,27 +261,27 @@ const upsertPlacements = (db: DrizzleDb, board: AuroraBoardName, data: Placement
           setId: Number(item.set_id),
           defaultPlacementRoleId:
             item.default_placement_role_id != null ? Number(item.default_placement_role_id) : null,
-        })
-        .onConflictDoUpdate({
-          target: [placementsSchema.boardType, placementsSchema.id],
-          set: {
-            layoutId: Number(item.layout_id),
-            holeId: Number(item.hole_id),
-            setId: Number(item.set_id),
-            defaultPlacementRoleId:
-              item.default_placement_role_id != null ? Number(item.default_placement_role_id) : null,
-          },
-        });
-    }),
-  );
+        })),
+      )
+      .onConflictDoUpdate({
+        target: [placementsSchema.boardType, placementsSchema.id],
+        set: {
+          layoutId: sql`excluded.layout_id`,
+          holeId: sql`excluded.hole_id`,
+          setId: sql`excluded.set_id`,
+          defaultPlacementRoleId: sql`excluded.default_placement_role_id`,
+        },
+      });
+  });
+}
 
-const upsertKits = (db: DrizzleDb, board: AuroraBoardName, data: Kit[]) =>
-  Promise.all(
-    data.map((item) => {
-      const kitsSchema = UNIFIED_TABLES.kits;
-      return db
-        .insert(kitsSchema)
-        .values({
+async function upsertKits(db: DrizzleDb, board: AuroraBoardName, data: Kit[]) {
+  const kitsSchema = UNIFIED_TABLES.kits;
+  await processBatches(data, async (batch) => {
+    await db
+      .insert(kitsSchema)
+      .values(
+        batch.map((item) => ({
           boardType: board,
           serialNumber: item.serial_number,
           name: item.name,
@@ -271,26 +289,27 @@ const upsertKits = (db: DrizzleDb, board: AuroraBoardName, data: Kit[]) =>
           isListed: Boolean(item.is_listed),
           createdAt: item.created_at,
           updatedAt: item.updated_at,
-        })
-        .onConflictDoUpdate({
-          target: [kitsSchema.boardType, kitsSchema.serialNumber],
-          set: {
-            name: item.name,
-            isAutoconnect: Boolean(item.is_autoconnect),
-            isListed: Boolean(item.is_listed),
-            updatedAt: item.updated_at,
-          },
-        });
-    }),
-  );
+        })),
+      )
+      .onConflictDoUpdate({
+        target: [kitsSchema.boardType, kitsSchema.serialNumber],
+        set: {
+          name: sql`excluded.name`,
+          isAutoconnect: sql`excluded.is_autoconnect`,
+          isListed: sql`excluded.is_listed`,
+          updatedAt: sql`excluded.updated_at`,
+        },
+      });
+  });
+}
 
-const upsertProductSizesLayoutsSets = (db: DrizzleDb, board: AuroraBoardName, data: ProductSizesLayoutsSet[]) =>
-  Promise.all(
-    data.map((item) => {
-      const pslsSchema = UNIFIED_TABLES.productSizesLayoutsSets;
-      return db
-        .insert(pslsSchema)
-        .values({
+async function upsertProductSizesLayoutsSets(db: DrizzleDb, board: AuroraBoardName, data: ProductSizesLayoutsSet[]) {
+  const pslsSchema = UNIFIED_TABLES.productSizesLayoutsSets;
+  await processBatches(data, async (batch) => {
+    await db
+      .insert(pslsSchema)
+      .values(
+        batch.map((item) => ({
           boardType: board,
           id: Number(item.id),
           productSizeId: Number(item.product_size_id),
@@ -298,27 +317,28 @@ const upsertProductSizesLayoutsSets = (db: DrizzleDb, board: AuroraBoardName, da
           setId: Number(item.set_id),
           imageFilename: item.image_filename,
           isListed: Boolean(item.is_listed),
-        })
-        .onConflictDoUpdate({
-          target: [pslsSchema.boardType, pslsSchema.id],
-          set: {
-            productSizeId: Number(item.product_size_id),
-            layoutId: Number(item.layout_id),
-            setId: Number(item.set_id),
-            imageFilename: item.image_filename,
-            isListed: Boolean(item.is_listed),
-          },
-        });
-    }),
-  );
+        })),
+      )
+      .onConflictDoUpdate({
+        target: [pslsSchema.boardType, pslsSchema.id],
+        set: {
+          productSizeId: sql`excluded.product_size_id`,
+          layoutId: sql`excluded.layout_id`,
+          setId: sql`excluded.set_id`,
+          imageFilename: sql`excluded.image_filename`,
+          isListed: sql`excluded.is_listed`,
+        },
+      });
+  });
+}
 
-const upsertProductSizes = (db: DrizzleDb, board: AuroraBoardName, data: ProductSize[]) =>
-  Promise.all(
-    data.map((item) => {
-      const productSizesSchema = UNIFIED_TABLES.productSizes;
-      return db
-        .insert(productSizesSchema)
-        .values({
+async function upsertProductSizes(db: DrizzleDb, board: AuroraBoardName, data: ProductSize[]) {
+  const productSizesSchema = UNIFIED_TABLES.productSizes;
+  await processBatches(data, async (batch) => {
+    await db
+      .insert(productSizesSchema)
+      .values(
+        batch.map((item) => ({
           boardType: board,
           id: Number(item.id),
           productId: Number(item.product_id),
@@ -331,107 +351,96 @@ const upsertProductSizes = (db: DrizzleDb, board: AuroraBoardName, data: Product
           imageFilename: item.image_filename,
           position: Number(item.position),
           isListed: Boolean(item.is_listed),
-        })
-        .onConflictDoUpdate({
-          target: [productSizesSchema.boardType, productSizesSchema.id],
-          set: {
-            productId: Number(item.product_id),
-            edgeLeft: Number(item.edge_left),
-            edgeRight: Number(item.edge_right),
-            edgeBottom: Number(item.edge_bottom),
-            edgeTop: Number(item.edge_top),
-            name: item.name,
-            description: item.description,
-            imageFilename: item.image_filename,
-            position: Number(item.position),
-            isListed: Boolean(item.is_listed),
-          },
-        });
-    }),
-  );
+        })),
+      )
+      .onConflictDoUpdate({
+        target: [productSizesSchema.boardType, productSizesSchema.id],
+        set: {
+          productId: sql`excluded.product_id`,
+          edgeLeft: sql`excluded.edge_left`,
+          edgeRight: sql`excluded.edge_right`,
+          edgeBottom: sql`excluded.edge_bottom`,
+          edgeTop: sql`excluded.edge_top`,
+          name: sql`excluded.name`,
+          description: sql`excluded.description`,
+          imageFilename: sql`excluded.image_filename`,
+          position: sql`excluded.position`,
+          isListed: sql`excluded.is_listed`,
+        },
+      });
+  });
+}
 
-const upsertAttempts = (db: DrizzleDb, board: AuroraBoardName, data: Attempt[]) =>
-  Promise.all(
-    data.map(async (item) => {
-      const attemptsSchema = UNIFIED_TABLES.attempts;
-      return db
-        .insert(attemptsSchema)
-        .values({
+async function upsertAttempts(db: DrizzleDb, board: AuroraBoardName, data: Attempt[]) {
+  const attemptsSchema = UNIFIED_TABLES.attempts;
+  await processBatches(data, async (batch) => {
+    await db
+      .insert(attemptsSchema)
+      .values(
+        batch.map((item) => ({
           boardType: board,
           id: Number(item.id),
           position: Number(item.position),
           name: item.name,
-        })
-        .onConflictDoUpdate({
-          target: [attemptsSchema.boardType, attemptsSchema.id],
-          set: {
-            // Only allow position updates if they're reasonable (0-100); guard against hostile remote updates
-            position: sql`CASE WHEN ${Number(item.position)} >= 0 AND ${Number(item.position)} <= 100 THEN ${Number(item.position)} ELSE ${attemptsSchema.position} END`,
-            name: item.name,
-          },
-        });
-    }),
-  );
+        })),
+      )
+      .onConflictDoUpdate({
+        target: [attemptsSchema.boardType, attemptsSchema.id],
+        set: {
+          // Only accept remote position updates inside the trusted 0..100 range; reject hostile values
+          position: sql`CASE WHEN excluded.position >= 0 AND excluded.position <= 100 THEN excluded.position ELSE ${attemptsSchema.position} END`,
+          name: sql`excluded.name`,
+        },
+      });
+  });
+}
 
 async function upsertClimbStats(db: DrizzleDb, board: AuroraBoardName, data: ClimbStats[]) {
   const climbStatsSchema = UNIFIED_TABLES.climbStats;
   const climbStatHistorySchema = UNIFIED_TABLES.climbStatsHistory;
 
-  await Promise.all(
-    data.map((item) =>
-      Promise.all([
-        db
-          .insert(climbStatsSchema)
-          .values({
-            boardType: board,
-            climbUuid: item.climb_uuid,
-            angle: Number(item.angle),
-            displayDifficulty: Number(item.display_difficulty || item.difficulty_average),
-            benchmarkDifficulty: item.benchmark_difficulty != null ? Number(item.benchmark_difficulty) : null,
-            ascensionistCount: Number(item.ascensionist_count),
-            difficultyAverage: Number(item.difficulty_average),
-            qualityAverage: Number(item.quality_average),
-            faUsername: item.fa_username,
-            faAt: item.fa_at,
-          })
-          .onConflictDoUpdate({
-            target: [climbStatsSchema.boardType, climbStatsSchema.climbUuid, climbStatsSchema.angle],
-            set: {
-              displayDifficulty: Number(item.display_difficulty || item.difficulty_average),
-              benchmarkDifficulty: item.benchmark_difficulty != null ? Number(item.benchmark_difficulty) : null,
-              ascensionistCount: Number(item.ascensionist_count),
-              difficultyAverage: Number(item.difficulty_average),
-              qualityAverage: Number(item.quality_average),
-              faUsername: item.fa_username,
-              faAt: item.fa_at,
-            },
-          }),
+  await processBatches(data, async (batch) => {
+    const values = batch.map((item) => ({
+      boardType: board,
+      climbUuid: item.climb_uuid,
+      angle: Number(item.angle),
+      displayDifficulty: Number(item.display_difficulty || item.difficulty_average),
+      benchmarkDifficulty: item.benchmark_difficulty != null ? Number(item.benchmark_difficulty) : null,
+      ascensionistCount: Number(item.ascensionist_count),
+      difficultyAverage: Number(item.difficulty_average),
+      qualityAverage: Number(item.quality_average),
+      faUsername: item.fa_username,
+      faAt: item.fa_at,
+    }));
 
-        db.insert(climbStatHistorySchema).values({
-          boardType: board,
-          climbUuid: item.climb_uuid,
-          angle: Number(item.angle),
-          displayDifficulty: Number(item.display_difficulty || item.difficulty_average),
-          benchmarkDifficulty: item.benchmark_difficulty != null ? Number(item.benchmark_difficulty) : null,
-          ascensionistCount: Number(item.ascensionist_count),
-          difficultyAverage: Number(item.difficulty_average),
-          qualityAverage: Number(item.quality_average),
-          faUsername: item.fa_username,
-          faAt: item.fa_at,
-        }),
-      ]),
-    ),
-  );
+    await db
+      .insert(climbStatsSchema)
+      .values(values)
+      .onConflictDoUpdate({
+        target: [climbStatsSchema.boardType, climbStatsSchema.climbUuid, climbStatsSchema.angle],
+        set: {
+          displayDifficulty: sql`excluded.display_difficulty`,
+          benchmarkDifficulty: sql`excluded.benchmark_difficulty`,
+          ascensionistCount: sql`excluded.ascensionist_count`,
+          difficultyAverage: sql`excluded.difficulty_average`,
+          qualityAverage: sql`excluded.quality_average`,
+          faUsername: sql`excluded.fa_username`,
+          faAt: sql`excluded.fa_at`,
+        },
+      });
+
+    // History is append-only; no conflict target needed.
+    await db.insert(climbStatHistorySchema).values(values);
+  });
 }
 
 async function upsertBetaLinks(db: DrizzleDb, board: AuroraBoardName, data: BetaLink[]) {
   const betaLinksSchema = UNIFIED_TABLES.betaLinks;
-
-  await Promise.all(
-    data.map((item) =>
-      db
-        .insert(betaLinksSchema)
-        .values({
+  await processBatches(data, async (batch) => {
+    await db
+      .insert(betaLinksSchema)
+      .values(
+        batch.map((item) => ({
           boardType: board,
           climbUuid: item.climb_uuid,
           link: item.link,
@@ -440,19 +449,19 @@ async function upsertBetaLinks(db: DrizzleDb, board: AuroraBoardName, data: Beta
           thumbnail: item.thumbnail,
           isListed: item.is_listed,
           createdAt: item.created_at,
-        })
-        .onConflictDoUpdate({
-          target: [betaLinksSchema.boardType, betaLinksSchema.climbUuid, betaLinksSchema.link],
-          set: {
-            foreignUsername: item.foreign_username,
-            angle: item.angle,
-            thumbnail: item.thumbnail,
-            isListed: item.is_listed,
-            createdAt: item.created_at,
-          },
-        }),
-    ),
-  );
+        })),
+      )
+      .onConflictDoUpdate({
+        target: [betaLinksSchema.boardType, betaLinksSchema.climbUuid, betaLinksSchema.link],
+        set: {
+          foreignUsername: sql`excluded.foreign_username`,
+          angle: sql`excluded.angle`,
+          thumbnail: sql`excluded.thumbnail`,
+          isListed: sql`excluded.is_listed`,
+          createdAt: sql`excluded.created_at`,
+        },
+      });
+  });
 }
 
 async function upsertClimbs(db: DrizzleDb, board: AuroraBoardName, data: Climb[]): Promise<NewClimbInfo[]> {
@@ -468,11 +477,15 @@ async function upsertClimbs(db: DrizzleDb, board: AuroraBoardName, data: Climb[]
     .where(inArray(climbsSchema.uuid, uuids));
   const existingUuids = new Set(existingRows.map((r) => r.uuid));
 
-  await Promise.all(
-    data.map(async (item: Climb) => {
-      await db
-        .insert(climbsSchema)
-        .values({
+  // Climbs: chunked multi-row upsert. The conflict policy only allows isDraft
+  // and isListed to flip false → true; everything else preserves the existing
+  // row (Aurora is the source of truth on creation, but we don't trust remote
+  // re-edits to overwrite our copy of frames/edges/setter/etc).
+  await processBatches(data, async (batch) => {
+    await db
+      .insert(climbsSchema)
+      .values(
+        batch.map((item) => ({
           uuid: item.uuid,
           boardType: board,
           name: item.name,
@@ -492,49 +505,41 @@ async function upsertClimbs(db: DrizzleDb, board: AuroraBoardName, data: Climb[]
           isListed: item.is_listed,
           createdAt: item.created_at,
           angle: item.angle,
-        })
-        .onConflictDoUpdate({
-          target: [climbsSchema.uuid],
-          set: {
-            // Only allow isDraft to flip false -> true (publishing)
-            isDraft: sql`CASE WHEN ${climbsSchema.isDraft} = false AND ${item.is_draft} = true THEN true ELSE ${climbsSchema.isDraft} END`,
-            // Only allow isListed to flip false -> true (making public)
-            isListed: sql`CASE WHEN ${climbsSchema.isListed} = false AND ${item.is_listed} = true THEN true ELSE ${climbsSchema.isListed} END`,
-            name: item.name,
-            description: item.description,
-            // Preserve all core climb data — never allow hostile updates to these critical fields
-            hsm: climbsSchema.hsm,
-            edgeLeft: climbsSchema.edgeLeft,
-            edgeRight: climbsSchema.edgeRight,
-            edgeBottom: climbsSchema.edgeBottom,
-            edgeTop: climbsSchema.edgeTop,
-            framesCount: climbsSchema.framesCount,
-            framesPace: climbsSchema.framesPace,
-            frames: climbsSchema.frames,
-            setterId: climbsSchema.setterId,
-            setterUsername: climbsSchema.setterUsername,
-            layoutId: climbsSchema.layoutId,
-            angle: climbsSchema.angle,
-          },
-        });
-
-      const holdsByFrame = convertLitUpHoldsStringToMap(item.frames, board);
-
-      const holdsToInsert = Object.entries(holdsByFrame).flatMap(([frameNumber, holds]) =>
-        Object.entries(holds).map(([holdId, { state }]) => ({
-          boardType: board,
-          climbUuid: item.uuid,
-          frameNumber: Number(frameNumber),
-          holdId: Number(holdId),
-          holdState: state,
         })),
-      );
+      )
+      .onConflictDoUpdate({
+        target: [climbsSchema.uuid],
+        set: {
+          isDraft: sql`CASE WHEN ${climbsSchema.isDraft} = false AND excluded.is_draft = true THEN true ELSE ${climbsSchema.isDraft} END`,
+          isListed: sql`CASE WHEN ${climbsSchema.isListed} = false AND excluded.is_listed = true THEN true ELSE ${climbsSchema.isListed} END`,
+          name: sql`excluded.name`,
+          description: sql`excluded.description`,
+        },
+      });
+  });
 
-      if (holdsToInsert.length > 0) {
-        await db.insert(climbHoldsSchema).values(holdsToInsert).onConflictDoNothing();
-      }
-    }),
-  );
+  // Flatten all per-climb holds into a single multi-row INSERT chunked by
+  // BATCH_SIZE. With the previous per-climb pattern this was N round-trips for
+  // N climbs; flattening turns it into ceil(totalHolds/BATCH_SIZE) round-trips
+  // regardless of climb count.
+  const allHolds = data.flatMap((item) => {
+    const holdsByFrame = convertLitUpHoldsStringToMap(item.frames, board);
+    return Object.entries(holdsByFrame).flatMap(([frameNumber, holds]) =>
+      Object.entries(holds).map(([holdId, { state }]) => ({
+        boardType: board,
+        climbUuid: item.uuid,
+        frameNumber: Number(frameNumber),
+        holdId: Number(holdId),
+        holdState: state,
+      })),
+    );
+  });
+
+  if (allHolds.length > 0) {
+    await processBatches(allHolds, async (batch) => {
+      await db.insert(climbHoldsSchema).values(batch).onConflictDoNothing();
+    });
+  }
 
   await populateDenormalizedColumns(db, board, uuids);
 
@@ -608,23 +613,23 @@ async function upsertSharedTableData(
 }
 
 async function updateSharedSyncs(tx: DrizzleDb, boardName: AuroraBoardName, sharedSyncs: SharedSync[]) {
+  if (sharedSyncs.length === 0) return;
   const sharedSyncsSchema = UNIFIED_TABLES.sharedSyncs;
-
-  for (const sync of sharedSyncs) {
-    await tx
-      .insert(sharedSyncsSchema)
-      .values({
+  await tx
+    .insert(sharedSyncsSchema)
+    .values(
+      sharedSyncs.map((sync) => ({
         boardType: boardName,
         tableName: sync.table_name,
         lastSynchronizedAt: sync.last_synchronized_at,
-      })
-      .onConflictDoUpdate({
-        target: [sharedSyncsSchema.boardType, sharedSyncsSchema.tableName],
-        set: {
-          lastSynchronizedAt: sync.last_synchronized_at,
-        },
-      });
-  }
+      })),
+    )
+    .onConflictDoUpdate({
+      target: [sharedSyncsSchema.boardType, sharedSyncsSchema.tableName],
+      set: {
+        lastSynchronizedAt: sql`excluded.last_synchronized_at`,
+      },
+    });
 }
 
 async function getAllSharedSyncTimes(db: DrizzleDb, boardName: AuroraBoardName) {
@@ -663,16 +668,23 @@ export async function syncSharedData(
   const db = drizzle(pgClient);
 
   const allSyncTimes = await getAllSharedSyncTimes(db, board);
+  // Single source of truth for cursors across batches — keyed by table name.
+  // We seed it from the DB once, then merge each batch's `shared_syncs`
+  // response into it. Aurora's response only includes entries for tables it
+  // actually returned data for; replacing the whole map (as the original web
+  // cron implicitly did by re-reading the DB on every recursion) loses the
+  // cursors of untouched tables and resets them to 1970, which sends the same
+  // small tables back forever.
   const sharedSyncMap = new Map(allSyncTimes.map((sync) => [sync.table_name, sync.last_synchronized_at]));
 
   const defaultTimestamp = '1970-01-01 00:00:00.000000';
 
-  let currentSyncParams: SyncOptions = {
+  const buildSyncParams = (): SyncOptions => ({
     sharedSyncs: SHARED_SYNC_TABLES.map((tableName) => ({
       table_name: tableName,
       last_synchronized_at: sharedSyncMap.get(tableName) || defaultTimestamp,
     })),
-  };
+  });
 
   const totalResults: Record<string, { synced: number; complete: boolean }> = {};
   const allNewClimbs: NewClimbInfo[] = [];
@@ -683,7 +695,7 @@ export async function syncSharedData(
     attempts++;
     log(`[SharedSync] Batch ${attempts} for ${board}`);
 
-    const syncResults = await sharedSync(board, currentSyncParams, token);
+    const syncResults = await sharedSync(board, buildSyncParams(), token);
 
     await db.transaction(async (tx) => {
       const txDb = tx as unknown as DrizzleDb;
@@ -721,13 +733,11 @@ export async function syncSharedData(
       if (Array.isArray(newSharedSyncs)) {
         await updateSharedSyncs(txDb, board, newSharedSyncs as SharedSync[]);
 
-        currentSyncParams = {
-          ...currentSyncParams,
-          sharedSyncs: (newSharedSyncs as SharedSync[]).map((sync) => ({
-            table_name: sync.table_name,
-            last_synchronized_at: sync.last_synchronized_at,
-          })),
-        };
+        // Merge — never replace. Tables Aurora didn't return this batch keep
+        // their existing cursor, instead of being silently reset to 1970.
+        for (const sync of newSharedSyncs as SharedSync[]) {
+          sharedSyncMap.set(sync.table_name, sync.last_synchronized_at);
+        }
       }
     });
 
