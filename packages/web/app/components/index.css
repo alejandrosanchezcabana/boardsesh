@@ -333,21 +333,6 @@ html[data-theme='dark'] .MuiSelect-icon {
   color: var(--neutral-500);
 }
 
-/* Floating MUI label sits inside the white input at rest, then floats up
-   over the dark page background when shrunk. Use a dark color at rest so
-   it reads on white, and a light color when shrunk so it reads on dark. */
-html[data-theme='dark'] .MuiInputLabel-root {
-  color: var(--neutral-100);
-}
-
-html[data-theme='dark'] .MuiInputLabel-root.MuiInputLabel-shrink {
-  color: var(--neutral-700);
-}
-
-html[data-theme='dark'] .MuiInputLabel-root.Mui-focused {
-  color: var(--color-primary);
-}
-
 html[data-theme='dark'] .MuiOutlinedInput-input::placeholder {
   color: var(--neutral-500);
   opacity: 1;
