@@ -57,8 +57,12 @@ export default function BoardSeshHeader({ boardDetails, angle, isAngleAdjustable
   // Stable callback for the bridge injector
   const openDrawer = useCallback(() => setSearchDropdownOpen(true), []);
 
+  // Pre-translate labels that the summary helpers can't access on their own
+  // (they live in a `.ts` module without React/i18next context).
+  const summaryLabels = { zone: t('search.panels.zone') };
+
   // Compute filter summary for the bridge
-  const summary = getSearchPillSummary(uiSearchParams);
+  const summary = getSearchPillSummary(uiSearchParams, summaryLabels);
   const filtersActive = hasActiveFilters(uiSearchParams);
   const nonNameFiltersActive = computeNonNameFilters(uiSearchParams);
 
@@ -182,7 +186,7 @@ export default function BoardSeshHeader({ boardDetails, angle, isAngleAdjustable
         open={searchDropdownOpen}
         onClose={() => {
           if (hasActiveFilters(uiSearchParams)) {
-            const label = getSearchPillSummary(uiSearchParams);
+            const label = getSearchPillSummary(uiSearchParams, summaryLabels);
             addRecentSearch(label, uiSearchParams).catch(() => {});
           }
           setSearchDropdownOpen(false);
@@ -222,7 +226,7 @@ export default function BoardSeshHeader({ boardDetails, angle, isAngleAdjustable
                 startIcon={isFetchingClimbs ? <CircularProgress size={20} /> : <SearchOutlined />}
                 onClick={() => {
                   if (currentFiltersActive) {
-                    const label = getSearchPillSummary(uiSearchParams);
+                    const label = getSearchPillSummary(uiSearchParams, summaryLabels);
                     addRecentSearch(label, uiSearchParams).catch(() => {});
                   }
                   setSearchDropdownOpen(false);

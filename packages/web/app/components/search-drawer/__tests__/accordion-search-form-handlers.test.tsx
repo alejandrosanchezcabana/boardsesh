@@ -48,6 +48,7 @@ vi.mock('../search-summary-utils', () => ({
   getStatusPanelSummary: () => '',
   getUserPanelSummary: () => '',
   getHoldsPanelSummary: () => '',
+  getZonePanelSummary: () => '',
 }));
 
 import AccordionSearchForm from '../accordion-search-form';

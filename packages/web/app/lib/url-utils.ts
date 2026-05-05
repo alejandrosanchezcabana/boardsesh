@@ -93,6 +93,7 @@ export const searchParamsToUrlParams = (input: SearchRequestPagination): URLSear
   const showOnlyCompleted = input.showOnlyCompleted ?? DEFAULT_SEARCH_PARAMS.showOnlyCompleted;
   const onlyDrafts = input.onlyDrafts ?? DEFAULT_SEARCH_PARAMS.onlyDrafts;
   const projectsOnly = input.projectsOnly ?? DEFAULT_SEARCH_PARAMS.projectsOnly;
+  const zoneBox = input.zoneBox ?? DEFAULT_SEARCH_PARAMS.zoneBox;
   const page = input.page ?? DEFAULT_SEARCH_PARAMS.page;
   const pageSize = input.pageSize ?? DEFAULT_SEARCH_PARAMS.pageSize;
 
@@ -160,6 +161,12 @@ export const searchParamsToUrlParams = (input: SearchRequestPagination): URLSear
   if (projectsOnly !== DEFAULT_SEARCH_PARAMS.projectsOnly) {
     params.projectsOnly = projectsOnly.toString();
   }
+  if (zoneBox) {
+    params.zoneEdgeLeft = zoneBox.edgeLeft.toString();
+    params.zoneEdgeRight = zoneBox.edgeRight.toString();
+    params.zoneEdgeBottom = zoneBox.edgeBottom.toString();
+    params.zoneEdgeTop = zoneBox.edgeTop.toString();
+  }
 
   // Add holds filter entries only if they exist.
   // Per-hold value is a comma-joined list of `{TYPE}:{include|exclude}` triples,
@@ -197,6 +204,7 @@ export const DEFAULT_SEARCH_PARAMS: SearchRequestPagination = {
   showOnlyCompleted: false,
   onlyDrafts: false,
   projectsOnly: false,
+  zoneBox: null,
   page: 0,
   pageSize: PAGE_LIMIT,
 };
@@ -286,9 +294,27 @@ export const urlParamsToSearchParams = (urlParams: URLSearchParams): SearchReque
     showOnlyCompleted: urlParams.get('showOnlyCompleted') === 'true',
     onlyDrafts: urlParams.get('onlyDrafts') === 'true',
     projectsOnly: urlParams.get('projectsOnly') === 'true',
+    zoneBox: parseZoneBoxFromQuery(urlParams),
     page: Number(urlParams.get('page') ?? DEFAULT_SEARCH_PARAMS.page),
     pageSize: Number(urlParams.get('pageSize') ?? DEFAULT_SEARCH_PARAMS.pageSize),
   };
+};
+
+const parseZoneBoxFromQuery = (urlParams: URLSearchParams) => {
+  const edgeLeft = parseQueryParamInt(urlParams, 'zoneEdgeLeft');
+  const edgeRight = parseQueryParamInt(urlParams, 'zoneEdgeRight');
+  const edgeBottom = parseQueryParamInt(urlParams, 'zoneEdgeBottom');
+  const edgeTop = parseQueryParamInt(urlParams, 'zoneEdgeTop');
+  if (edgeLeft === undefined || edgeRight === undefined || edgeBottom === undefined || edgeTop === undefined) {
+    return null;
+  }
+  // Reject inverted/empty boxes — a stale or hand-edited URL like
+  // zoneEdgeLeft=100&zoneEdgeRight=50 would otherwise hit the SQL filter
+  // and silently return zero results.
+  if (edgeRight <= edgeLeft || edgeTop <= edgeBottom) {
+    return null;
+  }
+  return { edgeLeft, edgeRight, edgeBottom, edgeTop };
 };
 
 export const parsedRouteSearchParamsToSearchParams = (urlParams: SearchRequestPagination): SearchRequestPagination => {
@@ -319,7 +345,36 @@ export const parsedRouteSearchParamsToSearchParams = (urlParams: SearchRequestPa
     pageSize: Number(urlParams.pageSize ?? DEFAULT_SEARCH_PARAMS.pageSize),
     // Next.js route search params come as strings, so coerce to boolean
     onlyTallClimbs: String(urlParams.onlyTallClimbs) === 'true',
+    // The zone filter is serialised as four separate query params; the typed
+    // SearchRequestPagination shape doesn't capture that, so read off the raw
+    // route record. Without this, SSR list pages hit the GraphQL search with
+    // no zone filter and the first paint shows unfiltered results until the
+    // client takes over.
+    zoneBox: parseZoneBoxFromRouteRecord(urlParams as unknown as Record<string, unknown>),
   };
+};
+
+const readQueryString = (record: Record<string, unknown>, key: string): string | undefined => {
+  const value = record[key];
+  if (typeof value === 'string') return value;
+  if (Array.isArray(value) && typeof value[0] === 'string') return value[0];
+  return undefined;
+};
+
+const parseZoneBoxFromRouteRecord = (record: Record<string, unknown>) => {
+  const params = new URLSearchParams();
+  const left = readQueryString(record, 'zoneEdgeLeft');
+  const right = readQueryString(record, 'zoneEdgeRight');
+  const bottom = readQueryString(record, 'zoneEdgeBottom');
+  const top = readQueryString(record, 'zoneEdgeTop');
+  if (left === undefined || right === undefined || bottom === undefined || top === undefined) {
+    return null;
+  }
+  params.set('zoneEdgeLeft', left);
+  params.set('zoneEdgeRight', right);
+  params.set('zoneEdgeBottom', bottom);
+  params.set('zoneEdgeTop', top);
+  return parseZoneBoxFromQuery(params);
 };
 
 export const constructClimbViewUrl = (

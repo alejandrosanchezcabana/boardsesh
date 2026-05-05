@@ -136,6 +136,12 @@ export type ClimbSearchInputVariables = {
     showOnlyCompleted?: boolean;
     onlyDrafts?: boolean;
     projectsOnly?: boolean;
+    zoneBox?: {
+      edgeLeft: number;
+      edgeRight: number;
+      edgeBottom: number;
+      edgeTop: number;
+    };
   };
 };
 

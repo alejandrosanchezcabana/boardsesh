@@ -46,6 +46,7 @@ export const UISearchParamsProvider: React.FC<{ children: React.ReactNode }> = (
     if (uiSearchParams.showOnlyCompleted) activeFilters.push('showOnlyCompleted');
     if (uiSearchParams.onlyDrafts) activeFilters.push('onlyDrafts');
     if (uiSearchParams.projectsOnly) activeFilters.push('projectsOnly');
+    if (uiSearchParams.zoneBox) activeFilters.push('zone');
 
     if (activeFilters.length > 0) {
       void incrementSearches().then(maybeFireFeedbackPromptEvent);

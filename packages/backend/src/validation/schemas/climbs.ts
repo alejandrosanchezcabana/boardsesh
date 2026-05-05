@@ -143,6 +143,17 @@ export const ClimbSearchInputSchema = z.object({
   showOnlyCompleted: z.boolean().optional(),
   onlyDrafts: z.boolean().optional(),
   projectsOnly: z.boolean().optional(),
+  zoneBox: z
+    .object({
+      edgeLeft: z.number().int(),
+      edgeRight: z.number().int(),
+      edgeBottom: z.number().int(),
+      edgeTop: z.number().int(),
+    })
+    .refine((box) => box.edgeRight > box.edgeLeft && box.edgeTop > box.edgeBottom, {
+      message: 'zoneBox edges must form a non-empty box (right > left, top > bottom)',
+    })
+    .optional(),
 });
 
 export const SaveClimbInputSchema = z.object({

@@ -12,14 +12,17 @@ import { useUISearchParams } from '@/app/components/queue-control/ui-searchparam
 import type { SearchRequestPagination } from '@/app/lib/types';
 import { DEFAULT_SEARCH_PARAMS } from '@/app/lib/url-utils';
 import { getSearchPillFullSummary } from './search-summary-utils';
+import { useTranslation } from 'react-i18next';
 import styles from './recent-search-pills.module.css';
 
 const SHADOW_PILL_WIDTHS = [72, 104, 88, 96, 80];
 
 const RecentSearchPills: React.FC = () => {
+  const { t } = useTranslation('climbs');
   const [searches, setSearches] = useState<RecentSearch[]>([]);
   const [hasLoadedInitialSearches, setHasLoadedInitialSearches] = useState(false);
   const { uiSearchParams, updateFilters } = useUISearchParams();
+  const summaryLabels = { zone: t('search.panels.zone') };
 
   const currentFilterKey = getFilterKey(uiSearchParams);
 
@@ -86,7 +89,7 @@ const RecentSearchPills: React.FC = () => {
             ...DEFAULT_SEARCH_PARAMS,
             ...search.filters,
           } as SearchRequestPagination;
-          const tooltipText = getSearchPillFullSummary(fullFilters);
+          const tooltipText = getSearchPillFullSummary(fullFilters, summaryLabels);
           return (
             <button
               key={search.id}

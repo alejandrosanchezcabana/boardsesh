@@ -138,6 +138,7 @@
       "progress": "Progression",
       "holds": "Prises",
       "holdsTitle": "Rechercher par prise",
+      "zone": "Zone",
       "anyDefault": "Toutes",
       "allClimbs": "Tous les blocs"
     },
@@ -184,6 +185,11 @@
       "excluded": "{{count}} exclues",
       "showHeatmap": "Afficher la carte de chaleur",
       "hideHeatmap": "Masquer la carte de chaleur"
+    },
+    "zone": {
+      "description": "Faites glisser la zone pour limiter les résultats aux voies qui s'y inscrivent.",
+      "draw": "Dessiner la zone",
+      "clear": "Effacer la zone"
     },
     "sortToggle": "Trier"
   },

@@ -12,6 +12,18 @@ export type BoardRouteParams = {
 };
 
 /**
+ * Bounding box on the board grid (same coordinate space as
+ * board_holes.x/y and board_climbs.edge_*). Used to keep search
+ * results inside a region the user drew on the board.
+ */
+export type ZoneBox = {
+  edgeLeft: number;
+  edgeRight: number;
+  edgeBottom: number;
+  edgeTop: number;
+};
+
+/**
  * Search parameters for the climb search query.
  * Shared between web and backend packages.
  */
@@ -45,6 +57,8 @@ export type ClimbSearchParams = {
   showOnlyCompleted?: boolean;
   onlyDrafts?: boolean;
   projectsOnly?: boolean;
+  // Zone filter — restrict to climbs whose bounding box fits inside this box
+  zoneBox?: ZoneBox | null;
   // Allow dynamic hold keys (e.g., hold_123)
   [key: `hold_${number}`]: unknown;
 };

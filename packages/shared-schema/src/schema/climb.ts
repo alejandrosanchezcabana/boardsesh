@@ -83,6 +83,22 @@ export const climbTypeDefs = /* GraphQL */ `
   # ============================================
 
   """
+  Bounding box defining a board region for filtering climbs.
+  Coordinates are in the same grid space as board placements
+  (board_holes.x/y) and board_climbs edge columns.
+  """
+  input ZoneBoxInput {
+    "Left edge of the zone (smaller x)"
+    edgeLeft: Int!
+    "Right edge of the zone (larger x)"
+    edgeRight: Int!
+    "Bottom edge of the zone (smaller y)"
+    edgeBottom: Int!
+    "Top edge of the zone (larger y)"
+    edgeTop: Int!
+  }
+
+  """
   Input parameters for searching climbs.
   Supports filtering, sorting, and pagination.
   """
@@ -137,6 +153,8 @@ export const climbTypeDefs = /* GraphQL */ `
     onlyDrafts: Boolean
     "Show only unclimbed projects (climbs with 0 ascents)"
     projectsOnly: Boolean
+    "Restrict results to climbs whose bounding box fits inside this zone"
+    zoneBox: ZoneBoxInput
   }
 
   """

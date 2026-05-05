@@ -136,18 +136,18 @@ describe('getQualityPanelSummary vs Status (no duplication)', () => {
   });
 
   it('pill summary for minAscents=3 shows "Established" only, no duplicate', () => {
-    const pill = getSearchPillSummary(makeParams({ minAscents: 3 }));
+    const pill = getSearchPillSummary(makeParams({ minAscents: 3 }), { zone: 'Zone' });
     expect(pill).toContain('Established');
     expect(pill).not.toContain('3+ ascents');
   });
 
   it('pill summary for projects shows "Projects"', () => {
-    const pill = getSearchPillSummary(makeParams({ projectsOnly: true }));
+    const pill = getSearchPillSummary(makeParams({ projectsOnly: true }), { zone: 'Zone' });
     expect(pill).toContain('Projects');
   });
 
   it('pill summary for drafts shows "Drafts"', () => {
-    const pill = getSearchPillSummary(makeParams({ onlyDrafts: true }));
+    const pill = getSearchPillSummary(makeParams({ onlyDrafts: true }), { zone: 'Zone' });
     expect(pill).toContain('Drafts');
   });
 });

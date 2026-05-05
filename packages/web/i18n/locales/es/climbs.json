@@ -138,6 +138,7 @@
       "progress": "Progreso",
       "holds": "Presas",
       "holdsTitle": "Buscar por presa",
+      "zone": "Zona",
       "anyDefault": "Cualquiera",
       "allClimbs": "Todos los bloques"
     },
@@ -184,6 +185,11 @@
       "excluded": "{{count}} excluidas",
       "showHeatmap": "Mostrar mapa de calor",
       "hideHeatmap": "Ocultar mapa de calor"
+    },
+    "zone": {
+      "description": "Arrastra el recuadro para limitar los resultados a bloques que entren en él.",
+      "draw": "Dibujar zona",
+      "clear": "Borrar zona"
     },
     "sortToggle": "Ordenar"
   },

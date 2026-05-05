@@ -14,6 +14,9 @@ export function hasActiveFilters(params: SearchRequestPagination): boolean {
     if (key === 'holdsFilter') {
       return Object.keys(value || {}).length > 0;
     }
+    if (key === 'zoneBox') {
+      return value !== null;
+    }
     return value !== DEFAULT_SEARCH_PARAMS[key as keyof typeof DEFAULT_SEARCH_PARAMS];
   });
 }
@@ -23,6 +26,9 @@ export function hasActiveNonNameFilters(params: SearchRequestPagination): boolea
     if (key === 'name') return false;
     if (key === 'holdsFilter') {
       return Object.keys(value || {}).length > 0;
+    }
+    if (key === 'zoneBox') {
+      return value !== null;
     }
     return value !== DEFAULT_SEARCH_PARAMS[key as keyof typeof DEFAULT_SEARCH_PARAMS];
   });
@@ -108,17 +114,30 @@ export function getHoldsPanelSummary(params: SearchRequestPagination): string[] 
   return [`${holdsCount} hold${holdsCount !== 1 ? 's' : ''}`];
 }
 
+export function getZonePanelSummary(params: SearchRequestPagination, label: string): string[] {
+  return params.zoneBox ? [label] : [];
+}
+
+/**
+ * Pre-translated labels used by the search-pill summary helpers.
+ * Pass these in from the React layer where i18n is available.
+ */
+export type SearchPillLabels = {
+  zone: string;
+};
+
 /**
  * Get compact search pill summary (max 2 items + "+N more")
  * Used for display in the search bar and recent search pills
  */
-export function getSearchPillSummary(params: SearchRequestPagination): string {
+export function getSearchPillSummary(params: SearchRequestPagination, labels: SearchPillLabels): string {
   const allParts = [
     ...getClimbPanelSummary(params),
     ...getQualityPanelSummary(params),
     ...getStatusPanelSummary(params),
     ...getUserPanelSummary(params),
     ...getHoldsPanelSummary(params),
+    ...getZonePanelSummary(params, labels.zone),
   ];
 
   if (allParts.length === 0) return DEFAULT_CLIMB_SEARCH_SUMMARY;
@@ -135,13 +154,14 @@ export function getSearchPillSummary(params: SearchRequestPagination): string {
  * Get full search pill summary (all items, no truncation)
  * Used for tooltips to show the complete filter list
  */
-export function getSearchPillFullSummary(params: SearchRequestPagination): string {
+export function getSearchPillFullSummary(params: SearchRequestPagination, labels: SearchPillLabels): string {
   const allParts = [
     ...getClimbPanelSummary(params),
     ...getQualityPanelSummary(params),
     ...getStatusPanelSummary(params),
     ...getUserPanelSummary(params),
     ...getHoldsPanelSummary(params),
+    ...getZonePanelSummary(params, labels.zone),
   ];
 
   if (allParts.length === 0) return DEFAULT_CLIMB_SEARCH_SUMMARY;

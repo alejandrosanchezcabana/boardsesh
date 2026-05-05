@@ -91,6 +91,17 @@ export type HoldFilterMode = 'include' | 'exclude';
 export type HoldFilterEntry = Partial<Record<HoldFilterType, HoldFilterMode>>;
 export type HoldsFilter = Record<number, HoldFilterEntry>;
 
+/**
+ * Bounding box on the board grid (board_holes.x/y coords). Used by the
+ * Zone search filter to restrict results to climbs that fit inside it.
+ */
+export type ZoneBox = {
+  edgeLeft: number;
+  edgeRight: number;
+  edgeBottom: number;
+  edgeTop: number;
+};
+
 export type SearchRequest = {
   gradeAccuracy: number;
   maxGrade: number;
@@ -111,6 +122,7 @@ export type SearchRequest = {
   showOnlyCompleted: boolean;
   onlyDrafts: boolean;
   projectsOnly: boolean;
+  zoneBox: ZoneBox | null;
 };
 
 export type SearchRequestPagination = SearchRequest & {

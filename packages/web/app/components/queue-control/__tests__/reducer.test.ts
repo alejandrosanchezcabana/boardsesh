@@ -50,6 +50,7 @@ const mockSearchParams: SearchRequestPagination = {
   showOnlyCompleted: false,
   onlyDrafts: false,
   projectsOnly: false,
+  zoneBox: null,
 };
 
 const initialState: QueueState = {
@@ -302,6 +303,7 @@ describe('queueReducer', () => {
         showOnlyCompleted: false,
         onlyDrafts: false,
         projectsOnly: false,
+        zoneBox: null,
       };
 
       const action: QueueAction = {

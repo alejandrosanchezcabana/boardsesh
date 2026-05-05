@@ -138,6 +138,14 @@
   position: relative;
 }
 
+.zoneSvg {
+  width: 100%;
+  height: auto;
+  max-height: 55vh;
+  /* Disable browser pan/zoom so pointer drag works smoothly on touch */
+  touch-action: none;
+}
+
 /* Search Results Footer Styles */
 .searchFooter {
   padding: 12px 16px;
