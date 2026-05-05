@@ -7,6 +7,10 @@ import { HOLD_STATE_MAP } from '../board-renderer/types';
 type SearchHoldFilterOverlayProps = {
   boardDetails: BoardDetails;
   holdsFilter: HoldsFilter;
+  // Hold the picker is currently anchored to. Rendered with a thick neutral
+  // highlight ring so the user can see which hold the popover is editing —
+  // important now that we no longer auto-include on first tap.
+  activeHoldId?: number | null;
 };
 
 // Order matters: outer rings first. Drawing the most-typical filters
@@ -24,7 +28,11 @@ const TYPE_DRAW_ORDER: readonly HoldFilterType[] = ['STARTING', 'HAND', 'FINISH'
  * (BoardRenderer's interaction layer) keeps receiving taps — otherwise
  * excluded holds with a dim fill would swallow the un-exclude click.
  */
-const SearchHoldFilterOverlay: React.FC<SearchHoldFilterOverlayProps> = ({ boardDetails, holdsFilter }) => {
+const SearchHoldFilterOverlay: React.FC<SearchHoldFilterOverlayProps> = ({
+  boardDetails,
+  holdsFilter,
+  activeHoldId,
+}) => {
   const { boardWidth, boardHeight, holdsData, board_name } = boardDetails;
 
   // Per-board map of hold-type → display colour, derived once from
@@ -79,9 +87,30 @@ const SearchHoldFilterOverlay: React.FC<SearchHoldFilterOverlayProps> = ({ board
           />
         );
       })}
+      {activeHoldId != null && holdsById.has(activeHoldId) && (
+        <ActiveHoldHighlight hold={holdsById.get(activeHoldId)!} />
+      )}
     </svg>
   );
 };
+
+function ActiveHoldHighlight({ hold }: { hold: { cx: number; cy: number; r: number } }) {
+  // Bright neutral ring sitting just outside the hold so it reads on any
+  // board image background. Drawn last so it paints on top of any filter
+  // rings already on the same hold.
+  return (
+    <circle
+      cx={hold.cx}
+      cy={hold.cy}
+      r={hold.r * 1.35}
+      stroke="#FFFFFF"
+      strokeWidth={Math.max(3, hold.r * 0.22)}
+      strokeOpacity={0.95}
+      fill="none"
+      pointerEvents="none"
+    />
+  );
+}
 
 export default SearchHoldFilterOverlay;
 

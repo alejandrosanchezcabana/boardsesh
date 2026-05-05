@@ -166,7 +166,11 @@ const ClimbHoldSearchForm: React.FC<ClimbHoldSearchFormProps> = ({ boardDetails 
           mirrored={false}
           onHoldClick={picker.handleHoldClick}
         />
-        <SearchHoldFilterOverlay boardDetails={boardDetails} holdsFilter={holdsFilter} />
+        <SearchHoldFilterOverlay
+          boardDetails={boardDetails}
+          holdsFilter={holdsFilter}
+          activeHoldId={picker.activeHoldId}
+        />
         <CreateClimbHeatmapOverlay
           boardDetails={tightenedBoardDetails}
           angle={angle}

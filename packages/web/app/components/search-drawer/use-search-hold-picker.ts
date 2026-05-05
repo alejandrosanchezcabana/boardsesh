@@ -76,6 +76,7 @@ export function useSearchHoldPicker({
 
   return {
     anchorEl: anchorState?.anchor ?? null,
+    activeHoldId: anchorState?.holdId ?? null,
     currentEntry,
     handleHoldClick,
     handleFilterChange,

@@ -127,18 +127,45 @@ export const createClimbFilters = (params: BoardRouteParams, searchParams: Climb
     ...notHolds.map((holdId) => notLike(boardClimbs.frames, `%${holdId}r%`)),
   ];
 
-  // State-specific hold conditions — use board_climb_holds. `include` requires
-  // the hold-state row to exist; `exclude` requires it to be absent.
-  const holdStateConditions: SQL[] = holdStateFilters.map(({ holdId, state, mode }) => {
-    const existsClause = sql`EXISTS (
+  // State-specific hold conditions — use board_climb_holds. Multiple types
+  // on the same hold are OR-combined within their mode: HAND:include +
+  // FOOT:include means "hold is HAND OR FOOT" (a hold has only one state in
+  // any given climb, so AND would always be empty). Same for excludes.
+  const includesByHold = new Map<number, string[]>();
+  const excludesByHold = new Map<number, string[]>();
+  for (const { holdId, state, mode } of holdStateFilters) {
+    const target = mode === 'include' ? includesByHold : excludesByHold;
+    const states = target.get(holdId) ?? [];
+    states.push(state);
+    target.set(holdId, states);
+  }
+  const holdStateConditions: SQL[] = [];
+  for (const [holdId, states] of includesByHold) {
+    const stateLiterals = sql.join(
+      states.map((s) => sql`${s}`),
+      sql`, `,
+    );
+    holdStateConditions.push(sql`EXISTS (
       SELECT 1 FROM ${boardClimbHolds} ch
       WHERE ch.board_type = ${params.board_name}
       AND ch.climb_uuid = ${boardClimbs.uuid}
       AND ch.hold_id = ${holdId}
-      AND ch.hold_state = ${state}
-    )`;
-    return mode === 'include' ? existsClause : sql`NOT ${existsClause}`;
-  });
+      AND ch.hold_state IN (${stateLiterals})
+    )`);
+  }
+  for (const [holdId, states] of excludesByHold) {
+    const stateLiterals = sql.join(
+      states.map((s) => sql`${s}`),
+      sql`, `,
+    );
+    holdStateConditions.push(sql`NOT EXISTS (
+      SELECT 1 FROM ${boardClimbHolds} ch
+      WHERE ch.board_type = ${params.board_name}
+      AND ch.climb_uuid = ${boardClimbs.uuid}
+      AND ch.hold_id = ${holdId}
+      AND ch.hold_state IN (${stateLiterals})
+    )`);
+  }
 
   // Tall climbs filter condition
   const tallClimbsConditions: SQL[] = [];
