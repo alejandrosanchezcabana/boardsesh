@@ -34,6 +34,7 @@ const PICKER_STATES_BY_BOARD: Record<BoardName, readonly SetterHoldState[]> = {
   decoy: SETTER_STATE_ORDER,
   touchstone: SETTER_STATE_ORDER,
   grasshopper: SETTER_STATE_ORDER,
+  soill: SETTER_STATE_ORDER,
   moonboard: ['STARTING', 'HAND', 'FINISH'],
 };
 
@@ -346,16 +347,7 @@ type SwatchProps = {
   onClick: () => void;
 };
 
-function Swatch({
-  label,
-  color,
-  isActive,
-  isDisabled = false,
-  isClear,
-  excluded,
-  ariaLabel,
-  onClick,
-}: SwatchProps) {
+function Swatch({ label, color, isActive, isDisabled = false, isClear, excluded, ariaLabel, onClick }: SwatchProps) {
   const ring = isClear ? themeTokens.neutral[400] : (color ?? themeTokens.neutral[400]);
 
   // Choose icon color: clear uses ring color; an active solid swatch uses
@@ -432,4 +424,3 @@ function Swatch({
     </ButtonBase>
   );
 }
-

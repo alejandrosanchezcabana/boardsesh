@@ -45,7 +45,8 @@ describe('hold-classifications validation', () => {
       expect(VALID_BOARD_TYPES).toContain('kilter');
       expect(VALID_BOARD_TYPES).toContain('tension');
       expect(VALID_BOARD_TYPES).toContain('moonboard');
-      expect(VALID_BOARD_TYPES.length).toBe(6);
+      expect(VALID_BOARD_TYPES).toContain('soill');
+      expect(VALID_BOARD_TYPES.length).toBe(7);
     });
   });
 

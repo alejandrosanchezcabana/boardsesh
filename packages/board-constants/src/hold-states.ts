@@ -94,6 +94,12 @@ export const HOLD_STATE_MAP: Record<BoardName, Record<HoldCode, HoldStateInfo>> 
     3: { name: 'FINISH', displayColor: '#FF0000', color: '#FF0000' },
     4: { name: 'FOOT', displayColor: '#FF00FF', color: '#FF00FF' },
   },
+  soill: {
+    1: { name: 'STARTING', displayColor: '#00DD00', color: '#00FF00' },
+    2: { name: 'HAND', displayColor: '#4444FF', color: '#0000FF' },
+    3: { name: 'FINISH', displayColor: '#FF0000', color: '#FF0000' },
+    4: { name: 'FOOT', displayColor: '#FF00FF', color: '#FF00FF' },
+  },
 };
 
 // The canonical role code used when *writing* frame strings for each board.
@@ -112,6 +118,7 @@ export const STATE_TO_PRIMARY_CODE: Record<BoardName, Partial<Record<HoldState, 
   decoy: { STARTING: 1, HAND: 2, FINISH: 3, FOOT: 4 },
   touchstone: { STARTING: 1, HAND: 2, FINISH: 3, FOOT: 4 },
   grasshopper: { STARTING: 1, HAND: 2, FINISH: 3, FOOT: 4 },
+  soill: { STARTING: 1, HAND: 2, FINISH: 3, FOOT: 4 },
 };
 
 // Warned hold states to avoid log spam

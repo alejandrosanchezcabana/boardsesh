@@ -32,6 +32,7 @@ import ClimbIcons from '@/app/components/climb-card/climb-icons';
 import { ConfirmPopover } from '@/app/components/ui/confirm-popover';
 import { useDeleteTick } from '@/app/hooks/use-delete-tick';
 import { themeTokens } from '@/app/theme/theme-config';
+import { formatBoardDisplayName } from '@/app/lib/string-utils';
 import styles from './ascents-feed.module.css';
 import { useInfiniteScroll } from '@/app/hooks/use-infinite-scroll';
 
@@ -56,9 +57,9 @@ const layoutNames: Record<string, string> = {
 };
 
 const getLayoutDisplayName = (boardType: string, layoutId: number | null): string => {
-  if (layoutId === null) return boardType.charAt(0).toUpperCase() + boardType.slice(1);
+  if (layoutId === null) return formatBoardDisplayName(boardType);
   const key = `${boardType}-${layoutId}`;
-  return layoutNames[key] || `${boardType.charAt(0).toUpperCase() + boardType.slice(1)}`;
+  return layoutNames[key] || formatBoardDisplayName(boardType);
 };
 
 const getGroupStatusSummary = (

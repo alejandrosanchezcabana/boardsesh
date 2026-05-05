@@ -3,6 +3,7 @@
 # Base URL
 kilter_url="https://api.kilterboardapp.com/img/"
 tension_url="https://api.tensionboardapp2.com/img/"
+soill_url="https://api.soillboardapp.com/img/"
 
 kilter_images=(
 "product_sizes_layouts_sets/47.png"
@@ -98,4 +99,15 @@ for image in "${tension_images[@]}"
 do
   echo $image
   wget "${tension_url}${image}" -P ../public/images/tension
+done
+
+soill_images=(
+"product_sizes_layouts_sets/1-v3.png"
+"product_sizes_layouts_sets/2-v2.png"
+)
+
+for image in "${soill_images[@]}"
+do
+  echo $image
+  wget "${soill_url}${image}" -P ../public/images/soill
 done

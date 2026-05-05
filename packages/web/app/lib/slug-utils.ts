@@ -26,7 +26,9 @@ export type SetRow = {
 };
 
 function findLayoutBySlug(rows: LayoutRow[], slug: string): LayoutRow | null {
-  const normalizedSlug = slug.toLowerCase().replace(/^(kilter|tension|decoy|touchstone|grasshopper|moonboard)-/, '');
+  const normalizedSlug = slug
+    .toLowerCase()
+    .replace(/^(kilter|tension|decoy|touchstone|grasshopper|moonboard|soill)-/, '');
 
   return (
     rows.find(

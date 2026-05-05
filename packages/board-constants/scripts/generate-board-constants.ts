@@ -89,7 +89,7 @@ type GeneratedBoardData = {
   holePlacements: HolePlacement[];
 };
 
-const BOARD_NAMES = ['kilter', 'tension', 'decoy', 'touchstone', 'grasshopper'] as const;
+const BOARD_NAMES = ['kilter', 'tension', 'decoy', 'touchstone', 'grasshopper', 'soill'] as const;
 type GeneratedBoardName = (typeof BOARD_NAMES)[number];
 
 const PRODUCT_OUTPUT_PATH = join(__dirname, '../src/generated/product-sizes-data.ts');
@@ -396,6 +396,7 @@ ${generateSizesTypeScript('tension', boardData.tension.sizes)},
 ${generateSizesTypeScript('decoy', boardData.decoy.sizes)},
 ${generateSizesTypeScript('touchstone', boardData.touchstone.sizes)},
 ${generateSizesTypeScript('grasshopper', boardData.grasshopper.sizes)},
+${generateSizesTypeScript('soill', boardData.soill.sizes)},
   moonboard: {},
 };
 
@@ -405,6 +406,7 @@ ${generateLayoutsTypeScript('tension', boardData.tension.layouts)},
 ${generateLayoutsTypeScript('decoy', boardData.decoy.layouts)},
 ${generateLayoutsTypeScript('touchstone', boardData.touchstone.layouts)},
 ${generateLayoutsTypeScript('grasshopper', boardData.grasshopper.layouts)},
+${generateLayoutsTypeScript('soill', boardData.soill.layouts)},
   moonboard: {},
 };
 
@@ -414,6 +416,7 @@ ${generateSetsTypeScript('tension', boardData.tension.sets)},
 ${generateSetsTypeScript('decoy', boardData.decoy.sets)},
 ${generateSetsTypeScript('touchstone', boardData.touchstone.sets)},
 ${generateSetsTypeScript('grasshopper', boardData.grasshopper.sets)},
+${generateSetsTypeScript('soill', boardData.soill.sets)},
   moonboard: {},
 };
 
@@ -423,6 +426,7 @@ ${generateImageFilenamesTypeScript('tension', boardData.tension.imageFilenames)}
 ${generateImageFilenamesTypeScript('decoy', boardData.decoy.imageFilenames)},
 ${generateImageFilenamesTypeScript('touchstone', boardData.touchstone.imageFilenames)},
 ${generateImageFilenamesTypeScript('grasshopper', boardData.grasshopper.imageFilenames)},
+${generateImageFilenamesTypeScript('soill', boardData.soill.imageFilenames)},
   moonboard: {},
 };
 
@@ -432,6 +436,7 @@ ${generateHolePlacementsTypeScript('tension', boardData.tension.holePlacements)}
 ${generateHolePlacementsTypeScript('decoy', boardData.decoy.holePlacements)},
 ${generateHolePlacementsTypeScript('touchstone', boardData.touchstone.holePlacements)},
 ${generateHolePlacementsTypeScript('grasshopper', boardData.grasshopper.holePlacements)},
+${generateHolePlacementsTypeScript('soill', boardData.soill.holePlacements)},
   moonboard: {},
 };
 `;
@@ -461,6 +466,7 @@ ${generateLedPlacementsTypeScript('tension', boardData.tension.ledPlacements)},
 ${generateLedPlacementsTypeScript('decoy', boardData.decoy.ledPlacements)},
 ${generateLedPlacementsTypeScript('touchstone', boardData.touchstone.ledPlacements)},
 ${generateLedPlacementsTypeScript('grasshopper', boardData.grasshopper.ledPlacements)},
+${generateLedPlacementsTypeScript('soill', boardData.soill.ledPlacements)},
   moonboard: {},
 };
 `;

@@ -119,6 +119,12 @@ vi.mock('@/app/components/board-renderer/types', () => ({
       3: { name: 'FINISH', color: '#FF0000' },
       4: { name: 'FOOT', color: '#FF00FF' },
     },
+    soill: {
+      1: { name: 'STARTING', color: '#00FF00' },
+      2: { name: 'HAND', color: '#0000FF' },
+      3: { name: 'FINISH', color: '#FF0000' },
+      4: { name: 'FOOT', color: '#FF00FF' },
+    },
   },
 }));
 
@@ -201,7 +207,7 @@ describe('board-render API route', () => {
     expect(body.error).toBe('Invalid format');
   });
 
-  it.each(['decoy', 'touchstone', 'grasshopper'])('accepts %s as a valid board_name', async (board) => {
+  it.each(['decoy', 'touchstone', 'grasshopper', 'soill'])('accepts %s as a valid board_name', async (board) => {
     const response = await GET(makeRequest({ ...validParams, board_name: board }));
     expect(response.status).toBe(200);
   });

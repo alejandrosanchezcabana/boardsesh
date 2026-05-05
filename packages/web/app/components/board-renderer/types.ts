@@ -40,5 +40,5 @@ export const THUMBNAIL_WIDTH = 200;
 
 // If adding more boards be sure to increment the DB version number for indexeddb
 export const supported_boards: BoardName[] = MOONBOARD_ENABLED
-  ? ['kilter', 'tension', 'moonboard', 'decoy', 'touchstone', 'grasshopper']
-  : ['kilter', 'tension', 'decoy', 'touchstone', 'grasshopper'];
+  ? ['kilter', 'tension', 'moonboard', 'decoy', 'touchstone', 'grasshopper', 'soill']
+  : ['kilter', 'tension', 'decoy', 'touchstone', 'grasshopper', 'soill'];

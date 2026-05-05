@@ -1,7 +1,7 @@
 # =============================================================================
 # Dockerfile.dev-db
 # Multi-stage build that produces a PostgreSQL + PostGIS image with all
-# Kilter/Tension/Decoy/Touchstone/Grasshopper/MoonBoard board data,
+# Kilter/Tension/Decoy/Touchstone/Grasshopper/So-iLL/MoonBoard board data,
 # a test user, and social seed data
 # pre-loaded with drizzle migrations applied. Developers just pull & run.
 #
@@ -96,6 +96,10 @@ RUN set -e && \
     curl -o /tmp/grasshopperboard.apk -L \
       -A "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36" \
       "https://d.apkpure.net/b/APK/com.auroraclimbing.grasshopperboard?version=latest" && \
+    echo ">>> Downloading So-iLL Board APK..." && \
+    curl -o /tmp/soillboard.apk -L \
+      -A "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36" \
+      "https://d.apkpure.net/b/APK/com.auroraclimbing.soillboard?version=latest" && \
     \
     # ── Extract SQLite databases from APKs ───────────────────────────── \
     echo ">>> Extracting Kilter database..." && \
@@ -141,6 +145,16 @@ RUN set -e && \
       (echo "ERROR: Failed to extract Grasshopper database from APK" && false); } && \
     mv /db/tmp/db.sqlite3 /db/tmp/grasshopper.db && \
     \
+    echo ">>> Extracting So-iLL database..." && \
+    rm -f /db/tmp/db.sqlite3 /tmp/com.auroraclimbing.soillboard.apk && \
+    (unzip -o -j /tmp/soillboard.apk assets/db.sqlite3 -d /db/tmp/ > /dev/null 2>&1 || \
+     (echo ">>> Direct extraction failed, trying nested APK..." && \
+      unzip -o -j /tmp/soillboard.apk 'com.auroraclimbing.soillboard.apk' -d /tmp/ && \
+      unzip -o -j /tmp/com.auroraclimbing.soillboard.apk assets/db.sqlite3 -d /db/tmp/)) && \
+    { test -f /db/tmp/db.sqlite3 || \
+      (echo "ERROR: Failed to extract So-iLL database from APK" && false); } && \
+    mv /db/tmp/db.sqlite3 /db/tmp/soill.db && \
+    \
     # ── Fix SQLite compatibility (FLOAT UNSIGNED → FLOAT, orphans) ──── \
     echo ">>> Fixing Kilter SQLite compatibility..." && \
     cp /db/tmp/kilter.db /db/tmp/kilter.modified.db && \
@@ -148,6 +162,7 @@ RUN set -e && \
     cp /db/tmp/decoy.db /db/tmp/decoy.modified.db && \
     cp /db/tmp/touchstone.db /db/tmp/touchstone.modified.db && \
     cp /db/tmp/grasshopper.db /db/tmp/grasshopper.modified.db && \
+    cp /db/tmp/soill.db /db/tmp/soill.modified.db && \
     DB_FILE=/db/tmp/kilter.modified.db /db/cleanup_sqlite_db_problems.sh && \
     echo ">>> Fixing Tension SQLite compatibility..." && \
     DB_FILE=/db/tmp/tension.modified.db /db/cleanup_sqlite_db_problems.sh && \
@@ -157,6 +172,8 @@ RUN set -e && \
     DB_FILE=/db/tmp/touchstone.modified.db /db/cleanup_sqlite_db_problems.sh && \
     echo ">>> Fixing Grasshopper SQLite compatibility..." && \
     DB_FILE=/db/tmp/grasshopper.modified.db /db/cleanup_sqlite_db_problems.sh && \
+    echo ">>> Fixing So-iLL SQLite compatibility..." && \
+    DB_FILE=/db/tmp/soill.modified.db /db/cleanup_sqlite_db_problems.sh && \
     \
     # ── Initialize and start PostgreSQL ────────────────────────────────── \
     # Listen on localhost TCP (for pgloader, which can't parse Unix socket URLs) \
@@ -233,6 +250,8 @@ RUN set -e && \
     DATABASE_URL=postgresql://postgres@localhost/main bunx tsx scripts/import-aurora-board-unified.ts touchstone /db/tmp/touchstone.modified.db && \
     echo ">>> Importing Grasshopper board data into unified tables..." && \
     DATABASE_URL=postgresql://postgres@localhost/main bunx tsx scripts/import-aurora-board-unified.ts grasshopper /db/tmp/grasshopper.modified.db && \
+    echo ">>> Importing So-iLL board data into unified tables..." && \
+    DATABASE_URL=postgresql://postgres@localhost/main bunx tsx scripts/import-aurora-board-unified.ts soill /db/tmp/soill.modified.db && \
     \
     # ── Download and import MoonBoard data ────────────────────────────── \
     echo ">>> Downloading MoonBoard problem data..." && \

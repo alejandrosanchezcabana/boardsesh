@@ -85,6 +85,13 @@ for f in "$PUBLIC_DIR"/images/touchstone/product_sizes_layouts_sets/*.png; do
 done
 echo ""
 
+# So-iLL board images
+echo "So-iLL:"
+for f in "$PUBLIC_DIR"/images/soill/product_sizes_layouts_sets/*.png; do
+  [[ -f "$f" ]] && convert_file "$f"
+done
+echo ""
+
 # MoonBoard images (recursive)
 echo "MoonBoard:"
 while IFS= read -r -d '' f; do

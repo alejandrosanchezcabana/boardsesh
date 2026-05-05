@@ -117,6 +117,7 @@ export const getBoardSelectorOptions = () => {
     decoy: [],
     touchstone: [],
     grasshopper: [],
+    soill: [],
   };
   const sizes: Record<string, { id: number; name: string; description: string }[]> = {};
   const sets: Record<string, { id: number; name: string }[]> = {};

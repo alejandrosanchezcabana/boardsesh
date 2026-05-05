@@ -5,5 +5,6 @@ export function capitalizeFirst(value: string): string {
 /** Trademark-safe display name for a board type (e.g. "kilter" → "Kilter", "moonboard" → "MoonBoard"). */
 export function formatBoardDisplayName(boardType: string): string {
   if (boardType === 'moonboard') return 'MoonBoard';
+  if (boardType === 'soill') return 'So iLL';
   return capitalizeFirst(boardType);
 }

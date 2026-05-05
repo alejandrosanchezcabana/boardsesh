@@ -76,7 +76,7 @@ export function getUnifiedTable<K extends keyof UnifiedTableSet>(tableName: K): 
 }
 
 /**
- * Board name type that includes all supported boards (kilter, tension, moonboard, decoy, touchstone, grasshopper)
+ * Board name type that includes all supported boards (kilter, tension, moonboard, decoy, touchstone, grasshopper, soill)
  */
 export type UnifiedBoardName = BoardName | 'moonboard';
 
@@ -92,7 +92,8 @@ export function isValidBoardName(boardName: string): boardName is UnifiedBoardNa
     boardName === 'moonboard' ||
     boardName === 'decoy' ||
     boardName === 'touchstone' ||
-    boardName === 'grasshopper'
+    boardName === 'grasshopper' ||
+    boardName === 'soill'
   );
 }
 
