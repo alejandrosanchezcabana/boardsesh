@@ -1,10 +1,10 @@
 import React from 'react';
 import { render, fireEvent, screen } from '@testing-library/react';
-import { beforeEach, describe, expect, it, vi } from 'vite-plus/test';
+import { beforeAll, beforeEach, describe, expect, it, vi } from 'vite-plus/test';
 import type { BoardDetails, HoldsFilter, SearchRequestPagination, ZoneBox } from '@/app/lib/types';
 import { DEFAULT_SEARCH_PARAMS } from '@/app/lib/url-utils';
 import { tFromCatalog } from '@/app/__test-helpers__/i18n-mock';
-import { gridToSvg, type BoardDimensions } from '../climb-zone-math';
+import { gridToSvg, svgToGrid, type BoardDimensions } from '../climb-zone-math';
 
 vi.mock('react-i18next', () => ({
   useTranslation: (ns?: string) => ({
@@ -243,5 +243,91 @@ describe('ClimbSearchForm — zone changes prune out-of-zone holds', () => {
       | undefined;
     expect(drawCall?.holdsFilter).toEqual({});
     expect(drawCall?.zoneBox).toBeDefined();
+  });
+});
+
+describe('ClimbSearchForm — drag handles', () => {
+  // JSDOM doesn't implement SVGSVGElement.createSVGPoint or getScreenCTM.
+  // svgPointToGrid (in the form) calls both, so simulating pointer events
+  // on a real handle requires patching them. The identity-CTM stub makes
+  // clientX/clientY equal local SVG coords, so the pointer event coords
+  // round-trip cleanly through svgToGrid in the test.
+  beforeAll(() => {
+    type StubSvgPoint = { x: number; y: number; matrixTransform(matrix: unknown): { x: number; y: number } };
+    const proto = SVGSVGElement.prototype as unknown as {
+      createSVGPoint?: () => StubSvgPoint;
+      getScreenCTM?: () => { inverse(): unknown };
+    };
+    if (!proto.createSVGPoint) {
+      proto.createSVGPoint = function (): StubSvgPoint {
+        return {
+          x: 0,
+          y: 0,
+          matrixTransform(_matrix: unknown) {
+            return { x: this.x, y: this.y };
+          },
+        };
+      };
+    }
+    if (!proto.getScreenCTM) {
+      proto.getScreenCTM = function () {
+        const identity = {
+          inverse() {
+            return this;
+          },
+        };
+        return identity;
+      };
+    }
+  });
+
+  beforeEach(() => {
+    mockUpdateFilters.mockClear();
+    mockUISearchParams = { ...DEFAULT_SEARCH_PARAMS };
+  });
+
+  // Sanity: confirm the SVG-pixel coords used by the drag test correspond
+  // to the grid coords we expect, so a future change to gridToSvg/svgToGrid
+  // doesn't silently invalidate the assertion.
+  it('coordinate stubs round-trip grid → SVG → grid', () => {
+    const seCornerSvg = gridToSvg(115, 31, dims);
+    const back = svgToGrid(seCornerSvg.x, seCornerSvg.y, dims);
+    expect(back.x).toBeCloseTo(115);
+    expect(back.y).toBeCloseTo(31);
+  });
+
+  it('dragging the SE corner shrinks the zone and prunes holds outside the new box', () => {
+    const startZone: ZoneBox = { edgeLeft: 29, edgeRight: 115, edgeBottom: 31, edgeTop: 125 };
+    mockUISearchParams = {
+      ...DEFAULT_SEARCH_PARAMS,
+      holdsFilter: filterAllThreeHolds,
+      zoneBox: startZone,
+    };
+    const { container } = render(<ClimbSearchForm boardDetails={boardDetails} />);
+
+    // JSX renders handles in the order: rect (pointer-events: none, skipped
+    // by the `circle` selector), then move, nw, ne, sw, se. The SE corner
+    // handle is therefore the 5th circle in the zone overlay.
+    const handles = container.querySelectorAll<SVGCircleElement>('svg circle');
+    expect(handles.length).toBe(5);
+    const seHandle = handles[4]!;
+
+    // SE corner starts at grid (115, 31) → SVG (862.5, 937.5).
+    fireEvent.pointerDown(seHandle, { clientX: 862.5, clientY: 937.5, pointerId: 1 });
+    // Drag inward to grid (70, 76) → SVG (525, 600).
+    fireEvent.pointerMove(seHandle, { clientX: 525, clientY: 600, pointerId: 1 });
+    fireEvent.pointerUp(seHandle, { clientX: 525, clientY: 600, pointerId: 1 });
+
+    const dragCall = mockUpdateFilters.mock.calls.at(-1)?.[0] as
+      | { zoneBox: ZoneBox; holdsFilter: HoldsFilter }
+      | undefined;
+    expect(dragCall).toBeDefined();
+    // SE corner moved -45 in x, +45 in y. clampZoneBox keeps min size and
+    // rounds to integer grid coords.
+    expect(dragCall?.zoneBox).toEqual({ edgeLeft: 29, edgeRight: 70, edgeBottom: 76, edgeTop: 125 });
+    // Hold 101 at grid (60, 80) is inside the new box; the other two are
+    // dropped. Critical check: a regression that removed pruneHoldsToZone
+    // from endDrag (while keeping it in handleEnable) would fail here.
+    expect(dragCall?.holdsFilter).toEqual({ 101: { STARTING: 'include' } });
   });
 });
