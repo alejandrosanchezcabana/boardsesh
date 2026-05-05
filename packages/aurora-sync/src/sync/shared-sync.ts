@@ -66,11 +66,12 @@ const TABLES_TO_PROCESS = new Set([...PROCESSING_ORDER, 'shared_syncs']);
 
 const MAX_SYNC_ATTEMPTS = 100;
 
-// Chunk multi-row INSERTs to keep statement size bounded. The parameter limit
-// in postgres-js (default 65535) is the real ceiling — at ~20 columns per row
-// we can fit ~3000 rows per statement, but 100 keeps statements short and is
-// already 100× faster than per-row inserts over a high-latency proxy.
-const BATCH_SIZE = 100;
+// Chunk multi-row INSERTs to keep statement size bounded. Postgres has a hard
+// limit of 65535 parameters per statement; the widest table we write here is
+// `climbs` at 19 columns, so 1000 rows/statement = 19 000 params, well under
+// the ceiling. Aurora caps each shared-sync response at ~2000 records total,
+// so 1000 means ≤2 statements per batch per table even at the API page cap.
+const BATCH_SIZE = 1000;
 
 async function processBatches<T>(data: T[], processor: (batch: T[]) => Promise<void>): Promise<void> {
   for (let i = 0; i < data.length; i += BATCH_SIZE) {
