@@ -68,24 +68,27 @@ export const searchClimbs = async (
   const sortOrder = searchParams.sortOrder === 'asc' ? 'asc' : 'desc';
   const isDraftsQuery = !!searchParams.onlyDrafts;
 
-  // For the default hot path (ascents DESC with stats filters active), drive from
-  // board_climb_stats so PostgreSQL reads the covering index in sorted order and
-  // stops after pageSize+1 qualifying rows — avoids scanning all 15K+ matching
-  // climbs just to sort and take 21.
+  // For ascents-DESC, drive from board_climb_stats so PostgreSQL walks the
+  // covering index in sorted order and stops after pageSize+1 qualifying rows.
+  // Avoids the LEFT-JOIN plan that scans all matching board_climbs and parallel-sorts
+  // them — that plan allocates 16MB DSM segments per parallel context and saturates
+  // /dev/shm under concurrent traffic.
   //
-  // Only safe when stats filters are active (e.g., minAscents >= 1) because the
-  // INNER JOIN excludes climbs without stats rows. When stats filters are active,
-  // those climbs would be excluded by the WHERE clause anyway (NULL fails >= 1),
-  // making LEFT JOIN and INNER JOIN equivalent.
-  // When no stats filters are active, fall through to the LEFT JOIN path.
-  const hasStatsFilters = filters.getClimbStatsConditions().length > 0;
-  // projectsOnly includes climbs with NO stats row (ascents NULL), so the INNER-JOIN
-  // stats-driven path would drop exactly the climbs we want. Force the LEFT-JOIN path.
-  const useStatsDriven =
-    sortBy === 'ascents' && sortOrder === 'desc' && !isDraftsQuery && hasStatsFilters && !searchParams.projectsOnly;
+  // statsDrivenSearch's INNER JOIN drops climbs without a stats row at this angle,
+  // so when its result is short we fall back to standardSearch (LEFT JOIN) to
+  // include stats-less climbs. The fallback runs over a small slice of the result
+  // set, so the planner picks a serial plan and doesn't allocate parallel DSM.
+  //
+  // projectsOnly explicitly wants climbs with NO stats row, so it can't use the
+  // stats-driven path — straight to standardSearch.
+  const useStatsDriven = sortBy === 'ascents' && sortOrder === 'desc' && !isDraftsQuery && !searchParams.projectsOnly;
 
   if (useStatsDriven) {
-    return statsDrivenSearch(db, params, filters, page, pageSize);
+    const statsResult = await statsDrivenSearch(db, params, filters, page, pageSize);
+    if (statsResult.hasMore) {
+      return statsResult;
+    }
+    return standardSearch(db, params, searchParams, filters, sortBy, sortOrder, isDraftsQuery, page, pageSize);
   }
 
   return standardSearch(db, params, searchParams, filters, sortBy, sortOrder, isDraftsQuery, page, pageSize);
@@ -96,9 +99,10 @@ export const searchClimbs = async (
  * PostgreSQL reads the stats covering index in ascensionist_count DESC order
  * and stops after pageSize+1 qualifying rows.
  *
- * Only used when stats filters are active (checked by caller), so the INNER JOIN
- * is equivalent to LEFT JOIN — climbs without stats would be excluded by stats
- * filters (e.g., minAscents >= 1) in the WHERE clause anyway.
+ * The INNER JOIN excludes climbs without a stats row at this angle. The caller
+ * (`searchClimbs`) handles that by falling back to `standardSearch` whenever this
+ * function reports `hasMore === false` — that signals we're at or past the boundary
+ * of stats-having climbs and stats-less climbs may need to fill the page.
  *
  * All climb filters (including personal progress like hideCompleted) are in
  * the WHERE clause — not the JOIN ON — so they apply correctly to the result set.
