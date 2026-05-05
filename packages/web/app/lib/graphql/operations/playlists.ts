@@ -615,3 +615,94 @@ export type UnfollowPlaylistMutationVariables = {
 export type UnfollowPlaylistMutationResponse = {
   unfollowPlaylist: boolean;
 };
+
+// ============================================
+// Smart (computed) Playlist Types and Operations
+// ============================================
+
+export type SmartPlaylistType = 'FIVE_STARS' | 'MOST_REPEATED' | 'PROJECTS';
+
+export type SmartPlaylistMeta = {
+  type: SmartPlaylistType;
+  userId: string;
+  userName: string;
+  userAvatar: string | null;
+  climbCount: number;
+};
+
+export type SmartPlaylistResult = {
+  meta: SmartPlaylistMeta;
+  climbs: PlaylistClimbsResult['climbs'];
+  totalCount: number;
+  hasMore: boolean;
+};
+
+export type GetSmartPlaylistInput = {
+  type: SmartPlaylistType;
+  userId: string;
+  boardName?: string;
+  layoutId?: number;
+  sizeId?: number;
+  setIds?: string;
+  angle?: number;
+  page?: number;
+  pageSize?: number;
+};
+
+export type GetSmartPlaylistQueryVariables = {
+  input: GetSmartPlaylistInput;
+};
+
+export type GetSmartPlaylistQueryResponse = {
+  smartPlaylist: SmartPlaylistResult;
+};
+
+export type SmartPlaylistCount = {
+  type: SmartPlaylistType;
+  count: number;
+};
+
+export type GetMySmartPlaylistCountsQueryResponse = {
+  mySmartPlaylistCounts: SmartPlaylistCount[];
+};
+
+export const GET_SMART_PLAYLIST = gql`
+  query GetSmartPlaylist($input: GetSmartPlaylistInput!) {
+    smartPlaylist(input: $input) {
+      meta {
+        type
+        userId
+        userName
+        userAvatar
+        climbCount
+      }
+      climbs {
+        uuid
+        layoutId
+        boardType
+        setter_username
+        name
+        description
+        frames
+        angle
+        ascensionist_count
+        difficulty
+        quality_average
+        stars
+        difficulty_error
+        benchmark_difficulty
+      }
+      totalCount
+      hasMore
+    }
+  }
+`;
+
+export const GET_MY_SMART_PLAYLIST_COUNTS = gql`
+  query GetMySmartPlaylistCounts {
+    mySmartPlaylistCounts {
+      type
+      count
+    }
+  }
+`;
