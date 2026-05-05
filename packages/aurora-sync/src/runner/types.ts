@@ -1,6 +1,12 @@
 export type SyncRunnerConfig = {
   onLog?: (message: string) => void;
   onError?: (error: Error, context: { userId?: string; board?: string }) => void;
+  /**
+   * Minimum time between shared-sync attempts on the same board. Multiple users
+   * cycling through user-sync within this window only trigger one shared-sync
+   * for that board. Defaults to 1 hour.
+   */
+  sharedSyncCooldownMs?: number;
 };
 
 export type DaemonOptions = {

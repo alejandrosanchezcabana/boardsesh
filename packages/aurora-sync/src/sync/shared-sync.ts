@@ -1,7 +1,8 @@
 import { sharedSync } from '../api/shared-sync-api';
 import { type SyncOptions, type AuroraBoardName, SHARED_SYNC_TABLES } from '../api/types';
 import { sql, eq, inArray } from 'drizzle-orm';
-import { drizzle, type PostgresJsDatabase } from 'drizzle-orm/postgres-js';
+import { drizzle } from 'drizzle-orm/postgres-js';
+import type { PgDatabase, PgQueryResultHKT } from 'drizzle-orm/pg-core';
 import type postgres from 'postgres';
 import type {
   Attempt,
@@ -27,7 +28,11 @@ import { populateDenormalizedColumns } from '@boardsesh/db/queries';
 import { setterFollows, notifications, userBoardMappings, userFollows } from '@boardsesh/db/schema';
 import { randomUUID } from 'crypto';
 
-type DrizzleDb = PostgresJsDatabase<Record<string, never>>;
+// Common ancestor of `PostgresJsDatabase` and the `PgTransaction` Drizzle
+// hands you inside `db.transaction(async (tx) => …)`. Both expose the same
+// query-builder surface (`insert`, `select`, `update`, `execute`), so we type
+// against the parent and avoid the `tx as unknown as …` cast at the call site.
+type DrizzleDb = PgDatabase<PgQueryResultHKT, Record<string, unknown>>;
 
 export type NewClimbInfo = {
   uuid: string;
@@ -704,13 +709,11 @@ export async function syncSharedData(
     const syncResults = await sharedSync(board, buildSyncParams(), token);
 
     await db.transaction(async (tx) => {
-      const txDb = tx as unknown as DrizzleDb;
-
       for (const tableName of PROCESSING_ORDER) {
         const data = syncResults[tableName];
         if (!Array.isArray(data)) continue;
         log(`[SharedSync] ${tableName}: ${data.length} records`);
-        const newClimbs = await upsertSharedTableData(txDb, board, tableName, data as SyncPutFields[], log);
+        const newClimbs = await upsertSharedTableData(tx, board, tableName, data as SyncPutFields[], log);
         allNewClimbs.push(...newClimbs);
         if (!totalResults[tableName]) {
           totalResults[tableName] = { synced: 0, complete: false };
@@ -737,7 +740,7 @@ export async function syncSharedData(
 
       const newSharedSyncs = syncResults['shared_syncs'];
       if (Array.isArray(newSharedSyncs)) {
-        await updateSharedSyncs(txDb, board, newSharedSyncs as SharedSync[]);
+        await updateSharedSyncs(tx, board, newSharedSyncs as SharedSync[]);
 
         // Merge — never replace. Tables Aurora didn't return this batch keep
         // their existing cursor, instead of being silently reset to 1970.
