@@ -194,6 +194,15 @@
   flex-shrink: 0;
 }
 
+/* Queue icon — clickable area for opening the queue drawer */
+.queueIconWrapper {
+  cursor: pointer;
+  touch-action: manipulation;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+}
+
 /* Expandable participant bar — same CSS grid collapse as tick row */
 .participantBar {
   display: grid;
