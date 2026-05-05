@@ -56,13 +56,7 @@ export function clampZoneBox(box: ZoneBox, edges: BoardEdges): ZoneBox {
  * grid-axis pairs as follows: visually-upper-Y = larger `edgeTop`,
  * visually-lower-Y = smaller `edgeBottom`.
  */
-export function applyDrag(
-  startBox: ZoneBox,
-  mode: DragMode,
-  dx: number,
-  dy: number,
-  edges: BoardEdges,
-): ZoneBox {
+export function applyDrag(startBox: ZoneBox, mode: DragMode, dx: number, dy: number, edges: BoardEdges): ZoneBox {
   if (mode === 'move') {
     const widthGrid = startBox.edgeRight - startBox.edgeLeft;
     const heightGrid = startBox.edgeTop - startBox.edgeBottom;
@@ -142,4 +136,24 @@ export function computeHandleRadius(dims: BoardDimensions): number {
   const MAX_HANDLE = 40;
   const fromBoard = Math.max(dims.boardWidth, dims.boardHeight) * HANDLE_FRACTION;
   return Math.max(MIN_HANDLE, Math.min(MAX_HANDLE, fromBoard));
+}
+
+/**
+ * Whether a hold sits inside (or on the edge of) a zone box. `cx`/`cy` come
+ * from `BoardDetails.holdsData` in SVG-pixel space (see board-constants.ts);
+ * the zone box is in grid coordinates, so we run the hold position through
+ * `svgToGrid` and compare against the box edges.
+ *
+ * Inclusive on all four sides — the backend zone filter keeps a climb if
+ * every hold fits inside the box, so a hold exactly on the edge still
+ * leaves the climb eligible.
+ */
+export function isHoldInsideZone(hold: { cx: number; cy: number }, zone: ZoneBox, dims: BoardDimensions): boolean {
+  const gridPoint = svgToGrid(hold.cx, hold.cy, dims);
+  return (
+    gridPoint.x >= zone.edgeLeft &&
+    gridPoint.x <= zone.edgeRight &&
+    gridPoint.y >= zone.edgeBottom &&
+    gridPoint.y <= zone.edgeTop
+  );
 }

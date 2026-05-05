@@ -139,6 +139,7 @@
       "holds": "Prises",
       "holdsTitle": "Rechercher par prise",
       "zone": "Zone",
+      "holdsAndZone": "Prises et zone",
       "anyDefault": "Toutes",
       "allClimbs": "Tous les blocs"
     },

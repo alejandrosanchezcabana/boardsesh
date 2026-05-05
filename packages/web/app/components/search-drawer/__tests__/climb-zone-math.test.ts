@@ -5,6 +5,7 @@ import {
   clampZoneBox,
   computeHandleRadius,
   gridToSvg,
+  isHoldInsideZone,
   svgToGrid,
   type BoardDimensions,
   type BoardEdges,
@@ -198,6 +199,44 @@ describe('gridToSvg / svgToGrid', () => {
     const topRight = gridToSvg(EDGES.edgeRight, EDGES.edgeTop, DIMS);
     expect(topRight.x).toBe(DIMS.boardWidth);
     expect(topRight.y).toBe(0);
+  });
+});
+
+describe('isHoldInsideZone', () => {
+  // The backend filter keeps climbs whose every hold fits inside the box
+  // (create-climb-filters.ts: edgeLeft >= zone.edgeLeft, etc.), so this
+  // helper has to use the same inclusive-edge semantics.
+  const zone = { edgeLeft: 30, edgeRight: 100, edgeBottom: 40, edgeTop: 120 };
+
+  // BoardDetails.holdsData stores positions as { cx, cy } in SVG-pixel space
+  // (see board-constants.ts). gridToSvg returns { x, y } so we adapt here.
+  const holdAtGrid = (gridX: number, gridY: number, dims: BoardDimensions) => {
+    const svgPoint = gridToSvg(gridX, gridY, dims);
+    return { cx: svgPoint.x, cy: svgPoint.y };
+  };
+
+  it('returns true for a hold deep inside the zone', () => {
+    expect(isHoldInsideZone(holdAtGrid(60, 80, DIMS), zone, DIMS)).toBe(true);
+  });
+
+  it('returns false for a hold below the zone', () => {
+    expect(isHoldInsideZone(holdAtGrid(60, 20, DIMS), zone, DIMS)).toBe(false);
+  });
+
+  it('returns false for a hold left of the zone', () => {
+    expect(isHoldInsideZone(holdAtGrid(10, 80, DIMS), zone, DIMS)).toBe(false);
+  });
+
+  it('returns true for a hold exactly on a zone edge (inclusive)', () => {
+    expect(isHoldInsideZone(holdAtGrid(zone.edgeLeft, zone.edgeBottom, DIMS), zone, DIMS)).toBe(true);
+  });
+
+  it('handles non-zero edge offsets (e.g. mirrored layouts)', () => {
+    const offsetEdges: BoardEdges = { edgeLeft: 12, edgeRight: 156, edgeBottom: 24, edgeTop: 168 };
+    const offsetDims: BoardDimensions = { ...offsetEdges, boardWidth: 1080, boardHeight: 1170 };
+    const offsetZone = { edgeLeft: 50, edgeRight: 130, edgeBottom: 60, edgeTop: 150 };
+    expect(isHoldInsideZone(holdAtGrid(80, 100, offsetDims), offsetZone, offsetDims)).toBe(true);
+    expect(isHoldInsideZone(holdAtGrid(140, 100, offsetDims), offsetZone, offsetDims)).toBe(false);
   });
 });
 

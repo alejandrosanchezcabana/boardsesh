@@ -139,6 +139,7 @@
       "holds": "Holds",
       "holdsTitle": "Search by Hold",
       "zone": "Zone",
+      "holdsAndZone": "Holds & Zone",
       "anyDefault": "Any",
       "allClimbs": "All climbs"
     },
