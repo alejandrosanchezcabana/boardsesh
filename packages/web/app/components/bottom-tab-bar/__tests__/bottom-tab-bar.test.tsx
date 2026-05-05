@@ -8,7 +8,6 @@ import BottomTabBar from '../bottom-tab-bar';
 
 const mockPush = vi.fn();
 const mockShowMessage = vi.fn();
-const mockCreatePlaylist = vi.fn();
 
 let mockPathname = '/kilter/original/12x12-square/screw_bolt/40/list';
 let mockLanguage = 'en-US';
@@ -166,15 +165,6 @@ vi.mock('../../persistent-session', () => ({
   usePersistentSessionActions: () => ({}),
 }));
 
-vi.mock('@/app/hooks/use-climb-actions-data', () => ({
-  useClimbActionsData: () => ({
-    playlistsProviderProps: {
-      createPlaylist: mockCreatePlaylist,
-      isAuthenticated: true,
-    },
-  }),
-}));
-
 vi.mock('@/app/lib/last-used-board-db', () => ({
   getLastUsedBoard: () => Promise.resolve(null),
 }));
@@ -189,10 +179,6 @@ vi.mock('@/app/components/board-lock/use-board-switch-guard', () => ({
 
 vi.mock('@/app/lib/board-config-for-playlist', () => ({
   getDefaultAngleForBoard: () => 40,
-}));
-
-vi.mock('@/app/lib/color-utils', () => ({
-  isValidHexColor: (c: string) => /^#[0-9a-f]{6}$/i.test(c),
 }));
 
 const boardDetails = {

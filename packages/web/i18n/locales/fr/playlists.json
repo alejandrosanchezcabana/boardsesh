@@ -28,7 +28,7 @@
     "createFab": {
       "ariaLabel": "Créer une playlist"
     },
-    "customUnavailable": "Les configurations personnalisées ne sont pas encore disponibles ici. Choisissez l'une de vos boards ou une configuration populaire ci-dessus.",
+    "customUnavailable": "Les configurations personnalisées ne sont pas encore disponibles ici. Choisissez l'une de vos boards ou une configuration populaire dans la liste.",
     "errors": {
       "loadTitle": "Impossible de charger la bibliothèque",
       "loadDescription": "Erreur lors du chargement de votre bibliothèque. Réessayez.",

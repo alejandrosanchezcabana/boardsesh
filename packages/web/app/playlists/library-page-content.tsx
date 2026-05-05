@@ -491,6 +491,9 @@ export default function LibraryPageContent({
           sx={{
             position: 'fixed',
             right: `${themeTokens.spacing[4]}px`,
+            // --bottom-bar-height is set by persistent-session-wrapper after hydration with the
+            // measured queue-control + tab-bar height; the 145px fallback matches the SSR estimate
+            // declared in app/components/index.css and is what users see during first paint only.
             bottom: `calc(var(--bottom-bar-height, 145px) + ${themeTokens.spacing[4]}px)`,
             zIndex: themeTokens.zIndex.fixed,
           }}

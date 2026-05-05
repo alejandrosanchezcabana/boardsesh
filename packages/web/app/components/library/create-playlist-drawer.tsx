@@ -191,6 +191,7 @@ export default function CreatePlaylistDrawer({
             onChange={(e) => setFormValues((prev) => ({ ...prev, color: e.target.value }))}
             size="small"
             sx={{ width: 80 }}
+            slotProps={{ htmlInput: { 'aria-label': t('create.fields.color') } }}
           />
         </Box>
       </Box>

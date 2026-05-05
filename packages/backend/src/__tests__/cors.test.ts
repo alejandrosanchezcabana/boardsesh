@@ -169,6 +169,34 @@ describe('CORS Handler', () => {
     it('returns false for non-dev ports on private LAN origins', () => {
       expect(isOriginAllowed('http://192.168.0.42:8080')).toBe(false);
     });
+
+    describe('Tailscale any-port allow', () => {
+      beforeEach(() => {
+        process.env.TAILSCALE_HOSTNAME = 'My-Laptop.tailnet123.ts.net';
+        initCors('https://boardsesh.com');
+      });
+
+      it('allows the resolved Tailscale host on a non-default port over https', () => {
+        expect(isOriginAllowed('https://my-laptop.tailnet123.ts.net:3005')).toBe(true);
+      });
+
+      it('allows the resolved Tailscale host on a non-default port over http', () => {
+        expect(isOriginAllowed('http://my-laptop.tailnet123.ts.net:8765')).toBe(true);
+      });
+
+      it('allows the resolved Tailscale host with no port', () => {
+        expect(isOriginAllowed('https://my-laptop.tailnet123.ts.net')).toBe(true);
+      });
+
+      it('rejects a different Tailscale host even on a dev port', () => {
+        expect(isOriginAllowed('https://other-laptop.tailnet123.ts.net:3005')).toBe(false);
+      });
+
+      it('rejects path or suffix attempts on the resolved Tailscale host', () => {
+        expect(isOriginAllowed('https://my-laptop.tailnet123.ts.net:3005/foo')).toBe(false);
+        expect(isOriginAllowed('https://my-laptop.tailnet123.ts.net.evil.com:3005')).toBe(false);
+      });
+    });
   });
 
   /* eslint-disable @typescript-eslint/unbound-method -- all assertions target vi.fn() mocks, no `this` concern */
