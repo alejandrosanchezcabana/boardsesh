@@ -1,7 +1,14 @@
 import React from 'react';
 import { render, fireEvent, screen } from '@testing-library/react';
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vite-plus/test';
-import type { BoardDetails, HoldsFilter, SearchRequestPagination, ZoneBox } from '@/app/lib/types';
+import type {
+  BoardDetails,
+  HoldFilterMode,
+  HoldFilterType,
+  HoldsFilter,
+  SearchRequestPagination,
+  ZoneBox,
+} from '@/app/lib/types';
 import { DEFAULT_SEARCH_PARAMS } from '@/app/lib/url-utils';
 import { tFromCatalog } from '@/app/__test-helpers__/i18n-mock';
 import { gridToSvg, svgToGrid, type BoardDimensions } from '../climb-zone-math';
@@ -48,16 +55,26 @@ vi.mock('../search-hold-filter-overlay', () => ({
   default: () => null,
 }));
 
+// Capture the `setHoldFilter` callback the form passes into useSearchHoldPicker
+// so tests can simulate a hold tap by invoking it directly. Doing it through
+// picker.handleHoldClick would require routing through the popover (mocked to
+// null), so we shortcut by talking to the form's setter.
+type CapturedSetHoldFilter = (holdId: number, type: HoldFilterType, nextMode: HoldFilterMode | undefined) => void;
+let capturedSetHoldFilter: CapturedSetHoldFilter | null = null;
+
 vi.mock('../use-search-hold-picker', () => ({
-  useSearchHoldPicker: () => ({
-    anchorEl: null,
-    activeHoldId: null,
-    currentEntry: {},
-    handleHoldClick: vi.fn(),
-    handleFilterChange: vi.fn(),
-    handleClearAll: vi.fn(),
-    handleClose: vi.fn(),
-  }),
+  useSearchHoldPicker: (options: { setHoldFilter: CapturedSetHoldFilter }) => {
+    capturedSetHoldFilter = options.setHoldFilter;
+    return {
+      anchorEl: null,
+      activeHoldId: null,
+      currentEntry: {},
+      handleHoldClick: vi.fn(),
+      handleFilterChange: vi.fn(),
+      handleClearAll: vi.fn(),
+      handleClose: vi.fn(),
+    };
+  },
 }));
 
 import ClimbSearchForm from '../climb-search-form';
@@ -225,24 +242,34 @@ describe('ClimbSearchForm — zone changes prune out-of-zone holds', () => {
   });
 
   it('uses the most recent in-flight holdsFilter when the zone changes mid-debounce', () => {
-    // Reproduction of the staleness bug the reviewer flagged: provider state
-    // still reflects `holdsFilterBefore` because the URL update is debounced,
-    // but the user's most recent hold tap (which lives in the form's ref)
-    // has already added hold 101. Drawing a zone right after must respect
-    // the in-flight tap, not silently drop it.
-    const holdsFilterBefore: HoldsFilter = {};
-    mockUISearchParams = { ...DEFAULT_SEARCH_PARAMS, holdsFilter: holdsFilterBefore };
+    // Reproduction of the staleness bug: provider state still reflects an
+    // empty filter because the URL update is debounced 500ms, but the
+    // user's most recent hold tap has already added hold 101 to the form's
+    // internal ref. Drawing a zone right after must respect the in-flight
+    // tap, not silently drop it.
+    mockUISearchParams = { ...DEFAULT_SEARCH_PARAMS, holdsFilter: {} };
     render(<ClimbSearchForm boardDetails={boardDetails} />);
 
-    // Verify form rendered with no chips, then click Draw — the only signal
-    // we have access to here is `updateFilters`, so we can at least confirm
-    // the call shape stays atomic and pruning runs against an empty filter.
+    // Simulate the hold tap. setHoldFilter writes to holdsFilterRef
+    // synchronously and calls updateFilters, but we don't update
+    // mockUISearchParams here — that's what models the debounce: provider
+    // value stays stale until the timer flushes.
+    expect(capturedSetHoldFilter).not.toBeNull();
+    capturedSetHoldFilter!(101, 'STARTING', 'include');
+    expect(mockUpdateFilters).toHaveBeenCalledWith({ holdsFilter: { 101: { STARTING: 'include' } } });
+    mockUpdateFilters.mockClear();
+
+    // User immediately clicks Draw zone before the debounce flushes. Hold
+    // 101 lives at grid (60, 80) — inside the default 60% zone — so a
+    // correctly-implemented prune keeps it. If pruneHoldsToZone had read
+    // from the stale uiSearchParams.holdsFilter (still empty), the call
+    // would emit holdsFilter: {} and silently drop the just-added hold.
     fireEvent.click(screen.getByRole('button', { name: 'Draw zone' }));
     const drawCall = mockUpdateFilters.mock.calls.at(-1)?.[0] as
       | { zoneBox: ZoneBox; holdsFilter: HoldsFilter }
       | undefined;
-    expect(drawCall?.holdsFilter).toEqual({});
-    expect(drawCall?.zoneBox).toBeDefined();
+    expect(drawCall?.holdsFilter).toEqual({ 101: { STARTING: 'include' } });
+    expect(drawCall?.zoneBox).toEqual({ edgeLeft: 29, edgeRight: 115, edgeBottom: 31, edgeTop: 125 });
   });
 });
 

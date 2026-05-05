@@ -273,16 +273,26 @@ const ClimbSearchForm: React.FC<ClimbSearchFormProps> = ({ boardDetails }) => {
       if (!drag || event.pointerId !== drag.pointerId) return;
       dragStateRef.current = null;
       (event.target as Element).releasePointerCapture?.(event.pointerId);
-      if (localZone) {
-        updateFilters({ zoneBox: localZone, holdsFilter: pruneHoldsToZone(localZone) });
-        track('Search Zone Updated', {
-          boardLayout: boardDetails.layout_name || '',
-          width: localZone.edgeRight - localZone.edgeLeft,
-          height: localZone.edgeTop - localZone.edgeBottom,
-        });
-      }
+      // Compute the final zone directly from the drag start state plus the
+      // pointerup event coords, instead of reading `localZone`. If the
+      // browser fires `pointerup` in the same task as the final
+      // `pointermove`, React hasn't committed the move's `setLocalZone`
+      // yet — closing over `localZone` would persist the second-to-last
+      // box. Reading from the ref + event keeps the persisted box in lock
+      // step with the user's actual final pointer position.
+      const grid = svgPointToGrid(event.clientX, event.clientY);
+      const finalZone = grid
+        ? applyDrag(drag.startBox, drag.mode, grid.x - drag.startGridX, grid.y - drag.startGridY, dims)
+        : drag.startBox;
+      setLocalZone(finalZone);
+      updateFilters({ zoneBox: finalZone, holdsFilter: pruneHoldsToZone(finalZone) });
+      track('Search Zone Updated', {
+        boardLayout: boardDetails.layout_name || '',
+        width: finalZone.edgeRight - finalZone.edgeLeft,
+        height: finalZone.edgeTop - finalZone.edgeBottom,
+      });
     },
-    [boardDetails.layout_name, localZone, pruneHoldsToZone, updateFilters],
+    [boardDetails.layout_name, dims, pruneHoldsToZone, svgPointToGrid, updateFilters],
   );
 
   // Drag pointer handlers attach to each interactive handle directly
