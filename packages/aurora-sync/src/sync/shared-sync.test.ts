@@ -244,8 +244,13 @@ function createNotificationDbShim(opts: {
     },
     insert(table: unknown) {
       return {
-        values: async (rows: Array<Record<string, unknown>>) => {
+        values: (rows: Array<Record<string, unknown>>) => {
           inserts.push({ table, rows });
+          const noop = () => Promise.resolve();
+          return Object.assign(Promise.resolve(), {
+            onConflictDoNothing: noop,
+            onConflictDoUpdate: noop,
+          });
         },
       };
     },
@@ -314,5 +319,69 @@ describe('createSetterSyncNotifications', () => {
     );
 
     expect(inserts.filter((i) => i.table === notifications)).toHaveLength(0);
+  });
+
+  it('creates notifications for users who follow a linked board account', async () => {
+    const { db, inserts } = createNotificationDbShim({
+      setterFollowsRows: [],
+      userBoardMappingsRows: [{ userId: 'linked-user-1', boardUsername: 'setter-a' }],
+      userFollowsRows: [
+        { followerId: 'follower-x', followingId: 'linked-user-1' },
+        { followerId: 'follower-y', followingId: 'linked-user-1' },
+      ],
+    });
+
+    await createSetterSyncNotifications(
+      db,
+      'decoy',
+      [{ uuid: 'climb-1', setterUsername: 'setter-a', layoutId: 1 }],
+      () => {},
+    );
+
+    const allRows = inserts.filter((i) => i.table === notifications).flatMap((i) => i.rows);
+    expect(allRows).toHaveLength(2);
+    const recipientIds = new Set(allRows.map((row) => row.recipientId));
+    expect(recipientIds.has('follower-x')).toBe(true);
+    expect(recipientIds.has('follower-y')).toBe(true);
+  });
+
+  it('deduplicates recipients who follow the setter both directly and via linked account', async () => {
+    const { db, inserts } = createNotificationDbShim({
+      setterFollowsRows: [{ followerId: 'shared-follower', setterUsername: 'setter-a' }],
+      userBoardMappingsRows: [{ userId: 'linked-user-1', boardUsername: 'setter-a' }],
+      userFollowsRows: [{ followerId: 'shared-follower', followingId: 'linked-user-1' }],
+    });
+
+    await createSetterSyncNotifications(
+      db,
+      'decoy',
+      [{ uuid: 'climb-1', setterUsername: 'setter-a', layoutId: 1 }],
+      () => {},
+    );
+
+    const allRows = inserts.filter((i) => i.table === notifications).flatMap((i) => i.rows);
+    expect(allRows).toHaveLength(1);
+    expect(allRows[0].recipientId).toBe('shared-follower');
+  });
+
+  it('does not reach userFollows when no setters have linked board accounts', async () => {
+    // userBoardMappings returns nothing → linkedUserIds is empty → the
+    // userFollows query is skipped entirely; userFollowsRows are unreachable.
+    const { db, inserts } = createNotificationDbShim({
+      setterFollowsRows: [{ followerId: 'direct-follower', setterUsername: 'setter-a' }],
+      userBoardMappingsRows: [],
+      userFollowsRows: [{ followerId: 'indirect-follower', followingId: 'some-user' }],
+    });
+
+    await createSetterSyncNotifications(
+      db,
+      'decoy',
+      [{ uuid: 'climb-1', setterUsername: 'setter-a', layoutId: 1 }],
+      () => {},
+    );
+
+    const allRows = inserts.filter((i) => i.table === notifications).flatMap((i) => i.rows);
+    expect(allRows).toHaveLength(1);
+    expect(allRows[0].recipientId).toBe('direct-follower');
   });
 });

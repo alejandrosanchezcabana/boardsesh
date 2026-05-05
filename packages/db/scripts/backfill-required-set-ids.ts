@@ -31,7 +31,6 @@ async function main() {
   try {
     // Discover boards eligible for backfill. In --all mode this counts every
     // climb (sans NULL filter) so progress reporting reflects the full pass.
-    const nullPredicate = all ? sql`` : sql`(required_set_ids IS NULL OR compatible_size_ids IS NULL) AND`;
     const heading = all ? 'Eligible climbs (full recompute):' : 'Climbs with NULL denormalized columns:';
     const emptyMessage = all
       ? 'No eligible climbs found. Nothing to do.'
@@ -39,16 +38,26 @@ async function main() {
 
     const boardTypes = await executeRows<{ board_type: string; eligible_count: string }>(
       db,
-      sql`
-      SELECT board_type, COUNT(*) as eligible_count
-      FROM board_climbs
-      WHERE ${nullPredicate}
-        frames IS NOT NULL
-        AND frames != ''
-        AND board_type != 'moonboard'
-      GROUP BY board_type
-      ORDER BY board_type
-    `,
+      all
+        ? sql`
+        SELECT board_type, COUNT(*) as eligible_count
+        FROM board_climbs
+        WHERE frames IS NOT NULL
+          AND frames != ''
+          AND board_type != 'moonboard'
+        GROUP BY board_type
+        ORDER BY board_type
+      `
+        : sql`
+        SELECT board_type, COUNT(*) as eligible_count
+        FROM board_climbs
+        WHERE (required_set_ids IS NULL OR compatible_size_ids IS NULL)
+          AND frames IS NOT NULL
+          AND frames != ''
+          AND board_type != 'moonboard'
+        GROUP BY board_type
+        ORDER BY board_type
+      `,
     );
 
     if (boardTypes.length === 0) {
