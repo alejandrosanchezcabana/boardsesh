@@ -10,10 +10,8 @@ import CardContent from '@mui/material/CardContent';
 import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
 import TextField from '@mui/material/TextField';
-import SwipeableDrawer from '../swipeable-drawer/swipeable-drawer';
 import SyncOutlined from '@mui/icons-material/SyncOutlined';
 import CloudOffOutlined from '@mui/icons-material/CloudOffOutlined';
-import DeleteOutlined from '@mui/icons-material/DeleteOutlined';
 import OpenInFullOutlined from '@mui/icons-material/OpenInFullOutlined';
 import FormatListBulletedOutlined from '@mui/icons-material/FormatListBulletedOutlined';
 import { track } from '@vercel/analytics';
@@ -30,7 +28,7 @@ import {
 } from '@/app/lib/url-utils';
 import type { BoardRouteParameters, BoardDetails, Angle, Climb } from '@/app/lib/types';
 import PreviousClimbButton from './previous-climb-button';
-import QueueList, { type QueueListHandle } from './queue-list';
+import QueueDrawer from '../play-view/queue-drawer';
 import { useSwipeable } from 'react-swipeable';
 import { TickButton } from '../logbook/tick-button';
 import { TickButtonWithLabel } from '../logbook/tick-icon';
@@ -63,7 +61,6 @@ import Badge from '@mui/material/Badge';
 import Typography from '@mui/material/Typography';
 import { getGradeTintColor } from '@/app/lib/grade-colors';
 import { useColorMode } from '@/app/hooks/use-color-mode';
-import { ConfirmPopover } from '@/app/components/ui/confirm-popover';
 import { useSnackbar } from '@/app/components/providers/snackbar-provider';
 import { usePersistentSessionState } from '../persistent-session/persistent-session-context';
 import PlayCircleOutlineOutlined from '@mui/icons-material/PlayCircleOutlineOutlined';
@@ -83,8 +80,6 @@ export type ActiveDrawer = 'none' | 'play' | 'queue' | 'tick';
 // The actual definition lives in ./play-drawer-event to keep the import graph
 // light for callsites that only need the dispatch helper.
 export { PLAY_DRAWER_EVENT, dispatchOpenPlayDrawer } from './play-drawer-event';
-
-const QUEUE_DRAWER_STYLES = { wrapper: { height: '70%' }, body: { padding: 0 } } as const;
 
 const QUEUE_BADGE_SX = { '& .MuiBadge-badge': themeTokens.badge.small } as const;
 
@@ -142,8 +137,6 @@ const QueueControlBar: React.FC<QueueControlBarProps> = ({ boardDetails, angle }
   const params = useParams<BoardRouteParameters>();
   const searchParams = useSearchParams();
   const router = useLocaleRouter();
-  const queueListRef = useRef<QueueListHandle>(null);
-  const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const enterFallbackRef = useRef<NodeJS.Timeout | null>(null);
 
   // Reset activeDrawer on navigation
@@ -154,9 +147,6 @@ const QueueControlBar: React.FC<QueueControlBarProps> = ({ boardDetails, angle }
   // Cleanup timeouts on unmount
   useEffect(() => {
     return () => {
-      if (scrollTimeoutRef.current) {
-        clearTimeout(scrollTimeoutRef.current);
-      }
       if (enterFallbackRef.current) {
         clearTimeout(enterFallbackRef.current);
       }
@@ -180,15 +170,6 @@ const QueueControlBar: React.FC<QueueControlBarProps> = ({ boardDetails, angle }
     return () => window.removeEventListener(PLAY_DRAWER_EVENT_INTERNAL, handler);
   }, []);
 
-  // Scroll to current climb when drawer finishes opening
-  const handleDrawerOpenChange = useCallback((open: boolean) => {
-    if (open) {
-      scrollTimeoutRef.current = setTimeout(() => {
-        queueListRef.current?.scrollToCurrentClimb();
-      }, 100);
-    }
-  }, []);
-
   const handleCloseDrawer = useCallback(() => setActiveDrawer('none'), []);
 
   const isViewPage = pathname.includes('/view/');
@@ -199,7 +180,6 @@ const QueueControlBar: React.FC<QueueControlBarProps> = ({ boardDetails, angle }
   const { activeSession, session: persistentSession, users: sessionUsers } = usePersistentSessionState();
   const {
     mirrorClimb,
-    setQueue,
     getNextClimbQueueItem,
     getPreviousClimbQueueItem,
     setCurrentClimbQueueItem,
@@ -731,14 +711,6 @@ const QueueControlBar: React.FC<QueueControlBarProps> = ({ boardDetails, angle }
     }
     return baseUrl;
   }, [currentClimb, boardDetails, angle, params, searchParams]);
-
-  const handleClearQueue = () => {
-    setQueue([]);
-    track('Queue Cleared', {
-      boardLayout: boardDetails.layout_name || '',
-      itemsCleared: queue.length,
-    });
-  };
 
   const handleClimbInfoClick = useCallback(() => {
     if (!currentClimb) return;
@@ -1362,32 +1334,7 @@ const QueueControlBar: React.FC<QueueControlBarProps> = ({ boardDetails, angle }
         </CardContent>
       </MuiCard>
 
-      {/* Drawer for showing the queue */}
-      <SwipeableDrawer
-        title={t('queueDrawer.title')}
-        placement="bottom"
-        open={activeDrawer === 'queue'}
-        onClose={handleCloseDrawer}
-        onTransitionEnd={handleDrawerOpenChange}
-        styles={QUEUE_DRAWER_STYLES}
-        extra={
-          queue.length > 0 && (
-            <ConfirmPopover
-              title={t('queueDrawer.clearTitle')}
-              description={t('queueDrawer.clearDescription')}
-              onConfirm={handleClearQueue}
-              okText={t('queueDrawer.clearConfirm')}
-              cancelText={t('common:actions.cancel')}
-            >
-              <MuiButton variant="text" startIcon={<DeleteOutlined />} sx={{ color: 'var(--neutral-400)' }}>
-                {t('queueDrawer.clearConfirm')}
-              </MuiButton>
-            </ConfirmPopover>
-          )
-        }
-      >
-        <QueueList ref={queueListRef} boardDetails={boardDetails} active={activeDrawer === 'queue'} />
-      </SwipeableDrawer>
+      <QueueDrawer open={activeDrawer === 'queue'} onClose={handleCloseDrawer} boardDetails={boardDetails} />
 
       <PlayViewDrawer
         activeDrawer={activeDrawer}
