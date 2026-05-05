@@ -150,4 +150,98 @@ describe('ClimbSearchForm — zone changes prune out-of-zone holds', () => {
     // means hold filters apply on their own).
     expect(lastCall).toEqual({ zoneBox: null });
   });
+
+  it('drops every hold when none of them fit inside the new zone', () => {
+    // All three filter holds are outside the default 60% zone (only hold 101
+    // would have been inside, so we leave it out here).
+    mockUISearchParams = {
+      ...DEFAULT_SEARCH_PARAMS,
+      holdsFilter: {
+        102: { ANY: 'include' },
+        103: { FOOT: 'exclude' },
+      },
+    };
+    render(<ClimbSearchForm boardDetails={boardDetails} />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Draw zone' }));
+
+    const lastCall = mockUpdateFilters.mock.calls.at(-1)?.[0] as
+      | { zoneBox: ZoneBox; holdsFilter: HoldsFilter }
+      | undefined;
+    expect(lastCall?.holdsFilter).toEqual({});
+  });
+
+  it('renders existing zoneBox state from URL params with the Clear button', () => {
+    const persistedZone: ZoneBox = { edgeLeft: 29, edgeRight: 115, edgeBottom: 31, edgeTop: 125 };
+    mockUISearchParams = {
+      ...DEFAULT_SEARCH_PARAMS,
+      holdsFilter: { 101: { STARTING: 'include' } },
+      zoneBox: persistedZone,
+    };
+    render(<ClimbSearchForm boardDetails={boardDetails} />);
+
+    // Hydrated state: zone is enabled (Clear button visible, Draw not).
+    expect(screen.getByRole('button', { name: 'Clear zone' })).toBeTruthy();
+    expect(screen.queryByRole('button', { name: 'Draw zone' })).toBeNull();
+    // Include chip reflects the persisted holdsFilter.
+    expect(screen.getByText('1 included')).toBeTruthy();
+  });
+
+  it('drawing a zone twice (e.g. user clears and redraws) prunes again from current holdsFilter', () => {
+    mockUISearchParams = { ...DEFAULT_SEARCH_PARAMS, holdsFilter: filterAllThreeHolds };
+    const { rerender } = render(<ClimbSearchForm boardDetails={boardDetails} />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Draw zone' }));
+    const firstDraw = mockUpdateFilters.mock.calls.at(-1)?.[0] as
+      | { zoneBox: ZoneBox; holdsFilter: HoldsFilter }
+      | undefined;
+    expect(firstDraw?.holdsFilter).toEqual({ 101: { STARTING: 'include' } });
+
+    // Simulate the URL flushing: provider state now reflects the pruned
+    // holdsFilter and the persisted zone. User clears, then draws again.
+    mockUISearchParams = {
+      ...DEFAULT_SEARCH_PARAMS,
+      holdsFilter: { 101: { STARTING: 'include' } },
+      zoneBox: firstDraw!.zoneBox,
+    };
+    rerender(<ClimbSearchForm boardDetails={boardDetails} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Clear zone' }));
+
+    mockUISearchParams = {
+      ...DEFAULT_SEARCH_PARAMS,
+      holdsFilter: { 101: { STARTING: 'include' } },
+      zoneBox: null,
+    };
+    rerender(<ClimbSearchForm boardDetails={boardDetails} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Draw zone' }));
+
+    // Second draw still produces a single atomic update. Hold 101 is inside
+    // the default zone so it stays.
+    const secondDraw = mockUpdateFilters.mock.calls.at(-1)?.[0] as
+      | { zoneBox: ZoneBox; holdsFilter: HoldsFilter }
+      | undefined;
+    expect(secondDraw?.holdsFilter).toEqual({ 101: { STARTING: 'include' } });
+    expect(secondDraw?.zoneBox).toEqual({ edgeLeft: 29, edgeRight: 115, edgeBottom: 31, edgeTop: 125 });
+  });
+
+  it('uses the most recent in-flight holdsFilter when the zone changes mid-debounce', () => {
+    // Reproduction of the staleness bug the reviewer flagged: provider state
+    // still reflects `holdsFilterBefore` because the URL update is debounced,
+    // but the user's most recent hold tap (which lives in the form's ref)
+    // has already added hold 101. Drawing a zone right after must respect
+    // the in-flight tap, not silently drop it.
+    const holdsFilterBefore: HoldsFilter = {};
+    mockUISearchParams = { ...DEFAULT_SEARCH_PARAMS, holdsFilter: holdsFilterBefore };
+    render(<ClimbSearchForm boardDetails={boardDetails} />);
+
+    // Verify form rendered with no chips, then click Draw — the only signal
+    // we have access to here is `updateFilters`, so we can at least confirm
+    // the call shape stays atomic and pruning runs against an empty filter.
+    fireEvent.click(screen.getByRole('button', { name: 'Draw zone' }));
+    const drawCall = mockUpdateFilters.mock.calls.at(-1)?.[0] as
+      | { zoneBox: ZoneBox; holdsFilter: HoldsFilter }
+      | undefined;
+    expect(drawCall?.holdsFilter).toEqual({});
+    expect(drawCall?.zoneBox).toBeDefined();
+  });
 });

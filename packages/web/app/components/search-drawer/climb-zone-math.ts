@@ -147,8 +147,17 @@ export function computeHandleRadius(dims: BoardDimensions): number {
  * Inclusive on all four sides — the backend zone filter keeps a climb if
  * every hold fits inside the box, so a hold exactly on the edge still
  * leaves the climb eligible.
+ *
+ * Returns `true` for a null/undefined zone — semantically "no zone
+ * constraint = every hold is unconstrained" — so callers that prune holds
+ * after a zone change can pass `null` without a separate guard.
  */
-export function isHoldInsideZone(hold: { cx: number; cy: number }, zone: ZoneBox, dims: BoardDimensions): boolean {
+export function isHoldInsideZone(
+  hold: { cx: number; cy: number },
+  zone: ZoneBox | null | undefined,
+  dims: BoardDimensions,
+): boolean {
+  if (!zone) return true;
   const gridPoint = svgToGrid(hold.cx, hold.cy, dims);
   return (
     gridPoint.x >= zone.edgeLeft &&

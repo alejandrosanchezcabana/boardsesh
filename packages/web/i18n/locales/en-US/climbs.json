@@ -192,6 +192,9 @@
       "draw": "Draw zone",
       "clear": "Clear zone"
     },
+    "holdsAndZone": {
+      "description": "Tap holds to filter, or draw a zone to limit results to climbs that fit inside it."
+    },
     "sortToggle": "Sort"
   },
   "statsFilter": {

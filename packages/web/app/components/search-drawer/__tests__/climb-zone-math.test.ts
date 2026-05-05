@@ -238,6 +238,16 @@ describe('isHoldInsideZone', () => {
     expect(isHoldInsideZone(holdAtGrid(80, 100, offsetDims), offsetZone, offsetDims)).toBe(true);
     expect(isHoldInsideZone(holdAtGrid(140, 100, offsetDims), offsetZone, offsetDims)).toBe(false);
   });
+
+  it('returns true for a null zone (no zone constraint = every hold qualifies)', () => {
+    expect(isHoldInsideZone(holdAtGrid(60, 80, DIMS), null, DIMS)).toBe(true);
+    // Out-of-bounds hold also passes — zone constraint only kicks in when set.
+    expect(isHoldInsideZone(holdAtGrid(10, 10, DIMS), null, DIMS)).toBe(true);
+  });
+
+  it('returns true for an undefined zone (same semantics as null)', () => {
+    expect(isHoldInsideZone(holdAtGrid(60, 80, DIMS), undefined, DIMS)).toBe(true);
+  });
 });
 
 describe('computeHandleRadius', () => {

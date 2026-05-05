@@ -75,6 +75,11 @@ const ClimbSearchForm: React.FC<ClimbSearchFormProps> = ({ boardDetails }) => {
     [boardDetails],
   );
 
+  // holdsById is built from the original (non-tightened) holdsData because
+  // we only need cx/cy here — the tightening shrinks `r`, not the position.
+  // If we ever start adjusting cx/cy in tightenedBoardDetails, this lookup
+  // must move to that array so the prune calculation stays in sync with
+  // where the user actually tapped.
   const holdsById = useMemo(() => {
     const map = new Map<number, { cx: number; cy: number }>();
     for (const hold of boardDetails.holdsData) {
@@ -98,7 +103,6 @@ const ClimbSearchForm: React.FC<ClimbSearchFormProps> = ({ boardDetails }) => {
 
   const defaultZone = useMemo(() => buildDefaultZone(dims), [dims]);
   const handleRadius = computeHandleRadius(dims);
-  const moveHandleRadius = handleRadius * 0.6;
 
   // Local zone mirrors the URL param so dragging stays smooth without
   // hammering the search debounce on every pointermove.
@@ -135,47 +139,61 @@ const ClimbSearchForm: React.FC<ClimbSearchFormProps> = ({ boardDetails }) => {
 
   const holdsFilter: HoldsFilter = uiSearchParams.holdsFilter || {};
 
+  // Latest-known holdsFilter snapshot for prune calculations during a drag.
+  // The tap-a-hold path calls `updateFilters({ holdsFilter })` which is
+  // debounced 500 ms before reaching the URL — but `setUISearchParams`
+  // updates the context synchronously, so reading the ref from `endDrag`
+  // sees a hold added immediately before the user grabbed a corner. The
+  // ref is also written synchronously inside `setHoldFilter`/`clearHold`
+  // so a within-render update doesn't have to wait for React's commit.
+  const holdsFilterRef = useRef<HoldsFilter>(holdsFilter);
+  useEffect(() => {
+    holdsFilterRef.current = holdsFilter;
+  }, [holdsFilter]);
+
   const setHoldFilter = useCallback(
     (holdId: number, type: HoldFilterType, nextMode: HoldFilterMode | undefined) => {
-      const next: HoldsFilter = { ...holdsFilter };
-      let entry: HoldFilterEntry = { ...next[holdId] };
+      const nextHoldsFilter: HoldsFilter = { ...holdsFilterRef.current };
+      let holdEntry: HoldFilterEntry = { ...nextHoldsFilter[holdId] };
       if (nextMode === undefined) {
-        delete entry[type];
+        delete holdEntry[type];
       } else {
         // Don't allow mixing include and exclude on the same hold — switching
         // modes wipes any previously-set entries in the other mode so the
         // hold ends up consistently include-only or exclude-only.
         const otherMode: HoldFilterMode = nextMode === 'include' ? 'exclude' : 'include';
-        const conflicts = Object.entries(entry).some(([, mode]) => mode === otherMode);
+        const conflicts = Object.entries(holdEntry).some(([, mode]) => mode === otherMode);
         if (conflicts) {
-          entry = Object.fromEntries(Object.entries(entry).filter(([, mode]) => mode !== otherMode));
+          holdEntry = Object.fromEntries(Object.entries(holdEntry).filter(([, mode]) => mode !== otherMode));
         }
-        entry[type] = nextMode;
+        holdEntry[type] = nextMode;
       }
-      if (Object.keys(entry).length === 0) {
-        delete next[holdId];
+      if (Object.keys(holdEntry).length === 0) {
+        delete nextHoldsFilter[holdId];
       } else {
-        next[holdId] = entry;
+        nextHoldsFilter[holdId] = holdEntry;
       }
-      updateFilters({ holdsFilter: next });
+      holdsFilterRef.current = nextHoldsFilter;
+      updateFilters({ holdsFilter: nextHoldsFilter });
       track('Search Hold Filter Changed', {
         type,
         mode: nextMode ?? 'unset',
         boardLayout: boardDetails.layout_name || '',
       });
     },
-    [boardDetails.layout_name, holdsFilter, updateFilters],
+    [boardDetails.layout_name, updateFilters],
   );
 
   const clearHold = useCallback(
     (holdId: number) => {
-      if (!(holdId in holdsFilter)) return;
-      const next: HoldsFilter = { ...holdsFilter };
-      delete next[holdId];
-      updateFilters({ holdsFilter: next });
+      if (!(holdId in holdsFilterRef.current)) return;
+      const nextHoldsFilter: HoldsFilter = { ...holdsFilterRef.current };
+      delete nextHoldsFilter[holdId];
+      holdsFilterRef.current = nextHoldsFilter;
+      updateFilters({ holdsFilter: nextHoldsFilter });
       track('Search Hold Filter Cleared', { boardLayout: boardDetails.layout_name || '' });
     },
-    [boardDetails.layout_name, holdsFilter, updateFilters],
+    [boardDetails.layout_name, updateFilters],
   );
 
   const picker = useSearchHoldPicker({
@@ -193,16 +211,16 @@ const ClimbSearchForm: React.FC<ClimbSearchFormProps> = ({ boardDetails }) => {
   // matches — drop it instead of leaving the user staring at empty results.
   const pruneHoldsToZone = useCallback(
     (zone: ZoneBox): HoldsFilter => {
-      const next: HoldsFilter = {};
-      for (const [holdIdRaw, entry] of Object.entries(holdsFilter)) {
+      const prunedHoldsFilter: HoldsFilter = {};
+      for (const [holdIdRaw, entry] of Object.entries(holdsFilterRef.current)) {
         const hold = holdsById.get(Number(holdIdRaw));
         if (hold && entry && isHoldInsideZone(hold, zone, dims)) {
-          next[Number(holdIdRaw)] = entry;
+          prunedHoldsFilter[Number(holdIdRaw)] = entry;
         }
       }
-      return next;
+      return prunedHoldsFilter;
     },
-    [dims, holdsById, holdsFilter],
+    [dims, holdsById],
   );
 
   const handleEnable = useCallback(() => {
@@ -267,6 +285,22 @@ const ClimbSearchForm: React.FC<ClimbSearchFormProps> = ({ boardDetails }) => {
     [boardDetails.layout_name, localZone, pruneHoldsToZone, updateFilters],
   );
 
+  // Drag pointer handlers attach to each interactive handle directly
+  // rather than to the parent SVG. The parent's `pointer-events: none` is
+  // what lets taps on holds inside the zone reach BoardRenderer underneath
+  // — and on Safari/iOS, listeners on a `pointer-events: none` element are
+  // unreliable once `setPointerCapture` re-routes the move/up events to
+  // the captured handle. Binding the handlers to each handle makes the
+  // capture self-contained.
+  const dragHandlers = useMemo(
+    () => ({
+      onPointerMove: handlePointerMove,
+      onPointerUp: endDrag,
+      onPointerCancel: endDrag,
+    }),
+    [endDrag, handlePointerMove],
+  );
+
   const rectSvg = useMemo(() => {
     if (!localZone) return null;
     const topLeft = gridToSvg(localZone.edgeLeft, localZone.edgeTop, dims);
@@ -281,22 +315,25 @@ const ClimbSearchForm: React.FC<ClimbSearchFormProps> = ({ boardDetails }) => {
     };
   }, [dims, localZone]);
 
-  let includeCount = 0;
-  let excludeCount = 0;
-  for (const entry of Object.values(holdsFilter)) {
-    if (!entry) continue;
-    for (const mode of Object.values(entry)) {
-      if (mode === 'include') includeCount++;
-      else if (mode === 'exclude') excludeCount++;
+  const { includeCount, excludeCount } = useMemo(() => {
+    let included = 0;
+    let excluded = 0;
+    for (const entry of Object.values(holdsFilter)) {
+      if (!entry) continue;
+      for (const mode of Object.values(entry)) {
+        if (mode === 'include') included++;
+        else if (mode === 'exclude') excluded++;
+      }
     }
-  }
+    return { includeCount: included, excludeCount: excluded };
+  }, [holdsFilter]);
 
   return (
     <div className={styles.holdSearchForm}>
       <div className={styles.holdSearchHeaderCompact}>
         <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', alignItems: 'center' }}>
           <MuiTypography variant="body2" component="span" color="text.secondary">
-            {t('search.holds.tapToToggle')}
+            {t('search.holdsAndZone.description')}
           </MuiTypography>
           {includeCount > 0 && (
             <Chip
@@ -325,9 +362,11 @@ const ClimbSearchForm: React.FC<ClimbSearchFormProps> = ({ boardDetails }) => {
             <IconButton
               size="small"
               onClick={() => {
-                const next = !showHeatmap;
-                setShowHeatmap(next);
-                track(`Heatmap ${next ? 'Shown' : 'Hidden'}`, { boardLayout: boardDetails.layout_name || '' });
+                const nextShowHeatmap = !showHeatmap;
+                setShowHeatmap(nextShowHeatmap);
+                track(`Heatmap ${nextShowHeatmap ? 'Shown' : 'Hidden'}`, {
+                  boardLayout: boardDetails.layout_name || '',
+                });
               }}
               aria-label={showHeatmap ? t('search.holds.hideHeatmap') : t('search.holds.showHeatmap')}
             >
@@ -344,11 +383,8 @@ const ClimbSearchForm: React.FC<ClimbSearchFormProps> = ({ boardDetails }) => {
           mirrored={false}
           onHoldClick={picker.handleHoldClick}
         />
-        <SearchHoldFilterOverlay
-          boardDetails={boardDetails}
-          holdsFilter={holdsFilter}
-          activeHoldId={picker.activeHoldId}
-        />
+        {/* Heatmap below the filter rings so the wash colours sit behind the
+            user's selections instead of dimming them. */}
         <CreateClimbHeatmapOverlay
           boardDetails={tightenedBoardDetails}
           angle={angle}
@@ -357,14 +393,16 @@ const ClimbSearchForm: React.FC<ClimbSearchFormProps> = ({ boardDetails }) => {
           enabled={showHeatmap}
           filtersOverride={uiSearchParams}
         />
+        <SearchHoldFilterOverlay
+          boardDetails={boardDetails}
+          holdsFilter={holdsFilter}
+          activeHoldId={picker.activeHoldId}
+        />
         {rectSvg && localZone && (
           <svg
             ref={svgRef}
             viewBox={`0 0 ${boardWidth} ${boardHeight}`}
             preserveAspectRatio="xMidYMid meet"
-            onPointerMove={handlePointerMove}
-            onPointerUp={endDrag}
-            onPointerCancel={endDrag}
             className={styles.zoneOverlaySvg}
           >
             <rect
@@ -380,18 +418,20 @@ const ClimbSearchForm: React.FC<ClimbSearchFormProps> = ({ boardDetails }) => {
               pointerEvents="none"
             />
             {/* Centre move handle replaces dragging the rect body so holds
-                under the zone fill stay tappable. */}
+                under the zone fill stay tappable. Sized to match the corner
+                handles so it's a proper touch target on mobile. */}
             <circle
               cx={rectSvg.centerX}
               cy={rectSvg.centerY}
-              r={moveHandleRadius}
+              r={handleRadius}
               fill={themeTokens.colors.primary}
               fillOpacity={HANDLE_OPACITY}
               stroke={themeTokens.neutral[50]}
-              strokeWidth={moveHandleRadius * 0.25}
+              strokeWidth={handleRadius * 0.25}
               onPointerDown={beginDrag('move')}
               cursor="move"
               pointerEvents="auto"
+              {...dragHandlers}
             />
             {(['nw', 'ne', 'sw', 'se'] as const).map((corner) => {
               const handleX = corner === 'nw' || corner === 'sw' ? localZone.edgeLeft : localZone.edgeRight;
@@ -411,6 +451,7 @@ const ClimbSearchForm: React.FC<ClimbSearchFormProps> = ({ boardDetails }) => {
                   onPointerDown={beginDrag(corner)}
                   cursor={cursor}
                   pointerEvents="auto"
+                  {...dragHandlers}
                 />
               );
             })}
