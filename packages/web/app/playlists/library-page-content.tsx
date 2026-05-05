@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import MuiButton from '@mui/material/Button';
 import Fab from '@mui/material/Fab';
 import Typography from '@mui/material/Typography';
@@ -10,15 +10,20 @@ import { useTranslation } from 'react-i18next';
 import { useLocaleRouter } from '@/app/lib/i18n/use-locale-router';
 import { executeGraphQL } from '@/app/lib/graphql/client';
 import {
-  type GetAllUserPlaylistsQueryResponse,
-  type GetAllUserPlaylistsInput,
   type DiscoverPlaylistsQueryResponse,
   type DiscoverPlaylistsInput,
   type Playlist,
   type DiscoverablePlaylist,
-  GET_ALL_USER_PLAYLISTS,
+  type PinPlaylistMutationResponse,
+  type PinPlaylistMutationVariables,
+  type UnpinPlaylistMutationResponse,
+  type UnpinPlaylistMutationVariables,
   DISCOVER_PLAYLISTS,
+  PIN_PLAYLIST,
+  UNPIN_PLAYLIST,
 } from '@/app/lib/graphql/operations/playlists';
+import { useUserPlaylists } from '@/app/hooks/use-user-playlists';
+import { usePinnedPlaylists } from '@/app/hooks/use-pinned-playlists';
 import { useWsAuthToken } from '@/app/hooks/use-ws-auth-token';
 import { useMyBoards } from '@/app/hooks/use-my-boards';
 import { useQueueBridgeBoardInfo } from '@/app/components/queue-control/queue-bridge-context';
@@ -133,57 +138,56 @@ export default function LibraryPageContent({
     }
   }, [myBoards, boardsLoading, currentBoardDetails, hasActiveQueue, boardSlug]);
 
-  // Data states — initialized from SSR data when available
-  const [playlists, setPlaylists] = useState<Playlist[]>(initialPlaylists ?? []);
+  // Owned playlists — paginated horizontal scroll. Reset on board filter change.
+  const {
+    playlists,
+    isLoading: playlistsLoading,
+    isLoadingMore: playlistsLoadingMore,
+    hasMore: playlistsHasMore,
+    error: playlistsError,
+    loadMore: loadMorePlaylists,
+    refetch: refetchPlaylists,
+  } = useUserPlaylists({
+    token: isAuthenticated ? token : null,
+    boardType: selectedBoard?.boardType,
+    layoutId: selectedBoard?.layoutId,
+    pageSize: 20,
+    initialData: hasInitialPlaylistData ? (initialPlaylists ?? []) : undefined,
+    // Without a server-side hasMore on initial load we can't know for sure;
+    // assume "could be more" so the sentinel still attaches and confirms with
+    // the first scroll-triggered fetch.
+    initialHasMore: hasInitialPlaylistData ? true : undefined,
+  });
+
+  // Pinned playlists — server first, IndexedDB recents fallback. Re-derives on
+  // every playlists/board/recents change.
+  const {
+    pinned: pinnedPlaylists,
+    source: pinnedSource,
+    isLoading: pinnedLoading,
+    refetch: refetchPinned,
+  } = usePinnedPlaylists({
+    token: isAuthenticated ? token : null,
+    boardType: selectedBoard?.boardType,
+    layoutId: selectedBoard?.layoutId,
+    candidatePlaylists: playlists,
+  });
+
+  const pinnedUuids = useMemo(
+    () => new Set(pinnedSource === 'pinned' ? pinnedPlaylists.map((p) => p.uuid) : []),
+    [pinnedPlaylists, pinnedSource],
+  );
+
   const [popularPlaylists, setPopularPlaylists] = useState<DiscoverablePlaylist[]>(
     initialDiscoverPlaylists?.popular ?? [],
   );
   const [recentPlaylists, setRecentPlaylists] = useState<DiscoverablePlaylist[]>(
     initialDiscoverPlaylists?.recent ?? [],
   );
-
-  // Loading states — skip loading when SSR data is available
-  const [playlistsLoading, setPlaylistsLoading] = useState(!hasInitialPlaylistData);
   const [discoverLoading, setDiscoverLoading] = useState(!hasInitialDiscoverData);
-  const [error, setError] = useState<string | null>(null);
+  const error = playlistsError;
 
-  // Track whether we already have data to avoid re-showing loading skeleton on refetches
-  const hasPlaylistDataRef = useRef(hasInitialPlaylistData);
   const hasDiscoverDataRef = useRef(hasInitialDiscoverData);
-
-  // Fetch user data
-  const fetchUserData = useCallback(async () => {
-    if (tokenLoading || !isAuthenticated) {
-      setPlaylistsLoading(false);
-      return;
-    }
-
-    try {
-      // Only show loading if we don't already have data
-      if (!hasPlaylistDataRef.current) {
-        setPlaylistsLoading(true);
-      }
-      setError(null);
-
-      const input: GetAllUserPlaylistsInput = selectedBoard
-        ? { boardType: selectedBoard.boardType, layoutId: selectedBoard.layoutId }
-        : {};
-
-      const playlistsRes = await executeGraphQL<GetAllUserPlaylistsQueryResponse, { input: GetAllUserPlaylistsInput }>(
-        GET_ALL_USER_PLAYLISTS,
-        { input },
-        token,
-      );
-
-      setPlaylists(playlistsRes.allUserPlaylists);
-      hasPlaylistDataRef.current = true;
-    } catch (err) {
-      console.error('Error fetching user data:', err);
-      setError(t('library.errors.loadFailed'));
-    } finally {
-      setPlaylistsLoading(false);
-    }
-  }, [selectedBoard, token, tokenLoading, isAuthenticated, t]);
 
   // Fetch discover playlists (works for both "All" and specific board)
   const fetchDiscoverData = useCallback(async () => {
@@ -221,12 +225,38 @@ export default function LibraryPageContent({
   }, [selectedBoard]);
 
   useEffect(() => {
-    void fetchUserData();
-  }, [fetchUserData]);
-
-  useEffect(() => {
     void fetchDiscoverData();
   }, [fetchDiscoverData]);
+
+  // Pin / unpin a playlist. Optimistic refetch — wait for the mutation, then
+  // re-pull both the pinned list (server source of truth) and the page-1 of
+  // owned playlists (so the "Jump Back In" ordering reflects any server-side
+  // touches). Rate-limit handling is upstream in executeGraphQL.
+  const handleTogglePin = useCallback(
+    async (uuid: string, nextPinned: boolean) => {
+      if (!token) return;
+      try {
+        if (nextPinned) {
+          await executeGraphQL<PinPlaylistMutationResponse, PinPlaylistMutationVariables>(
+            PIN_PLAYLIST,
+            { input: { playlistUuid: uuid } },
+            token,
+          );
+        } else {
+          await executeGraphQL<UnpinPlaylistMutationResponse, UnpinPlaylistMutationVariables>(
+            UNPIN_PLAYLIST,
+            { input: { playlistUuid: uuid } },
+            token,
+          );
+        }
+        refetchPinned();
+      } catch (err) {
+        console.error('Failed to toggle pin:', err);
+        showMessage(t(nextPinned ? 'library.pin.pinFailed' : 'library.pin.unpinFailed'), 'error');
+      }
+    },
+    [token, refetchPinned, showMessage, t],
+  );
 
   const getPlaylistUrl = useCallback(
     (playlistUuid: string) => {
@@ -255,8 +285,8 @@ export default function LibraryPageContent({
   const handleBoardSelect = useCallback(
     (board: UserBoard | null) => {
       setSelectedBoard(board);
-      // Reset data refs so loading skeletons show for new board filter
-      hasPlaylistDataRef.current = false;
+      // useUserPlaylists / usePinnedPlaylists reset themselves on filter change.
+      // Discover keeps its skeletons on board flip via this ref.
       hasDiscoverDataRef.current = false;
 
       // When rendered from a board route, switching boards navigates to the correct URL
@@ -379,10 +409,14 @@ export default function LibraryPageContent({
 
   const handlePlaylistCreated = useCallback(
     (created: Playlist) => {
-      setPlaylists((prev) => [created, ...prev]);
+      // Refetch first page so the new playlist shows up in "Jump Back In",
+      // then navigate. Cheaper than doing both an optimistic prepend and a
+      // full re-pull, and avoids divergence between local state and server
+      // ordering once lastAccessedAt is touched on the detail page.
+      refetchPlaylists();
       router.push(getPlaylistUrl(created.uuid));
     },
-    [router, getPlaylistUrl],
+    [refetchPlaylists, router, getPlaylistUrl],
   );
 
   // Error state (only for authenticated users with fetch errors)
@@ -396,7 +430,7 @@ export default function LibraryPageContent({
         <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
           {t('library.errors.loadDescription')}
         </Typography>
-        <MuiButton variant="outlined" onClick={fetchUserData}>
+        <MuiButton variant="outlined" onClick={refetchPlaylists}>
           {t('library.errors.tryAgain')}
         </MuiButton>
       </div>
@@ -408,6 +442,7 @@ export default function LibraryPageContent({
 
   // Server query already filters by boardType + layoutId; no client-side filter needed
   const filteredPlaylists = playlists;
+  const showPinnedSection = isAuthenticated && (pinnedLoading || pinnedPlaylists.length > 0);
 
   return (
     <>
@@ -451,13 +486,27 @@ export default function LibraryPageContent({
         </div>
       )}
 
-      {/* Authenticated: Recent Playlists Grid */}
-      {isAuthenticated && (
-        <PlaylistCardGrid playlists={filteredPlaylists} getPlaylistUrl={getPlaylistUrl} loading={isLoading} />
+      {/* Pinned grid (top, small). Filled with server-side pins when present;
+          falls back to per-device IndexedDB recents so the grid isn't empty
+          for users who haven't pinned anything yet. */}
+      {showPinnedSection && (
+        <>
+          <div className={styles.sectionTitle}>{t('library.sections.pinned')}</div>
+          <PlaylistCardGrid
+            playlists={pinnedPlaylists}
+            getPlaylistUrl={getPlaylistUrl}
+            loading={pinnedLoading && pinnedPlaylists.length === 0}
+            // Only show the pin button on rows that came from server pins —
+            // recents fallback rows aren't "pinned" yet, but tapping the pin
+            // pins them. Both cases use handleTogglePin.
+            onTogglePin={handleTogglePin}
+            pinnedUuids={pinnedUuids}
+          />
+        </>
       )}
 
-      {/* Empty state if no playlists (authenticated only) */}
-      {isAuthenticated && !isLoading && playlists.length === 0 && (
+      {/* Empty state if no playlists at all (authenticated, no pinned + no owned) */}
+      {isAuthenticated && !isLoading && !pinnedLoading && playlists.length === 0 && pinnedPlaylists.length === 0 && (
         <div className={styles.emptyContainer}>
           <LabelOutlined className={styles.emptyIcon} />
           <Typography variant="h6" component="h4" sx={{ mb: 1 }}>
@@ -469,10 +518,18 @@ export default function LibraryPageContent({
         </div>
       )}
 
-      {/* Jump Back In (authenticated only) */}
+      {/* Jump Back In — paginated horizontal scroll of all owned playlists.
+          IntersectionObserver in PlaylistScrollSection fires loadMore when the
+          right-edge sentinel comes into view. */}
       {isAuthenticated && (isLoading || filteredPlaylists.length > 0) && (
-        <PlaylistScrollSection title={t('library.sections.jumpBackIn')} loading={isLoading}>
-          {filteredPlaylists.slice(0, 10).map((p, i) => (
+        <PlaylistScrollSection
+          title={t('library.sections.jumpBackIn')}
+          loading={isLoading}
+          onLoadMore={loadMorePlaylists}
+          hasMore={playlistsHasMore}
+          isLoadingMore={playlistsLoadingMore}
+        >
+          {filteredPlaylists.map((p, i) => (
             <PlaylistCard
               key={p.uuid}
               name={p.name}

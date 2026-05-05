@@ -1,6 +1,9 @@
 'use client';
 
 import React from 'react';
+import IconButton from '@mui/material/IconButton';
+import { PushPin, PushPinOutlined } from '@mui/icons-material';
+import { useTranslation } from 'react-i18next';
 import LocaleLink from '@/app/components/i18n/locale-link';
 import PlaylistPreviewSquare from './playlist-preview-square';
 import styles from './library.module.css';
@@ -17,6 +20,10 @@ export type PlaylistCardProps = {
   index?: number;
   isLikedClimbs?: boolean;
   fetchPriority?: 'high' | 'low' | 'auto';
+  /** When set, renders a pin toggle button on the grid variant. */
+  isPinned?: boolean;
+  /** Click handler for the pin button. Receives the new desired state. */
+  onTogglePin?: (nextPinned: boolean) => void;
 };
 
 export default function PlaylistCard({
@@ -31,9 +38,20 @@ export default function PlaylistCard({
   index = 0,
   isLikedClimbs,
   fetchPriority,
+  isPinned,
+  onTogglePin,
 }: PlaylistCardProps) {
+  const { t } = useTranslation('playlists');
+  const showPinButton = variant === 'grid' && onTogglePin != null;
+
+  const handlePinClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    onTogglePin?.(!isPinned);
+  };
+
   if (variant === 'grid') {
-    return (
+    const card = (
       <LocaleLink href={href} className={styles.cardCompact}>
         <div className={styles.cardCompactSquare}>
           <PlaylistPreviewSquare
@@ -54,6 +72,22 @@ export default function PlaylistCard({
           </div>
         </div>
       </LocaleLink>
+    );
+
+    if (!showPinButton) return card;
+
+    return (
+      <div className={styles.cardCompactWrapper}>
+        {card}
+        <IconButton
+          size="small"
+          className={styles.cardCompactPinButton}
+          onClick={handlePinClick}
+          aria-label={isPinned ? t('library.pin.unpinAriaLabel') : t('library.pin.pinAriaLabel')}
+        >
+          {isPinned ? <PushPin fontSize="small" /> : <PushPinOutlined fontSize="small" />}
+        </IconButton>
+      </div>
     );
   }
 

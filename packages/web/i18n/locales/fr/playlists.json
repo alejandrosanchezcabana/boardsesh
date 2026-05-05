@@ -18,8 +18,15 @@
       "modalDescription": "Connectez-vous pour suivre vos blocs et gérer vos playlists."
     },
     "sections": {
+      "pinned": "Épinglées",
       "jumpBackIn": "Reprendre",
       "discover": "Découvrir"
+    },
+    "pin": {
+      "pinAriaLabel": "Épingler la playlist",
+      "unpinAriaLabel": "Désépingler la playlist",
+      "pinFailed": "Échec de l'épinglage de la playlist",
+      "unpinFailed": "Échec du désépinglage de la playlist"
     },
     "empty": {
       "title": "Aucune playlist pour l'instant",

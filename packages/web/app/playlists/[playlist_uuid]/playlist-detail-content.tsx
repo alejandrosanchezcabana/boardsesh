@@ -48,6 +48,7 @@ import { LoadingSpinner } from '@/app/components/ui/loading-spinner';
 import { EmptyState } from '@/app/components/ui/empty-state';
 import FollowButton from '@/app/components/ui/follow-button';
 import PlaylistPreviewSquare from '@/app/components/library/playlist-preview-square';
+import { recordPlaylistOpen } from '@/app/lib/recent-playlists-db';
 import { useWsAuthToken } from '@/app/hooks/use-ws-auth-token';
 import { getBoardDetailsForPlaylist, getDefaultAngleForBoard } from '@/app/lib/board-config-for-playlist';
 import { themeTokens } from '@/app/theme/theme-config';
@@ -181,6 +182,18 @@ export default function PlaylistDetailContent({
       });
     }
   }, [playlist, token, playlistUuid]);
+
+  // Track per-device playlist opens so the library page can fall back to
+  // "recently opened" when the user has nothing pinned. Records every load
+  // (not just owners), since the recency list captures viewed playlists too.
+  useEffect(() => {
+    if (!playlist) return;
+    void recordPlaylistOpen({
+      uuid: playlist.uuid,
+      boardType: playlist.boardType,
+      layoutId: playlist.layoutId ?? null,
+    });
+  }, [playlist]);
 
   // === Playlist climbs data fetching (all-boards mode by default) ===
 

@@ -178,10 +178,16 @@ export const queriesTypeDefs = /* GraphQL */ `
     userPlaylists(input: GetUserPlaylistsInput!): [Playlist!]!
 
     """
-    Get all current user's playlists across boards/layouts.
-    Optional boardType filter. Requires authentication.
+    Get all current user's playlists across boards/layouts, paginated.
+    Optional boardType/layoutId filter. Requires authentication.
     """
-    allUserPlaylists(input: GetAllUserPlaylistsInput!): [Playlist!]!
+    allUserPlaylists(input: GetAllUserPlaylistsInput!): AllUserPlaylistsResult!
+
+    """
+    Get the authenticated user's pinned playlists, ordered by most recently pinned.
+    Capped server-side (small grid surface). Requires authentication.
+    """
+    myPinnedPlaylists(input: GetMyPinnedPlaylistsInput!): [Playlist!]!
 
     """
     Get a specific playlist by ID.

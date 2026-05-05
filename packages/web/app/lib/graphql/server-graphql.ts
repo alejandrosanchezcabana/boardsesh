@@ -51,14 +51,14 @@ export async function serverMyBoards(authToken: string): Promise<UserBoard[] | n
  */
 export async function serverUserPlaylists(
   authToken: string,
-  input: { boardType?: string; layoutId?: number } = {},
+  input: { boardType?: string; layoutId?: number; page?: number; pageSize?: number } = {},
 ): Promise<Playlist[] | null> {
   const { GET_ALL_USER_PLAYLISTS } = await import('@/app/lib/graphql/operations/playlists');
   type Response = GetAllUserPlaylistsQueryResponse;
 
   try {
     const response = await executeAuthenticatedGraphQL<Response>(GET_ALL_USER_PLAYLISTS, { input }, authToken);
-    return response.allUserPlaylists;
+    return response.allUserPlaylists.playlists;
   } catch {
     return null;
   }

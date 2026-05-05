@@ -49,6 +49,17 @@ export const GetUserPlaylistsInputSchema = z.object({
 export const GetAllUserPlaylistsInputSchema = z.object({
   boardType: BoardNameSchema.optional(),
   layoutId: z.number().int().positive().optional(),
+  page: z.number().int().min(0).optional(),
+  pageSize: z.number().int().min(1).max(100).optional(),
+});
+
+export const PinPlaylistInputSchema = z.object({
+  playlistUuid: z.string().min(1, 'Playlist UUID cannot be empty'),
+});
+
+export const GetMyPinnedPlaylistsInputSchema = z.object({
+  boardType: BoardNameSchema.optional(),
+  layoutId: z.number().int().positive().optional(),
 });
 
 export const GetPlaylistsForClimbInputSchema = z.object({

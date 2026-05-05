@@ -1425,6 +1425,40 @@ input GetAllUserPlaylistsInput {
   boardType: String
   "Optional filter by layout ID (includes playlists with null layoutId)"
   layoutId: Int
+  "Page number (0-indexed)"
+  page: Int
+  "Page size"
+  pageSize: Int
+}
+
+"""
+Result of fetching the authenticated user's playlists, paginated.
+"""
+type AllUserPlaylistsResult {
+  "List of playlists"
+  playlists: [Playlist!]!
+  "Total count across all pages"
+  totalCount: Int!
+  "Whether more are available"
+  hasMore: Boolean!
+}
+
+"""
+Input for pinning/unpinning a playlist.
+"""
+input PinPlaylistInput {
+  "The playlist UUID"
+  playlistUuid: ID!
+}
+
+"""
+Input for getting the authenticated user's pinned playlists.
+"""
+input GetMyPinnedPlaylistsInput {
+  "Optional filter by board type"
+  boardType: String
+  "Optional filter by layout ID (includes playlists with null layoutId)"
+  layoutId: Int
 }
 
 """
@@ -3404,10 +3438,16 @@ type Query {
   userPlaylists(input: GetUserPlaylistsInput!): [Playlist!]!
 
   """
-  Get all current user's playlists across boards/layouts.
-  Optional boardType filter. Requires authentication.
+  Get all current user's playlists across boards/layouts, paginated.
+  Optional boardType/layoutId filter. Requires authentication.
   """
-  allUserPlaylists(input: GetAllUserPlaylistsInput!): [Playlist!]!
+  allUserPlaylists(input: GetAllUserPlaylistsInput!): AllUserPlaylistsResult!
+
+  """
+  Get the authenticated user's pinned playlists, ordered by most recently pinned.
+  Capped server-side (small grid surface). Requires authentication.
+  """
+  myPinnedPlaylists(input: GetMyPinnedPlaylistsInput!): [Playlist!]!
 
   """
   Get a specific playlist by ID.
@@ -3997,6 +4037,18 @@ type Mutation {
   Unfollow a playlist.
   """
   unfollowPlaylist(input: FollowPlaylistInput!): Boolean!
+
+  """
+  Pin a playlist to the authenticated user's library. Idempotent.
+  Pinning is per-user; the same playlist can be pinned by many users.
+  Only playlists the user can access (own or public) may be pinned.
+  """
+  pinPlaylist(input: PinPlaylistInput!): Boolean!
+
+  """
+  Unpin a playlist. Idempotent.
+  """
+  unpinPlaylist(input: PinPlaylistInput!): Boolean!
 
   """
   Subscribe to new climbs for a board type and layout.

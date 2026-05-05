@@ -67,18 +67,24 @@ export const userPlaylists = async (
 };
 
 /**
- * Get all playlists owned by the authenticated user, optionally filtered by board type.
- * No layoutId filter required — shows playlists across all layouts.
+ * Get all playlists owned by the authenticated user, optionally filtered by board type
+ * and layout, paginated with offset-based pagination. Mirrors discoverPlaylists' shape.
  */
 export const allUserPlaylists = async (
   _: unknown,
-  { input }: { input: { boardType?: string; layoutId?: number } },
+  {
+    input,
+  }: {
+    input: { boardType?: string; layoutId?: number; page?: number; pageSize?: number };
+  },
   ctx: ConnectionContext,
-): Promise<unknown[]> => {
+): Promise<{ playlists: unknown[]; totalCount: number; hasMore: boolean }> => {
   requireAuthenticated(ctx);
   validateInput(GetAllUserPlaylistsInputSchema, input, 'input');
 
   const userId = ctx.userId!;
+  const page = input.page ?? 0;
+  const pageSize = input.pageSize ?? 20;
 
   const conditions = [eq(dbSchema.playlistOwnership.userId, userId)];
 
@@ -93,12 +99,30 @@ export const allUserPlaylists = async (
     }
   }
 
-  const playlists = await db
+  const whereClause = and(...conditions);
+
+  const countResult = await db
+    .select({ count: sql<number>`count(*)::int` })
+    .from(dbSchema.playlists)
+    .innerJoin(dbSchema.playlistOwnership, eq(dbSchema.playlistOwnership.playlistId, dbSchema.playlists.id))
+    .where(whereClause);
+  const totalCount = countResult[0]?.count ?? 0;
+
+  const rows = await db
     .select(PLAYLIST_SELECT)
     .from(dbSchema.playlists)
     .innerJoin(dbSchema.playlistOwnership, eq(dbSchema.playlistOwnership.playlistId, dbSchema.playlists.id))
-    .where(and(...conditions))
-    .orderBy(PLAYLIST_ORDER);
+    .where(whereClause)
+    .orderBy(PLAYLIST_ORDER)
+    .limit(pageSize + 1)
+    .offset(page * pageSize);
 
-  return enrichOwnedPlaylists(playlists, userId);
+  const hasMore = rows.length > pageSize;
+  const trimmed = hasMore ? rows.slice(0, pageSize) : rows;
+
+  return {
+    playlists: await enrichOwnedPlaylists(trimmed, userId),
+    totalCount,
+    hasMore,
+  };
 };

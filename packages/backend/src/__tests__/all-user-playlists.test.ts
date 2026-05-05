@@ -154,6 +154,10 @@ describe('allUserPlaylists resolver', () => {
   it('should return all playlists when no filters provided', async () => {
     const ctx = makeCtx();
 
+    // Count query (runs first in paginated resolver)
+    const { chain: countTotalChain } = createMockChain([{ count: 2 }]);
+    mockDb.select.mockReturnValueOnce(countTotalChain);
+
     // Main query
     const { chain: mainChain, calls: mainCalls } = createMockChain([
       makePlaylistRow({ uuid: 'pl-1', boardType: 'kilter', layoutId: 1 }),
@@ -178,17 +182,24 @@ describe('allUserPlaylists resolver', () => {
 
     const result = await playlistQueries.allUserPlaylists(null, { input: {} }, ctx);
 
-    expect(result).toHaveLength(2);
-    expect(result[0]).toMatchObject({ uuid: 'pl-1', boardType: 'kilter', climbCount: 5 });
-    expect(result[1]).toMatchObject({ uuid: 'pl-2', boardType: 'tension', climbCount: 3 });
+    expect(result.playlists).toHaveLength(2);
+    expect(result.totalCount).toBe(2);
+    expect(result.hasMore).toBe(false);
+    expect(result.playlists[0]).toMatchObject({ uuid: 'pl-1', boardType: 'kilter', climbCount: 5 });
+    expect(result.playlists[1]).toMatchObject({ uuid: 'pl-2', boardType: 'tension', climbCount: 3 });
 
     // Verify main query used where() and innerJoin()
     expect(mainCalls.where.length).toBe(1);
     expect(mainCalls.innerJoin.length).toBe(1);
+    expect(mainCalls.limit.length).toBe(1);
+    expect(mainCalls.offset.length).toBe(1);
   });
 
   it('should filter by boardType only when only boardType provided', async () => {
     const ctx = makeCtx();
+
+    const { chain: countTotalChain } = createMockChain([{ count: 1 }]);
+    mockDb.select.mockReturnValueOnce(countTotalChain);
 
     const { chain: mainChain, calls: mainCalls } = createMockChain([
       makePlaylistRow({ uuid: 'pl-1', boardType: 'kilter' }),
@@ -206,8 +217,8 @@ describe('allUserPlaylists resolver', () => {
 
     const result = await playlistQueries.allUserPlaylists(null, { input: { boardType: 'kilter' } }, ctx);
 
-    expect(result).toHaveLength(1);
-    expect(result[0]).toMatchObject({ uuid: 'pl-1', boardType: 'kilter' });
+    expect(result.playlists).toHaveLength(1);
+    expect(result.playlists[0]).toMatchObject({ uuid: 'pl-1', boardType: 'kilter' });
 
     // Verify where() was called with conditions (userId + boardType)
     expect(mainCalls.where.length).toBe(1);
@@ -215,6 +226,9 @@ describe('allUserPlaylists resolver', () => {
 
   it('should filter by both boardType and layoutId when both provided', async () => {
     const ctx = makeCtx();
+
+    const { chain: countTotalChain } = createMockChain([{ count: 1 }]);
+    mockDb.select.mockReturnValueOnce(countTotalChain);
 
     const { chain: mainChain, calls: mainCalls } = createMockChain([
       makePlaylistRow({ uuid: 'pl-1', boardType: 'kilter', layoutId: 8 }),
@@ -232,8 +246,8 @@ describe('allUserPlaylists resolver', () => {
 
     const result = await playlistQueries.allUserPlaylists(null, { input: { boardType: 'kilter', layoutId: 8 } }, ctx);
 
-    expect(result).toHaveLength(1);
-    expect(result[0]).toMatchObject({ uuid: 'pl-1', boardType: 'kilter', layoutId: 8 });
+    expect(result.playlists).toHaveLength(1);
+    expect(result.playlists[0]).toMatchObject({ uuid: 'pl-1', boardType: 'kilter', layoutId: 8 });
 
     // Verify where() was called (userId + boardType + layoutId or null)
     expect(mainCalls.where.length).toBe(1);
@@ -241,6 +255,9 @@ describe('allUserPlaylists resolver', () => {
 
   it('should include playlists with null layoutId when filtering by layoutId', async () => {
     const ctx = makeCtx();
+
+    const { chain: countTotalChain } = createMockChain([{ count: 2 }]);
+    mockDb.select.mockReturnValueOnce(countTotalChain);
 
     // Simulate returning a playlist with null layoutId (Aurora-synced circuit)
     const { chain: mainChain } = createMockChain([
@@ -264,13 +281,16 @@ describe('allUserPlaylists resolver', () => {
     const result = await playlistQueries.allUserPlaylists(null, { input: { boardType: 'kilter', layoutId: 8 } }, ctx);
 
     // Both playlists should be returned (layoutId=8 match + layoutId=null circuit)
-    expect(result).toHaveLength(2);
-    expect(result[0]).toMatchObject({ uuid: 'pl-1', layoutId: 8 });
-    expect(result[1]).toMatchObject({ uuid: 'pl-circuit', layoutId: null });
+    expect(result.playlists).toHaveLength(2);
+    expect(result.playlists[0]).toMatchObject({ uuid: 'pl-1', layoutId: 8 });
+    expect(result.playlists[1]).toMatchObject({ uuid: 'pl-circuit', layoutId: null });
   });
 
-  it('should return empty array when no playlists match', async () => {
+  it('should return empty result when no playlists match', async () => {
     const ctx = makeCtx();
+
+    const { chain: countTotalChain } = createMockChain([{ count: 0 }]);
+    mockDb.select.mockReturnValueOnce(countTotalChain);
 
     const { chain: mainChain } = createMockChain([]);
     mockDb.select.mockReturnValueOnce(mainChain);
@@ -279,11 +299,16 @@ describe('allUserPlaylists resolver', () => {
 
     const result = await playlistQueries.allUserPlaylists(null, { input: { boardType: 'tension', layoutId: 99 } }, ctx);
 
-    expect(result).toHaveLength(0);
+    expect(result.playlists).toHaveLength(0);
+    expect(result.totalCount).toBe(0);
+    expect(result.hasMore).toBe(false);
   });
 
   it('should return playlists ordered by last accessed/updated', async () => {
     const ctx = makeCtx();
+
+    const { chain: countTotalChain } = createMockChain([{ count: 2 }]);
+    mockDb.select.mockReturnValueOnce(countTotalChain);
 
     const { chain: mainChain, calls: mainCalls } = createMockChain([
       makePlaylistRow({ uuid: 'pl-recent', lastAccessedAt: new Date('2026-01-15') }),
@@ -302,8 +327,38 @@ describe('allUserPlaylists resolver', () => {
 
     const result = await playlistQueries.allUserPlaylists(null, { input: {} }, ctx);
 
-    expect(result).toHaveLength(2);
+    expect(result.playlists).toHaveLength(2);
     // Verify orderBy was called
     expect(mainCalls.orderBy.length).toBe(1);
+  });
+
+  it('should set hasMore=true when result count exceeds pageSize', async () => {
+    const ctx = makeCtx();
+
+    const { chain: countTotalChain } = createMockChain([{ count: 30 }]);
+    mockDb.select.mockReturnValueOnce(countTotalChain);
+
+    // pageSize=2, return 3 to simulate "extra row" sentinel
+    const { chain: mainChain } = createMockChain([
+      makePlaylistRow({ uuid: 'pl-1' }),
+      makePlaylistRow({ uuid: 'pl-2', id: BigInt(2) }),
+      makePlaylistRow({ uuid: 'pl-3', id: BigInt(3) }),
+    ]);
+    mockDb.select.mockReturnValueOnce(mainChain);
+
+    const { chain: countChain } = createMockChain([]);
+    mockDb.select.mockReturnValueOnce(countChain);
+
+    const { chain: followerChain } = createMockChain([]);
+    mockDb.select.mockReturnValueOnce(followerChain);
+
+    const { chain: followedChain } = createMockChain([]);
+    mockDb.select.mockReturnValueOnce(followedChain);
+
+    const result = await playlistQueries.allUserPlaylists(null, { input: { pageSize: 2, page: 0 } }, ctx);
+
+    expect(result.playlists).toHaveLength(2); // trimmed to pageSize
+    expect(result.totalCount).toBe(30);
+    expect(result.hasMore).toBe(true);
   });
 });

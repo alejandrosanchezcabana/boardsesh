@@ -145,6 +145,40 @@ export const playlistsTypeDefs = /* GraphQL */ `
     boardType: String
     "Optional filter by layout ID (includes playlists with null layoutId)"
     layoutId: Int
+    "Page number (0-indexed)"
+    page: Int
+    "Page size"
+    pageSize: Int
+  }
+
+  """
+  Result of fetching the authenticated user's playlists, paginated.
+  """
+  type AllUserPlaylistsResult {
+    "List of playlists"
+    playlists: [Playlist!]!
+    "Total count across all pages"
+    totalCount: Int!
+    "Whether more are available"
+    hasMore: Boolean!
+  }
+
+  """
+  Input for pinning/unpinning a playlist.
+  """
+  input PinPlaylistInput {
+    "The playlist UUID"
+    playlistUuid: ID!
+  }
+
+  """
+  Input for getting the authenticated user's pinned playlists.
+  """
+  input GetMyPinnedPlaylistsInput {
+    "Optional filter by board type"
+    boardType: String
+    "Optional filter by layout ID (includes playlists with null layoutId)"
+    layoutId: Int
   }
 
   """
