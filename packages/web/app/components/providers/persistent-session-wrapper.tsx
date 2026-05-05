@@ -3,7 +3,8 @@
 import React, { useState, useEffect, useLayoutEffect, useCallback, useMemo, useRef } from 'react';
 import { usePathnameWithoutLocale } from '@/app/lib/i18n/use-locale-router';
 import { PartyProfileProvider } from '../party-manager/party-profile-context';
-import { PersistentSessionProvider, usePersistentSession } from '../persistent-session';
+import { PersistentSessionProvider, usePersistentSession, usePersistentSessionState } from '../persistent-session';
+import { useWakeLock } from '../board-bluetooth-control/use-wake-lock';
 import { QueueBridgeProvider, useQueueBridgeBoardInfo } from '../queue-control/queue-bridge-context';
 import { useCurrentClimb, useQueueList } from '../graphql-queue';
 import QueueControlBar from '../queue-control/queue-control-bar';
@@ -63,6 +64,7 @@ export default function PersistentSessionWrapper({ children, boardConfigs }: Per
                   <RootBottomBar boardConfigs={boardConfigs} />
                   <RootSessionSummaryDialog />
                   <RootSeshSettingsDrawer />
+                  <SessionWakeLock />
                 </ProfileHeaderShareProvider>
               </StatsFilterBridgeProvider>
             </SearchDrawerBridgeProvider>
@@ -71,6 +73,17 @@ export default function PersistentSessionWrapper({ children, boardConfigs }: Per
       </PersistentSessionProvider>
     </PartyProfileProvider>
   );
+}
+
+/**
+ * Holds a screen wake lock while a party session is active so the device
+ * (especially Android) doesn't sleep mid-session and break the WebSocket
+ * or Bluetooth connection.
+ */
+function SessionWakeLock() {
+  const { activeSession } = usePersistentSessionState();
+  useWakeLock(activeSession !== null);
+  return null;
 }
 
 /**
