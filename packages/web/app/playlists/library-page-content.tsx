@@ -471,6 +471,30 @@ export default function LibraryPageContent({
   const filteredPlaylists = playlists;
   const showPinnedSection = isAuthenticated && (pinnedLoading || pinnedPlaylists.length > 0);
 
+  // Smart playlists prepended to the playlist card grid for the signed-in user.
+  // Skip entries with count === 0 so the grid only shows non-empty smart playlists.
+  const smartLeadingItems = (() => {
+    const userId = session?.user?.id;
+    if (!isAuthenticated || !userId) return [];
+    return SMART_PLAYLISTS.flatMap((preset) => {
+      const found = smartCounts.find((c) => c.type === preset.type);
+      const count = found?.count ?? 0;
+      if (count === 0) return [];
+      return [
+        {
+          key: preset.slug,
+          name: t(preset.titleI18nKey),
+          climbCount: count,
+          boardType: selectedBoard?.boardType ?? 'kilter',
+          layoutId: selectedBoard?.layoutId ?? null,
+          color: preset.color,
+          icon: preset.icon,
+          href: smartPlaylistHref(preset.slug, userId),
+        },
+      ];
+    });
+  })();
+
   return (
     <>
       {/* Board Selector */}
