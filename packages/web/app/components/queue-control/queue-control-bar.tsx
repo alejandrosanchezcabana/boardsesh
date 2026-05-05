@@ -15,6 +15,7 @@ import SyncOutlined from '@mui/icons-material/SyncOutlined';
 import CloudOffOutlined from '@mui/icons-material/CloudOffOutlined';
 import DeleteOutlined from '@mui/icons-material/DeleteOutlined';
 import OpenInFullOutlined from '@mui/icons-material/OpenInFullOutlined';
+import FormatListBulletedOutlined from '@mui/icons-material/FormatListBulletedOutlined';
 import { track } from '@vercel/analytics';
 import { useQueueActions, useCurrentClimb, useQueueList, useSessionData } from '../graphql-queue';
 import NextClimbButton from './next-climb-button';
@@ -84,6 +85,8 @@ export type ActiveDrawer = 'none' | 'play' | 'queue' | 'tick';
 export { PLAY_DRAWER_EVENT, dispatchOpenPlayDrawer } from './play-drawer-event';
 
 const QUEUE_DRAWER_STYLES = { wrapper: { height: '70%' }, body: { padding: 0 } } as const;
+
+const QUEUE_BADGE_SX = { '& .MuiBadge-badge': themeTokens.badge.small } as const;
 
 const TICK_BADGE_SX = {
   '& .MuiBadge-badge': {
@@ -852,6 +855,32 @@ const QueueControlBar: React.FC<QueueControlBarProps> = ({ boardDetails, angle }
     offlineBannerText = 'Offline. Changes will sync when you reconnect.';
   }
 
+  const openQueueDrawer = () => setActiveDrawer('queue');
+  const queueIconButton = (
+    <div
+      className={styles.queueIconWrapper}
+      onClick={(e) => {
+        e.stopPropagation();
+        openQueueDrawer();
+      }}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.stopPropagation();
+          openQueueDrawer();
+        }
+      }}
+      role="button"
+      tabIndex={0}
+      aria-label={t('common:ariaLabels.openQueue')}
+    >
+      <IconButton size="small" component="span" tabIndex={-1} sx={{ p: 0.25 }}>
+        <Badge badgeContent={queue.length} max={99} color="primary" invisible={queue.length === 0} sx={QUEUE_BADGE_SX}>
+          <FormatListBulletedOutlined sx={{ fontSize: 18 }} />
+        </Badge>
+      </IconButton>
+    </div>
+  );
+
   return (
     <div id="onboarding-queue-bar" className={`queue-bar-shadow ${styles.queueBar}`} data-testid="queue-control-bar">
       {/* Main Control Bar */}
@@ -950,6 +979,7 @@ const QueueControlBar: React.FC<QueueControlBarProps> = ({ boardDetails, angle }
                       )}
                     </div>
                   )}
+                  {queueIconButton}
                 </div>
               ) : (
                 <div
@@ -967,6 +997,7 @@ const QueueControlBar: React.FC<QueueControlBarProps> = ({ boardDetails, angle }
                 >
                   <PlayCircleOutlineOutlined sx={{ fontSize: 16, opacity: 0.7 }} />
                   <span className={styles.sessionName}>{t('queueBar.startSesh')}</span>
+                  {queueIconButton}
                 </div>
               )}
               {/* Expandable participant bar — only for active sessions with participants */}

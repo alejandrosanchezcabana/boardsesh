@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState, useCallback, useRef } from 'react';
-import dynamic from 'next/dynamic';
 import Box from '@mui/material/Box';
 import IconButton from '@mui/material/IconButton';
 import TextField from '@mui/material/TextField';
@@ -9,7 +8,6 @@ import InputAdornment from '@mui/material/InputAdornment';
 import SearchOutlined from '@mui/icons-material/SearchOutlined';
 import ClearOutlined from '@mui/icons-material/ClearOutlined';
 import FilterListOutlined from '@mui/icons-material/FilterListOutlined';
-import FormatListBulletedOutlined from '@mui/icons-material/FormatListBulletedOutlined';
 import SettingsOutlined from '@mui/icons-material/SettingsOutlined';
 import IosShareOutlined from '@mui/icons-material/IosShare';
 import NotificationsOutlined from '@mui/icons-material/NotificationsOutlined';
@@ -33,14 +31,10 @@ import { useTranslation } from 'react-i18next';
 import { useStatsFilterBridge } from '@/app/components/stats-filter-bridge/stats-filter-bridge-context';
 import { useProfileHeaderShare } from '@/app/components/profile-header-bridge/profile-header-bridge-context';
 import { useSnackbar } from '@/app/components/providers/snackbar-provider';
-import { useQueueBridgeBoardInfo } from '@/app/components/queue-control/queue-bridge-board-info-context';
-import { useQueueList } from '@/app/components/graphql-queue';
 import { themeTokens } from '@/app/theme/theme-config';
 import styles from './global-header.module.css';
 
 const BADGE_SMALL_SX = { '& .MuiBadge-badge': themeTokens.badge.small } as const;
-
-const QueueDrawer = dynamic(() => import('@/app/components/play-view/queue-drawer'), { ssr: false });
 
 /** Route prefix → translation key for pages that show a simple title header instead of the default search/sesh header */
 const TITLE_HEADER_PAGES: Record<string, string> = {
@@ -168,8 +162,6 @@ export default function GlobalHeader({ boardConfigs }: GlobalHeaderProps) {
   const { t } = useTranslation('common');
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchRendered, setSearchRendered] = useState(false);
-  const [isQueueOpen, setIsQueueOpen] = useState(false);
-  const [isQueueRendered, setIsQueueRendered] = useState(false);
   const { data: session } = useSession();
   const { showMessage } = useSnackbar();
 
@@ -183,8 +175,6 @@ export default function GlobalHeader({ boardConfigs }: GlobalHeaderProps) {
   } = useSearchDrawerBridge();
   const statsFilterBridge = useStatsFilterBridge();
   const profileHeaderShare = useProfileHeaderShare();
-  const { boardDetails, isHydrated: isQueueBridgeHydrated } = useQueueBridgeBoardInfo();
-  const { queue } = useQueueList();
   const pathname = usePathnameWithoutLocale();
   const inputRef = useRef<HTMLInputElement>(null);
   const profileHeaderConfig = getProfileHeaderConfig(pathname, t);
@@ -193,20 +183,6 @@ export default function GlobalHeader({ boardConfigs }: GlobalHeaderProps) {
   // MUI Modal/Portal/FocusTrap infrastructure on every parent re-render.
   const handleSearchTransitionEnd = useCallback((open: boolean) => {
     if (!open) setSearchRendered(false);
-  }, []);
-
-  const handleOpenQueue = useCallback(() => {
-    if (!boardDetails) return;
-    setIsQueueRendered(true);
-    setIsQueueOpen(true);
-  }, [boardDetails]);
-
-  const handleCloseQueue = useCallback(() => {
-    setIsQueueOpen(false);
-  }, []);
-
-  const handleQueueTransitionEnd = useCallback((open: boolean) => {
-    if (!open) setIsQueueRendered(false);
   }, []);
 
   const handleShareOwnProfile = useCallback(() => {
@@ -463,27 +439,6 @@ export default function GlobalHeader({ boardConfigs }: GlobalHeaderProps) {
             {nonNameFiltersActive && <span className={styles.filterActiveIndicator} />}
           </div>
         )}
-
-        {isClimbListPage && (
-          <div className={styles.iconButtonWrapper}>
-            <IconButton
-              onClick={handleOpenQueue}
-              aria-label={t('ariaLabels.openQueue')}
-              size="small"
-              disabled={!isQueueBridgeHydrated || !boardDetails}
-            >
-              <Badge
-                badgeContent={queue.length}
-                max={99}
-                color="primary"
-                invisible={queue.length === 0}
-                sx={BADGE_SMALL_SX}
-              >
-                <FormatListBulletedOutlined />
-              </Badge>
-            </IconButton>
-          </div>
-        )}
       </header>
 
       {searchRendered && (
@@ -492,15 +447,6 @@ export default function GlobalHeader({ boardConfigs }: GlobalHeaderProps) {
           onClose={() => setSearchOpen(false)}
           onTransitionEnd={handleSearchTransitionEnd}
           defaultCategory={isOnBoardRoute ? 'climbs' : 'boards'}
-        />
-      )}
-
-      {isQueueRendered && boardDetails && (
-        <QueueDrawer
-          open={isQueueOpen}
-          onClose={handleCloseQueue}
-          onTransitionEnd={handleQueueTransitionEnd}
-          boardDetails={boardDetails}
         />
       )}
     </>

@@ -48,36 +48,6 @@ vi.mock('@/app/components/search-drawer/search-drawer-bridge-context', () => ({
   useSearchDrawerBridge: () => mockBridgeState,
 }));
 
-let mockQueueList: { queue: Array<{ uuid: string }>; suggestedClimbs: unknown[] } = {
-  queue: [],
-  suggestedClimbs: [],
-};
-vi.mock('@/app/components/graphql-queue', () => ({
-  useQueueList: () => mockQueueList,
-}));
-
-let mockQueueBridgeBoardInfo: {
-  boardDetails: { board_name: string } | null;
-  angle: number;
-  hasActiveQueue: boolean;
-  isHydrated: boolean;
-} = { boardDetails: null, angle: 0, hasActiveQueue: false, isHydrated: false };
-vi.mock('@/app/components/queue-control/queue-bridge-board-info-context', () => ({
-  useQueueBridgeBoardInfo: () => mockQueueBridgeBoardInfo,
-}));
-
-// `next/dynamic` is used at module top to lazy-load QueueDrawer; intercept it
-// so the loader returns the mock synchronously (otherwise the lazy boundary
-// never resolves under the test renderer). vi.hoisted lets the vi.mock factory
-// reference the component despite mock-call hoisting.
-const { mockQueueDrawer } = vi.hoisted(() => ({
-  mockQueueDrawer: ({ open }: { open: boolean }) =>
-    open ? React.createElement('div', { 'data-testid': 'queue-drawer' }) : null,
-}));
-vi.mock('next/dynamic', () => ({
-  default: () => mockQueueDrawer,
-}));
-
 vi.mock('@/app/components/search-drawer/unified-search-drawer', () => ({
   default: ({ open, defaultCategory }: { open: boolean; onClose: () => void; defaultCategory: string }) =>
     open ? <div data-testid="unified-search-drawer" data-category={defaultCategory} /> : null,
@@ -191,8 +161,6 @@ describe('GlobalHeader', () => {
       setNameFilter: null,
       hasActiveNonNameFilters: false,
     };
-    mockQueueList = { queue: [], suggestedClimbs: [] };
-    mockQueueBridgeBoardInfo = { boardDetails: null, angle: 0, hasActiveQueue: false, isHydrated: false };
   });
 
   it('renders user drawer and search input', () => {
@@ -376,16 +344,13 @@ describe('GlobalHeader', () => {
     expect(screen.getByPlaceholderText('Search climbs...')).toBeTruthy();
   });
 
-  it('renders filter and queue buttons on board list routes pre-hydration (disabled)', () => {
+  it('renders the filter button disabled on board list routes pre-hydration', () => {
     mockPathname = '/b/test-board/40/list';
-    // Bridge not yet registered, queue not hydrated — both buttons render
-    // but should be disabled so taps don't silently no-op.
     render(<GlobalHeader boardConfigs={mockBoardConfigs} />);
 
     const filterButton = screen.getByLabelText('Open filters') as HTMLButtonElement;
-    const queueButton = screen.getByLabelText('Open queue') as HTMLButtonElement;
     expect(filterButton.disabled).toBe(true);
-    expect(queueButton.disabled).toBe(true);
+    expect(screen.queryByLabelText('Open queue')).toBeNull();
   });
 
   it('shows generic placeholder on non-list routes when the bridge is inactive', () => {
@@ -589,92 +554,6 @@ describe('GlobalHeader', () => {
       render(<GlobalHeader boardConfigs={mockBoardConfigs} />);
 
       expect(screen.getByPlaceholderText('What do you want to climb?')).toBeTruthy();
-    });
-  });
-
-  // -----------------------------------------------------------------------
-  // Queue button (climb list page)
-  // -----------------------------------------------------------------------
-  describe('queue button on climb list page', () => {
-    const listPathname = '/b/test-board/40/list';
-
-    beforeEach(() => {
-      mockPathname = listPathname;
-    });
-
-    it('does not render on non-list routes', () => {
-      mockPathname = '/you';
-      render(<GlobalHeader boardConfigs={mockBoardConfigs} />);
-      expect(screen.queryByLabelText('Open queue')).toBeNull();
-    });
-
-    it('renders disabled when the queue bridge has not hydrated', () => {
-      mockQueueBridgeBoardInfo = {
-        boardDetails: { board_name: 'kilter' },
-        angle: 40,
-        hasActiveQueue: false,
-        isHydrated: false,
-      };
-      render(<GlobalHeader boardConfigs={mockBoardConfigs} />);
-      const button = screen.getByLabelText('Open queue') as HTMLButtonElement;
-      expect(button.disabled).toBe(true);
-    });
-
-    it('renders disabled when boardDetails is null even after hydration', () => {
-      mockQueueBridgeBoardInfo = { boardDetails: null, angle: 0, hasActiveQueue: false, isHydrated: true };
-      render(<GlobalHeader boardConfigs={mockBoardConfigs} />);
-      const button = screen.getByLabelText('Open queue') as HTMLButtonElement;
-      expect(button.disabled).toBe(true);
-    });
-
-    it('renders enabled when hydrated and boardDetails is present', () => {
-      mockQueueBridgeBoardInfo = {
-        boardDetails: { board_name: 'kilter' },
-        angle: 40,
-        hasActiveQueue: true,
-        isHydrated: true,
-      };
-      render(<GlobalHeader boardConfigs={mockBoardConfigs} />);
-      const button = screen.getByLabelText('Open queue') as HTMLButtonElement;
-      expect(button.disabled).toBe(false);
-    });
-
-    it('opens the queue drawer when the enabled button is clicked', () => {
-      mockQueueBridgeBoardInfo = {
-        boardDetails: { board_name: 'kilter' },
-        angle: 40,
-        hasActiveQueue: true,
-        isHydrated: true,
-      };
-      render(<GlobalHeader boardConfigs={mockBoardConfigs} />);
-      expect(screen.queryByTestId('queue-drawer')).toBeNull();
-      fireEvent.click(screen.getByLabelText('Open queue'));
-      expect(screen.getByTestId('queue-drawer')).toBeTruthy();
-    });
-
-    it('does not open the drawer if click somehow fires while disabled', () => {
-      // boardDetails is null so the button is disabled and handleOpenQueue
-      // bails early — defensive against any path where the visual disabled
-      // state is bypassed (e.g. assistive tooling).
-      mockQueueBridgeBoardInfo = { boardDetails: null, angle: 0, hasActiveQueue: false, isHydrated: true };
-      render(<GlobalHeader boardConfigs={mockBoardConfigs} />);
-      fireEvent.click(screen.getByLabelText('Open queue'));
-      expect(screen.queryByTestId('queue-drawer')).toBeNull();
-    });
-
-    it('shows the queue count badge when items are queued', () => {
-      mockQueueBridgeBoardInfo = {
-        boardDetails: { board_name: 'kilter' },
-        angle: 40,
-        hasActiveQueue: true,
-        isHydrated: true,
-      };
-      mockQueueList = {
-        queue: [{ uuid: 'a' }, { uuid: 'b' }, { uuid: 'c' }],
-        suggestedClimbs: [],
-      };
-      render(<GlobalHeader boardConfigs={mockBoardConfigs} />);
-      expect(screen.getByText('3')).toBeTruthy();
     });
   });
 });
