@@ -70,7 +70,7 @@ describe('useClimbActionsData', () => {
   it('returns favorites set from GraphQL response', async () => {
     mockRequest.mockResolvedValueOnce({ favorites: ['climb-1'] });
     // Playlists queries
-    mockRequest.mockResolvedValueOnce({ allUserPlaylists: [] });
+    mockRequest.mockResolvedValueOnce({ allUserPlaylists: { playlists: [], totalCount: 0, hasMore: false } });
     mockRequest.mockResolvedValueOnce({ playlistsForClimbs: [] });
 
     const wrapper = createQueryWrapper();
@@ -108,7 +108,7 @@ describe('useClimbActionsData', () => {
 
   it('isFavorited returns true for favorited climb', async () => {
     mockRequest.mockResolvedValueOnce({ favorites: ['climb-2'] });
-    mockRequest.mockResolvedValueOnce({ allUserPlaylists: [] });
+    mockRequest.mockResolvedValueOnce({ allUserPlaylists: { playlists: [], totalCount: 0, hasMore: false } });
     mockRequest.mockResolvedValueOnce({ playlistsForClimbs: [] });
 
     const wrapper = createQueryWrapper();
@@ -122,7 +122,7 @@ describe('useClimbActionsData', () => {
 
   it('toggleFavorite sends mutation and returns result', async () => {
     mockRequest.mockResolvedValueOnce({ favorites: [] });
-    mockRequest.mockResolvedValueOnce({ allUserPlaylists: [] });
+    mockRequest.mockResolvedValueOnce({ allUserPlaylists: { playlists: [], totalCount: 0, hasMore: false } });
     mockRequest.mockResolvedValueOnce({ playlistsForClimbs: [] });
 
     const wrapper = createQueryWrapper();
@@ -148,7 +148,7 @@ describe('useClimbActionsData', () => {
 
   it('optimistic update: adds uuid on toggle', async () => {
     mockRequest.mockResolvedValueOnce({ favorites: [] });
-    mockRequest.mockResolvedValueOnce({ allUserPlaylists: [] });
+    mockRequest.mockResolvedValueOnce({ allUserPlaylists: { playlists: [], totalCount: 0, hasMore: false } });
     mockRequest.mockResolvedValueOnce({ playlistsForClimbs: [] });
 
     const wrapper = createQueryWrapper();
@@ -186,7 +186,7 @@ describe('useClimbActionsData', () => {
 
   it('rolls back on toggleFavorite error', async () => {
     mockRequest.mockResolvedValueOnce({ favorites: ['climb-1'] });
-    mockRequest.mockResolvedValueOnce({ allUserPlaylists: [] });
+    mockRequest.mockResolvedValueOnce({ allUserPlaylists: { playlists: [], totalCount: 0, hasMore: false } });
     mockRequest.mockResolvedValueOnce({ playlistsForClimbs: [] });
 
     const wrapper = createQueryWrapper();
@@ -218,7 +218,7 @@ describe('useClimbActionsData', () => {
 
   it('shows error snackbar on toggle failure', async () => {
     mockRequest.mockResolvedValueOnce({ favorites: [] });
-    mockRequest.mockResolvedValueOnce({ allUserPlaylists: [] });
+    mockRequest.mockResolvedValueOnce({ allUserPlaylists: { playlists: [], totalCount: 0, hasMore: false } });
     mockRequest.mockResolvedValueOnce({ playlistsForClimbs: [] });
 
     const wrapper = createQueryWrapper();
@@ -252,7 +252,9 @@ describe('useClimbActionsData', () => {
       { uuid: 'pl-2', name: 'Other Playlist', climbCount: 7 },
     ];
     mockRequest.mockResolvedValueOnce({ favorites: [] });
-    mockRequest.mockResolvedValueOnce({ allUserPlaylists: playlists });
+    mockRequest.mockResolvedValueOnce({
+      allUserPlaylists: { playlists, totalCount: playlists.length, hasMore: false },
+    });
     mockRequest.mockResolvedValueOnce({ playlistsForClimbs: [] });
 
     const wrapper = createQueryWrapper();
@@ -266,7 +268,11 @@ describe('useClimbActionsData', () => {
   it('addToPlaylist sends mutation and updates accumulated cache', async () => {
     mockRequest.mockResolvedValueOnce({ favorites: [] });
     mockRequest.mockResolvedValueOnce({
-      allUserPlaylists: [{ uuid: 'pl-1', name: 'Test', climbCount: 2 }],
+      allUserPlaylists: {
+        playlists: [{ uuid: 'pl-1', name: 'Test', climbCount: 2 }],
+        totalCount: 1,
+        hasMore: false,
+      },
     });
     mockRequest.mockResolvedValueOnce({ playlistsForClimbs: [] });
 
@@ -293,7 +299,11 @@ describe('useClimbActionsData', () => {
   it('removeFromPlaylist sends mutation and updates accumulated cache', async () => {
     mockRequest.mockResolvedValueOnce({ favorites: [] });
     mockRequest.mockResolvedValueOnce({
-      allUserPlaylists: [{ uuid: 'pl-1', name: 'Test', climbCount: 5 }],
+      allUserPlaylists: {
+        playlists: [{ uuid: 'pl-1', name: 'Test', climbCount: 5 }],
+        totalCount: 1,
+        hasMore: false,
+      },
     });
     mockRequest.mockResolvedValueOnce({
       playlistsForClimbs: [{ climbUuid: 'climb-1', playlistUuids: ['pl-1'] }],
@@ -322,7 +332,11 @@ describe('useClimbActionsData', () => {
   it('rapid addToPlaylist taps converge to a single climbCount increment (#1851)', async () => {
     mockRequest.mockResolvedValueOnce({ favorites: [] });
     mockRequest.mockResolvedValueOnce({
-      allUserPlaylists: [{ uuid: 'pl-1', name: 'Test', climbCount: 2 }],
+      allUserPlaylists: {
+        playlists: [{ uuid: 'pl-1', name: 'Test', climbCount: 2 }],
+        totalCount: 1,
+        hasMore: false,
+      },
     });
     mockRequest.mockResolvedValueOnce({ playlistsForClimbs: [] });
 
@@ -354,7 +368,11 @@ describe('useClimbActionsData', () => {
   it('rapid removeFromPlaylist taps converge to a single climbCount decrement (#1851)', async () => {
     mockRequest.mockResolvedValueOnce({ favorites: [] });
     mockRequest.mockResolvedValueOnce({
-      allUserPlaylists: [{ uuid: 'pl-1', name: 'Test', climbCount: 5 }],
+      allUserPlaylists: {
+        playlists: [{ uuid: 'pl-1', name: 'Test', climbCount: 5 }],
+        totalCount: 1,
+        hasMore: false,
+      },
     });
     mockRequest.mockResolvedValueOnce({
       playlistsForClimbs: [{ climbUuid: 'climb-1', playlistUuids: ['pl-1'] }],
@@ -387,7 +405,11 @@ describe('useClimbActionsData', () => {
   it('addToPlaylist rolls back membership and climbCount when the request fails', async () => {
     mockRequest.mockResolvedValueOnce({ favorites: [] });
     mockRequest.mockResolvedValueOnce({
-      allUserPlaylists: [{ uuid: 'pl-1', name: 'Test', climbCount: 2 }],
+      allUserPlaylists: {
+        playlists: [{ uuid: 'pl-1', name: 'Test', climbCount: 2 }],
+        totalCount: 1,
+        hasMore: false,
+      },
     });
     mockRequest.mockResolvedValueOnce({ playlistsForClimbs: [] });
 
@@ -414,7 +436,11 @@ describe('useClimbActionsData', () => {
   it('removeFromPlaylist rolls back membership and climbCount when the request fails', async () => {
     mockRequest.mockResolvedValueOnce({ favorites: [] });
     mockRequest.mockResolvedValueOnce({
-      allUserPlaylists: [{ uuid: 'pl-1', name: 'Test', climbCount: 5 }],
+      allUserPlaylists: {
+        playlists: [{ uuid: 'pl-1', name: 'Test', climbCount: 5 }],
+        totalCount: 1,
+        hasMore: false,
+      },
     });
     mockRequest.mockResolvedValueOnce({
       playlistsForClimbs: [{ climbUuid: 'climb-1', playlistUuids: ['pl-1'] }],
@@ -442,7 +468,7 @@ describe('useClimbActionsData', () => {
 
   it('createPlaylist sends mutation and updates cache', async () => {
     mockRequest.mockResolvedValueOnce({ favorites: [] });
-    mockRequest.mockResolvedValueOnce({ allUserPlaylists: [] });
+    mockRequest.mockResolvedValueOnce({ allUserPlaylists: { playlists: [], totalCount: 0, hasMore: false } });
     mockRequest.mockResolvedValueOnce({ playlistsForClimbs: [] });
 
     const wrapper = createQueryWrapper();
@@ -470,7 +496,7 @@ describe('useClimbActionsData', () => {
 
   it('refreshPlaylists invalidates query', async () => {
     mockRequest.mockResolvedValueOnce({ favorites: [] });
-    mockRequest.mockResolvedValueOnce({ allUserPlaylists: [] });
+    mockRequest.mockResolvedValueOnce({ allUserPlaylists: { playlists: [], totalCount: 0, hasMore: false } });
     mockRequest.mockResolvedValueOnce({ playlistsForClimbs: [] });
 
     const wrapper = createQueryWrapper();
@@ -482,7 +508,11 @@ describe('useClimbActionsData', () => {
 
     // Mock the re-fetch after invalidation
     mockRequest.mockResolvedValueOnce({
-      allUserPlaylists: [{ uuid: 'pl-refreshed', name: 'Refreshed', climbCount: 0 }],
+      allUserPlaylists: {
+        playlists: [{ uuid: 'pl-refreshed', name: 'Refreshed', climbCount: 0 }],
+        totalCount: 1,
+        hasMore: false,
+      },
     });
 
     await act(async () => {
@@ -500,7 +530,7 @@ describe('useClimbActionsData', () => {
   it('only fetches new UUIDs incrementally', async () => {
     // Initial fetch for climb-1 and climb-2
     mockRequest.mockResolvedValueOnce({ favorites: ['climb-1'] });
-    mockRequest.mockResolvedValueOnce({ allUserPlaylists: [] });
+    mockRequest.mockResolvedValueOnce({ allUserPlaylists: { playlists: [], totalCount: 0, hasMore: false } });
     mockRequest.mockResolvedValueOnce({ playlistsForClimbs: [] });
 
     const wrapper = createQueryWrapper();
@@ -535,7 +565,7 @@ describe('useClimbActionsData', () => {
 
   it('does not refetch when UUIDs are reordered', async () => {
     mockRequest.mockResolvedValueOnce({ favorites: [] });
-    mockRequest.mockResolvedValueOnce({ allUserPlaylists: [] });
+    mockRequest.mockResolvedValueOnce({ allUserPlaylists: { playlists: [], totalCount: 0, hasMore: false } });
     mockRequest.mockResolvedValueOnce({ playlistsForClimbs: [] });
 
     const wrapper = createQueryWrapper();

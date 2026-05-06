@@ -3,6 +3,7 @@ import { playlist, playlistsForClimb, playlistsForClimbs } from './playlist-deta
 import { playlistClimbs } from './playlist-climbs';
 import { discoverPlaylists, playlistCreators } from './discover';
 import { searchPlaylists } from './search';
+import { myPinnedPlaylists } from './pinned';
 
 export const playlistQueries = {
   userPlaylists,
@@ -14,4 +15,5 @@ export const playlistQueries = {
   discoverPlaylists,
   playlistCreators,
   searchPlaylists,
+  myPinnedPlaylists,
 };

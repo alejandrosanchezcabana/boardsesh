@@ -162,10 +162,12 @@ export function useClimbActionsData({ boardName, layoutId, angle, climbUuids }: 
     queryKey: playlistsQueryKey,
     queryFn: async (): Promise<Playlist[]> => {
       const client = createGraphQLHttpClient(token);
+      // Climb-action picker shows the user's full playlist library; ask for a
+      // single large page rather than streaming. 200 covers any realistic user.
       const response = await client.request<GetAllUserPlaylistsQueryResponse>(GET_ALL_USER_PLAYLISTS, {
-        input: {},
+        input: { pageSize: 200 },
       });
-      return response.allUserPlaylists;
+      return response.allUserPlaylists.playlists;
     },
     enabled: isAuthenticated && !!token,
     staleTime: 5 * 60 * 1000,

@@ -152,6 +152,17 @@ export type AddUserToSessionInput = {
   userId: Scalars['ID']['input'];
 };
 
+/** Result of fetching the authenticated user's playlists, paginated. */
+export type AllUserPlaylistsResult = {
+  __typename?: 'AllUserPlaylistsResult';
+  /** Whether more are available */
+  hasMore: Scalars['Boolean']['output'];
+  /** List of playlists */
+  playlists: Array<Playlist>;
+  /** Total count across all pages */
+  totalCount: Scalars['Int']['output'];
+};
+
 /** A supported board angle. */
 export type Angle = {
   __typename?: 'Angle';
@@ -1276,6 +1287,10 @@ export type GetAllUserPlaylistsInput = {
   boardType?: InputMaybe<Scalars['String']['input']>;
   /** Optional filter by layout ID (includes playlists with null layoutId) */
   layoutId?: InputMaybe<Scalars['Int']['input']>;
+  /** Page number (0-indexed) */
+  page?: InputMaybe<Scalars['Int']['input']>;
+  /** Page size */
+  pageSize?: InputMaybe<Scalars['Int']['input']>;
 };
 
 export type GetClimbProposalsInput = {
@@ -1286,6 +1301,14 @@ export type GetClimbProposalsInput = {
   offset?: InputMaybe<Scalars['Int']['input']>;
   status?: InputMaybe<ProposalStatus>;
   type?: InputMaybe<ProposalType>;
+};
+
+/** Input for getting the authenticated user's pinned playlists. */
+export type GetMyPinnedPlaylistsInput = {
+  /** Optional filter by board type */
+  boardType?: InputMaybe<Scalars['String']['input']>;
+  /** Optional filter by layout ID (includes playlists with null layoutId) */
+  layoutId?: InputMaybe<Scalars['Int']['input']>;
 };
 
 /** Input for getting climbs in a playlist with full data. */
@@ -1801,6 +1824,12 @@ export type Mutation = {
   /** Toggle mirrored display for the current climb. */
   mirrorCurrentClimb?: Maybe<ClimbQueueItem>;
   navigateQueue?: Maybe<ClimbQueueItem>;
+  /**
+   * Pin a playlist to the authenticated user's library. Idempotent.
+   * Pinning is per-user; the same playlist can be pinned by many users.
+   * Only playlists the user can access (own or public) may be pinned.
+   */
+  pinPlaylist: Scalars['Boolean']['output'];
   registerController: ControllerRegistration;
   /** Remove a climb from a playlist. */
   removeClimbFromPlaylist: Scalars['Boolean']['output'];
@@ -1877,6 +1906,8 @@ export type Mutation = {
   unfollowSetter: Scalars['Boolean']['output'];
   /** Unfollow a user. */
   unfollowUser: Scalars['Boolean']['output'];
+  /** Unpin a playlist. Idempotent. */
+  unpinPlaylist: Scalars['Boolean']['output'];
   /** Unsubscribe from new climbs for a board type and layout. */
   unsubscribeNewClimbs: Scalars['Boolean']['output'];
   /** Update a board's metadata. */
@@ -2147,6 +2178,12 @@ export type MutationNavigateQueueArgs = {
 
 
 /** Root mutation type for all write operations. */
+export type MutationPinPlaylistArgs = {
+  input: PinPlaylistInput;
+};
+
+
+/** Root mutation type for all write operations. */
 export type MutationRegisterControllerArgs = {
   input: RegisterControllerInput;
 };
@@ -2320,6 +2357,12 @@ export type MutationUnfollowSetterArgs = {
 /** Root mutation type for all write operations. */
 export type MutationUnfollowUserArgs = {
   input: FollowInput;
+};
+
+
+/** Root mutation type for all write operations. */
+export type MutationUnpinPlaylistArgs = {
+  input: PinPlaylistInput;
 };
 
 
@@ -2545,6 +2588,12 @@ export type OutlierAnalysis = {
   neighborCount: Scalars['Int']['output'];
 };
 
+/** Input for pinning/unpinning a playlist. */
+export type PinPlaylistInput = {
+  /** The playlist UUID */
+  playlistUuid: Scalars['ID']['input'];
+};
+
 /** A user-created collection of climbs. */
 export type Playlist = {
   __typename?: 'Playlist';
@@ -2566,6 +2615,8 @@ export type Playlist = {
   id: Scalars['ID']['output'];
   /** Whether the current user follows this playlist */
   isFollowedByMe: Scalars['Boolean']['output'];
+  /** Whether the current user has pinned this playlist (false when unauthenticated) */
+  isPinnedByMe: Scalars['Boolean']['output'];
   /** Whether publicly visible */
   isPublic: Scalars['Boolean']['output'];
   /** When last accessed/viewed (ISO 8601) */
@@ -2772,10 +2823,10 @@ export type Query = {
    */
   activityFeed: ActivityFeedResult;
   /**
-   * Get all current user's playlists across boards/layouts.
-   * Optional boardType filter. Requires authentication.
+   * Get all current user's playlists across boards/layouts, paginated.
+   * Optional boardType/layoutId filter. Requires authentication.
    */
-  allUserPlaylists: Array<Playlist>;
+  allUserPlaylists: AllUserPlaylistsResult;
   /** Get available angles for a board layout. */
   angles: Array<Angle>;
   /**
@@ -2927,6 +2978,11 @@ export type Query = {
    * Requires authentication.
    */
   myNewClimbSubscriptions: Array<NewClimbSubscription>;
+  /**
+   * Get the authenticated user's pinned playlists, ordered by most recently pinned.
+   * Capped server-side (small grid surface). Requires authentication.
+   */
+  myPinnedPlaylists: Array<Playlist>;
   /** Get the current user's community roles. */
   myRoles: Array<CommunityRoleAssignment>;
   /**
@@ -3313,6 +3369,12 @@ export type QueryMyBoardsArgs = {
 /** Root query type for all read operations. */
 export type QueryMyGymsArgs = {
   input?: InputMaybe<MyGymsInput>;
+};
+
+
+/** Root query type for all read operations. */
+export type QueryMyPinnedPlaylistsArgs = {
+  input: GetMyPinnedPlaylistsInput;
 };
 
 
@@ -4861,6 +4923,7 @@ export type ResolversTypes = ResolversObject<{
   AddCommentInput: AddCommentInput;
   AddGymMemberInput: AddGymMemberInput;
   AddUserToSessionInput: AddUserToSessionInput;
+  AllUserPlaylistsResult: ResolverTypeWrapper<AllUserPlaylistsResult>;
   Angle: ResolverTypeWrapper<Angle>;
   AscentFeedInput: AscentFeedInput;
   AscentFeedItem: ResolverTypeWrapper<AscentFeedItem>;
@@ -4939,6 +5002,7 @@ export type ResolversTypes = ResolversObject<{
   FullSync: ResolverTypeWrapper<FullSync>;
   GetAllUserPlaylistsInput: GetAllUserPlaylistsInput;
   GetClimbProposalsInput: GetClimbProposalsInput;
+  GetMyPinnedPlaylistsInput: GetMyPinnedPlaylistsInput;
   GetPlaylistClimbsInput: GetPlaylistClimbsInput;
   GetPlaylistCreatorsInput: GetPlaylistCreatorsInput;
   GetPlaylistsForClimbInput: GetPlaylistsForClimbInput;
@@ -4987,6 +5051,7 @@ export type ResolversTypes = ResolversObject<{
   NotificationEvent: ResolverTypeWrapper<NotificationEvent>;
   NotificationType: NotificationType;
   OutlierAnalysis: ResolverTypeWrapper<OutlierAnalysis>;
+  PinPlaylistInput: PinPlaylistInput;
   Playlist: ResolverTypeWrapper<Playlist>;
   PlaylistClimb: ResolverTypeWrapper<PlaylistClimb>;
   PlaylistClimbsResult: ResolverTypeWrapper<PlaylistClimbsResult>;
@@ -5098,6 +5163,7 @@ export type ResolversParentTypes = ResolversObject<{
   AddCommentInput: AddCommentInput;
   AddGymMemberInput: AddGymMemberInput;
   AddUserToSessionInput: AddUserToSessionInput;
+  AllUserPlaylistsResult: AllUserPlaylistsResult;
   Angle: Angle;
   AscentFeedInput: AscentFeedInput;
   AscentFeedItem: AscentFeedItem;
@@ -5175,6 +5241,7 @@ export type ResolversParentTypes = ResolversObject<{
   FullSync: FullSync;
   GetAllUserPlaylistsInput: GetAllUserPlaylistsInput;
   GetClimbProposalsInput: GetClimbProposalsInput;
+  GetMyPinnedPlaylistsInput: GetMyPinnedPlaylistsInput;
   GetPlaylistClimbsInput: GetPlaylistClimbsInput;
   GetPlaylistCreatorsInput: GetPlaylistCreatorsInput;
   GetPlaylistsForClimbInput: GetPlaylistsForClimbInput;
@@ -5221,6 +5288,7 @@ export type ResolversParentTypes = ResolversObject<{
   NotificationConnection: NotificationConnection;
   NotificationEvent: NotificationEvent;
   OutlierAnalysis: OutlierAnalysis;
+  PinPlaylistInput: PinPlaylistInput;
   Playlist: Playlist;
   PlaylistClimb: PlaylistClimb;
   PlaylistClimbsResult: PlaylistClimbsResult;
@@ -5353,6 +5421,13 @@ export type ActivityFeedResultResolvers<ContextType = ConnectionContext, ParentT
   cursor?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   hasMore?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
   items?: Resolver<Array<ResolversTypes['ActivityFeedItem']>, ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+}>;
+
+export type AllUserPlaylistsResultResolvers<ContextType = ConnectionContext, ParentType extends ResolversParentTypes['AllUserPlaylistsResult'] = ResolversParentTypes['AllUserPlaylistsResult']> = ResolversObject<{
+  hasMore?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
+  playlists?: Resolver<Array<ResolversTypes['Playlist']>, ParentType, ContextType>;
+  totalCount?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 }>;
 
@@ -5999,6 +6074,7 @@ export type MutationResolvers<ContextType = ConnectionContext, ParentType extend
   markNotificationRead?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType, RequireFields<MutationMarkNotificationReadArgs, 'notificationUuid'>>;
   mirrorCurrentClimb?: Resolver<Maybe<ResolversTypes['ClimbQueueItem']>, ParentType, ContextType, RequireFields<MutationMirrorCurrentClimbArgs, 'mirrored'>>;
   navigateQueue?: Resolver<Maybe<ResolversTypes['ClimbQueueItem']>, ParentType, ContextType, RequireFields<MutationNavigateQueueArgs, 'direction' | 'sessionId'>>;
+  pinPlaylist?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType, RequireFields<MutationPinPlaylistArgs, 'input'>>;
   registerController?: Resolver<ResolversTypes['ControllerRegistration'], ParentType, ContextType, RequireFields<MutationRegisterControllerArgs, 'input'>>;
   removeClimbFromPlaylist?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType, RequireFields<MutationRemoveClimbFromPlaylistArgs, 'input'>>;
   removeGymMember?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType, RequireFields<MutationRemoveGymMemberArgs, 'input'>>;
@@ -6027,6 +6103,7 @@ export type MutationResolvers<ContextType = ConnectionContext, ParentType extend
   unfollowPlaylist?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType, RequireFields<MutationUnfollowPlaylistArgs, 'input'>>;
   unfollowSetter?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType, RequireFields<MutationUnfollowSetterArgs, 'input'>>;
   unfollowUser?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType, RequireFields<MutationUnfollowUserArgs, 'input'>>;
+  unpinPlaylist?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType, RequireFields<MutationUnpinPlaylistArgs, 'input'>>;
   unsubscribeNewClimbs?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType, RequireFields<MutationUnsubscribeNewClimbsArgs, 'input'>>;
   updateBoard?: Resolver<ResolversTypes['UserBoard'], ParentType, ContextType, RequireFields<MutationUpdateBoardArgs, 'input'>>;
   updateClimb?: Resolver<ResolversTypes['UpdateClimbResult'], ParentType, ContextType, RequireFields<MutationUpdateClimbArgs, 'input'>>;
@@ -6127,6 +6204,7 @@ export type PlaylistResolvers<ContextType = ConnectionContext, ParentType extend
   icon?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   isFollowedByMe?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
+  isPinnedByMe?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
   isPublic?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
   lastAccessedAt?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   layoutId?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
@@ -6250,7 +6328,7 @@ export type PublicUserProfileResolvers<ContextType = ConnectionContext, ParentTy
 
 export type QueryResolvers<ContextType = ConnectionContext, ParentType extends ResolversParentTypes['Query'] = ResolversParentTypes['Query']> = ResolversObject<{
   activityFeed?: Resolver<ResolversTypes['ActivityFeedResult'], ParentType, ContextType, Partial<QueryActivityFeedArgs>>;
-  allUserPlaylists?: Resolver<Array<ResolversTypes['Playlist']>, ParentType, ContextType, RequireFields<QueryAllUserPlaylistsArgs, 'input'>>;
+  allUserPlaylists?: Resolver<ResolversTypes['AllUserPlaylistsResult'], ParentType, ContextType, RequireFields<QueryAllUserPlaylistsArgs, 'input'>>;
   angles?: Resolver<Array<ResolversTypes['Angle']>, ParentType, ContextType, RequireFields<QueryAnglesArgs, 'boardName' | 'layoutId'>>;
   auroraCredential?: Resolver<Maybe<ResolversTypes['AuroraCredential']>, ParentType, ContextType, RequireFields<QueryAuroraCredentialArgs, 'boardType'>>;
   auroraCredentials?: Resolver<Array<ResolversTypes['AuroraCredentialStatus']>, ParentType, ContextType>;
@@ -6293,6 +6371,7 @@ export type QueryResolvers<ContextType = ConnectionContext, ParentType extends R
   myControllers?: Resolver<Array<ResolversTypes['ControllerInfo']>, ParentType, ContextType>;
   myGyms?: Resolver<ResolversTypes['GymConnection'], ParentType, ContextType, Partial<QueryMyGymsArgs>>;
   myNewClimbSubscriptions?: Resolver<Array<ResolversTypes['NewClimbSubscription']>, ParentType, ContextType>;
+  myPinnedPlaylists?: Resolver<Array<ResolversTypes['Playlist']>, ParentType, ContextType, RequireFields<QueryMyPinnedPlaylistsArgs, 'input'>>;
   myRoles?: Resolver<Array<ResolversTypes['CommunityRoleAssignment']>, ParentType, ContextType>;
   mySessions?: Resolver<Array<ResolversTypes['DiscoverableSession']>, ParentType, ContextType>;
   nearbySessions?: Resolver<Array<ResolversTypes['DiscoverableSession']>, ParentType, ContextType, RequireFields<QueryNearbySessionsArgs, 'latitude' | 'longitude'>>;
@@ -6802,6 +6881,7 @@ export type VoteSummaryResolvers<ContextType = ConnectionContext, ParentType ext
 export type Resolvers<ContextType = ConnectionContext> = ResolversObject<{
   ActivityFeedItem?: ActivityFeedItemResolvers<ContextType>;
   ActivityFeedResult?: ActivityFeedResultResolvers<ContextType>;
+  AllUserPlaylistsResult?: AllUserPlaylistsResultResolvers<ContextType>;
   Angle?: AngleResolvers<ContextType>;
   AscentFeedItem?: AscentFeedItemResolvers<ContextType>;
   AscentFeedResult?: AscentFeedResultResolvers<ContextType>;

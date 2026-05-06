@@ -2,7 +2,9 @@ import { eq, and, inArray, sql } from 'drizzle-orm';
 import { db } from '../../../../db/client';
 import * as dbSchema from '@boardsesh/db/schema';
 
-/** Raw playlist row shape from owned-playlist queries (userPlaylists, allUserPlaylists). */
+/** Raw playlist row shape from owned-playlist queries (userPlaylists, allUserPlaylists).
+ *  isPinnedByMe is computed inline via a LEFT JOIN on userPlaylistPins so the
+ *  flag is available on the row without a second round-trip. */
 export type OwnedPlaylistRow = {
   id: bigint;
   uuid: string;
@@ -17,6 +19,7 @@ export type OwnedPlaylistRow = {
   updatedAt: Date;
   lastAccessedAt: Date | null;
   role: string;
+  isPinnedByMe: boolean;
 };
 
 /** Fetch climb counts for a list of playlist numeric IDs. Returns Map<stringId, count>. */
@@ -35,7 +38,8 @@ export async function getClimbCounts(playlistIds: bigint[]): Promise<Map<string,
   return new Map(climbCounts.map((c) => [c.playlistId.toString(), c.count]));
 }
 
-/** Transform an owned playlist DB row into the GraphQL response shape. */
+/** Transform an owned playlist DB row into the GraphQL response shape.
+ *  isPinnedByMe rides on the row from the LEFT JOIN — no separate lookup. */
 export function formatOwnedPlaylist(
   p: OwnedPlaylistRow,
   climbCountMap: Map<string, number>,
@@ -59,6 +63,7 @@ export function formatOwnedPlaylist(
     userRole: p.role,
     followerCount: stats.followerCount,
     isFollowedByMe: stats.isFollowedByMe,
+    isPinnedByMe: p.isPinnedByMe,
   };
 }
 

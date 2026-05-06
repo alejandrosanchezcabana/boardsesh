@@ -10,9 +10,19 @@ type PlaylistCardGridProps = {
   playlists: Playlist[];
   getPlaylistUrl: (uuid: string) => string;
   loading?: boolean;
+  /** Callback when a card's pin button is tapped. Enables the pin overlay. */
+  onTogglePin?: (uuid: string, nextPinned: boolean) => void;
+  /** Set of currently-pinned playlist UUIDs. Drives the pin button icon state. */
+  pinnedUuids?: Set<string>;
 };
 
-export default function PlaylistCardGrid({ playlists, getPlaylistUrl, loading }: PlaylistCardGridProps) {
+export default function PlaylistCardGrid({
+  playlists,
+  getPlaylistUrl,
+  loading,
+  onTogglePin,
+  pinnedUuids,
+}: PlaylistCardGridProps) {
   if (loading) {
     return (
       <div className={styles.cardGrid}>
@@ -29,16 +39,13 @@ export default function PlaylistCardGrid({ playlists, getPlaylistUrl, loading }:
     );
   }
 
-  // Show up to 8 playlists
-  const display = playlists.slice(0, 8);
-
-  if (display.length === 0) {
+  if (playlists.length === 0) {
     return null;
   }
 
   return (
     <div className={styles.cardGrid}>
-      {display.map((playlist, index) => (
+      {playlists.map((playlist, index) => (
         <PlaylistCard
           key={playlist.uuid}
           name={playlist.name}
@@ -51,6 +58,8 @@ export default function PlaylistCardGrid({ playlists, getPlaylistUrl, loading }:
           variant="grid"
           index={index}
           fetchPriority={index === 0 ? 'high' : undefined}
+          isPinned={pinnedUuids?.has(playlist.uuid)}
+          onTogglePin={onTogglePin ? (nextPinned) => onTogglePin(playlist.uuid, nextPinned) : undefined}
         />
       ))}
     </div>

@@ -18,8 +18,15 @@
       "modalDescription": "Sign in to track your climbs and manage playlists."
     },
     "sections": {
+      "pinned": "Pinned",
       "jumpBackIn": "Jump Back In",
       "discover": "Discover"
+    },
+    "pin": {
+      "pinAriaLabel": "Pin playlist",
+      "unpinAriaLabel": "Unpin playlist",
+      "pinFailed": "Failed to pin playlist",
+      "unpinFailed": "Failed to unpin playlist"
     },
     "empty": {
       "title": "No playlists yet",

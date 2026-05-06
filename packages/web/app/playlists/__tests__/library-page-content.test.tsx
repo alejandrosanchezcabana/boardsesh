@@ -53,8 +53,13 @@ vi.mock('@/app/components/queue-control/queue-bridge-context', () => ({
 }));
 
 const mockExecuteGraphQL = vi.fn();
+const mockGraphQLRequest = vi.fn();
 vi.mock('@/app/lib/graphql/client', () => ({
   executeGraphQL: (...args: unknown[]) => mockExecuteGraphQL(...args),
+  // useUserPlaylists / usePinnedPlaylists call .request on this client; the
+  // tests only care about FAB orchestration, so an empty resolved value is
+  // sufficient and shared across both hooks.
+  createGraphQLHttpClient: () => ({ request: (...args: unknown[]) => mockGraphQLRequest(...args) }),
 }));
 
 // CSS module proxy
@@ -248,7 +253,17 @@ function clickFab() {
 
 beforeEach(() => {
   vi.clearAllMocks();
-  mockExecuteGraphQL.mockResolvedValue({ allUserPlaylists: [], discoverPlaylists: { playlists: [] } });
+  mockExecuteGraphQL.mockResolvedValue({
+    allUserPlaylists: { playlists: [], totalCount: 0, hasMore: false },
+    discoverPlaylists: { playlists: [] },
+    myPinnedPlaylists: [],
+  });
+  // Hooks use createGraphQLHttpClient(...).request; reuse the same shape so
+  // useUserPlaylists / usePinnedPlaylists initialise to empty without errors.
+  mockGraphQLRequest.mockResolvedValue({
+    allUserPlaylists: { playlists: [], totalCount: 0, hasMore: false },
+    myPinnedPlaylists: [],
+  });
   mockSession.data = { user: { id: 'user-1' } };
   mockSession.status = 'authenticated';
 });
@@ -259,7 +274,7 @@ describe('LibraryPageContent FAB orchestration', () => {
     render(
       <LibraryPageContent
         initialMyBoards={[board]}
-        initialPlaylists={[]}
+        initialPlaylists={{ playlists: [], totalCount: 0, hasMore: false }}
         initialDiscoverPlaylists={{ popular: [], recent: [] }}
         boardConfigs={fakeBoardConfigs}
         boardSlug={board.slug}
@@ -280,7 +295,7 @@ describe('LibraryPageContent FAB orchestration', () => {
     render(
       <LibraryPageContent
         initialMyBoards={[]}
-        initialPlaylists={[]}
+        initialPlaylists={{ playlists: [], totalCount: 0, hasMore: false }}
         initialDiscoverPlaylists={{ popular: [], recent: [] }}
         boardConfigs={fakeBoardConfigs}
       />,
@@ -300,7 +315,7 @@ describe('LibraryPageContent FAB orchestration', () => {
     render(
       <LibraryPageContent
         initialMyBoards={[]}
-        initialPlaylists={[]}
+        initialPlaylists={{ playlists: [], totalCount: 0, hasMore: false }}
         initialDiscoverPlaylists={{ popular: [], recent: [] }}
         boardConfigs={fakeBoardConfigs}
       />,
@@ -322,7 +337,7 @@ describe('LibraryPageContent FAB orchestration', () => {
     render(
       <LibraryPageContent
         initialMyBoards={[]}
-        initialPlaylists={[]}
+        initialPlaylists={{ playlists: [], totalCount: 0, hasMore: false }}
         initialDiscoverPlaylists={{ popular: [], recent: [] }}
         boardConfigs={fakeBoardConfigs}
       />,
@@ -348,7 +363,7 @@ describe('LibraryPageContent FAB orchestration', () => {
     render(
       <LibraryPageContent
         initialMyBoards={[]}
-        initialPlaylists={[]}
+        initialPlaylists={{ playlists: [], totalCount: 0, hasMore: false }}
         initialDiscoverPlaylists={{ popular: [], recent: [] }}
       />,
     );
@@ -369,7 +384,7 @@ describe('LibraryPageContent FAB orchestration', () => {
     render(
       <LibraryPageContent
         initialMyBoards={[board]}
-        initialPlaylists={[]}
+        initialPlaylists={{ playlists: [], totalCount: 0, hasMore: false }}
         initialDiscoverPlaylists={{ popular: [], recent: [] }}
         boardConfigs={fakeBoardConfigs}
         boardSlug={board.slug}
@@ -387,7 +402,7 @@ describe('LibraryPageContent FAB orchestration', () => {
     render(
       <LibraryPageContent
         initialMyBoards={[board]}
-        initialPlaylists={[]}
+        initialPlaylists={{ playlists: [], totalCount: 0, hasMore: false }}
         initialDiscoverPlaylists={{ popular: [], recent: [] }}
         boardConfigs={fakeBoardConfigs}
         boardSlug={board.slug}
@@ -409,7 +424,7 @@ describe('LibraryPageContent FAB orchestration', () => {
     render(
       <LibraryPageContent
         initialMyBoards={[board]}
-        initialPlaylists={[]}
+        initialPlaylists={{ playlists: [], totalCount: 0, hasMore: false }}
         initialDiscoverPlaylists={{ popular: [], recent: [] }}
         boardConfigs={fakeBoardConfigs}
         boardSlug="kilter-route"
@@ -427,7 +442,7 @@ describe('LibraryPageContent FAB orchestration', () => {
     render(
       <LibraryPageContent
         initialMyBoards={[]}
-        initialPlaylists={[]}
+        initialPlaylists={{ playlists: [], totalCount: 0, hasMore: false }}
         initialDiscoverPlaylists={{ popular: [], recent: [] }}
         boardConfigs={fakeBoardConfigs}
       />,

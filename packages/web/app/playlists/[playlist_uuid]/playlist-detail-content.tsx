@@ -19,6 +19,8 @@ import {
   DeleteOutlined,
   PeopleOutlined,
   IosShare,
+  PushPin,
+  PushPinOutlined,
 } from '@mui/icons-material';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
@@ -39,6 +41,12 @@ import {
   UPDATE_PLAYLIST_LAST_ACCESSED,
   FOLLOW_PLAYLIST,
   UNFOLLOW_PLAYLIST,
+  PIN_PLAYLIST,
+  UNPIN_PLAYLIST,
+  type PinPlaylistMutationResponse,
+  type PinPlaylistMutationVariables,
+  type UnpinPlaylistMutationResponse,
+  type UnpinPlaylistMutationVariables,
   type GetPlaylistClimbsQueryVariables,
   type GetPlaylistClimbsInput,
 } from '@/app/lib/graphql/operations/playlists';
@@ -48,6 +56,7 @@ import { LoadingSpinner } from '@/app/components/ui/loading-spinner';
 import { EmptyState } from '@/app/components/ui/empty-state';
 import FollowButton from '@/app/components/ui/follow-button';
 import PlaylistPreviewSquare from '@/app/components/library/playlist-preview-square';
+import { recordPlaylistOpen } from '@/app/lib/recent-playlists-db';
 import { useWsAuthToken } from '@/app/hooks/use-ws-auth-token';
 import { getBoardDetailsForPlaylist, getDefaultAngleForBoard } from '@/app/lib/board-config-for-playlist';
 import { themeTokens } from '@/app/theme/theme-config';
@@ -182,6 +191,18 @@ export default function PlaylistDetailContent({
     }
   }, [playlist, token, playlistUuid]);
 
+  // Track per-device playlist opens so the library page can fall back to
+  // "recently opened" when the user has nothing pinned. Records every load
+  // (not just owners), since the recency list captures viewed playlists too.
+  useEffect(() => {
+    if (!playlist) return;
+    void recordPlaylistOpen({
+      uuid: playlist.uuid,
+      boardType: playlist.boardType,
+      layoutId: playlist.layoutId ?? null,
+    });
+  }, [playlist]);
+
   // === Playlist climbs data fetching (all-boards mode by default) ===
 
   const {
@@ -290,6 +311,35 @@ export default function PlaylistDetailContent({
       onError: () => showMessage(t('detail.shareError'), 'error'),
     });
   }, [playlistUuid, playlist, showMessage, t]);
+
+  // Pin / unpin from the detail header. Optimistically flip the local state
+  // so the icon swaps immediately; revert on failure. Same mutation as the
+  // grid card pin button on /playlists.
+  const handleTogglePin = useCallback(async () => {
+    if (!token || !playlist) return;
+    const nextPinned = !playlist.isPinnedByMe;
+    setPlaylist({ ...playlist, isPinnedByMe: nextPinned });
+    try {
+      if (nextPinned) {
+        await executeGraphQL<PinPlaylistMutationResponse, PinPlaylistMutationVariables>(
+          PIN_PLAYLIST,
+          { input: { playlistUuid } },
+          token,
+        );
+      } else {
+        await executeGraphQL<UnpinPlaylistMutationResponse, UnpinPlaylistMutationVariables>(
+          UNPIN_PLAYLIST,
+          { input: { playlistUuid } },
+          token,
+        );
+      }
+    } catch (err) {
+      console.error('Failed to toggle pin:', err);
+      // Revert local state on failure.
+      setPlaylist({ ...playlist, isPinnedByMe: !nextPinned });
+      showMessage(t(nextPinned ? 'library.pin.pinFailed' : 'library.pin.unpinFailed'), 'error');
+    }
+  }, [token, playlist, playlistUuid, showMessage, t]);
 
   const isOwner = playlist?.userRole === 'owner';
 
@@ -423,6 +473,17 @@ export default function PlaylistDetailContent({
               gap: 0.5,
             }}
           >
+            {/* Pin toggle: any signed-in viewer can pin a playlist they can
+                see (own private/public + others' public, gated server-side
+                by verifyPlaylistAccess). Hidden for unauthenticated users. */}
+            {token && (
+              <IconButton
+                onClick={handleTogglePin}
+                aria-label={t(playlist.isPinnedByMe ? 'library.pin.unpinAriaLabel' : 'library.pin.pinAriaLabel')}
+              >
+                {playlist.isPinnedByMe ? <PushPin /> : <PushPinOutlined />}
+              </IconButton>
+            )}
             {playlist.isPublic && (
               <IconButton onClick={handleShare} aria-label={t('detail.share')}>
                 <IosShare />

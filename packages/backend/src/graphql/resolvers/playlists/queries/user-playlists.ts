@@ -7,33 +7,44 @@ import { GetUserPlaylistsInputSchema, GetAllUserPlaylistsInputSchema } from '../
 import { getPlaylistFollowStats } from '../helpers/follow-stats';
 import { getClimbCounts, formatOwnedPlaylist, type OwnedPlaylistRow } from '../helpers/enrichment';
 
-const PLAYLIST_SELECT = {
-  id: dbSchema.playlists.id,
-  uuid: dbSchema.playlists.uuid,
-  boardType: dbSchema.playlists.boardType,
-  layoutId: dbSchema.playlists.layoutId,
-  name: dbSchema.playlists.name,
-  description: dbSchema.playlists.description,
-  isPublic: dbSchema.playlists.isPublic,
-  color: dbSchema.playlists.color,
-  icon: dbSchema.playlists.icon,
-  createdAt: dbSchema.playlists.createdAt,
-  updatedAt: dbSchema.playlists.updatedAt,
-  lastAccessedAt: dbSchema.playlists.lastAccessedAt,
-  role: dbSchema.playlistOwnership.role,
-} as const;
+/**
+ * Build the select shape for owned-playlist queries. Takes the current user
+ * id so we can compute isPinnedByMe via a LEFT JOIN against userPlaylistPins
+ * — same query, no extra round-trip.
+ */
+function ownedPlaylistSelect(userId: string) {
+  return {
+    id: dbSchema.playlists.id,
+    uuid: dbSchema.playlists.uuid,
+    boardType: dbSchema.playlists.boardType,
+    layoutId: dbSchema.playlists.layoutId,
+    name: dbSchema.playlists.name,
+    description: dbSchema.playlists.description,
+    isPublic: dbSchema.playlists.isPublic,
+    color: dbSchema.playlists.color,
+    icon: dbSchema.playlists.icon,
+    createdAt: dbSchema.playlists.createdAt,
+    updatedAt: dbSchema.playlists.updatedAt,
+    lastAccessedAt: dbSchema.playlists.lastAccessedAt,
+    role: dbSchema.playlistOwnership.role,
+    isPinnedByMe: sql<boolean>`${dbSchema.userPlaylistPins.id} IS NOT NULL`,
+  } as const;
+}
 
 const PLAYLIST_ORDER = desc(sql`COALESCE(${dbSchema.playlists.lastAccessedAt}, ${dbSchema.playlists.updatedAt})`);
 
 /**
  * Enrich owned playlist rows with climb counts and follow stats.
+ * isPinnedByMe is already on the row from the LEFT JOIN.
  */
 async function enrichOwnedPlaylists(playlists: OwnedPlaylistRow[], userId: string) {
-  const countMap = await getClimbCounts(playlists.map((p) => p.id));
-  const followStats = await getPlaylistFollowStats(
-    playlists.map((p) => p.uuid),
-    userId,
-  );
+  const [countMap, followStats] = await Promise.all([
+    getClimbCounts(playlists.map((p) => p.id)),
+    getPlaylistFollowStats(
+      playlists.map((p) => p.uuid),
+      userId,
+    ),
+  ]);
   return playlists.map((p) => formatOwnedPlaylist(p, countMap, followStats));
 }
 
@@ -51,9 +62,16 @@ export const userPlaylists = async (
   const userId = ctx.userId!;
 
   const userPlaylists = await db
-    .select(PLAYLIST_SELECT)
+    .select(ownedPlaylistSelect(userId))
     .from(dbSchema.playlists)
     .innerJoin(dbSchema.playlistOwnership, eq(dbSchema.playlistOwnership.playlistId, dbSchema.playlists.id))
+    .leftJoin(
+      dbSchema.userPlaylistPins,
+      and(
+        eq(dbSchema.userPlaylistPins.playlistId, dbSchema.playlists.id),
+        eq(dbSchema.userPlaylistPins.userId, userId),
+      ),
+    )
     .where(
       and(
         eq(dbSchema.playlistOwnership.userId, userId),
@@ -67,18 +85,24 @@ export const userPlaylists = async (
 };
 
 /**
- * Get all playlists owned by the authenticated user, optionally filtered by board type.
- * No layoutId filter required — shows playlists across all layouts.
+ * Get all playlists owned by the authenticated user, optionally filtered by board type
+ * and layout, paginated with offset-based pagination. Mirrors discoverPlaylists' shape.
  */
 export const allUserPlaylists = async (
   _: unknown,
-  { input }: { input: { boardType?: string; layoutId?: number } },
+  {
+    input,
+  }: {
+    input: { boardType?: string; layoutId?: number; page?: number; pageSize?: number };
+  },
   ctx: ConnectionContext,
-): Promise<unknown[]> => {
+): Promise<{ playlists: unknown[]; totalCount: number; hasMore: boolean }> => {
   requireAuthenticated(ctx);
   validateInput(GetAllUserPlaylistsInputSchema, input, 'input');
 
   const userId = ctx.userId!;
+  const page = input.page ?? 0;
+  const pageSize = input.pageSize ?? 20;
 
   const conditions = [eq(dbSchema.playlistOwnership.userId, userId)];
 
@@ -93,12 +117,37 @@ export const allUserPlaylists = async (
     }
   }
 
-  const playlists = await db
-    .select(PLAYLIST_SELECT)
+  const whereClause = and(...conditions);
+
+  const countResult = await db
+    .select({ count: sql<number>`count(*)::int` })
     .from(dbSchema.playlists)
     .innerJoin(dbSchema.playlistOwnership, eq(dbSchema.playlistOwnership.playlistId, dbSchema.playlists.id))
-    .where(and(...conditions))
-    .orderBy(PLAYLIST_ORDER);
+    .where(whereClause);
+  const totalCount = countResult[0]?.count ?? 0;
 
-  return enrichOwnedPlaylists(playlists, userId);
+  const rows = await db
+    .select(ownedPlaylistSelect(userId))
+    .from(dbSchema.playlists)
+    .innerJoin(dbSchema.playlistOwnership, eq(dbSchema.playlistOwnership.playlistId, dbSchema.playlists.id))
+    .leftJoin(
+      dbSchema.userPlaylistPins,
+      and(
+        eq(dbSchema.userPlaylistPins.playlistId, dbSchema.playlists.id),
+        eq(dbSchema.userPlaylistPins.userId, userId),
+      ),
+    )
+    .where(whereClause)
+    .orderBy(PLAYLIST_ORDER)
+    .limit(pageSize + 1)
+    .offset(page * pageSize);
+
+  const hasMore = rows.length > pageSize;
+  const trimmed = hasMore ? rows.slice(0, pageSize) : rows;
+
+  return {
+    playlists: await enrichOwnedPlaylists(trimmed, userId),
+    totalCount,
+    hasMore,
+  };
 };

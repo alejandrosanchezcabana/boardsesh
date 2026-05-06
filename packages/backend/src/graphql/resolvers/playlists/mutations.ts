@@ -10,8 +10,10 @@ import {
   AddClimbToPlaylistInputSchema,
   RemoveClimbFromPlaylistInputSchema,
   FollowPlaylistInputSchema,
+  PinPlaylistInputSchema,
 } from '../../../validation/schemas';
 import { getPlaylistFollowStats } from './queries';
+import { verifyPlaylistAccess } from './helpers/enrichment';
 
 export const playlistMutations = {
   /**
@@ -66,6 +68,7 @@ export const playlistMutations = {
       userRole: 'owner',
       followerCount: 0,
       isFollowedByMe: false,
+      isPinnedByMe: false,
     };
   },
 
@@ -123,8 +126,19 @@ export const playlistMutations = {
       .where(eq(dbSchema.playlistClimbs.playlistId, playlistId))
       .limit(1);
 
-    const followStats = await getPlaylistFollowStats([updated.uuid], userId);
+    const [followStats, pinRow] = await Promise.all([
+      getPlaylistFollowStats([updated.uuid], userId),
+      // Single-row pin lookup by composite-unique-index (userId, playlistId)
+      // — cheaper than the helper's batched IN-array path for the
+      // mutation's one-playlist case.
+      db
+        .select({ id: dbSchema.userPlaylistPins.id })
+        .from(dbSchema.userPlaylistPins)
+        .where(and(eq(dbSchema.userPlaylistPins.userId, userId), eq(dbSchema.userPlaylistPins.playlistId, playlistId)))
+        .limit(1),
+    ]);
     const stats = followStats.get(updated.uuid) ?? { followerCount: 0, isFollowedByMe: false };
+    const isPinnedByMe = pinRow.length > 0;
 
     return {
       id: updated.id.toString(),
@@ -142,6 +156,7 @@ export const playlistMutations = {
       userRole: 'owner',
       followerCount: stats.followerCount,
       isFollowedByMe: stats.isFollowedByMe,
+      isPinnedByMe,
     };
   },
 
@@ -409,6 +424,57 @@ export const playlistMutations = {
           eq(dbSchema.playlistFollows.playlistUuid, validatedInput.playlistUuid),
         ),
       );
+
+    return true;
+  },
+
+  /**
+   * Pin a playlist to the user's library. Idempotent.
+   * verifyPlaylistAccess gates: own private/public + others' public are pinnable;
+   * others' private playlists throw access-denied.
+   */
+  pinPlaylist: async (
+    _: unknown,
+    { input }: { input: { playlistUuid: string } },
+    ctx: ConnectionContext,
+  ): Promise<boolean> => {
+    requireAuthenticated(ctx);
+    const validatedInput = validateInput(PinPlaylistInputSchema, input, 'input');
+    const userId = ctx.userId!;
+
+    const playlistId = await verifyPlaylistAccess(validatedInput.playlistUuid, userId);
+
+    await db.insert(dbSchema.userPlaylistPins).values({ userId, playlistId }).onConflictDoNothing();
+
+    return true;
+  },
+
+  /**
+   * Unpin a playlist. Idempotent.
+   */
+  unpinPlaylist: async (
+    _: unknown,
+    { input }: { input: { playlistUuid: string } },
+    ctx: ConnectionContext,
+  ): Promise<boolean> => {
+    requireAuthenticated(ctx);
+    const validatedInput = validateInput(PinPlaylistInputSchema, input, 'input');
+    const userId = ctx.userId!;
+
+    // Resolve uuid -> id without an access check: unpinning is always safe,
+    // and we want to allow users to unpin a playlist that's since been made
+    // private or that they no longer own.
+    const [row] = await db
+      .select({ id: dbSchema.playlists.id })
+      .from(dbSchema.playlists)
+      .where(eq(dbSchema.playlists.uuid, validatedInput.playlistUuid))
+      .limit(1);
+
+    if (!row) return true;
+
+    await db
+      .delete(dbSchema.userPlaylistPins)
+      .where(and(eq(dbSchema.userPlaylistPins.userId, userId), eq(dbSchema.userPlaylistPins.playlistId, row.id)));
 
     return true;
   },

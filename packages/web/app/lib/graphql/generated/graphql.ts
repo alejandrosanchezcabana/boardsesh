@@ -149,6 +149,17 @@ export type AddUserToSessionInput = {
   userId: Scalars['ID']['input'];
 };
 
+/** Result of fetching the authenticated user's playlists, paginated. */
+export type AllUserPlaylistsResult = {
+  __typename?: 'AllUserPlaylistsResult';
+  /** Whether more are available */
+  hasMore: Scalars['Boolean']['output'];
+  /** List of playlists */
+  playlists: Array<Playlist>;
+  /** Total count across all pages */
+  totalCount: Scalars['Int']['output'];
+};
+
 /** A supported board angle. */
 export type Angle = {
   __typename?: 'Angle';
@@ -1273,6 +1284,10 @@ export type GetAllUserPlaylistsInput = {
   boardType?: InputMaybe<Scalars['String']['input']>;
   /** Optional filter by layout ID (includes playlists with null layoutId) */
   layoutId?: InputMaybe<Scalars['Int']['input']>;
+  /** Page number (0-indexed) */
+  page?: InputMaybe<Scalars['Int']['input']>;
+  /** Page size */
+  pageSize?: InputMaybe<Scalars['Int']['input']>;
 };
 
 export type GetClimbProposalsInput = {
@@ -1283,6 +1298,14 @@ export type GetClimbProposalsInput = {
   offset?: InputMaybe<Scalars['Int']['input']>;
   status?: InputMaybe<ProposalStatus>;
   type?: InputMaybe<ProposalType>;
+};
+
+/** Input for getting the authenticated user's pinned playlists. */
+export type GetMyPinnedPlaylistsInput = {
+  /** Optional filter by board type */
+  boardType?: InputMaybe<Scalars['String']['input']>;
+  /** Optional filter by layout ID (includes playlists with null layoutId) */
+  layoutId?: InputMaybe<Scalars['Int']['input']>;
 };
 
 /** Input for getting climbs in a playlist with full data. */
@@ -1798,6 +1821,12 @@ export type Mutation = {
   /** Toggle mirrored display for the current climb. */
   mirrorCurrentClimb?: Maybe<ClimbQueueItem>;
   navigateQueue?: Maybe<ClimbQueueItem>;
+  /**
+   * Pin a playlist to the authenticated user's library. Idempotent.
+   * Pinning is per-user; the same playlist can be pinned by many users.
+   * Only playlists the user can access (own or public) may be pinned.
+   */
+  pinPlaylist: Scalars['Boolean']['output'];
   registerController: ControllerRegistration;
   /** Remove a climb from a playlist. */
   removeClimbFromPlaylist: Scalars['Boolean']['output'];
@@ -1874,6 +1903,8 @@ export type Mutation = {
   unfollowSetter: Scalars['Boolean']['output'];
   /** Unfollow a user. */
   unfollowUser: Scalars['Boolean']['output'];
+  /** Unpin a playlist. Idempotent. */
+  unpinPlaylist: Scalars['Boolean']['output'];
   /** Unsubscribe from new climbs for a board type and layout. */
   unsubscribeNewClimbs: Scalars['Boolean']['output'];
   /** Update a board's metadata. */
@@ -2144,6 +2175,12 @@ export type MutationNavigateQueueArgs = {
 
 
 /** Root mutation type for all write operations. */
+export type MutationPinPlaylistArgs = {
+  input: PinPlaylistInput;
+};
+
+
+/** Root mutation type for all write operations. */
 export type MutationRegisterControllerArgs = {
   input: RegisterControllerInput;
 };
@@ -2317,6 +2354,12 @@ export type MutationUnfollowSetterArgs = {
 /** Root mutation type for all write operations. */
 export type MutationUnfollowUserArgs = {
   input: FollowInput;
+};
+
+
+/** Root mutation type for all write operations. */
+export type MutationUnpinPlaylistArgs = {
+  input: PinPlaylistInput;
 };
 
 
@@ -2542,6 +2585,12 @@ export type OutlierAnalysis = {
   neighborCount: Scalars['Int']['output'];
 };
 
+/** Input for pinning/unpinning a playlist. */
+export type PinPlaylistInput = {
+  /** The playlist UUID */
+  playlistUuid: Scalars['ID']['input'];
+};
+
 /** A user-created collection of climbs. */
 export type Playlist = {
   __typename?: 'Playlist';
@@ -2563,6 +2612,8 @@ export type Playlist = {
   id: Scalars['ID']['output'];
   /** Whether the current user follows this playlist */
   isFollowedByMe: Scalars['Boolean']['output'];
+  /** Whether the current user has pinned this playlist (false when unauthenticated) */
+  isPinnedByMe: Scalars['Boolean']['output'];
   /** Whether publicly visible */
   isPublic: Scalars['Boolean']['output'];
   /** When last accessed/viewed (ISO 8601) */
@@ -2769,10 +2820,10 @@ export type Query = {
    */
   activityFeed: ActivityFeedResult;
   /**
-   * Get all current user's playlists across boards/layouts.
-   * Optional boardType filter. Requires authentication.
+   * Get all current user's playlists across boards/layouts, paginated.
+   * Optional boardType/layoutId filter. Requires authentication.
    */
-  allUserPlaylists: Array<Playlist>;
+  allUserPlaylists: AllUserPlaylistsResult;
   /** Get available angles for a board layout. */
   angles: Array<Angle>;
   /**
@@ -2924,6 +2975,11 @@ export type Query = {
    * Requires authentication.
    */
   myNewClimbSubscriptions: Array<NewClimbSubscription>;
+  /**
+   * Get the authenticated user's pinned playlists, ordered by most recently pinned.
+   * Capped server-side (small grid surface). Requires authentication.
+   */
+  myPinnedPlaylists: Array<Playlist>;
   /** Get the current user's community roles. */
   myRoles: Array<CommunityRoleAssignment>;
   /**
@@ -3310,6 +3366,12 @@ export type QueryMyBoardsArgs = {
 /** Root query type for all read operations. */
 export type QueryMyGymsArgs = {
   input?: InputMaybe<MyGymsInput>;
+};
+
+
+/** Root query type for all read operations. */
+export type QueryMyPinnedPlaylistsArgs = {
+  input: GetMyPinnedPlaylistsInput;
 };
 
 
@@ -5008,28 +5070,49 @@ export type MarkAllNotificationsReadMutationVariables = Exact<{ [key: string]: n
 
 export type MarkAllNotificationsReadMutation = { __typename?: 'Mutation', markAllNotificationsRead: boolean };
 
-export type PlaylistFieldsFragment = { __typename?: 'Playlist', id: string, uuid: string, boardType: string, layoutId?: number | null, name: string, description?: string | null, isPublic: boolean, color?: string | null, icon?: string | null, createdAt: string, updatedAt: string, lastAccessedAt?: string | null, climbCount: number, userRole?: string | null, followerCount: number, isFollowedByMe: boolean };
+export type PlaylistFieldsFragment = { __typename?: 'Playlist', id: string, uuid: string, boardType: string, layoutId?: number | null, name: string, description?: string | null, isPublic: boolean, color?: string | null, icon?: string | null, createdAt: string, updatedAt: string, lastAccessedAt?: string | null, climbCount: number, userRole?: string | null, followerCount: number, isFollowedByMe: boolean, isPinnedByMe: boolean };
 
 export type GetUserPlaylistsQueryVariables = Exact<{
   input: GetUserPlaylistsInput;
 }>;
 
 
-export type GetUserPlaylistsQuery = { __typename?: 'Query', userPlaylists: Array<{ __typename?: 'Playlist', id: string, uuid: string, boardType: string, layoutId?: number | null, name: string, description?: string | null, isPublic: boolean, color?: string | null, icon?: string | null, createdAt: string, updatedAt: string, lastAccessedAt?: string | null, climbCount: number, userRole?: string | null, followerCount: number, isFollowedByMe: boolean }> };
+export type GetUserPlaylistsQuery = { __typename?: 'Query', userPlaylists: Array<{ __typename?: 'Playlist', id: string, uuid: string, boardType: string, layoutId?: number | null, name: string, description?: string | null, isPublic: boolean, color?: string | null, icon?: string | null, createdAt: string, updatedAt: string, lastAccessedAt?: string | null, climbCount: number, userRole?: string | null, followerCount: number, isFollowedByMe: boolean, isPinnedByMe: boolean }> };
 
 export type GetAllUserPlaylistsQueryVariables = Exact<{
   input: GetAllUserPlaylistsInput;
 }>;
 
 
-export type GetAllUserPlaylistsQuery = { __typename?: 'Query', allUserPlaylists: Array<{ __typename?: 'Playlist', id: string, uuid: string, boardType: string, layoutId?: number | null, name: string, description?: string | null, isPublic: boolean, color?: string | null, icon?: string | null, createdAt: string, updatedAt: string, lastAccessedAt?: string | null, climbCount: number, userRole?: string | null, followerCount: number, isFollowedByMe: boolean }> };
+export type GetAllUserPlaylistsQuery = { __typename?: 'Query', allUserPlaylists: { __typename?: 'AllUserPlaylistsResult', totalCount: number, hasMore: boolean, playlists: Array<{ __typename?: 'Playlist', id: string, uuid: string, boardType: string, layoutId?: number | null, name: string, description?: string | null, isPublic: boolean, color?: string | null, icon?: string | null, createdAt: string, updatedAt: string, lastAccessedAt?: string | null, climbCount: number, userRole?: string | null, followerCount: number, isFollowedByMe: boolean, isPinnedByMe: boolean }> } };
+
+export type GetMyPinnedPlaylistsQueryVariables = Exact<{
+  input: GetMyPinnedPlaylistsInput;
+}>;
+
+
+export type GetMyPinnedPlaylistsQuery = { __typename?: 'Query', myPinnedPlaylists: Array<{ __typename?: 'Playlist', id: string, uuid: string, boardType: string, layoutId?: number | null, name: string, description?: string | null, isPublic: boolean, color?: string | null, icon?: string | null, createdAt: string, updatedAt: string, lastAccessedAt?: string | null, climbCount: number, userRole?: string | null, followerCount: number, isFollowedByMe: boolean, isPinnedByMe: boolean }> };
+
+export type PinPlaylistMutationVariables = Exact<{
+  input: PinPlaylistInput;
+}>;
+
+
+export type PinPlaylistMutation = { __typename?: 'Mutation', pinPlaylist: boolean };
+
+export type UnpinPlaylistMutationVariables = Exact<{
+  input: PinPlaylistInput;
+}>;
+
+
+export type UnpinPlaylistMutation = { __typename?: 'Mutation', unpinPlaylist: boolean };
 
 export type GetPlaylistQueryVariables = Exact<{
   playlistId: Scalars['ID']['input'];
 }>;
 
 
-export type GetPlaylistQuery = { __typename?: 'Query', playlist?: { __typename?: 'Playlist', id: string, uuid: string, boardType: string, layoutId?: number | null, name: string, description?: string | null, isPublic: boolean, color?: string | null, icon?: string | null, createdAt: string, updatedAt: string, lastAccessedAt?: string | null, climbCount: number, userRole?: string | null, followerCount: number, isFollowedByMe: boolean } | null };
+export type GetPlaylistQuery = { __typename?: 'Query', playlist?: { __typename?: 'Playlist', id: string, uuid: string, boardType: string, layoutId?: number | null, name: string, description?: string | null, isPublic: boolean, color?: string | null, icon?: string | null, createdAt: string, updatedAt: string, lastAccessedAt?: string | null, climbCount: number, userRole?: string | null, followerCount: number, isFollowedByMe: boolean, isPinnedByMe: boolean } | null };
 
 export type GetPlaylistsForClimbQueryVariables = Exact<{
   input: GetPlaylistsForClimbInput;
@@ -5050,14 +5133,14 @@ export type CreatePlaylistMutationVariables = Exact<{
 }>;
 
 
-export type CreatePlaylistMutation = { __typename?: 'Mutation', createPlaylist: { __typename?: 'Playlist', id: string, uuid: string, boardType: string, layoutId?: number | null, name: string, description?: string | null, isPublic: boolean, color?: string | null, icon?: string | null, createdAt: string, updatedAt: string, lastAccessedAt?: string | null, climbCount: number, userRole?: string | null, followerCount: number, isFollowedByMe: boolean } };
+export type CreatePlaylistMutation = { __typename?: 'Mutation', createPlaylist: { __typename?: 'Playlist', id: string, uuid: string, boardType: string, layoutId?: number | null, name: string, description?: string | null, isPublic: boolean, color?: string | null, icon?: string | null, createdAt: string, updatedAt: string, lastAccessedAt?: string | null, climbCount: number, userRole?: string | null, followerCount: number, isFollowedByMe: boolean, isPinnedByMe: boolean } };
 
 export type UpdatePlaylistMutationVariables = Exact<{
   input: UpdatePlaylistInput;
 }>;
 
 
-export type UpdatePlaylistMutation = { __typename?: 'Mutation', updatePlaylist: { __typename?: 'Playlist', id: string, uuid: string, boardType: string, layoutId?: number | null, name: string, description?: string | null, isPublic: boolean, color?: string | null, icon?: string | null, createdAt: string, updatedAt: string, lastAccessedAt?: string | null, climbCount: number, userRole?: string | null, followerCount: number, isFollowedByMe: boolean } };
+export type UpdatePlaylistMutation = { __typename?: 'Mutation', updatePlaylist: { __typename?: 'Playlist', id: string, uuid: string, boardType: string, layoutId?: number | null, name: string, description?: string | null, isPublic: boolean, color?: string | null, icon?: string | null, createdAt: string, updatedAt: string, lastAccessedAt?: string | null, climbCount: number, userRole?: string | null, followerCount: number, isFollowedByMe: boolean, isPinnedByMe: boolean } };
 
 export type DeletePlaylistMutationVariables = Exact<{
   playlistId: Scalars['ID']['input'];
@@ -5454,7 +5537,7 @@ export type UpdateTickMutationVariables = Exact<{
 
 export type UpdateTickMutation = { __typename?: 'Mutation', updateTick: { __typename?: 'Tick', uuid: string, status: TickStatus, attemptCount: number, quality?: number | null, difficulty?: number | null, isBenchmark: boolean, comment: string, updatedAt: string } };
 
-export const PlaylistFieldsFragmentDoc = {"kind":"Document","definitions":[{"kind":"FragmentDefinition","name":{"kind":"Name","value":"PlaylistFields"},"typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"Playlist"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"uuid"}},{"kind":"Field","name":{"kind":"Name","value":"boardType"}},{"kind":"Field","name":{"kind":"Name","value":"layoutId"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"description"}},{"kind":"Field","name":{"kind":"Name","value":"isPublic"}},{"kind":"Field","name":{"kind":"Name","value":"color"}},{"kind":"Field","name":{"kind":"Name","value":"icon"}},{"kind":"Field","name":{"kind":"Name","value":"createdAt"}},{"kind":"Field","name":{"kind":"Name","value":"updatedAt"}},{"kind":"Field","name":{"kind":"Name","value":"lastAccessedAt"}},{"kind":"Field","name":{"kind":"Name","value":"climbCount"}},{"kind":"Field","name":{"kind":"Name","value":"userRole"}},{"kind":"Field","name":{"kind":"Name","value":"followerCount"}},{"kind":"Field","name":{"kind":"Name","value":"isFollowedByMe"}}]}}]} as unknown as DocumentNode<PlaylistFieldsFragment, unknown>;
+export const PlaylistFieldsFragmentDoc = {"kind":"Document","definitions":[{"kind":"FragmentDefinition","name":{"kind":"Name","value":"PlaylistFields"},"typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"Playlist"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"uuid"}},{"kind":"Field","name":{"kind":"Name","value":"boardType"}},{"kind":"Field","name":{"kind":"Name","value":"layoutId"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"description"}},{"kind":"Field","name":{"kind":"Name","value":"isPublic"}},{"kind":"Field","name":{"kind":"Name","value":"color"}},{"kind":"Field","name":{"kind":"Name","value":"icon"}},{"kind":"Field","name":{"kind":"Name","value":"createdAt"}},{"kind":"Field","name":{"kind":"Name","value":"updatedAt"}},{"kind":"Field","name":{"kind":"Name","value":"lastAccessedAt"}},{"kind":"Field","name":{"kind":"Name","value":"climbCount"}},{"kind":"Field","name":{"kind":"Name","value":"userRole"}},{"kind":"Field","name":{"kind":"Name","value":"followerCount"}},{"kind":"Field","name":{"kind":"Name","value":"isFollowedByMe"}},{"kind":"Field","name":{"kind":"Name","value":"isPinnedByMe"}}]}}]} as unknown as DocumentNode<PlaylistFieldsFragment, unknown>;
 export const SessionSummaryFieldsFragmentDoc = {"kind":"Document","definitions":[{"kind":"FragmentDefinition","name":{"kind":"Name","value":"SessionSummaryFields"},"typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"SessionSummary"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"sessionId"}},{"kind":"Field","name":{"kind":"Name","value":"totalSends"}},{"kind":"Field","name":{"kind":"Name","value":"totalAttempts"}},{"kind":"Field","name":{"kind":"Name","value":"gradeDistribution"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"grade"}},{"kind":"Field","name":{"kind":"Name","value":"count"}}]}},{"kind":"Field","name":{"kind":"Name","value":"hardestClimb"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"climbUuid"}},{"kind":"Field","name":{"kind":"Name","value":"climbName"}},{"kind":"Field","name":{"kind":"Name","value":"grade"}}]}},{"kind":"Field","name":{"kind":"Name","value":"participants"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"userId"}},{"kind":"Field","name":{"kind":"Name","value":"displayName"}},{"kind":"Field","name":{"kind":"Name","value":"avatarUrl"}},{"kind":"Field","name":{"kind":"Name","value":"sends"}},{"kind":"Field","name":{"kind":"Name","value":"attempts"}}]}},{"kind":"Field","name":{"kind":"Name","value":"startedAt"}},{"kind":"Field","name":{"kind":"Name","value":"endedAt"}},{"kind":"Field","name":{"kind":"Name","value":"durationMinutes"}},{"kind":"Field","name":{"kind":"Name","value":"goal"}}]}}]} as unknown as DocumentNode<SessionSummaryFieldsFragment, unknown>;
 export const GetDeleteAccountInfoDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"GetDeleteAccountInfo"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"deleteAccountInfo"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"publishedClimbCount"}}]}}]}}]} as unknown as DocumentNode<GetDeleteAccountInfoQuery, GetDeleteAccountInfoQueryVariables>;
 export const DeleteAccountDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"DeleteAccount"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"DeleteAccountInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"deleteAccount"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}]}]}}]} as unknown as DocumentNode<DeleteAccountMutation, DeleteAccountMutationVariables>;
@@ -5490,13 +5573,16 @@ export const GetUnreadNotificationCountDocument = {"kind":"Document","definition
 export const MarkNotificationReadDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"MarkNotificationRead"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"notificationUuid"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ID"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"markNotificationRead"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"notificationUuid"},"value":{"kind":"Variable","name":{"kind":"Name","value":"notificationUuid"}}}]}]}}]} as unknown as DocumentNode<MarkNotificationReadMutation, MarkNotificationReadMutationVariables>;
 export const MarkGroupNotificationsReadDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"MarkGroupNotificationsRead"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"type"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"NotificationType"}}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"entityType"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"SocialEntityType"}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"entityId"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"markGroupNotificationsRead"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"type"},"value":{"kind":"Variable","name":{"kind":"Name","value":"type"}}},{"kind":"Argument","name":{"kind":"Name","value":"entityType"},"value":{"kind":"Variable","name":{"kind":"Name","value":"entityType"}}},{"kind":"Argument","name":{"kind":"Name","value":"entityId"},"value":{"kind":"Variable","name":{"kind":"Name","value":"entityId"}}}]}]}}]} as unknown as DocumentNode<MarkGroupNotificationsReadMutation, MarkGroupNotificationsReadMutationVariables>;
 export const MarkAllNotificationsReadDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"MarkAllNotificationsRead"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"markAllNotificationsRead"}}]}}]} as unknown as DocumentNode<MarkAllNotificationsReadMutation, MarkAllNotificationsReadMutationVariables>;
-export const GetUserPlaylistsDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"GetUserPlaylists"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"GetUserPlaylistsInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"userPlaylists"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"FragmentSpread","name":{"kind":"Name","value":"PlaylistFields"}}]}}]}},{"kind":"FragmentDefinition","name":{"kind":"Name","value":"PlaylistFields"},"typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"Playlist"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"uuid"}},{"kind":"Field","name":{"kind":"Name","value":"boardType"}},{"kind":"Field","name":{"kind":"Name","value":"layoutId"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"description"}},{"kind":"Field","name":{"kind":"Name","value":"isPublic"}},{"kind":"Field","name":{"kind":"Name","value":"color"}},{"kind":"Field","name":{"kind":"Name","value":"icon"}},{"kind":"Field","name":{"kind":"Name","value":"createdAt"}},{"kind":"Field","name":{"kind":"Name","value":"updatedAt"}},{"kind":"Field","name":{"kind":"Name","value":"lastAccessedAt"}},{"kind":"Field","name":{"kind":"Name","value":"climbCount"}},{"kind":"Field","name":{"kind":"Name","value":"userRole"}},{"kind":"Field","name":{"kind":"Name","value":"followerCount"}},{"kind":"Field","name":{"kind":"Name","value":"isFollowedByMe"}}]}}]} as unknown as DocumentNode<GetUserPlaylistsQuery, GetUserPlaylistsQueryVariables>;
-export const GetAllUserPlaylistsDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"GetAllUserPlaylists"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"GetAllUserPlaylistsInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"allUserPlaylists"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"FragmentSpread","name":{"kind":"Name","value":"PlaylistFields"}}]}}]}},{"kind":"FragmentDefinition","name":{"kind":"Name","value":"PlaylistFields"},"typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"Playlist"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"uuid"}},{"kind":"Field","name":{"kind":"Name","value":"boardType"}},{"kind":"Field","name":{"kind":"Name","value":"layoutId"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"description"}},{"kind":"Field","name":{"kind":"Name","value":"isPublic"}},{"kind":"Field","name":{"kind":"Name","value":"color"}},{"kind":"Field","name":{"kind":"Name","value":"icon"}},{"kind":"Field","name":{"kind":"Name","value":"createdAt"}},{"kind":"Field","name":{"kind":"Name","value":"updatedAt"}},{"kind":"Field","name":{"kind":"Name","value":"lastAccessedAt"}},{"kind":"Field","name":{"kind":"Name","value":"climbCount"}},{"kind":"Field","name":{"kind":"Name","value":"userRole"}},{"kind":"Field","name":{"kind":"Name","value":"followerCount"}},{"kind":"Field","name":{"kind":"Name","value":"isFollowedByMe"}}]}}]} as unknown as DocumentNode<GetAllUserPlaylistsQuery, GetAllUserPlaylistsQueryVariables>;
-export const GetPlaylistDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"GetPlaylist"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"playlistId"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ID"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"playlist"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"playlistId"},"value":{"kind":"Variable","name":{"kind":"Name","value":"playlistId"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"FragmentSpread","name":{"kind":"Name","value":"PlaylistFields"}}]}}]}},{"kind":"FragmentDefinition","name":{"kind":"Name","value":"PlaylistFields"},"typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"Playlist"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"uuid"}},{"kind":"Field","name":{"kind":"Name","value":"boardType"}},{"kind":"Field","name":{"kind":"Name","value":"layoutId"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"description"}},{"kind":"Field","name":{"kind":"Name","value":"isPublic"}},{"kind":"Field","name":{"kind":"Name","value":"color"}},{"kind":"Field","name":{"kind":"Name","value":"icon"}},{"kind":"Field","name":{"kind":"Name","value":"createdAt"}},{"kind":"Field","name":{"kind":"Name","value":"updatedAt"}},{"kind":"Field","name":{"kind":"Name","value":"lastAccessedAt"}},{"kind":"Field","name":{"kind":"Name","value":"climbCount"}},{"kind":"Field","name":{"kind":"Name","value":"userRole"}},{"kind":"Field","name":{"kind":"Name","value":"followerCount"}},{"kind":"Field","name":{"kind":"Name","value":"isFollowedByMe"}}]}}]} as unknown as DocumentNode<GetPlaylistQuery, GetPlaylistQueryVariables>;
+export const GetUserPlaylistsDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"GetUserPlaylists"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"GetUserPlaylistsInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"userPlaylists"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"FragmentSpread","name":{"kind":"Name","value":"PlaylistFields"}}]}}]}},{"kind":"FragmentDefinition","name":{"kind":"Name","value":"PlaylistFields"},"typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"Playlist"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"uuid"}},{"kind":"Field","name":{"kind":"Name","value":"boardType"}},{"kind":"Field","name":{"kind":"Name","value":"layoutId"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"description"}},{"kind":"Field","name":{"kind":"Name","value":"isPublic"}},{"kind":"Field","name":{"kind":"Name","value":"color"}},{"kind":"Field","name":{"kind":"Name","value":"icon"}},{"kind":"Field","name":{"kind":"Name","value":"createdAt"}},{"kind":"Field","name":{"kind":"Name","value":"updatedAt"}},{"kind":"Field","name":{"kind":"Name","value":"lastAccessedAt"}},{"kind":"Field","name":{"kind":"Name","value":"climbCount"}},{"kind":"Field","name":{"kind":"Name","value":"userRole"}},{"kind":"Field","name":{"kind":"Name","value":"followerCount"}},{"kind":"Field","name":{"kind":"Name","value":"isFollowedByMe"}},{"kind":"Field","name":{"kind":"Name","value":"isPinnedByMe"}}]}}]} as unknown as DocumentNode<GetUserPlaylistsQuery, GetUserPlaylistsQueryVariables>;
+export const GetAllUserPlaylistsDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"GetAllUserPlaylists"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"GetAllUserPlaylistsInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"allUserPlaylists"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"playlists"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"FragmentSpread","name":{"kind":"Name","value":"PlaylistFields"}}]}},{"kind":"Field","name":{"kind":"Name","value":"totalCount"}},{"kind":"Field","name":{"kind":"Name","value":"hasMore"}}]}}]}},{"kind":"FragmentDefinition","name":{"kind":"Name","value":"PlaylistFields"},"typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"Playlist"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"uuid"}},{"kind":"Field","name":{"kind":"Name","value":"boardType"}},{"kind":"Field","name":{"kind":"Name","value":"layoutId"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"description"}},{"kind":"Field","name":{"kind":"Name","value":"isPublic"}},{"kind":"Field","name":{"kind":"Name","value":"color"}},{"kind":"Field","name":{"kind":"Name","value":"icon"}},{"kind":"Field","name":{"kind":"Name","value":"createdAt"}},{"kind":"Field","name":{"kind":"Name","value":"updatedAt"}},{"kind":"Field","name":{"kind":"Name","value":"lastAccessedAt"}},{"kind":"Field","name":{"kind":"Name","value":"climbCount"}},{"kind":"Field","name":{"kind":"Name","value":"userRole"}},{"kind":"Field","name":{"kind":"Name","value":"followerCount"}},{"kind":"Field","name":{"kind":"Name","value":"isFollowedByMe"}},{"kind":"Field","name":{"kind":"Name","value":"isPinnedByMe"}}]}}]} as unknown as DocumentNode<GetAllUserPlaylistsQuery, GetAllUserPlaylistsQueryVariables>;
+export const GetMyPinnedPlaylistsDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"GetMyPinnedPlaylists"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"GetMyPinnedPlaylistsInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"myPinnedPlaylists"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"FragmentSpread","name":{"kind":"Name","value":"PlaylistFields"}}]}}]}},{"kind":"FragmentDefinition","name":{"kind":"Name","value":"PlaylistFields"},"typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"Playlist"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"uuid"}},{"kind":"Field","name":{"kind":"Name","value":"boardType"}},{"kind":"Field","name":{"kind":"Name","value":"layoutId"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"description"}},{"kind":"Field","name":{"kind":"Name","value":"isPublic"}},{"kind":"Field","name":{"kind":"Name","value":"color"}},{"kind":"Field","name":{"kind":"Name","value":"icon"}},{"kind":"Field","name":{"kind":"Name","value":"createdAt"}},{"kind":"Field","name":{"kind":"Name","value":"updatedAt"}},{"kind":"Field","name":{"kind":"Name","value":"lastAccessedAt"}},{"kind":"Field","name":{"kind":"Name","value":"climbCount"}},{"kind":"Field","name":{"kind":"Name","value":"userRole"}},{"kind":"Field","name":{"kind":"Name","value":"followerCount"}},{"kind":"Field","name":{"kind":"Name","value":"isFollowedByMe"}},{"kind":"Field","name":{"kind":"Name","value":"isPinnedByMe"}}]}}]} as unknown as DocumentNode<GetMyPinnedPlaylistsQuery, GetMyPinnedPlaylistsQueryVariables>;
+export const PinPlaylistDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"PinPlaylist"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"PinPlaylistInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"pinPlaylist"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}]}]}}]} as unknown as DocumentNode<PinPlaylistMutation, PinPlaylistMutationVariables>;
+export const UnpinPlaylistDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"UnpinPlaylist"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"PinPlaylistInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"unpinPlaylist"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}]}]}}]} as unknown as DocumentNode<UnpinPlaylistMutation, UnpinPlaylistMutationVariables>;
+export const GetPlaylistDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"GetPlaylist"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"playlistId"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ID"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"playlist"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"playlistId"},"value":{"kind":"Variable","name":{"kind":"Name","value":"playlistId"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"FragmentSpread","name":{"kind":"Name","value":"PlaylistFields"}}]}}]}},{"kind":"FragmentDefinition","name":{"kind":"Name","value":"PlaylistFields"},"typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"Playlist"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"uuid"}},{"kind":"Field","name":{"kind":"Name","value":"boardType"}},{"kind":"Field","name":{"kind":"Name","value":"layoutId"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"description"}},{"kind":"Field","name":{"kind":"Name","value":"isPublic"}},{"kind":"Field","name":{"kind":"Name","value":"color"}},{"kind":"Field","name":{"kind":"Name","value":"icon"}},{"kind":"Field","name":{"kind":"Name","value":"createdAt"}},{"kind":"Field","name":{"kind":"Name","value":"updatedAt"}},{"kind":"Field","name":{"kind":"Name","value":"lastAccessedAt"}},{"kind":"Field","name":{"kind":"Name","value":"climbCount"}},{"kind":"Field","name":{"kind":"Name","value":"userRole"}},{"kind":"Field","name":{"kind":"Name","value":"followerCount"}},{"kind":"Field","name":{"kind":"Name","value":"isFollowedByMe"}},{"kind":"Field","name":{"kind":"Name","value":"isPinnedByMe"}}]}}]} as unknown as DocumentNode<GetPlaylistQuery, GetPlaylistQueryVariables>;
 export const GetPlaylistsForClimbDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"GetPlaylistsForClimb"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"GetPlaylistsForClimbInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"playlistsForClimb"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}]}]}}]} as unknown as DocumentNode<GetPlaylistsForClimbQuery, GetPlaylistsForClimbQueryVariables>;
 export const GetPlaylistsForClimbsDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"GetPlaylistsForClimbs"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"GetPlaylistsForClimbsInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"playlistsForClimbs"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"climbUuid"}},{"kind":"Field","name":{"kind":"Name","value":"playlistUuids"}}]}}]}}]} as unknown as DocumentNode<GetPlaylistsForClimbsQuery, GetPlaylistsForClimbsQueryVariables>;
-export const CreatePlaylistDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"CreatePlaylist"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"CreatePlaylistInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"createPlaylist"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"FragmentSpread","name":{"kind":"Name","value":"PlaylistFields"}}]}}]}},{"kind":"FragmentDefinition","name":{"kind":"Name","value":"PlaylistFields"},"typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"Playlist"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"uuid"}},{"kind":"Field","name":{"kind":"Name","value":"boardType"}},{"kind":"Field","name":{"kind":"Name","value":"layoutId"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"description"}},{"kind":"Field","name":{"kind":"Name","value":"isPublic"}},{"kind":"Field","name":{"kind":"Name","value":"color"}},{"kind":"Field","name":{"kind":"Name","value":"icon"}},{"kind":"Field","name":{"kind":"Name","value":"createdAt"}},{"kind":"Field","name":{"kind":"Name","value":"updatedAt"}},{"kind":"Field","name":{"kind":"Name","value":"lastAccessedAt"}},{"kind":"Field","name":{"kind":"Name","value":"climbCount"}},{"kind":"Field","name":{"kind":"Name","value":"userRole"}},{"kind":"Field","name":{"kind":"Name","value":"followerCount"}},{"kind":"Field","name":{"kind":"Name","value":"isFollowedByMe"}}]}}]} as unknown as DocumentNode<CreatePlaylistMutation, CreatePlaylistMutationVariables>;
-export const UpdatePlaylistDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"UpdatePlaylist"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"UpdatePlaylistInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"updatePlaylist"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"FragmentSpread","name":{"kind":"Name","value":"PlaylistFields"}}]}}]}},{"kind":"FragmentDefinition","name":{"kind":"Name","value":"PlaylistFields"},"typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"Playlist"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"uuid"}},{"kind":"Field","name":{"kind":"Name","value":"boardType"}},{"kind":"Field","name":{"kind":"Name","value":"layoutId"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"description"}},{"kind":"Field","name":{"kind":"Name","value":"isPublic"}},{"kind":"Field","name":{"kind":"Name","value":"color"}},{"kind":"Field","name":{"kind":"Name","value":"icon"}},{"kind":"Field","name":{"kind":"Name","value":"createdAt"}},{"kind":"Field","name":{"kind":"Name","value":"updatedAt"}},{"kind":"Field","name":{"kind":"Name","value":"lastAccessedAt"}},{"kind":"Field","name":{"kind":"Name","value":"climbCount"}},{"kind":"Field","name":{"kind":"Name","value":"userRole"}},{"kind":"Field","name":{"kind":"Name","value":"followerCount"}},{"kind":"Field","name":{"kind":"Name","value":"isFollowedByMe"}}]}}]} as unknown as DocumentNode<UpdatePlaylistMutation, UpdatePlaylistMutationVariables>;
+export const CreatePlaylistDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"CreatePlaylist"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"CreatePlaylistInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"createPlaylist"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"FragmentSpread","name":{"kind":"Name","value":"PlaylistFields"}}]}}]}},{"kind":"FragmentDefinition","name":{"kind":"Name","value":"PlaylistFields"},"typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"Playlist"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"uuid"}},{"kind":"Field","name":{"kind":"Name","value":"boardType"}},{"kind":"Field","name":{"kind":"Name","value":"layoutId"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"description"}},{"kind":"Field","name":{"kind":"Name","value":"isPublic"}},{"kind":"Field","name":{"kind":"Name","value":"color"}},{"kind":"Field","name":{"kind":"Name","value":"icon"}},{"kind":"Field","name":{"kind":"Name","value":"createdAt"}},{"kind":"Field","name":{"kind":"Name","value":"updatedAt"}},{"kind":"Field","name":{"kind":"Name","value":"lastAccessedAt"}},{"kind":"Field","name":{"kind":"Name","value":"climbCount"}},{"kind":"Field","name":{"kind":"Name","value":"userRole"}},{"kind":"Field","name":{"kind":"Name","value":"followerCount"}},{"kind":"Field","name":{"kind":"Name","value":"isFollowedByMe"}},{"kind":"Field","name":{"kind":"Name","value":"isPinnedByMe"}}]}}]} as unknown as DocumentNode<CreatePlaylistMutation, CreatePlaylistMutationVariables>;
+export const UpdatePlaylistDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"UpdatePlaylist"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"UpdatePlaylistInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"updatePlaylist"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"FragmentSpread","name":{"kind":"Name","value":"PlaylistFields"}}]}}]}},{"kind":"FragmentDefinition","name":{"kind":"Name","value":"PlaylistFields"},"typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"Playlist"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"uuid"}},{"kind":"Field","name":{"kind":"Name","value":"boardType"}},{"kind":"Field","name":{"kind":"Name","value":"layoutId"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"description"}},{"kind":"Field","name":{"kind":"Name","value":"isPublic"}},{"kind":"Field","name":{"kind":"Name","value":"color"}},{"kind":"Field","name":{"kind":"Name","value":"icon"}},{"kind":"Field","name":{"kind":"Name","value":"createdAt"}},{"kind":"Field","name":{"kind":"Name","value":"updatedAt"}},{"kind":"Field","name":{"kind":"Name","value":"lastAccessedAt"}},{"kind":"Field","name":{"kind":"Name","value":"climbCount"}},{"kind":"Field","name":{"kind":"Name","value":"userRole"}},{"kind":"Field","name":{"kind":"Name","value":"followerCount"}},{"kind":"Field","name":{"kind":"Name","value":"isFollowedByMe"}},{"kind":"Field","name":{"kind":"Name","value":"isPinnedByMe"}}]}}]} as unknown as DocumentNode<UpdatePlaylistMutation, UpdatePlaylistMutationVariables>;
 export const DeletePlaylistDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"DeletePlaylist"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"playlistId"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ID"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"deletePlaylist"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"playlistId"},"value":{"kind":"Variable","name":{"kind":"Name","value":"playlistId"}}}]}]}}]} as unknown as DocumentNode<DeletePlaylistMutation, DeletePlaylistMutationVariables>;
 export const AddClimbToPlaylistDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"AddClimbToPlaylist"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"AddClimbToPlaylistInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"addClimbToPlaylist"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"playlistId"}},{"kind":"Field","name":{"kind":"Name","value":"climbUuid"}},{"kind":"Field","name":{"kind":"Name","value":"angle"}},{"kind":"Field","name":{"kind":"Name","value":"position"}},{"kind":"Field","name":{"kind":"Name","value":"addedAt"}}]}}]}}]} as unknown as DocumentNode<AddClimbToPlaylistMutation, AddClimbToPlaylistMutationVariables>;
 export const RemoveClimbFromPlaylistDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"RemoveClimbFromPlaylist"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"RemoveClimbFromPlaylistInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"removeClimbFromPlaylist"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}]}]}}]} as unknown as DocumentNode<RemoveClimbFromPlaylistMutation, RemoveClimbFromPlaylistMutationVariables>;

@@ -102,6 +102,32 @@ export const playlistOwnership = pgTable(
   }),
 );
 
+/**
+ * User Playlist Pins - Per-user pin relationships to playlists.
+ * Datamodel mirrors user_follows: a row is the user-saves-thing edge.
+ * Used to populate the small "Pinned" grid on /playlists. The grid falls
+ * back to a per-device IndexedDB recents list when this table is empty for
+ * a given user.
+ */
+export const userPlaylistPins = pgTable(
+  'user_playlist_pins',
+  {
+    id: bigserial('id', { mode: 'number' }).primaryKey().notNull(),
+    userId: text('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    playlistId: bigint('playlist_id', { mode: 'bigint' })
+      .notNull()
+      .references(() => playlists.id, { onDelete: 'cascade' }),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+  },
+  (table) => ({
+    uniquePin: uniqueIndex('unique_user_playlist_pin').on(table.userId, table.playlistId),
+    userIdx: index('user_playlist_pins_user_idx').on(table.userId),
+    playlistIdx: index('user_playlist_pins_playlist_idx').on(table.playlistId),
+  }),
+);
+
 // Type exports for use in application code
 export type Playlist = typeof playlists.$inferSelect;
 export type NewPlaylist = typeof playlists.$inferInsert;
@@ -109,3 +135,5 @@ export type PlaylistClimb = typeof playlistClimbs.$inferSelect;
 export type NewPlaylistClimb = typeof playlistClimbs.$inferInsert;
 export type PlaylistOwnership = typeof playlistOwnership.$inferSelect;
 export type NewPlaylistOwnership = typeof playlistOwnership.$inferInsert;
+export type UserPlaylistPin = typeof userPlaylistPins.$inferSelect;
+export type NewUserPlaylistPin = typeof userPlaylistPins.$inferInsert;

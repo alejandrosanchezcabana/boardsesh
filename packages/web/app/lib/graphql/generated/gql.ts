@@ -48,9 +48,12 @@ type Documents = {
     "\n  mutation MarkNotificationRead($notificationUuid: ID!) {\n    markNotificationRead(notificationUuid: $notificationUuid)\n  }\n": typeof types.MarkNotificationReadDocument,
     "\n  mutation MarkGroupNotificationsRead($type: NotificationType!, $entityType: SocialEntityType, $entityId: String) {\n    markGroupNotificationsRead(type: $type, entityType: $entityType, entityId: $entityId)\n  }\n": typeof types.MarkGroupNotificationsReadDocument,
     "\n  mutation MarkAllNotificationsRead {\n    markAllNotificationsRead\n  }\n": typeof types.MarkAllNotificationsReadDocument,
-    "\n  fragment PlaylistFields on Playlist {\n    id\n    uuid\n    boardType\n    layoutId\n    name\n    description\n    isPublic\n    color\n    icon\n    createdAt\n    updatedAt\n    lastAccessedAt\n    climbCount\n    userRole\n    followerCount\n    isFollowedByMe\n  }\n": typeof types.PlaylistFieldsFragmentDoc,
+    "\n  fragment PlaylistFields on Playlist {\n    id\n    uuid\n    boardType\n    layoutId\n    name\n    description\n    isPublic\n    color\n    icon\n    createdAt\n    updatedAt\n    lastAccessedAt\n    climbCount\n    userRole\n    followerCount\n    isFollowedByMe\n    isPinnedByMe\n  }\n": typeof types.PlaylistFieldsFragmentDoc,
     "\n  \n  query GetUserPlaylists($input: GetUserPlaylistsInput!) {\n    userPlaylists(input: $input) {\n      ...PlaylistFields\n    }\n  }\n": typeof types.GetUserPlaylistsDocument,
-    "\n  \n  query GetAllUserPlaylists($input: GetAllUserPlaylistsInput!) {\n    allUserPlaylists(input: $input) {\n      ...PlaylistFields\n    }\n  }\n": typeof types.GetAllUserPlaylistsDocument,
+    "\n  \n  query GetAllUserPlaylists($input: GetAllUserPlaylistsInput!) {\n    allUserPlaylists(input: $input) {\n      playlists {\n        ...PlaylistFields\n      }\n      totalCount\n      hasMore\n    }\n  }\n": typeof types.GetAllUserPlaylistsDocument,
+    "\n  \n  query GetMyPinnedPlaylists($input: GetMyPinnedPlaylistsInput!) {\n    myPinnedPlaylists(input: $input) {\n      ...PlaylistFields\n    }\n  }\n": typeof types.GetMyPinnedPlaylistsDocument,
+    "\n  mutation PinPlaylist($input: PinPlaylistInput!) {\n    pinPlaylist(input: $input)\n  }\n": typeof types.PinPlaylistDocument,
+    "\n  mutation UnpinPlaylist($input: PinPlaylistInput!) {\n    unpinPlaylist(input: $input)\n  }\n": typeof types.UnpinPlaylistDocument,
     "\n  \n  query GetPlaylist($playlistId: ID!) {\n    playlist(playlistId: $playlistId) {\n      ...PlaylistFields\n    }\n  }\n": typeof types.GetPlaylistDocument,
     "\n  query GetPlaylistsForClimb($input: GetPlaylistsForClimbInput!) {\n    playlistsForClimb(input: $input)\n  }\n": typeof types.GetPlaylistsForClimbDocument,
     "\n  query GetPlaylistsForClimbs($input: GetPlaylistsForClimbsInput!) {\n    playlistsForClimbs(input: $input) {\n      climbUuid\n      playlistUuids\n    }\n  }\n": typeof types.GetPlaylistsForClimbsDocument,
@@ -148,9 +151,12 @@ const documents: Documents = {
     "\n  mutation MarkNotificationRead($notificationUuid: ID!) {\n    markNotificationRead(notificationUuid: $notificationUuid)\n  }\n": types.MarkNotificationReadDocument,
     "\n  mutation MarkGroupNotificationsRead($type: NotificationType!, $entityType: SocialEntityType, $entityId: String) {\n    markGroupNotificationsRead(type: $type, entityType: $entityType, entityId: $entityId)\n  }\n": types.MarkGroupNotificationsReadDocument,
     "\n  mutation MarkAllNotificationsRead {\n    markAllNotificationsRead\n  }\n": types.MarkAllNotificationsReadDocument,
-    "\n  fragment PlaylistFields on Playlist {\n    id\n    uuid\n    boardType\n    layoutId\n    name\n    description\n    isPublic\n    color\n    icon\n    createdAt\n    updatedAt\n    lastAccessedAt\n    climbCount\n    userRole\n    followerCount\n    isFollowedByMe\n  }\n": types.PlaylistFieldsFragmentDoc,
+    "\n  fragment PlaylistFields on Playlist {\n    id\n    uuid\n    boardType\n    layoutId\n    name\n    description\n    isPublic\n    color\n    icon\n    createdAt\n    updatedAt\n    lastAccessedAt\n    climbCount\n    userRole\n    followerCount\n    isFollowedByMe\n    isPinnedByMe\n  }\n": types.PlaylistFieldsFragmentDoc,
     "\n  \n  query GetUserPlaylists($input: GetUserPlaylistsInput!) {\n    userPlaylists(input: $input) {\n      ...PlaylistFields\n    }\n  }\n": types.GetUserPlaylistsDocument,
-    "\n  \n  query GetAllUserPlaylists($input: GetAllUserPlaylistsInput!) {\n    allUserPlaylists(input: $input) {\n      ...PlaylistFields\n    }\n  }\n": types.GetAllUserPlaylistsDocument,
+    "\n  \n  query GetAllUserPlaylists($input: GetAllUserPlaylistsInput!) {\n    allUserPlaylists(input: $input) {\n      playlists {\n        ...PlaylistFields\n      }\n      totalCount\n      hasMore\n    }\n  }\n": types.GetAllUserPlaylistsDocument,
+    "\n  \n  query GetMyPinnedPlaylists($input: GetMyPinnedPlaylistsInput!) {\n    myPinnedPlaylists(input: $input) {\n      ...PlaylistFields\n    }\n  }\n": types.GetMyPinnedPlaylistsDocument,
+    "\n  mutation PinPlaylist($input: PinPlaylistInput!) {\n    pinPlaylist(input: $input)\n  }\n": types.PinPlaylistDocument,
+    "\n  mutation UnpinPlaylist($input: PinPlaylistInput!) {\n    unpinPlaylist(input: $input)\n  }\n": types.UnpinPlaylistDocument,
     "\n  \n  query GetPlaylist($playlistId: ID!) {\n    playlist(playlistId: $playlistId) {\n      ...PlaylistFields\n    }\n  }\n": types.GetPlaylistDocument,
     "\n  query GetPlaylistsForClimb($input: GetPlaylistsForClimbInput!) {\n    playlistsForClimb(input: $input)\n  }\n": types.GetPlaylistsForClimbDocument,
     "\n  query GetPlaylistsForClimbs($input: GetPlaylistsForClimbsInput!) {\n    playlistsForClimbs(input: $input) {\n      climbUuid\n      playlistUuids\n    }\n  }\n": types.GetPlaylistsForClimbsDocument,
@@ -367,7 +373,7 @@ export function graphql(source: "\n  mutation MarkAllNotificationsRead {\n    ma
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
-export function graphql(source: "\n  fragment PlaylistFields on Playlist {\n    id\n    uuid\n    boardType\n    layoutId\n    name\n    description\n    isPublic\n    color\n    icon\n    createdAt\n    updatedAt\n    lastAccessedAt\n    climbCount\n    userRole\n    followerCount\n    isFollowedByMe\n  }\n"): (typeof documents)["\n  fragment PlaylistFields on Playlist {\n    id\n    uuid\n    boardType\n    layoutId\n    name\n    description\n    isPublic\n    color\n    icon\n    createdAt\n    updatedAt\n    lastAccessedAt\n    climbCount\n    userRole\n    followerCount\n    isFollowedByMe\n  }\n"];
+export function graphql(source: "\n  fragment PlaylistFields on Playlist {\n    id\n    uuid\n    boardType\n    layoutId\n    name\n    description\n    isPublic\n    color\n    icon\n    createdAt\n    updatedAt\n    lastAccessedAt\n    climbCount\n    userRole\n    followerCount\n    isFollowedByMe\n    isPinnedByMe\n  }\n"): (typeof documents)["\n  fragment PlaylistFields on Playlist {\n    id\n    uuid\n    boardType\n    layoutId\n    name\n    description\n    isPublic\n    color\n    icon\n    createdAt\n    updatedAt\n    lastAccessedAt\n    climbCount\n    userRole\n    followerCount\n    isFollowedByMe\n    isPinnedByMe\n  }\n"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
@@ -375,7 +381,19 @@ export function graphql(source: "\n  \n  query GetUserPlaylists($input: GetUserP
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
-export function graphql(source: "\n  \n  query GetAllUserPlaylists($input: GetAllUserPlaylistsInput!) {\n    allUserPlaylists(input: $input) {\n      ...PlaylistFields\n    }\n  }\n"): (typeof documents)["\n  \n  query GetAllUserPlaylists($input: GetAllUserPlaylistsInput!) {\n    allUserPlaylists(input: $input) {\n      ...PlaylistFields\n    }\n  }\n"];
+export function graphql(source: "\n  \n  query GetAllUserPlaylists($input: GetAllUserPlaylistsInput!) {\n    allUserPlaylists(input: $input) {\n      playlists {\n        ...PlaylistFields\n      }\n      totalCount\n      hasMore\n    }\n  }\n"): (typeof documents)["\n  \n  query GetAllUserPlaylists($input: GetAllUserPlaylistsInput!) {\n    allUserPlaylists(input: $input) {\n      playlists {\n        ...PlaylistFields\n      }\n      totalCount\n      hasMore\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  \n  query GetMyPinnedPlaylists($input: GetMyPinnedPlaylistsInput!) {\n    myPinnedPlaylists(input: $input) {\n      ...PlaylistFields\n    }\n  }\n"): (typeof documents)["\n  \n  query GetMyPinnedPlaylists($input: GetMyPinnedPlaylistsInput!) {\n    myPinnedPlaylists(input: $input) {\n      ...PlaylistFields\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation PinPlaylist($input: PinPlaylistInput!) {\n    pinPlaylist(input: $input)\n  }\n"): (typeof documents)["\n  mutation PinPlaylist($input: PinPlaylistInput!) {\n    pinPlaylist(input: $input)\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation UnpinPlaylist($input: PinPlaylistInput!) {\n    unpinPlaylist(input: $input)\n  }\n"): (typeof documents)["\n  mutation UnpinPlaylist($input: PinPlaylistInput!) {\n    unpinPlaylist(input: $input)\n  }\n"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */

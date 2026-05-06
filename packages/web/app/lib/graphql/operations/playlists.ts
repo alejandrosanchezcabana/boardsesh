@@ -19,6 +19,7 @@ export const PLAYLIST_FIELDS = gql`
     userRole
     followerCount
     isFollowedByMe
+    isPinnedByMe
   }
 `;
 
@@ -32,13 +33,41 @@ export const GET_USER_PLAYLISTS = gql`
   }
 `;
 
-// Get all user's playlists across boards (optional board filter)
+// Get all user's playlists across boards (optional board filter, paginated)
 export const GET_ALL_USER_PLAYLISTS = gql`
   ${PLAYLIST_FIELDS}
   query GetAllUserPlaylists($input: GetAllUserPlaylistsInput!) {
     allUserPlaylists(input: $input) {
+      playlists {
+        ...PlaylistFields
+      }
+      totalCount
+      hasMore
+    }
+  }
+`;
+
+// Get the authenticated user's pinned playlists
+export const GET_MY_PINNED_PLAYLISTS = gql`
+  ${PLAYLIST_FIELDS}
+  query GetMyPinnedPlaylists($input: GetMyPinnedPlaylistsInput!) {
+    myPinnedPlaylists(input: $input) {
       ...PlaylistFields
     }
+  }
+`;
+
+// Pin a playlist (idempotent)
+export const PIN_PLAYLIST = gql`
+  mutation PinPlaylist($input: PinPlaylistInput!) {
+    pinPlaylist(input: $input)
+  }
+`;
+
+// Unpin a playlist (idempotent)
+export const UNPIN_PLAYLIST = gql`
+  mutation UnpinPlaylist($input: PinPlaylistInput!) {
+    unpinPlaylist(input: $input)
   }
 `;
 
@@ -162,19 +191,61 @@ export type Playlist = {
   userRole?: string;
   followerCount: number;
   isFollowedByMe: boolean;
+  isPinnedByMe: boolean;
 };
 
 export type GetAllUserPlaylistsInput = {
   boardType?: string;
   layoutId?: number;
+  page?: number;
+  pageSize?: number;
 };
 
 export type GetAllUserPlaylistsQueryVariables = {
   input: GetAllUserPlaylistsInput;
 };
 
+export type AllUserPlaylistsResult = {
+  playlists: Playlist[];
+  totalCount: number;
+  hasMore: boolean;
+};
+
 export type GetAllUserPlaylistsQueryResponse = {
-  allUserPlaylists: Playlist[];
+  allUserPlaylists: AllUserPlaylistsResult;
+};
+
+export type GetMyPinnedPlaylistsInput = {
+  boardType?: string;
+  layoutId?: number;
+};
+
+export type GetMyPinnedPlaylistsQueryVariables = {
+  input: GetMyPinnedPlaylistsInput;
+};
+
+export type GetMyPinnedPlaylistsQueryResponse = {
+  myPinnedPlaylists: Playlist[];
+};
+
+export type PinPlaylistInput = {
+  playlistUuid: string;
+};
+
+export type PinPlaylistMutationVariables = {
+  input: PinPlaylistInput;
+};
+
+export type PinPlaylistMutationResponse = {
+  pinPlaylist: boolean;
+};
+
+export type UnpinPlaylistMutationVariables = {
+  input: PinPlaylistInput;
+};
+
+export type UnpinPlaylistMutationResponse = {
+  unpinPlaylist: boolean;
 };
 
 export type GetUserPlaylistsInput = {

@@ -242,6 +242,18 @@ export const mutationsTypeDefs = /* GraphQL */ `
     unfollowPlaylist(input: FollowPlaylistInput!): Boolean!
 
     """
+    Pin a playlist to the authenticated user's library. Idempotent.
+    Pinning is per-user; the same playlist can be pinned by many users.
+    Only playlists the user can access (own or public) may be pinned.
+    """
+    pinPlaylist(input: PinPlaylistInput!): Boolean!
+
+    """
+    Unpin a playlist. Idempotent.
+    """
+    unpinPlaylist(input: PinPlaylistInput!): Boolean!
+
+    """
     Subscribe to new climbs for a board type and layout.
     """
     subscribeNewClimbs(input: NewClimbSubscriptionInput!): Boolean!

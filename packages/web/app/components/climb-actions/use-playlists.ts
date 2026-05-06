@@ -33,6 +33,7 @@ const noopCreatePlaylist = async (): Promise<Playlist> => {
     climbCount: 0,
     followerCount: 0,
     isFollowedByMe: false,
+    isPinnedByMe: false,
   };
 };
 
