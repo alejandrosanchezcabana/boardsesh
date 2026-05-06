@@ -23,12 +23,14 @@
   },
   "retention": {
     "heading": "User retention",
-    "subheading": "Of users who signed up in week W, how many returned to log a tick within N days.",
-    "definitions": "Cohort = signup week (UTC). Activity = at least one tick logged in Boardsesh (Aurora-imported ticks excluded). D7 = active within 7 days of signup. Cohorts younger than the window show —.",
+    "subheading": "Of users who signed up in week W, how many came back within N days — both as ticks (climbs logged) and as any in-app activity.",
+    "definitions": "Cohort = signup week (UTC). Ticks = at least one climb logged in Boardsesh (Aurora-imported ticks excluded). Any activity = a tick, party-session host or join, favorite, playlist (created or pinned), follow (user, setter, or playlist), new-climb subscription, comment, vote, proposal vote, or feedback submission. D7 = active within 7 days of signup. Cohorts younger than the window show —.",
     "back": "Back to admin",
     "table": {
       "cohortWeek": "Cohort week",
       "signups": "Signups",
+      "groupTicks": "Ticks",
+      "groupAny": "Any activity",
       "activated": "Activated",
       "d1": "D1",
       "d3": "D3",
@@ -39,7 +41,8 @@
     },
     "chart": {
       "title": "D7 retention by cohort week",
-      "label": "D7 %"
+      "label": "Ticks",
+      "labelAny": "Any activity"
     }
   },
   "roles": {
