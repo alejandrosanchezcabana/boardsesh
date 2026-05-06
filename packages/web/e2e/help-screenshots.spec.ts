@@ -56,18 +56,23 @@ test.describe('Help Page Screenshots', () => {
   test('search by hold', async ({ page }) => {
     await page.getByRole('button', { name: 'Open filters' }).click();
     await page.locator('[data-swipeable-drawer="true"]:visible').first().waitFor({ timeout: 10_000 });
-    // Expand the "Holds" accordion section.
-    await page.getByText('Holds', { exact: true }).click();
+    // Expand the "Holds & Zone" accordion section (the panel was renamed when
+    // hold and zone search were consolidated — see PR #1986).
+    await page.getByText('Holds & Zone', { exact: true }).click();
     await page.screenshot({ path: `${SCREENSHOT_DIR}/search-by-hold.png` });
   });
 
   test('heatmap', async ({ page }) => {
     await page.getByRole('button', { name: 'Open filters' }).click();
     await page.locator('[data-swipeable-drawer="true"]:visible').first().waitFor({ timeout: 10_000 });
-    await page.getByText('Holds', { exact: true }).click();
-    await page.getByRole('button', { name: 'Show Heatmap' }).click();
+    await page.getByText('Holds & Zone', { exact: true }).click();
+    await page.getByRole('button', { name: 'Show heatmap' }).click();
     await page.waitForSelector('text=Loading heatmap...', { state: 'hidden', timeout: 10_000 }).catch(() => {});
-    await page.waitForSelector('button:has-text("Hide Heatmap")', { state: 'visible' });
+    // The heatmap toggle is an icon-only IconButton — its label lives in the
+    // aria-label, not in text content. `:has-text` only inspects DOM text, so
+    // it never matched here even when the button was visible. Use getByRole
+    // (matches accessible name, case-insensitive by default).
+    await expect(page.getByRole('button', { name: 'Hide heatmap' })).toBeVisible({ timeout: 15_000 });
     await page.screenshot({ path: `${SCREENSHOT_DIR}/heatmap.png` });
   });
 

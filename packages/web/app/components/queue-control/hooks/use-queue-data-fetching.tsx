@@ -12,6 +12,7 @@ import {
   type ClimbSearchCountResponse,
 } from '@/app/lib/graphql/operations/climb-search';
 import { useWsAuthToken } from '@/app/hooks/use-ws-auth-token';
+import { USER_SPECIFIC_SEARCH_PARAMS } from '@boardsesh/shared-schema';
 
 type UseQueueDataFetchingProps = {
   searchParams: SearchRequestPagination;
@@ -35,7 +36,24 @@ export const useQueueDataFetching = ({
   const { token: wsAuthToken } = useWsAuthToken();
   const fetchedUuidsRef = useRef<string>('');
 
-  // Create a stable query key with flattened primitive values to avoid object reference changes
+  // Whether the active search uses any filter that the backend resolves
+  // against the authenticated user (showOnlyCompleted, hideAttempted, …).
+  // The backend's `searchClimbs` resolver only treats the request as
+  // user-specific when at least one of these is set, so we only need to
+  // wait for the auth token (and bust the React Query cache when it
+  // arrives) for these searches — anonymous-equivalent searches stay on
+  // the fast path and fire without auth.
+  const usesUserSpecificFilters = useMemo(
+    () => USER_SPECIFIC_SEARCH_PARAMS.some((key) => Boolean((searchParams as Record<string, unknown>)[key])),
+    [searchParams],
+  );
+
+  // Create a stable query key with flattened primitive values to avoid object reference changes.
+  // The auth token is included only when user-specific filters are active so the cached
+  // unauthenticated result (returned when SearchClimbs raced ahead of /api/internal/ws-auth)
+  // gets invalidated as soon as the token resolves. Otherwise the Bearer-less request would
+  // satisfy useInfiniteQuery's cache for the rest of the session and we'd render unfiltered
+  // popular climbs even though the URL says ?showOnlyCompleted=true.
   const queryKey = useMemo(() => {
     // Exclude page from the key since pagination is handled by useInfiniteQuery
     const { page: _, ...paramsWithoutPage } = searchParams;
@@ -49,8 +67,9 @@ export const useQueueDataFetching = ({
       parsedParams.set_ids.join(','),
       parsedParams.angle,
       stableFilterKey,
+      usesUserSpecificFilters ? (wsAuthToken ?? null) : null,
     ] as const;
-  }, [searchParams, parsedParams]);
+  }, [searchParams, parsedParams, usesUserSpecificFilters, wsAuthToken]);
 
   // Shared base input for both search and count queries — single source of truth
   const baseInput = useMemo(
@@ -165,6 +184,14 @@ export const useQueueDataFetching = ({
     [countSearchParams, parsedParams],
   );
 
+  // Same auth-token-dependent cache key as the search query above; if the
+  // count request beats /api/internal/ws-auth the backend silently drops the
+  // user-specific filter and we'd cache the wrong total forever.
+  const countUsesUserSpecificFilters = useMemo(
+    () => USER_SPECIFIC_SEARCH_PARAMS.some((key) => Boolean((countSearchParams as Record<string, unknown>)[key])),
+    [countSearchParams],
+  );
+
   const countQueryKey = useMemo(() => {
     const { page: _, ...paramsWithoutPage } = countSearchParams;
     return [
@@ -175,8 +202,9 @@ export const useQueueDataFetching = ({
       parsedParams.set_ids.join(','),
       parsedParams.angle,
       JSON.stringify(paramsWithoutPage),
+      countUsesUserSpecificFilters ? (wsAuthToken ?? null) : null,
     ] as const;
-  }, [countSearchParams, parsedParams]);
+  }, [countSearchParams, parsedParams, countUsesUserSpecificFilters, wsAuthToken]);
 
   const { data: countData } = useQuery({
     queryKey: countQueryKey,
