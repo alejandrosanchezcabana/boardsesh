@@ -30,6 +30,16 @@ export type RetentionRow = {
   d7Pct: number | null;
   d30Pct: number | null;
   activationPct: number | null;
+  d1AnyCount: number;
+  d3AnyCount: number;
+  d7AnyCount: number;
+  d30AnyCount: number;
+  activatedAnyCount: number;
+  d1AnyPct: number | null;
+  d3AnyPct: number | null;
+  d7AnyPct: number | null;
+  d30AnyPct: number | null;
+  activationAnyPct: number | null;
 };
 
 type RetentionDashboardProps = {
@@ -45,9 +55,10 @@ export default function RetentionDashboard({ rows }: RetentionDashboardProps) {
   const { t } = useTranslation('admin');
   const placeholder = t('retention.table.notReady');
 
-  const chartRows = [...rows].reverse().filter((row) => row.d7Pct !== null);
+  const chartRows = [...rows].reverse().filter((row) => row.d7Pct !== null || row.d7AnyPct !== null);
   const chartCategories = chartRows.map((row) => row.cohortWeek);
-  const chartValues = chartRows.map((row) => row.d7Pct ?? 0);
+  const chartTickValues = chartRows.map((row) => row.d7Pct ?? 0);
+  const chartAnyValues = chartRows.map((row) => row.d7AnyPct ?? 0);
 
   return (
     <Container maxWidth="lg" sx={{ py: 4, pt: 'calc(var(--global-header-height) + 32px)' }}>
@@ -72,13 +83,18 @@ export default function RetentionDashboard({ rows }: RetentionDashboardProps) {
           <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 1, color: themeTokens.neutral[800] }}>
             {t('retention.chart.title')}
           </Typography>
-          <Box sx={{ height: 240 }}>
+          <Box sx={{ height: 280 }}>
             <BarChart
               series={[
                 {
-                  data: chartValues,
+                  data: chartTickValues,
                   label: t('retention.chart.label'),
                   color: themeTokens.colors.primary,
+                },
+                {
+                  data: chartAnyValues,
+                  label: t('retention.chart.labelAny'),
+                  color: themeTokens.colors.success,
                 },
               ]}
               xAxis={[
@@ -89,9 +105,8 @@ export default function RetentionDashboard({ rows }: RetentionDashboardProps) {
                 },
               ]}
               yAxis={[{ min: 0, max: 100 }]}
-              height={240}
-              margin={{ top: 8, bottom: 56, left: 32, right: 8 }}
-              hideLegend
+              height={280}
+              margin={{ top: 24, bottom: 56, left: 32, right: 8 }}
               borderRadius={4}
             />
           </Box>
@@ -102,9 +117,28 @@ export default function RetentionDashboard({ rows }: RetentionDashboardProps) {
         <Table size="small">
           <TableHead>
             <TableRow>
-              <TableCell>{t('retention.table.cohortWeek')}</TableCell>
-              <TableCell align="right">{t('retention.table.signups')}</TableCell>
-              <TableCell align="right">{t('retention.table.activated')}</TableCell>
+              <TableCell rowSpan={2}>{t('retention.table.cohortWeek')}</TableCell>
+              <TableCell align="right" rowSpan={2}>
+                {t('retention.table.signups')}
+              </TableCell>
+              <TableCell align="center" colSpan={5} sx={{ borderLeft: `1px solid ${themeTokens.neutral[300]}` }}>
+                {t('retention.table.groupTicks')}
+              </TableCell>
+              <TableCell align="center" colSpan={5} sx={{ borderLeft: `1px solid ${themeTokens.neutral[300]}` }}>
+                {t('retention.table.groupAny')}
+              </TableCell>
+            </TableRow>
+            <TableRow>
+              <TableCell align="right" sx={{ borderLeft: `1px solid ${themeTokens.neutral[300]}` }}>
+                {t('retention.table.activated')}
+              </TableCell>
+              <TableCell align="right">{t('retention.table.d1')}</TableCell>
+              <TableCell align="right">{t('retention.table.d3')}</TableCell>
+              <TableCell align="right">{t('retention.table.d7')}</TableCell>
+              <TableCell align="right">{t('retention.table.d30')}</TableCell>
+              <TableCell align="right" sx={{ borderLeft: `1px solid ${themeTokens.neutral[300]}` }}>
+                {t('retention.table.activated')}
+              </TableCell>
               <TableCell align="right">{t('retention.table.d1')}</TableCell>
               <TableCell align="right">{t('retention.table.d3')}</TableCell>
               <TableCell align="right">{t('retention.table.d7')}</TableCell>
@@ -114,7 +148,7 @@ export default function RetentionDashboard({ rows }: RetentionDashboardProps) {
           <TableBody>
             {rows.length === 0 && (
               <TableRow>
-                <TableCell colSpan={7} align="center" sx={{ color: themeTokens.neutral[600] }}>
+                <TableCell colSpan={12} align="center" sx={{ color: themeTokens.neutral[600] }}>
                   {t('retention.table.empty')}
                 </TableCell>
               </TableRow>
@@ -123,11 +157,20 @@ export default function RetentionDashboard({ rows }: RetentionDashboardProps) {
               <TableRow key={row.cohortWeek}>
                 <TableCell>{row.cohortWeek}</TableCell>
                 <TableCell align="right">{row.signups}</TableCell>
-                <TableCell align="right">{formatPct(row.activationPct, placeholder)}</TableCell>
+                <TableCell align="right" sx={{ borderLeft: `1px solid ${themeTokens.neutral[300]}` }}>
+                  {formatPct(row.activationPct, placeholder)}
+                </TableCell>
                 <TableCell align="right">{formatPct(row.d1Pct, placeholder)}</TableCell>
                 <TableCell align="right">{formatPct(row.d3Pct, placeholder)}</TableCell>
                 <TableCell align="right">{formatPct(row.d7Pct, placeholder)}</TableCell>
                 <TableCell align="right">{formatPct(row.d30Pct, placeholder)}</TableCell>
+                <TableCell align="right" sx={{ borderLeft: `1px solid ${themeTokens.neutral[300]}` }}>
+                  {formatPct(row.activationAnyPct, placeholder)}
+                </TableCell>
+                <TableCell align="right">{formatPct(row.d1AnyPct, placeholder)}</TableCell>
+                <TableCell align="right">{formatPct(row.d3AnyPct, placeholder)}</TableCell>
+                <TableCell align="right">{formatPct(row.d7AnyPct, placeholder)}</TableCell>
+                <TableCell align="right">{formatPct(row.d30AnyPct, placeholder)}</TableCell>
               </TableRow>
             ))}
           </TableBody>
