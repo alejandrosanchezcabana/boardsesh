@@ -3,6 +3,10 @@
     "admin": {
       "title": "Admin Panel",
       "description": "Boardsesh admin panel"
+    },
+    "retention": {
+      "title": "Retention",
+      "description": "Cohort retention dashboard"
     }
   },
   "title": "Admin Panel",
@@ -13,6 +17,30 @@
   "tabs": {
     "roles": "Roles",
     "settings": "Settings"
+  },
+  "nav": {
+    "retention": "Retention dashboard"
+  },
+  "retention": {
+    "heading": "User retention",
+    "subheading": "Of users who signed up in week W, how many returned to log a tick within N days.",
+    "definitions": "Cohort = signup week (UTC). Activity = at least one logged tick. D7 = active within 7 days of signup. Cohorts younger than the window show —.",
+    "back": "Back to admin",
+    "table": {
+      "cohortWeek": "Cohort week",
+      "signups": "Signups",
+      "activated": "Activated",
+      "d1": "D1",
+      "d3": "D3",
+      "d7": "D7",
+      "d30": "D30",
+      "notReady": "—",
+      "empty": "No cohort data yet."
+    },
+    "chart": {
+      "title": "D7 retention by cohort week",
+      "label": "D7 %"
+    }
   },
   "roles": {
     "heading": "Community Roles",
