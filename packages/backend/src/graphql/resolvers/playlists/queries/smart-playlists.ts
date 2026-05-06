@@ -1,4 +1,4 @@
-import { eq, and, desc, sql, inArray, notInArray, max, type SQL } from 'drizzle-orm';
+import { eq, and, desc, sql, inArray, max, type SQL } from 'drizzle-orm';
 import { type ConnectionContext, type Climb } from '@boardsesh/shared-schema';
 import { db } from '../../../../db/client';
 import * as dbSchema from '@boardsesh/db/schema';
@@ -31,22 +31,23 @@ function smartBaseConditions(userId: string, boardName: string | undefined): SQL
 }
 
 /**
- * Subquery of climbUuids the user has flashed or sent. Scoped by boardType when
- * a board filter is active so that, e.g., a sent climb on Kilter doesn't
- * accidentally exclude an unrelated UUID-collision climb on Tension.
+ * SQL fragment: "no flash/send tick exists for this (userId, board_type, climb_uuid)
+ * triple." Matches by `(board_type, climb_uuid)` rather than `climb_uuid` alone so
+ * a sent Kilter climb doesn't accidentally exclude a different Tension climb that
+ * happens to share the same UUID. Always includes the board-type match — when
+ * `boardName` is provided we additionally constrain the side that's being filtered
+ * (the outer query) to that board, but the existence test itself is always
+ * board-aware.
  */
-function sentClimbsSubquery(userId: string, boardName: string | undefined) {
-  const conditions: SQL[] = [
-    eq(dbSchema.boardseshTicks.userId, userId),
-    inArray(dbSchema.boardseshTicks.status, ['flash', 'send']),
-  ];
-  if (boardName) {
-    conditions.push(eq(dbSchema.boardseshTicks.boardType, boardName));
-  }
-  return db
-    .select({ climbUuid: dbSchema.boardseshTicks.climbUuid })
-    .from(dbSchema.boardseshTicks)
-    .where(and(...conditions));
+function notSentExists(userId: string): SQL {
+  return sql`NOT EXISTS (
+    SELECT 1
+    FROM ${dbSchema.boardseshTicks} sent
+    WHERE sent.user_id = ${userId}
+      AND sent.board_type = ${dbSchema.boardseshTicks.boardType}
+      AND sent.climb_uuid = ${dbSchema.boardseshTicks.climbUuid}
+      AND sent.status IN ('flash', 'send')
+  )`;
 }
 
 /**
@@ -97,11 +98,11 @@ async function selectSmartClimbRefs(
     return rows.map((row) => ({ climbUuid: row.climbUuid, boardType: row.boardType }));
   }
 
-  // PROJECTS — climbs the user has logged but never sent on this board.
-  // notInArray(sentSubquery) is the necessary check: any climb the user has
-  // flashed or sent gets excluded entirely. We don't add `status = 'attempt'`
-  // because a climb that survives notInArray has no flash/send rows by
-  // definition, so the additional row filter is redundant.
+  // PROJECTS — climbs the user has logged but never sent on this (board, climb).
+  // The NOT EXISTS check matches on both board_type and climb_uuid, so a sent
+  // Kilter climb doesn't accidentally exclude a Tension climb with the same
+  // UUID. We don't add `status = 'attempt'` because a climb that survives the
+  // NOT EXISTS has no flash/send rows for this board by definition.
   const rows = await db
     .select({
       climbUuid: dbSchema.boardseshTicks.climbUuid,
@@ -109,7 +110,7 @@ async function selectSmartClimbRefs(
       total: sql<number>`SUM(${dbSchema.boardseshTicks.attemptCount})::int`,
     })
     .from(dbSchema.boardseshTicks)
-    .where(and(...conditions, notInArray(dbSchema.boardseshTicks.climbUuid, sentClimbsSubquery(userId, boardName))))
+    .where(and(...conditions, notSentExists(userId)))
     .groupBy(dbSchema.boardseshTicks.climbUuid, dbSchema.boardseshTicks.boardType)
     .orderBy(desc(sql`SUM(${dbSchema.boardseshTicks.attemptCount})`))
     .limit(pageSize)
@@ -158,7 +159,7 @@ async function countSmartClimbRefs(
       count: sql<number>`COUNT(DISTINCT (${dbSchema.boardseshTicks.boardType}, ${dbSchema.boardseshTicks.climbUuid}))::int`,
     })
     .from(dbSchema.boardseshTicks)
-    .where(and(...conditions, notInArray(dbSchema.boardseshTicks.climbUuid, sentClimbsSubquery(userId, boardName))));
+    .where(and(...conditions, notSentExists(userId)));
   return row?.count ?? 0;
 }
 
@@ -249,7 +250,7 @@ export const mySmartPlaylistCounts = async (
       WHERE user_id = ${userId}
     ),
     sent AS (
-      SELECT DISTINCT climb_uuid
+      SELECT DISTINCT climb_uuid, board_type
       FROM base
       WHERE status IN ('flash', 'send')
     ),
@@ -268,9 +269,16 @@ export const mySmartPlaylistCounts = async (
       ) r
     ),
     projects AS (
+      -- Match sent on (climb_uuid, board_type) so a Kilter send doesn't
+      -- exclude a Tension climb sharing the same UUID; mirrors the
+      -- per-page paged-query semantics in selectSmartClimbRefs.
       SELECT COUNT(DISTINCT (board_type, climb_uuid))::int AS count
       FROM base
-      WHERE climb_uuid NOT IN (SELECT climb_uuid FROM sent)
+      WHERE NOT EXISTS (
+        SELECT 1 FROM sent
+        WHERE sent.climb_uuid = base.climb_uuid
+          AND sent.board_type = base.board_type
+      )
     )
     SELECT 'FIVE_STARS'::text AS type, count FROM five_stars
     UNION ALL

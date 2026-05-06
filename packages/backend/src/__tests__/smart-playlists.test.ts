@@ -115,7 +115,10 @@ const USER_ROW = {
 
 describe('smartPlaylist resolver', () => {
   beforeEach(() => {
-    vi.clearAllMocks();
+    // resetAllMocks (not clearAllMocks) so the `mockReturnValueOnce` queues
+    // drain between tests — clearAllMocks only resets call history, leaving
+    // unused queued return values to leak into the next test.
+    vi.resetAllMocks();
   });
 
   it('FIVE_STARS uses LIMIT/OFFSET for pagination and only returns the requested page', async () => {
@@ -193,22 +196,18 @@ describe('smartPlaylist resolver', () => {
     expect(pageCalls.groupBy.length).toBe(1);
   });
 
-  it('PROJECTS scopes the sent-climbs subquery by boardType when boardName is provided', async () => {
+  it('PROJECTS uses a NOT EXISTS scoped by both board_type and climb_uuid', async () => {
     const ctx = makeCtx();
 
     mockDb.select.mockReturnValueOnce(makeChain([USER_ROW]).chain);
 
-    // page selects: outer + inner sentSubquery (sentSubquery is built lazily during the where())
-    const { chain: outerChain } = makeChain([]);
-    mockDb.select.mockReturnValueOnce(outerChain);
-    const { chain: sentChainPage, calls: sentCallsPage } = makeChain([]);
-    mockDb.select.mockReturnValueOnce(sentChainPage);
-
-    // count selects: same shape
-    const { chain: countOuter } = makeChain([{ count: 0 }]);
-    mockDb.select.mockReturnValueOnce(countOuter);
-    const { chain: sentChainCount, calls: sentCallsCount } = makeChain([]);
-    mockDb.select.mockReturnValueOnce(sentChainCount);
+    // No separate sent-subquery select — the NOT EXISTS lives inside the
+    // where() arg as a sql`` fragment. Just three top-level selects:
+    // user lookup, page query, count query.
+    const { chain: pageChain, calls: pageCalls } = makeChain([]);
+    mockDb.select.mockReturnValueOnce(pageChain);
+    const { chain: countChain, calls: countCalls } = makeChain([{ count: 0 }]);
+    mockDb.select.mockReturnValueOnce(countChain);
 
     await playlistQueries.smartPlaylist(
       null,
@@ -218,14 +217,44 @@ describe('smartPlaylist resolver', () => {
       ctx,
     );
 
-    // Each sentSubquery should have been built with two conditions (userId + boardType in addition
-    // to the inArray status), so where() has been called once with one composed argument.
-    expect(sentCallsPage.where.length).toBe(1);
-    expect(sentCallsCount.where.length).toBe(1);
-    // The outer page + count queries must each apply notInArray(climbUuid, sentSubquery)
-    // — without it, sent climbs would leak into the projects list.
-    const notInArrayClimbCalls = notInArraySpy.mock.calls.filter(([col]) => col === dbSchema.boardseshTicks.climbUuid);
-    expect(notInArrayClimbCalls.length).toBe(2);
+    // Both page and count call where() exactly once with a composed condition
+    // that includes the NOT EXISTS sentinel. Stringifying the sql fragment so
+    // the test can assert on its shape without coupling to drizzle's AST.
+    expect(pageCalls.where.length).toBe(1);
+    expect(countCalls.where.length).toBe(1);
+
+    // The NOT EXISTS SQL fragment must reference both board_type and climb_uuid
+    // — that is the joint-scoping fix for the UUID-collision bug. Drizzle
+    // serialises the sql template's `queryChunks` so we can inspect them.
+    const renderSql = (whereArg: unknown): string => {
+      // drizzle wraps the fragment as `{ queryChunks: [...] }`. Recurse for nested.
+      const seen = new WeakSet<object>();
+      const walk = (node: unknown): string => {
+        if (node === null || node === undefined) return '';
+        if (typeof node === 'string') return node;
+        if (typeof node !== 'object') return '';
+        if (seen.has(node)) return '';
+        seen.add(node);
+        const obj = node as Record<string, unknown>;
+        if (Array.isArray(obj.queryChunks)) {
+          return (obj.queryChunks as unknown[]).map(walk).join(' ');
+        }
+        if (Array.isArray((obj as { value?: unknown[] }).value)) {
+          return (obj.value as unknown[]).map(walk).join(' ');
+        }
+        return Object.values(obj).map(walk).join(' ');
+      };
+      return walk(whereArg);
+    };
+    for (const calls of [pageCalls, countCalls]) {
+      const rendered = renderSql(calls.where[0][0]);
+      expect(rendered).toMatch(/board_type/i);
+      expect(rendered).toMatch(/climb_uuid/i);
+      expect(rendered.toUpperCase()).toMatch(/NOT EXISTS/);
+    }
+
+    // Sanity: notInArray is no longer used anywhere (we replaced it with NOT EXISTS).
+    expect(notInArraySpy).not.toHaveBeenCalled();
   });
 
   it('throws when user does not exist', async () => {
@@ -263,7 +292,7 @@ describe('smartPlaylist resolver', () => {
 
 describe('mySmartPlaylistCounts resolver', () => {
   beforeEach(() => {
-    vi.clearAllMocks();
+    vi.resetAllMocks();
   });
 
   it('requires authentication', async () => {
@@ -324,5 +353,29 @@ describe('mySmartPlaylistCounts resolver', () => {
       { type: 'MOST_REPEATED', count: 0 },
       { type: 'PROJECTS', count: 0 },
     ]);
+  });
+
+  it('CTE scopes the sent-climbs check by both board_type and climb_uuid', async () => {
+    // Pin the joint-scoping fix: a kilter send must NOT exclude a tension
+    // climb sharing the same UUID from the projects count. The pure SQL of
+    // the CTE is what enforces this, so this test asserts on the SQL string
+    // rather than on db result rows.
+    const ctx = makeCtx();
+    mockDb.execute.mockResolvedValueOnce([]);
+
+    await playlistQueries.mySmartPlaylistCounts(null, undefined, ctx);
+
+    expect(mockDb.execute).toHaveBeenCalledTimes(1);
+    const sqlArg = mockDb.execute.mock.calls[0][0] as { queryChunks?: unknown[] } | undefined;
+    const rendered = (sqlArg?.queryChunks ?? [])
+      .map((chunk) => (typeof chunk === 'string' ? chunk : ((chunk as { value?: string }).value ?? '')))
+      .join(' ');
+
+    // sent CTE projects (climb_uuid, board_type) — not just climb_uuid.
+    expect(rendered).toMatch(/SELECT\s+DISTINCT\s+climb_uuid,\s+board_type\s+FROM\s+base/i);
+    // projects CTE checks NOT EXISTS with both columns matched.
+    expect(rendered.toUpperCase()).toContain('NOT EXISTS');
+    expect(rendered).toMatch(/sent\.climb_uuid\s*=\s*base\.climb_uuid/i);
+    expect(rendered).toMatch(/sent\.board_type\s*=\s*base\.board_type/i);
   });
 });
