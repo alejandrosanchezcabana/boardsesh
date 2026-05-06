@@ -40,6 +40,7 @@ export function formatOwnedPlaylist(
   p: OwnedPlaylistRow,
   climbCountMap: Map<string, number>,
   followStats: Map<string, { followerCount: number; isFollowedByMe: boolean }>,
+  pinSet: Set<string>,
 ) {
   const stats = followStats.get(p.uuid) ?? { followerCount: 0, isFollowedByMe: false };
   return {
@@ -59,6 +60,7 @@ export function formatOwnedPlaylist(
     userRole: p.role,
     followerCount: stats.followerCount,
     isFollowedByMe: stats.isFollowedByMe,
+    isPinnedByMe: pinSet.has(p.uuid),
   };
 }
 

@@ -19,6 +19,7 @@ export const PLAYLIST_FIELDS = gql`
     userRole
     followerCount
     isFollowedByMe
+    isPinnedByMe
   }
 `;
 
@@ -190,6 +191,7 @@ export type Playlist = {
   userRole?: string;
   followerCount: number;
   isFollowedByMe: boolean;
+  isPinnedByMe: boolean;
 };
 
 export type GetAllUserPlaylistsInput = {

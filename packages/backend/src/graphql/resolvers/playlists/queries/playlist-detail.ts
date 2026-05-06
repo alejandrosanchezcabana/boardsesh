@@ -5,6 +5,7 @@ import * as dbSchema from '@boardsesh/db/schema';
 import { requireAuthenticated, validateInput } from '../../shared/helpers';
 import { GetPlaylistsForClimbInputSchema, GetPlaylistsForClimbsInputSchema } from '../../../../validation/schemas';
 import { getPlaylistFollowStats } from '../helpers/follow-stats';
+import { getPlaylistPinSet } from '../helpers/pin-stats';
 
 /**
  * Get a specific playlist by ID.
@@ -66,8 +67,11 @@ export const playlist = async (
     .where(eq(dbSchema.playlistClimbs.playlistId, p.id))
     .limit(1);
 
-  // Get follow stats
-  const followStats = await getPlaylistFollowStats([p.uuid], userId ?? null);
+  // Get follow + pin stats in parallel
+  const [followStats, pinSet] = await Promise.all([
+    getPlaylistFollowStats([p.uuid], userId ?? null),
+    getPlaylistPinSet([p.uuid], userId ?? null),
+  ]);
   const stats = followStats.get(p.uuid) ?? { followerCount: 0, isFollowedByMe: false };
 
   return {
@@ -87,6 +91,7 @@ export const playlist = async (
     userRole,
     followerCount: stats.followerCount,
     isFollowedByMe: stats.isFollowedByMe,
+    isPinnedByMe: pinSet.has(p.uuid),
   };
 };
 

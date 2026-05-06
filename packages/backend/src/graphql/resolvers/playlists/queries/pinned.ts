@@ -100,5 +100,7 @@ export const myPinnedPlaylists = async (
     owned.map((p) => p.uuid),
     userId,
   );
-  return owned.map((p) => formatOwnedPlaylist(p, climbCounts, followStats));
+  // Every row here is pinned by definition — short-circuit the lookup.
+  const pinSet = new Set(owned.map((p) => p.uuid));
+  return owned.map((p) => formatOwnedPlaylist(p, climbCounts, followStats, pinSet));
 };

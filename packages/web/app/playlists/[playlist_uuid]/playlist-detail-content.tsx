@@ -19,6 +19,8 @@ import {
   DeleteOutlined,
   PeopleOutlined,
   IosShare,
+  PushPin,
+  PushPinOutlined,
 } from '@mui/icons-material';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
@@ -39,6 +41,12 @@ import {
   UPDATE_PLAYLIST_LAST_ACCESSED,
   FOLLOW_PLAYLIST,
   UNFOLLOW_PLAYLIST,
+  PIN_PLAYLIST,
+  UNPIN_PLAYLIST,
+  type PinPlaylistMutationResponse,
+  type PinPlaylistMutationVariables,
+  type UnpinPlaylistMutationResponse,
+  type UnpinPlaylistMutationVariables,
   type GetPlaylistClimbsQueryVariables,
   type GetPlaylistClimbsInput,
 } from '@/app/lib/graphql/operations/playlists';
@@ -304,6 +312,35 @@ export default function PlaylistDetailContent({
     });
   }, [playlistUuid, playlist, showMessage, t]);
 
+  // Pin / unpin from the detail header. Optimistically flip the local state
+  // so the icon swaps immediately; revert on failure. Same mutation as the
+  // grid card pin button on /playlists.
+  const handleTogglePin = useCallback(async () => {
+    if (!token || !playlist) return;
+    const nextPinned = !playlist.isPinnedByMe;
+    setPlaylist({ ...playlist, isPinnedByMe: nextPinned });
+    try {
+      if (nextPinned) {
+        await executeGraphQL<PinPlaylistMutationResponse, PinPlaylistMutationVariables>(
+          PIN_PLAYLIST,
+          { input: { playlistUuid } },
+          token,
+        );
+      } else {
+        await executeGraphQL<UnpinPlaylistMutationResponse, UnpinPlaylistMutationVariables>(
+          UNPIN_PLAYLIST,
+          { input: { playlistUuid } },
+          token,
+        );
+      }
+    } catch (err) {
+      console.error('Failed to toggle pin:', err);
+      // Revert local state on failure.
+      setPlaylist({ ...playlist, isPinnedByMe: !nextPinned });
+      showMessage(t(nextPinned ? 'library.pin.pinFailed' : 'library.pin.unpinFailed'), 'error');
+    }
+  }, [token, playlist, playlistUuid, showMessage, t]);
+
   const isOwner = playlist?.userRole === 'owner';
 
   const getPlaylistColor = () => {
@@ -436,6 +473,17 @@ export default function PlaylistDetailContent({
               gap: 0.5,
             }}
           >
+            {/* Pin toggle: any signed-in viewer can pin a playlist they can
+                see (own private/public + others' public, gated server-side
+                by verifyPlaylistAccess). Hidden for unauthenticated users. */}
+            {token && (
+              <IconButton
+                onClick={handleTogglePin}
+                aria-label={t(playlist.isPinnedByMe ? 'library.pin.unpinAriaLabel' : 'library.pin.pinAriaLabel')}
+              >
+                {playlist.isPinnedByMe ? <PushPin /> : <PushPinOutlined />}
+              </IconButton>
+            )}
             {playlist.isPublic && (
               <IconButton onClick={handleShare} aria-label={t('detail.share')}>
                 <IosShare />

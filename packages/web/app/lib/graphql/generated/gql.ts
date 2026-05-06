@@ -48,7 +48,7 @@ type Documents = {
   '\n  mutation MarkNotificationRead($notificationUuid: ID!) {\n    markNotificationRead(notificationUuid: $notificationUuid)\n  }\n': typeof types.MarkNotificationReadDocument;
   '\n  mutation MarkGroupNotificationsRead($type: NotificationType!, $entityType: SocialEntityType, $entityId: String) {\n    markGroupNotificationsRead(type: $type, entityType: $entityType, entityId: $entityId)\n  }\n': typeof types.MarkGroupNotificationsReadDocument;
   '\n  mutation MarkAllNotificationsRead {\n    markAllNotificationsRead\n  }\n': typeof types.MarkAllNotificationsReadDocument;
-  '\n  fragment PlaylistFields on Playlist {\n    id\n    uuid\n    boardType\n    layoutId\n    name\n    description\n    isPublic\n    color\n    icon\n    createdAt\n    updatedAt\n    lastAccessedAt\n    climbCount\n    userRole\n    followerCount\n    isFollowedByMe\n  }\n': typeof types.PlaylistFieldsFragmentDoc;
+  '\n  fragment PlaylistFields on Playlist {\n    id\n    uuid\n    boardType\n    layoutId\n    name\n    description\n    isPublic\n    color\n    icon\n    createdAt\n    updatedAt\n    lastAccessedAt\n    climbCount\n    userRole\n    followerCount\n    isFollowedByMe\n    isPinnedByMe\n  }\n': typeof types.PlaylistFieldsFragmentDoc;
   '\n  \n  query GetUserPlaylists($input: GetUserPlaylistsInput!) {\n    userPlaylists(input: $input) {\n      ...PlaylistFields\n    }\n  }\n': typeof types.GetUserPlaylistsDocument;
   '\n  \n  query GetAllUserPlaylists($input: GetAllUserPlaylistsInput!) {\n    allUserPlaylists(input: $input) {\n      playlists {\n        ...PlaylistFields\n      }\n      totalCount\n      hasMore\n    }\n  }\n': typeof types.GetAllUserPlaylistsDocument;
   '\n  \n  query GetMyPinnedPlaylists($input: GetMyPinnedPlaylistsInput!) {\n    myPinnedPlaylists(input: $input) {\n      ...PlaylistFields\n    }\n  }\n': typeof types.GetMyPinnedPlaylistsDocument;
@@ -184,7 +184,7 @@ const documents: Documents = {
     types.MarkGroupNotificationsReadDocument,
   '\n  mutation MarkAllNotificationsRead {\n    markAllNotificationsRead\n  }\n':
     types.MarkAllNotificationsReadDocument,
-  '\n  fragment PlaylistFields on Playlist {\n    id\n    uuid\n    boardType\n    layoutId\n    name\n    description\n    isPublic\n    color\n    icon\n    createdAt\n    updatedAt\n    lastAccessedAt\n    climbCount\n    userRole\n    followerCount\n    isFollowedByMe\n  }\n':
+  '\n  fragment PlaylistFields on Playlist {\n    id\n    uuid\n    boardType\n    layoutId\n    name\n    description\n    isPublic\n    color\n    icon\n    createdAt\n    updatedAt\n    lastAccessedAt\n    climbCount\n    userRole\n    followerCount\n    isFollowedByMe\n    isPinnedByMe\n  }\n':
     types.PlaylistFieldsFragmentDoc,
   '\n  \n  query GetUserPlaylists($input: GetUserPlaylistsInput!) {\n    userPlaylists(input: $input) {\n      ...PlaylistFields\n    }\n  }\n':
     types.GetUserPlaylistsDocument,
@@ -538,8 +538,8 @@ export function graphql(
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function graphql(
-  source: '\n  fragment PlaylistFields on Playlist {\n    id\n    uuid\n    boardType\n    layoutId\n    name\n    description\n    isPublic\n    color\n    icon\n    createdAt\n    updatedAt\n    lastAccessedAt\n    climbCount\n    userRole\n    followerCount\n    isFollowedByMe\n  }\n',
-): (typeof documents)['\n  fragment PlaylistFields on Playlist {\n    id\n    uuid\n    boardType\n    layoutId\n    name\n    description\n    isPublic\n    color\n    icon\n    createdAt\n    updatedAt\n    lastAccessedAt\n    climbCount\n    userRole\n    followerCount\n    isFollowedByMe\n  }\n'];
+  source: '\n  fragment PlaylistFields on Playlist {\n    id\n    uuid\n    boardType\n    layoutId\n    name\n    description\n    isPublic\n    color\n    icon\n    createdAt\n    updatedAt\n    lastAccessedAt\n    climbCount\n    userRole\n    followerCount\n    isFollowedByMe\n    isPinnedByMe\n  }\n',
+): (typeof documents)['\n  fragment PlaylistFields on Playlist {\n    id\n    uuid\n    boardType\n    layoutId\n    name\n    description\n    isPublic\n    color\n    icon\n    createdAt\n    updatedAt\n    lastAccessedAt\n    climbCount\n    userRole\n    followerCount\n    isFollowedByMe\n    isPinnedByMe\n  }\n'];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */

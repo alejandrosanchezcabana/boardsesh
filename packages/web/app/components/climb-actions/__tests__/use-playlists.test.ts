@@ -31,6 +31,7 @@ describe('usePlaylists', () => {
     climbCount: 5,
     followerCount: 0,
     isFollowedByMe: false,
+    isPinnedByMe: false,
   };
 
   const defaultContext = {
@@ -187,6 +188,7 @@ describe('usePlaylists', () => {
         climbCount: 0,
         followerCount: 0,
         isFollowedByMe: false,
+        isPinnedByMe: false,
       });
     });
 

@@ -2524,6 +2524,8 @@ export type Playlist = {
   id: Scalars['ID']['output'];
   /** Whether the current user follows this playlist */
   isFollowedByMe: Scalars['Boolean']['output'];
+  /** Whether the current user has pinned this playlist (false when unauthenticated) */
+  isPinnedByMe: Scalars['Boolean']['output'];
   /** Whether publicly visible */
   isPublic: Scalars['Boolean']['output'];
   /** When last accessed/viewed (ISO 8601) */
@@ -5210,6 +5212,7 @@ export type PlaylistFieldsFragment = {
   userRole?: string | null;
   followerCount: number;
   isFollowedByMe: boolean;
+  isPinnedByMe: boolean;
 };
 
 export type GetUserPlaylistsQueryVariables = Exact<{
@@ -5236,6 +5239,7 @@ export type GetUserPlaylistsQuery = {
     userRole?: string | null;
     followerCount: number;
     isFollowedByMe: boolean;
+    isPinnedByMe: boolean;
   }>;
 };
 
@@ -5267,6 +5271,7 @@ export type GetAllUserPlaylistsQuery = {
       userRole?: string | null;
       followerCount: number;
       isFollowedByMe: boolean;
+      isPinnedByMe: boolean;
     }>;
   };
 };
@@ -5295,6 +5300,7 @@ export type GetMyPinnedPlaylistsQuery = {
     userRole?: string | null;
     followerCount: number;
     isFollowedByMe: boolean;
+    isPinnedByMe: boolean;
   }>;
 };
 
@@ -5334,6 +5340,7 @@ export type GetPlaylistQuery = {
     userRole?: string | null;
     followerCount: number;
     isFollowedByMe: boolean;
+    isPinnedByMe: boolean;
   } | null;
 };
 
@@ -5380,6 +5387,7 @@ export type CreatePlaylistMutation = {
     userRole?: string | null;
     followerCount: number;
     isFollowedByMe: boolean;
+    isPinnedByMe: boolean;
   };
 };
 
@@ -5407,6 +5415,7 @@ export type UpdatePlaylistMutation = {
     userRole?: string | null;
     followerCount: number;
     isFollowedByMe: boolean;
+    isPinnedByMe: boolean;
   };
 };
 
@@ -6618,6 +6627,7 @@ export const PlaylistFieldsFragmentDoc = {
           { kind: 'Field', name: { kind: 'Name', value: 'userRole' } },
           { kind: 'Field', name: { kind: 'Name', value: 'followerCount' } },
           { kind: 'Field', name: { kind: 'Name', value: 'isFollowedByMe' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'isPinnedByMe' } },
         ],
       },
     },
@@ -8308,6 +8318,7 @@ export const GetUserPlaylistsDocument = {
           { kind: 'Field', name: { kind: 'Name', value: 'userRole' } },
           { kind: 'Field', name: { kind: 'Name', value: 'followerCount' } },
           { kind: 'Field', name: { kind: 'Name', value: 'isFollowedByMe' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'isPinnedByMe' } },
         ],
       },
     },
@@ -8385,6 +8396,7 @@ export const GetAllUserPlaylistsDocument = {
           { kind: 'Field', name: { kind: 'Name', value: 'userRole' } },
           { kind: 'Field', name: { kind: 'Name', value: 'followerCount' } },
           { kind: 'Field', name: { kind: 'Name', value: 'isFollowedByMe' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'isPinnedByMe' } },
         ],
       },
     },
@@ -8451,6 +8463,7 @@ export const GetMyPinnedPlaylistsDocument = {
           { kind: 'Field', name: { kind: 'Name', value: 'userRole' } },
           { kind: 'Field', name: { kind: 'Name', value: 'followerCount' } },
           { kind: 'Field', name: { kind: 'Name', value: 'isFollowedByMe' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'isPinnedByMe' } },
         ],
       },
     },
@@ -8580,6 +8593,7 @@ export const GetPlaylistDocument = {
           { kind: 'Field', name: { kind: 'Name', value: 'userRole' } },
           { kind: 'Field', name: { kind: 'Name', value: 'followerCount' } },
           { kind: 'Field', name: { kind: 'Name', value: 'isFollowedByMe' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'isPinnedByMe' } },
         ],
       },
     },
@@ -8725,6 +8739,7 @@ export const CreatePlaylistDocument = {
           { kind: 'Field', name: { kind: 'Name', value: 'userRole' } },
           { kind: 'Field', name: { kind: 'Name', value: 'followerCount' } },
           { kind: 'Field', name: { kind: 'Name', value: 'isFollowedByMe' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'isPinnedByMe' } },
         ],
       },
     },
@@ -8791,6 +8806,7 @@ export const UpdatePlaylistDocument = {
           { kind: 'Field', name: { kind: 'Name', value: 'userRole' } },
           { kind: 'Field', name: { kind: 'Name', value: 'followerCount' } },
           { kind: 'Field', name: { kind: 'Name', value: 'isFollowedByMe' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'isPinnedByMe' } },
         ],
       },
     },

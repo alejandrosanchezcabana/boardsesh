@@ -30,7 +30,10 @@ const PLAYLIST_COLORS = [
   '#EF4444', // red
 ];
 
-const PLAYLIST_ICONS = ['StarOutlined', 'WhatshotOutlined', 'TrendingUpOutlined', 'BookmarkOutlined', 'FlagOutlined'];
+// playlists.icon stores raw emoji characters (rendered verbatim by
+// PlaylistPreviewSquare). Don't put MUI component names here — they show
+// up as literal text on the cards.
+const PLAYLIST_ICONS = ['⭐', '🔥', '📈', '🔖', '🚩', '🧗', '💪', '🎯'];
 
 type PlaylistSeed = {
   uuid: string;
@@ -131,6 +134,12 @@ async function seedTestUserPlaylists(db: ReturnType<typeof createScriptDb>['db']
     const lastAccessedAt = new Date(baseTimestamp - i * 60_000); // 1 minute apart
     const createdAt = new Date(baseTimestamp - (seeds.length + i) * 60_000);
 
+    const color = PLAYLIST_COLORS[i % PLAYLIST_COLORS.length];
+    const icon = PLAYLIST_ICONS[i % PLAYLIST_ICONS.length];
+
+    // upsert by uuid so re-running picks up display field changes (icon,
+    // color, name) for existing rows. Keeps the same `id`, so prior pins
+    // and ownerships survive.
     const [inserted] = await db
       .insert(playlists)
       .values({
@@ -140,21 +149,19 @@ async function seedTestUserPlaylists(db: ReturnType<typeof createScriptDb>['db']
         name: seed.name,
         description: null,
         isPublic: seed.isPublic,
-        color: PLAYLIST_COLORS[i % PLAYLIST_COLORS.length],
-        icon: PLAYLIST_ICONS[i % PLAYLIST_ICONS.length],
+        color,
+        icon,
         createdAt,
         updatedAt: lastAccessedAt,
         lastAccessedAt,
       })
-      .onConflictDoNothing()
+      .onConflictDoUpdate({
+        target: playlists.uuid,
+        set: { name: seed.name, color, icon, updatedAt: lastAccessedAt },
+      })
       .returning({ id: playlists.id });
 
-    // onConflictDoNothing returns no rows when the uuid already exists; look
-    // up the existing row in that case so we can still ensure ownership +
-    // pin state are present.
-    const playlistId =
-      inserted?.id ??
-      (await db.select({ id: playlists.id }).from(playlists).where(eq(playlists.uuid, seed.uuid)).limit(1))[0]?.id;
+    const playlistId = inserted?.id;
     if (playlistId == null) continue;
 
     await db

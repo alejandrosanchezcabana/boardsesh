@@ -39,6 +39,8 @@ export const playlistsTypeDefs = /* GraphQL */ `
     followerCount: Int!
     "Whether the current user follows this playlist"
     isFollowedByMe: Boolean!
+    "Whether the current user has pinned this playlist (false when unauthenticated)"
+    isPinnedByMe: Boolean!
   }
 
   """

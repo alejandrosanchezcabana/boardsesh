@@ -5,6 +5,7 @@ import * as dbSchema from '@boardsesh/db/schema';
 import { requireAuthenticated, validateInput } from '../../shared/helpers';
 import { GetUserPlaylistsInputSchema, GetAllUserPlaylistsInputSchema } from '../../../../validation/schemas';
 import { getPlaylistFollowStats } from '../helpers/follow-stats';
+import { getPlaylistPinSet } from '../helpers/pin-stats';
 import { getClimbCounts, formatOwnedPlaylist, type OwnedPlaylistRow } from '../helpers/enrichment';
 
 const PLAYLIST_SELECT = {
@@ -29,12 +30,13 @@ const PLAYLIST_ORDER = desc(sql`COALESCE(${dbSchema.playlists.lastAccessedAt}, $
  * Enrich owned playlist rows with climb counts and follow stats.
  */
 async function enrichOwnedPlaylists(playlists: OwnedPlaylistRow[], userId: string) {
-  const countMap = await getClimbCounts(playlists.map((p) => p.id));
-  const followStats = await getPlaylistFollowStats(
-    playlists.map((p) => p.uuid),
-    userId,
-  );
-  return playlists.map((p) => formatOwnedPlaylist(p, countMap, followStats));
+  const uuids = playlists.map((p) => p.uuid);
+  const [countMap, followStats, pinSet] = await Promise.all([
+    getClimbCounts(playlists.map((p) => p.id)),
+    getPlaylistFollowStats(uuids, userId),
+    getPlaylistPinSet(uuids, userId),
+  ]);
+  return playlists.map((p) => formatOwnedPlaylist(p, countMap, followStats, pinSet));
 }
 
 /**

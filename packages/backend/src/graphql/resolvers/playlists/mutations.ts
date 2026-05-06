@@ -13,6 +13,7 @@ import {
   PinPlaylistInputSchema,
 } from '../../../validation/schemas';
 import { getPlaylistFollowStats } from './queries';
+import { getPlaylistPinSet } from './helpers/pin-stats';
 import { verifyPlaylistAccess } from './helpers/enrichment';
 
 export const playlistMutations = {
@@ -68,6 +69,7 @@ export const playlistMutations = {
       userRole: 'owner',
       followerCount: 0,
       isFollowedByMe: false,
+      isPinnedByMe: false,
     };
   },
 
@@ -125,7 +127,10 @@ export const playlistMutations = {
       .where(eq(dbSchema.playlistClimbs.playlistId, playlistId))
       .limit(1);
 
-    const followStats = await getPlaylistFollowStats([updated.uuid], userId);
+    const [followStats, pinSet] = await Promise.all([
+      getPlaylistFollowStats([updated.uuid], userId),
+      getPlaylistPinSet([updated.uuid], userId),
+    ]);
     const stats = followStats.get(updated.uuid) ?? { followerCount: 0, isFollowedByMe: false };
 
     return {
@@ -144,6 +149,7 @@ export const playlistMutations = {
       userRole: 'owner',
       followerCount: stats.followerCount,
       isFollowedByMe: stats.isFollowedByMe,
+      isPinnedByMe: pinSet.has(updated.uuid),
     };
   },
 

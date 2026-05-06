@@ -2527,6 +2527,8 @@ export type Playlist = {
   id: Scalars['ID']['output'];
   /** Whether the current user follows this playlist */
   isFollowedByMe: Scalars['Boolean']['output'];
+  /** Whether the current user has pinned this playlist (false when unauthenticated) */
+  isPinnedByMe: Scalars['Boolean']['output'];
   /** Whether publicly visible */
   isPublic: Scalars['Boolean']['output'];
   /** When last accessed/viewed (ISO 8601) */
@@ -6629,6 +6631,7 @@ export type PlaylistResolvers<
   icon?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   isFollowedByMe?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
+  isPinnedByMe?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
   isPublic?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
   lastAccessedAt?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   layoutId?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
