@@ -20,6 +20,7 @@
     "sections": {
       "pinned": "Pinned",
       "jumpBackIn": "Jump Back In",
+      "smart": "Your Picks",
       "discover": "Discover"
     },
     "pin": {
@@ -27,6 +28,26 @@
       "unpinAriaLabel": "Unpin playlist",
       "pinFailed": "Failed to pin playlist",
       "unpinFailed": "Failed to unpin playlist"
+    },
+    "smart": {
+      "fiveStars": {
+        "title": "Five Stars",
+        "description": "Climbs you've rated five stars."
+      },
+      "mostRepeated": {
+        "title": "Most Repeated",
+        "description": "Climbs you keep coming back to."
+      },
+      "projects": {
+        "title": "Projects",
+        "description": "Climbs you've worked the most without sending."
+      },
+      "notFound": {
+        "title": "Smart playlist not found",
+        "description": "This smart playlist doesn't exist."
+      },
+      "empty": "No climbs in this smart playlist yet.",
+      "shareText": "Check out {{name}}'s climbs on Boardsesh"
     },
     "empty": {
       "title": "No playlists yet",

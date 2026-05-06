@@ -1361,6 +1361,20 @@ export type GetPlaylistsForClimbsInput = {
   layoutId: Scalars['Int']['input'];
 };
 
+/** Input for fetching a smart playlist. */
+export type GetSmartPlaylistInput = {
+  /** Filter to a board type (optional) */
+  boardName?: InputMaybe<Scalars['String']['input']>;
+  /** Page number */
+  page?: InputMaybe<Scalars['Int']['input']>;
+  /** Page size */
+  pageSize?: InputMaybe<Scalars['Int']['input']>;
+  /** Smart playlist type */
+  type: SmartPlaylistType;
+  /** User whose logbook to compute from */
+  userId: Scalars['ID']['input'];
+};
+
 /** Input for fetching user's ticks. */
 export type GetTicksInput = {
   /** Board type to filter by */
@@ -2991,6 +3005,12 @@ export type Query = {
    */
   mySessions: Array<DiscoverableSession>;
   /**
+   * Get climb counts for the current user's smart playlists.
+   * Used to render the smart-playlist cards on the library page.
+   * Requires authentication.
+   */
+  mySmartPlaylistCounts: Array<SmartPlaylistCount>;
+  /**
    * Find discoverable sessions near a GPS location.
    * Default radius is 1000 meters.
    */
@@ -3065,6 +3085,11 @@ export type Query = {
   setterClimbsFull: PlaylistClimbsResult;
   /** Get a setter profile by username. */
   setterProfile?: Maybe<SetterProfile>;
+  /**
+   * Get a smart (computed) playlist for a user — five-stars, most-repeated, or projects.
+   * Public — no authentication required.
+   */
+  smartPlaylist: SmartPlaylistResult;
   /**
    * Get current user's ticks (recorded climb attempts).
    * Requires authentication.
@@ -3517,6 +3542,12 @@ export type QuerySetterClimbsFullArgs = {
 /** Root query type for all read operations. */
 export type QuerySetterProfileArgs = {
   input: SetterProfileInput;
+};
+
+
+/** Root query type for all read operations. */
+export type QuerySmartPlaylistArgs = {
+  input: GetSmartPlaylistInput;
 };
 
 
@@ -4266,6 +4297,54 @@ export type SetterSearchResult = {
   username: Scalars['String']['output'];
 };
 
+/** Climb count for a single smart playlist type (used to render library cards). */
+export type SmartPlaylistCount = {
+  __typename?: 'SmartPlaylistCount';
+  /** Number of climbs the smart playlist would contain */
+  count: Scalars['Int']['output'];
+  /** Smart playlist type */
+  type: SmartPlaylistType;
+};
+
+/** Metadata about a smart playlist (the user it belongs to + counts). */
+export type SmartPlaylistMeta = {
+  __typename?: 'SmartPlaylistMeta';
+  /** Total number of climbs in the playlist */
+  climbCount: Scalars['Int']['output'];
+  /** Smart playlist type */
+  type: SmartPlaylistType;
+  /** Avatar URL of the user (or null) */
+  userAvatar?: Maybe<Scalars['String']['output']>;
+  /** User the playlist was generated for */
+  userId: Scalars['ID']['output'];
+  /** Display name of the user */
+  userName: Scalars['String']['output'];
+};
+
+/** Result of a smart playlist query. */
+export type SmartPlaylistResult = {
+  __typename?: 'SmartPlaylistResult';
+  /** Page of climbs with full data */
+  climbs: Array<Climb>;
+  /** Whether more pages are available */
+  hasMore: Scalars['Boolean']['output'];
+  /** Playlist metadata */
+  meta: SmartPlaylistMeta;
+  /** Total number of climbs (matches meta.climbCount) */
+  totalCount: Scalars['Int']['output'];
+};
+
+/**
+ * A computed playlist generated from a user's logbook.
+ * - FIVE_STARS: climbs the user has rated 5/5
+ * - MOST_REPEATED: climbs the user has logged the most attempts on
+ * - PROJECTS: climbs with the most attempts that have never been sent
+ */
+export type SmartPlaylistType =
+  | 'FIVE_STARS'
+  | 'MOST_REPEATED'
+  | 'PROJECTS';
+
 export type SocialEntityType =
   | 'board'
   | 'climb'
@@ -5007,6 +5086,7 @@ export type ResolversTypes = ResolversObject<{
   GetPlaylistCreatorsInput: GetPlaylistCreatorsInput;
   GetPlaylistsForClimbInput: GetPlaylistsForClimbInput;
   GetPlaylistsForClimbsInput: GetPlaylistsForClimbsInput;
+  GetSmartPlaylistInput: GetSmartPlaylistInput;
   GetTicksInput: GetTicksInput;
   GetUserFavoriteClimbsInput: GetUserFavoriteClimbsInput;
   GetUserPlaylistsInput: GetUserPlaylistsInput;
@@ -5118,6 +5198,10 @@ export type ResolversTypes = ResolversObject<{
   SetterProfile: ResolverTypeWrapper<SetterProfile>;
   SetterProfileInput: SetterProfileInput;
   SetterSearchResult: ResolverTypeWrapper<SetterSearchResult>;
+  SmartPlaylistCount: ResolverTypeWrapper<SmartPlaylistCount>;
+  SmartPlaylistMeta: ResolverTypeWrapper<SmartPlaylistMeta>;
+  SmartPlaylistResult: ResolverTypeWrapper<SmartPlaylistResult>;
+  SmartPlaylistType: SmartPlaylistType;
   SocialEntityType: SocialEntityType;
   SortMode: SortMode;
   String: ResolverTypeWrapper<Scalars['String']['output']>;
@@ -5246,6 +5330,7 @@ export type ResolversParentTypes = ResolversObject<{
   GetPlaylistCreatorsInput: GetPlaylistCreatorsInput;
   GetPlaylistsForClimbInput: GetPlaylistsForClimbInput;
   GetPlaylistsForClimbsInput: GetPlaylistsForClimbsInput;
+  GetSmartPlaylistInput: GetSmartPlaylistInput;
   GetTicksInput: GetTicksInput;
   GetUserFavoriteClimbsInput: GetUserFavoriteClimbsInput;
   GetUserPlaylistsInput: GetUserPlaylistsInput;
@@ -5353,6 +5438,9 @@ export type ResolversParentTypes = ResolversObject<{
   SetterProfile: SetterProfile;
   SetterProfileInput: SetterProfileInput;
   SetterSearchResult: SetterSearchResult;
+  SmartPlaylistCount: SmartPlaylistCount;
+  SmartPlaylistMeta: SmartPlaylistMeta;
+  SmartPlaylistResult: SmartPlaylistResult;
   String: Scalars['String']['output'];
   SubmitAppFeedbackInput: SubmitAppFeedbackInput;
   Subscription: {};
@@ -6374,6 +6462,7 @@ export type QueryResolvers<ContextType = ConnectionContext, ParentType extends R
   myPinnedPlaylists?: Resolver<Array<ResolversTypes['Playlist']>, ParentType, ContextType, RequireFields<QueryMyPinnedPlaylistsArgs, 'input'>>;
   myRoles?: Resolver<Array<ResolversTypes['CommunityRoleAssignment']>, ParentType, ContextType>;
   mySessions?: Resolver<Array<ResolversTypes['DiscoverableSession']>, ParentType, ContextType>;
+  mySmartPlaylistCounts?: Resolver<Array<ResolversTypes['SmartPlaylistCount']>, ParentType, ContextType>;
   nearbySessions?: Resolver<Array<ResolversTypes['DiscoverableSession']>, ParentType, ContextType, RequireFields<QueryNearbySessionsArgs, 'latitude' | 'longitude'>>;
   newClimbFeed?: Resolver<ResolversTypes['NewClimbFeedResult'], ParentType, ContextType, RequireFields<QueryNewClimbFeedArgs, 'input'>>;
   notifications?: Resolver<ResolversTypes['NotificationConnection'], ParentType, ContextType, Partial<QueryNotificationsArgs>>;
@@ -6398,6 +6487,7 @@ export type QueryResolvers<ContextType = ConnectionContext, ParentType extends R
   setterClimbs?: Resolver<ResolversTypes['SetterClimbsConnection'], ParentType, ContextType, RequireFields<QuerySetterClimbsArgs, 'input'>>;
   setterClimbsFull?: Resolver<ResolversTypes['PlaylistClimbsResult'], ParentType, ContextType, RequireFields<QuerySetterClimbsFullArgs, 'input'>>;
   setterProfile?: Resolver<Maybe<ResolversTypes['SetterProfile']>, ParentType, ContextType, RequireFields<QuerySetterProfileArgs, 'input'>>;
+  smartPlaylist?: Resolver<ResolversTypes['SmartPlaylistResult'], ParentType, ContextType, RequireFields<QuerySmartPlaylistArgs, 'input'>>;
   ticks?: Resolver<Array<ResolversTypes['Tick']>, ParentType, ContextType, RequireFields<QueryTicksArgs, 'input'>>;
   trendingFeed?: Resolver<ResolversTypes['ActivityFeedResult'], ParentType, ContextType, Partial<QueryTrendingFeedArgs>>;
   unreadNotificationCount?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
@@ -6718,6 +6808,29 @@ export type SetterSearchResultResolvers<ContextType = ConnectionContext, ParentT
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 }>;
 
+export type SmartPlaylistCountResolvers<ContextType = ConnectionContext, ParentType extends ResolversParentTypes['SmartPlaylistCount'] = ResolversParentTypes['SmartPlaylistCount']> = ResolversObject<{
+  count?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
+  type?: Resolver<ResolversTypes['SmartPlaylistType'], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+}>;
+
+export type SmartPlaylistMetaResolvers<ContextType = ConnectionContext, ParentType extends ResolversParentTypes['SmartPlaylistMeta'] = ResolversParentTypes['SmartPlaylistMeta']> = ResolversObject<{
+  climbCount?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
+  type?: Resolver<ResolversTypes['SmartPlaylistType'], ParentType, ContextType>;
+  userAvatar?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  userId?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
+  userName?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+}>;
+
+export type SmartPlaylistResultResolvers<ContextType = ConnectionContext, ParentType extends ResolversParentTypes['SmartPlaylistResult'] = ResolversParentTypes['SmartPlaylistResult']> = ResolversObject<{
+  climbs?: Resolver<Array<ResolversTypes['Climb']>, ParentType, ContextType>;
+  hasMore?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
+  meta?: Resolver<ResolversTypes['SmartPlaylistMeta'], ParentType, ContextType>;
+  totalCount?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+}>;
+
 export type SubscriptionResolvers<ContextType = ConnectionContext, ParentType extends ResolversParentTypes['Subscription'] = ResolversParentTypes['Subscription']> = ResolversObject<{
   commentUpdates?: SubscriptionResolver<ResolversTypes['CommentEvent'], "commentUpdates", ParentType, ContextType, RequireFields<SubscriptionCommentUpdatesArgs, 'entityId' | 'entityType'>>;
   controllerEvents?: SubscriptionResolver<ResolversTypes['ControllerEvent'], "controllerEvents", ParentType, ContextType, RequireFields<SubscriptionControllerEventsArgs, 'sessionId'>>;
@@ -6994,6 +7107,9 @@ export type Resolvers<ContextType = ConnectionContext> = ResolversObject<{
   SetterClimbsConnection?: SetterClimbsConnectionResolvers<ContextType>;
   SetterProfile?: SetterProfileResolvers<ContextType>;
   SetterSearchResult?: SetterSearchResultResolvers<ContextType>;
+  SmartPlaylistCount?: SmartPlaylistCountResolvers<ContextType>;
+  SmartPlaylistMeta?: SmartPlaylistMetaResolvers<ContextType>;
+  SmartPlaylistResult?: SmartPlaylistResultResolvers<ContextType>;
   Subscription?: SubscriptionResolvers<ContextType>;
   Tick?: TickResolvers<ContextType>;
   ToggleFavoriteResult?: ToggleFavoriteResultResolvers<ContextType>;

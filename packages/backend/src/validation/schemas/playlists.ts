@@ -107,3 +107,13 @@ export const SearchPlaylistsInputSchema = z.object({
   limit: z.number().int().min(1).max(50).optional().default(20),
   offset: z.number().int().min(0).optional().default(0),
 });
+
+export const SmartPlaylistTypeSchema = z.enum(['FIVE_STARS', 'MOST_REPEATED', 'PROJECTS']);
+
+export const GetSmartPlaylistInputSchema = z.object({
+  type: SmartPlaylistTypeSchema,
+  userId: z.string().min(1),
+  boardName: BoardNameSchema.optional(),
+  page: z.number().int().min(0).optional(),
+  pageSize: z.number().int().min(1).max(100).optional(),
+});

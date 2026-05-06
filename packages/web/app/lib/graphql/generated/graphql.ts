@@ -1358,6 +1358,20 @@ export type GetPlaylistsForClimbsInput = {
   layoutId: Scalars['Int']['input'];
 };
 
+/** Input for fetching a smart playlist. */
+export type GetSmartPlaylistInput = {
+  /** Filter to a board type (optional) */
+  boardName?: InputMaybe<Scalars['String']['input']>;
+  /** Page number */
+  page?: InputMaybe<Scalars['Int']['input']>;
+  /** Page size */
+  pageSize?: InputMaybe<Scalars['Int']['input']>;
+  /** Smart playlist type */
+  type: SmartPlaylistType;
+  /** User whose logbook to compute from */
+  userId: Scalars['ID']['input'];
+};
+
 /** Input for fetching user's ticks. */
 export type GetTicksInput = {
   /** Board type to filter by */
@@ -2988,6 +3002,12 @@ export type Query = {
    */
   mySessions: Array<DiscoverableSession>;
   /**
+   * Get climb counts for the current user's smart playlists.
+   * Used to render the smart-playlist cards on the library page.
+   * Requires authentication.
+   */
+  mySmartPlaylistCounts: Array<SmartPlaylistCount>;
+  /**
    * Find discoverable sessions near a GPS location.
    * Default radius is 1000 meters.
    */
@@ -3062,6 +3082,11 @@ export type Query = {
   setterClimbsFull: PlaylistClimbsResult;
   /** Get a setter profile by username. */
   setterProfile?: Maybe<SetterProfile>;
+  /**
+   * Get a smart (computed) playlist for a user — five-stars, most-repeated, or projects.
+   * Public — no authentication required.
+   */
+  smartPlaylist: SmartPlaylistResult;
   /**
    * Get current user's ticks (recorded climb attempts).
    * Requires authentication.
@@ -3514,6 +3539,12 @@ export type QuerySetterClimbsFullArgs = {
 /** Root query type for all read operations. */
 export type QuerySetterProfileArgs = {
   input: SetterProfileInput;
+};
+
+
+/** Root query type for all read operations. */
+export type QuerySmartPlaylistArgs = {
+  input: GetSmartPlaylistInput;
 };
 
 
@@ -4262,6 +4293,54 @@ export type SetterSearchResult = {
   /** The setter's Aurora username */
   username: Scalars['String']['output'];
 };
+
+/** Climb count for a single smart playlist type (used to render library cards). */
+export type SmartPlaylistCount = {
+  __typename?: 'SmartPlaylistCount';
+  /** Number of climbs the smart playlist would contain */
+  count: Scalars['Int']['output'];
+  /** Smart playlist type */
+  type: SmartPlaylistType;
+};
+
+/** Metadata about a smart playlist (the user it belongs to + counts). */
+export type SmartPlaylistMeta = {
+  __typename?: 'SmartPlaylistMeta';
+  /** Total number of climbs in the playlist */
+  climbCount: Scalars['Int']['output'];
+  /** Smart playlist type */
+  type: SmartPlaylistType;
+  /** Avatar URL of the user (or null) */
+  userAvatar?: Maybe<Scalars['String']['output']>;
+  /** User the playlist was generated for */
+  userId: Scalars['ID']['output'];
+  /** Display name of the user */
+  userName: Scalars['String']['output'];
+};
+
+/** Result of a smart playlist query. */
+export type SmartPlaylistResult = {
+  __typename?: 'SmartPlaylistResult';
+  /** Page of climbs with full data */
+  climbs: Array<Climb>;
+  /** Whether more pages are available */
+  hasMore: Scalars['Boolean']['output'];
+  /** Playlist metadata */
+  meta: SmartPlaylistMeta;
+  /** Total number of climbs (matches meta.climbCount) */
+  totalCount: Scalars['Int']['output'];
+};
+
+/**
+ * A computed playlist generated from a user's logbook.
+ * - FIVE_STARS: climbs the user has rated 5/5
+ * - MOST_REPEATED: climbs the user has logged the most attempts on
+ * - PROJECTS: climbs with the most attempts that have never been sent
+ */
+export type SmartPlaylistType =
+  | 'FIVE_STARS'
+  | 'MOST_REPEATED'
+  | 'PROJECTS';
 
 export type SocialEntityType =
   | 'board'
@@ -5212,6 +5291,18 @@ export type UnfollowPlaylistMutationVariables = Exact<{
 
 export type UnfollowPlaylistMutation = { __typename?: 'Mutation', unfollowPlaylist: boolean };
 
+export type GetSmartPlaylistQueryVariables = Exact<{
+  input: GetSmartPlaylistInput;
+}>;
+
+
+export type GetSmartPlaylistQuery = { __typename?: 'Query', smartPlaylist: { __typename?: 'SmartPlaylistResult', totalCount: number, hasMore: boolean, meta: { __typename?: 'SmartPlaylistMeta', type: SmartPlaylistType, userId: string, userName: string, userAvatar?: string | null, climbCount: number }, climbs: Array<{ __typename?: 'Climb', uuid: string, layoutId?: number | null, boardType?: string | null, setter_username: string, name: string, description?: string | null, frames: string, angle: number, ascensionist_count: number, difficulty: string, quality_average: string, stars: number, difficulty_error: string, benchmark_difficulty?: string | null }> } };
+
+export type GetMySmartPlaylistCountsQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type GetMySmartPlaylistCountsQuery = { __typename?: 'Query', mySmartPlaylistCounts: Array<{ __typename?: 'SmartPlaylistCount', type: SmartPlaylistType, count: number }> };
+
 export type GetClimbProposalsQueryVariables = Exact<{
   input: GetClimbProposalsInput;
 }>;
@@ -5593,6 +5684,8 @@ export const UpdatePlaylistLastAccessedDocument = {"kind":"Document","definition
 export const SearchPlaylistsDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"SearchPlaylists"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"SearchPlaylistsInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"searchPlaylists"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"playlists"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"uuid"}},{"kind":"Field","name":{"kind":"Name","value":"boardType"}},{"kind":"Field","name":{"kind":"Name","value":"layoutId"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"description"}},{"kind":"Field","name":{"kind":"Name","value":"color"}},{"kind":"Field","name":{"kind":"Name","value":"icon"}},{"kind":"Field","name":{"kind":"Name","value":"climbCount"}},{"kind":"Field","name":{"kind":"Name","value":"creatorId"}},{"kind":"Field","name":{"kind":"Name","value":"creatorName"}},{"kind":"Field","name":{"kind":"Name","value":"createdAt"}},{"kind":"Field","name":{"kind":"Name","value":"updatedAt"}}]}},{"kind":"Field","name":{"kind":"Name","value":"totalCount"}},{"kind":"Field","name":{"kind":"Name","value":"hasMore"}}]}}]}}]} as unknown as DocumentNode<SearchPlaylistsQuery, SearchPlaylistsQueryVariables>;
 export const FollowPlaylistDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"FollowPlaylist"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"FollowPlaylistInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"followPlaylist"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}]}]}}]} as unknown as DocumentNode<FollowPlaylistMutation, FollowPlaylistMutationVariables>;
 export const UnfollowPlaylistDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"UnfollowPlaylist"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"FollowPlaylistInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"unfollowPlaylist"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}]}]}}]} as unknown as DocumentNode<UnfollowPlaylistMutation, UnfollowPlaylistMutationVariables>;
+export const GetSmartPlaylistDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"GetSmartPlaylist"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"GetSmartPlaylistInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"smartPlaylist"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"meta"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"type"}},{"kind":"Field","name":{"kind":"Name","value":"userId"}},{"kind":"Field","name":{"kind":"Name","value":"userName"}},{"kind":"Field","name":{"kind":"Name","value":"userAvatar"}},{"kind":"Field","name":{"kind":"Name","value":"climbCount"}}]}},{"kind":"Field","name":{"kind":"Name","value":"climbs"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"uuid"}},{"kind":"Field","name":{"kind":"Name","value":"layoutId"}},{"kind":"Field","name":{"kind":"Name","value":"boardType"}},{"kind":"Field","name":{"kind":"Name","value":"setter_username"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"description"}},{"kind":"Field","name":{"kind":"Name","value":"frames"}},{"kind":"Field","name":{"kind":"Name","value":"angle"}},{"kind":"Field","name":{"kind":"Name","value":"ascensionist_count"}},{"kind":"Field","name":{"kind":"Name","value":"difficulty"}},{"kind":"Field","name":{"kind":"Name","value":"quality_average"}},{"kind":"Field","name":{"kind":"Name","value":"stars"}},{"kind":"Field","name":{"kind":"Name","value":"difficulty_error"}},{"kind":"Field","name":{"kind":"Name","value":"benchmark_difficulty"}}]}},{"kind":"Field","name":{"kind":"Name","value":"totalCount"}},{"kind":"Field","name":{"kind":"Name","value":"hasMore"}}]}}]}}]} as unknown as DocumentNode<GetSmartPlaylistQuery, GetSmartPlaylistQueryVariables>;
+export const GetMySmartPlaylistCountsDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"GetMySmartPlaylistCounts"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"mySmartPlaylistCounts"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"type"}},{"kind":"Field","name":{"kind":"Name","value":"count"}}]}}]}}]} as unknown as DocumentNode<GetMySmartPlaylistCountsQuery, GetMySmartPlaylistCountsQueryVariables>;
 export const GetClimbProposalsDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"GetClimbProposals"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"GetClimbProposalsInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"climbProposals"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"proposals"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"uuid"}},{"kind":"Field","name":{"kind":"Name","value":"climbUuid"}},{"kind":"Field","name":{"kind":"Name","value":"boardType"}},{"kind":"Field","name":{"kind":"Name","value":"angle"}},{"kind":"Field","name":{"kind":"Name","value":"proposerId"}},{"kind":"Field","name":{"kind":"Name","value":"proposerDisplayName"}},{"kind":"Field","name":{"kind":"Name","value":"proposerAvatarUrl"}},{"kind":"Field","name":{"kind":"Name","value":"type"}},{"kind":"Field","name":{"kind":"Name","value":"proposedValue"}},{"kind":"Field","name":{"kind":"Name","value":"currentValue"}},{"kind":"Field","name":{"kind":"Name","value":"status"}},{"kind":"Field","name":{"kind":"Name","value":"reason"}},{"kind":"Field","name":{"kind":"Name","value":"resolvedAt"}},{"kind":"Field","name":{"kind":"Name","value":"resolvedBy"}},{"kind":"Field","name":{"kind":"Name","value":"createdAt"}},{"kind":"Field","name":{"kind":"Name","value":"weightedUpvotes"}},{"kind":"Field","name":{"kind":"Name","value":"weightedDownvotes"}},{"kind":"Field","name":{"kind":"Name","value":"requiredUpvotes"}},{"kind":"Field","name":{"kind":"Name","value":"userVote"}},{"kind":"Field","name":{"kind":"Name","value":"climbName"}},{"kind":"Field","name":{"kind":"Name","value":"frames"}},{"kind":"Field","name":{"kind":"Name","value":"layoutId"}},{"kind":"Field","name":{"kind":"Name","value":"climbSetterUsername"}},{"kind":"Field","name":{"kind":"Name","value":"climbDifficulty"}},{"kind":"Field","name":{"kind":"Name","value":"climbQualityAverage"}},{"kind":"Field","name":{"kind":"Name","value":"climbAscensionistCount"}},{"kind":"Field","name":{"kind":"Name","value":"climbDifficultyError"}},{"kind":"Field","name":{"kind":"Name","value":"climbBenchmarkDifficulty"}},{"kind":"Field","name":{"kind":"Name","value":"climbIsNoMatch"}}]}},{"kind":"Field","name":{"kind":"Name","value":"totalCount"}},{"kind":"Field","name":{"kind":"Name","value":"hasMore"}}]}}]}}]} as unknown as DocumentNode<GetClimbProposalsQuery, GetClimbProposalsQueryVariables>;
 export const GetClimbCommunityStatusDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"GetClimbCommunityStatus"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"climbUuid"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"boardType"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"angle"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"Int"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"climbCommunityStatus"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"climbUuid"},"value":{"kind":"Variable","name":{"kind":"Name","value":"climbUuid"}}},{"kind":"Argument","name":{"kind":"Name","value":"boardType"},"value":{"kind":"Variable","name":{"kind":"Name","value":"boardType"}}},{"kind":"Argument","name":{"kind":"Name","value":"angle"},"value":{"kind":"Variable","name":{"kind":"Name","value":"angle"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"climbUuid"}},{"kind":"Field","name":{"kind":"Name","value":"boardType"}},{"kind":"Field","name":{"kind":"Name","value":"angle"}},{"kind":"Field","name":{"kind":"Name","value":"communityGrade"}},{"kind":"Field","name":{"kind":"Name","value":"isBenchmark"}},{"kind":"Field","name":{"kind":"Name","value":"isClassic"}},{"kind":"Field","name":{"kind":"Name","value":"isFrozen"}},{"kind":"Field","name":{"kind":"Name","value":"freezeReason"}},{"kind":"Field","name":{"kind":"Name","value":"openProposalCount"}},{"kind":"Field","name":{"kind":"Name","value":"outlierAnalysis"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"isOutlier"}},{"kind":"Field","name":{"kind":"Name","value":"currentGrade"}},{"kind":"Field","name":{"kind":"Name","value":"neighborAverage"}},{"kind":"Field","name":{"kind":"Name","value":"neighborCount"}},{"kind":"Field","name":{"kind":"Name","value":"gradeDifference"}}]}},{"kind":"Field","name":{"kind":"Name","value":"updatedAt"}}]}}]}}]} as unknown as DocumentNode<GetClimbCommunityStatusQuery, GetClimbCommunityStatusQueryVariables>;
 export const GetBulkClimbCommunityStatusDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"GetBulkClimbCommunityStatus"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"climbUuids"}},"type":{"kind":"NonNullType","type":{"kind":"ListType","type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"boardType"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"angle"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"Int"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"bulkClimbCommunityStatus"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"climbUuids"},"value":{"kind":"Variable","name":{"kind":"Name","value":"climbUuids"}}},{"kind":"Argument","name":{"kind":"Name","value":"boardType"},"value":{"kind":"Variable","name":{"kind":"Name","value":"boardType"}}},{"kind":"Argument","name":{"kind":"Name","value":"angle"},"value":{"kind":"Variable","name":{"kind":"Name","value":"angle"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"climbUuid"}},{"kind":"Field","name":{"kind":"Name","value":"boardType"}},{"kind":"Field","name":{"kind":"Name","value":"angle"}},{"kind":"Field","name":{"kind":"Name","value":"communityGrade"}},{"kind":"Field","name":{"kind":"Name","value":"isBenchmark"}},{"kind":"Field","name":{"kind":"Name","value":"isClassic"}},{"kind":"Field","name":{"kind":"Name","value":"isFrozen"}},{"kind":"Field","name":{"kind":"Name","value":"freezeReason"}},{"kind":"Field","name":{"kind":"Name","value":"openProposalCount"}},{"kind":"Field","name":{"kind":"Name","value":"updatedAt"}}]}}]}}]} as unknown as DocumentNode<GetBulkClimbCommunityStatusQuery, GetBulkClimbCommunityStatusQueryVariables>;

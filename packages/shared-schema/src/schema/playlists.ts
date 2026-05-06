@@ -384,4 +384,76 @@ export const playlistsTypeDefs = /* GraphQL */ `
     "Page size"
     pageSize: Int
   }
+
+  # ============================================
+  # Smart (computed) Playlist Types
+  # ============================================
+
+  """
+  A computed playlist generated from a user's logbook.
+  - FIVE_STARS: climbs the user has rated 5/5
+  - MOST_REPEATED: climbs the user has logged the most attempts on
+  - PROJECTS: climbs with the most attempts that have never been sent
+  """
+  enum SmartPlaylistType {
+    FIVE_STARS
+    MOST_REPEATED
+    PROJECTS
+  }
+
+  """
+  Metadata about a smart playlist (the user it belongs to + counts).
+  """
+  type SmartPlaylistMeta {
+    "Smart playlist type"
+    type: SmartPlaylistType!
+    "User the playlist was generated for"
+    userId: ID!
+    "Display name of the user"
+    userName: String!
+    "Avatar URL of the user (or null)"
+    userAvatar: String
+    "Total number of climbs in the playlist"
+    climbCount: Int!
+  }
+
+  """
+  Result of a smart playlist query.
+  """
+  type SmartPlaylistResult {
+    "Playlist metadata"
+    meta: SmartPlaylistMeta!
+    "Page of climbs with full data"
+    climbs: [Climb!]!
+    "Total number of climbs (matches meta.climbCount)"
+    totalCount: Int!
+    "Whether more pages are available"
+    hasMore: Boolean!
+  }
+
+  """
+  Input for fetching a smart playlist.
+  """
+  input GetSmartPlaylistInput {
+    "Smart playlist type"
+    type: SmartPlaylistType!
+    "User whose logbook to compute from"
+    userId: ID!
+    "Filter to a board type (optional)"
+    boardName: String
+    "Page number"
+    page: Int
+    "Page size"
+    pageSize: Int
+  }
+
+  """
+  Climb count for a single smart playlist type (used to render library cards).
+  """
+  type SmartPlaylistCount {
+    "Smart playlist type"
+    type: SmartPlaylistType!
+    "Number of climbs the smart playlist would contain"
+    count: Int!
+  }
 `;

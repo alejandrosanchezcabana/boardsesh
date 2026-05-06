@@ -4,6 +4,7 @@ import { playlistClimbs } from './playlist-climbs';
 import { discoverPlaylists, playlistCreators } from './discover';
 import { searchPlaylists } from './search';
 import { myPinnedPlaylists } from './pinned';
+import { smartPlaylist, mySmartPlaylistCounts } from './smart-playlists';
 
 export const playlistQueries = {
   userPlaylists,
@@ -16,4 +17,6 @@ export const playlistQueries = {
   playlistCreators,
   searchPlaylists,
   myPinnedPlaylists,
+  smartPlaylist,
+  mySmartPlaylistCounts,
 };

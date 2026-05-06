@@ -229,6 +229,19 @@ export const queriesTypeDefs = /* GraphQL */ `
     """
     playlistCreators(input: GetPlaylistCreatorsInput!): [PlaylistCreator!]!
 
+    """
+    Get a smart (computed) playlist for a user — five-stars, most-repeated, or projects.
+    Public — no authentication required.
+    """
+    smartPlaylist(input: GetSmartPlaylistInput!): SmartPlaylistResult!
+
+    """
+    Get climb counts for the current user's smart playlists.
+    Used to render the smart-playlist cards on the library page.
+    Requires authentication.
+    """
+    mySmartPlaylistCounts: [SmartPlaylistCount!]!
+
     # ============================================
     # ESP32 Controller Queries (require auth)
     # ============================================

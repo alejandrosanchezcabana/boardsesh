@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import MuiButton from '@mui/material/Button';
 import Fab from '@mui/material/Fab';
 import Typography from '@mui/material/Typography';
@@ -12,6 +13,7 @@ import { executeGraphQL } from '@/app/lib/graphql/client';
 import {
   type DiscoverPlaylistsQueryResponse,
   type DiscoverPlaylistsInput,
+  type GetMySmartPlaylistCountsQueryResponse,
   type Playlist,
   type DiscoverablePlaylist,
   type PinPlaylistMutationResponse,
@@ -21,9 +23,11 @@ import {
   DISCOVER_PLAYLISTS,
   PIN_PLAYLIST,
   UNPIN_PLAYLIST,
+  GET_MY_SMART_PLAYLIST_COUNTS,
 } from '@/app/lib/graphql/operations/playlists';
 import { useUserPlaylists } from '@/app/hooks/use-user-playlists';
 import { usePinnedPlaylists } from '@/app/hooks/use-pinned-playlists';
+import { SMART_PLAYLISTS, smartPlaylistHref } from '@/app/lib/smart-playlists';
 import { useWsAuthToken } from '@/app/hooks/use-ws-auth-token';
 import { useMyBoards } from '@/app/hooks/use-my-boards';
 import { useQueueBridgeBoardInfo } from '@/app/components/queue-control/queue-bridge-context';
@@ -262,6 +266,24 @@ export default function LibraryPageContent({
     [token, refetchPinned, showMessage, t],
   );
 
+  // Smart playlist counts — react-query handles caching across the session and
+  // dedupes if the page remounts. The token is part of the key so we refetch
+  // after sign-in/out, but a 5-minute staleTime avoids refetching every visit.
+  const { data: smartCountsData } = useQuery({
+    queryKey: ['mySmartPlaylistCounts', token ?? null],
+    queryFn: async () => {
+      const res = await executeGraphQL<GetMySmartPlaylistCountsQueryResponse, Record<string, never>>(
+        GET_MY_SMART_PLAYLIST_COUNTS,
+        {},
+        token,
+      );
+      return res.mySmartPlaylistCounts;
+    },
+    enabled: !tokenLoading && isAuthenticated && !!token,
+    staleTime: 5 * 60 * 1000,
+  });
+  const smartCounts = smartCountsData ?? [];
+
   const getPlaylistUrl = useCallback(
     (playlistUuid: string) => {
       return `${playlistsBasePath}/${playlistUuid}`;
@@ -448,6 +470,14 @@ export default function LibraryPageContent({
   const filteredPlaylists = playlists;
   const showPinnedSection = isAuthenticated && (pinnedLoading || pinnedPlaylists.length > 0);
 
+  // Smart playlists prepended to the playlist card grid for the signed-in user.
+  // Skip entries with count === 0 so the grid only shows non-empty smart playlists.
+  // boardType/layoutId drive the board-preview backdrop on the smart cards;
+  // pick the user's selected board if any, falling back to their primary
+  // board so a Tension-only user doesn't see a Kilter visual.
+  const currentUserId = session?.user?.id ?? null;
+  const smartCardBoard = selectedBoard ?? myBoards[0] ?? null;
+
   return (
     <>
       {/* Board Selector */}
@@ -488,6 +518,39 @@ export default function LibraryPageContent({
             {t('library.signInBanner.cta')}
           </MuiButton>
         </div>
+      )}
+
+      {/* Smart playlists computed from the signed-in user's logbook. Sits
+          above Pinned because the cards are auto-generated suggestions —
+          a clean entry point at the top of the page. Only renders presets
+          whose count is non-zero so users without enough history don't see
+          empty cards. */}
+      {isAuthenticated && currentUserId && smartCounts.some((c) => c.count > 0) && (
+        <>
+          <div className={styles.sectionTitle}>{t('library.sections.smart')}</div>
+          <div className={styles.cardGrid}>
+            {SMART_PLAYLISTS.map((preset, i) => {
+              const found = smartCounts.find((c) => c.type === preset.type);
+              const count = found?.count ?? 0;
+              if (count === 0) return null;
+              return (
+                <PlaylistCard
+                  key={preset.slug}
+                  name={t(preset.titleI18nKey)}
+                  climbCount={count}
+                  boardType={smartCardBoard?.boardType ?? 'kilter'}
+                  layoutId={smartCardBoard?.layoutId ?? null}
+                  color={preset.color}
+                  icon={preset.icon}
+                  href={smartPlaylistHref(preset.slug, currentUserId)}
+                  variant="grid"
+                  index={i}
+                  fetchPriority={i === 0 ? 'high' : undefined}
+                />
+              );
+            })}
+          </div>
+        </>
       )}
 
       {/* Pinned grid (top, small). Filled with server-side pins when present;
