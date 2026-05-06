@@ -217,6 +217,11 @@
       "editLockedAria": "Periodo de edición cerrado",
       "savedTitle": "Guardado",
       "savedAria": "Guardado"
+    },
+    "clear": {
+      "title": "Borrar bloque",
+      "description": "Esto borrará todas las presas y reiniciará el formulario. ¿Seguro?",
+      "tooltip": "Borrar todas las presas"
     }
   },
   "actions": {

@@ -1,4 +1,5 @@
 import 'server-only';
+import 'intl-pluralrules';
 import { cache } from 'react';
 import { createInstance, type i18n, type TFunction } from 'i18next';
 import resourcesToBackend from 'i18next-resources-to-backend';
@@ -30,6 +31,7 @@ const initI18nForRequest = cache(async (locale: Locale, namespacesKey: string): 
       interpolation: { escapeValue: false },
       returnNull: false,
       saveMissing: true,
+      saveMissingPlurals: false,
       missingKeyHandler: (lngs, ns, key, fallbackValue) => {
         reportMissingI18nKey({ lngs, ns, key, fallbackValue });
       },
