@@ -24,7 +24,7 @@
   "retention": {
     "heading": "User retention",
     "subheading": "Of users who signed up in week W, how many returned to log a tick within N days.",
-    "definitions": "Cohort = signup week (UTC). Activity = at least one logged tick. D7 = active within 7 days of signup. Cohorts younger than the window show —.",
+    "definitions": "Cohort = signup week (UTC). Activity = at least one tick logged in Boardsesh (Aurora-imported ticks excluded). D7 = active within 7 days of signup. Cohorts younger than the window show —.",
     "back": "Back to admin",
     "table": {
       "cohortWeek": "Cohort week",
