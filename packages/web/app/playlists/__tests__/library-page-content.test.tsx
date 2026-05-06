@@ -285,7 +285,7 @@ describe('LibraryPageContent FAB orchestration', () => {
       <LibraryPageContent
         initialMyBoards={[board]}
         initialPlaylists={{ playlists: [], totalCount: 0, hasMore: false }}
-        initialDiscoverPlaylists={{ popular: [], recent: [] }}
+        initialDiscoverPlaylists={{ popular: [], recent: [], popularHasMore: false, recentHasMore: false }}
         boardConfigs={fakeBoardConfigs}
         boardSlug={board.slug}
       />,
@@ -306,7 +306,7 @@ describe('LibraryPageContent FAB orchestration', () => {
       <LibraryPageContent
         initialMyBoards={[]}
         initialPlaylists={{ playlists: [], totalCount: 0, hasMore: false }}
-        initialDiscoverPlaylists={{ popular: [], recent: [] }}
+        initialDiscoverPlaylists={{ popular: [], recent: [], popularHasMore: false, recentHasMore: false }}
         boardConfigs={fakeBoardConfigs}
       />,
     );
@@ -326,7 +326,7 @@ describe('LibraryPageContent FAB orchestration', () => {
       <LibraryPageContent
         initialMyBoards={[]}
         initialPlaylists={{ playlists: [], totalCount: 0, hasMore: false }}
-        initialDiscoverPlaylists={{ popular: [], recent: [] }}
+        initialDiscoverPlaylists={{ popular: [], recent: [], popularHasMore: false, recentHasMore: false }}
         boardConfigs={fakeBoardConfigs}
       />,
     );
@@ -348,7 +348,7 @@ describe('LibraryPageContent FAB orchestration', () => {
       <LibraryPageContent
         initialMyBoards={[]}
         initialPlaylists={{ playlists: [], totalCount: 0, hasMore: false }}
-        initialDiscoverPlaylists={{ popular: [], recent: [] }}
+        initialDiscoverPlaylists={{ popular: [], recent: [], popularHasMore: false, recentHasMore: false }}
         boardConfigs={fakeBoardConfigs}
       />,
     );
@@ -374,7 +374,7 @@ describe('LibraryPageContent FAB orchestration', () => {
       <LibraryPageContent
         initialMyBoards={[]}
         initialPlaylists={{ playlists: [], totalCount: 0, hasMore: false }}
-        initialDiscoverPlaylists={{ popular: [], recent: [] }}
+        initialDiscoverPlaylists={{ popular: [], recent: [], popularHasMore: false, recentHasMore: false }}
       />,
     );
 
@@ -395,7 +395,7 @@ describe('LibraryPageContent FAB orchestration', () => {
       <LibraryPageContent
         initialMyBoards={[board]}
         initialPlaylists={{ playlists: [], totalCount: 0, hasMore: false }}
-        initialDiscoverPlaylists={{ popular: [], recent: [] }}
+        initialDiscoverPlaylists={{ popular: [], recent: [], popularHasMore: false, recentHasMore: false }}
         boardConfigs={fakeBoardConfigs}
         boardSlug={board.slug}
         createSource="board-slug-playlists-fab"
@@ -413,7 +413,7 @@ describe('LibraryPageContent FAB orchestration', () => {
       <LibraryPageContent
         initialMyBoards={[board]}
         initialPlaylists={{ playlists: [], totalCount: 0, hasMore: false }}
-        initialDiscoverPlaylists={{ popular: [], recent: [] }}
+        initialDiscoverPlaylists={{ popular: [], recent: [], popularHasMore: false, recentHasMore: false }}
         boardConfigs={fakeBoardConfigs}
         boardSlug={board.slug}
       />,
@@ -435,7 +435,7 @@ describe('LibraryPageContent FAB orchestration', () => {
       <LibraryPageContent
         initialMyBoards={[board]}
         initialPlaylists={{ playlists: [], totalCount: 0, hasMore: false }}
-        initialDiscoverPlaylists={{ popular: [], recent: [] }}
+        initialDiscoverPlaylists={{ popular: [], recent: [], popularHasMore: false, recentHasMore: false }}
         boardConfigs={fakeBoardConfigs}
         boardSlug="kilter-route"
       />,
@@ -453,7 +453,7 @@ describe('LibraryPageContent FAB orchestration', () => {
       <LibraryPageContent
         initialMyBoards={[]}
         initialPlaylists={{ playlists: [], totalCount: 0, hasMore: false }}
-        initialDiscoverPlaylists={{ popular: [], recent: [] }}
+        initialDiscoverPlaylists={{ popular: [], recent: [], popularHasMore: false, recentHasMore: false }}
         boardConfigs={fakeBoardConfigs}
       />,
     );
@@ -476,7 +476,7 @@ describe('LibraryPageContent FAB orchestration', () => {
       <LibraryPageContent
         initialMyBoards={null}
         initialPlaylists={null}
-        initialDiscoverPlaylists={{ popular: [], recent: [] }}
+        initialDiscoverPlaylists={{ popular: [], recent: [], popularHasMore: false, recentHasMore: false }}
         boardConfigs={fakeBoardConfigs}
       />,
     );
