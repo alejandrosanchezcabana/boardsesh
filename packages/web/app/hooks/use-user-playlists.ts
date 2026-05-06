@@ -34,7 +34,10 @@ type UseUserPlaylistsResult = {
   isLoadingMore: boolean;
   hasMore: boolean;
   totalCount: number;
-  error: string | null;
+  /** True when the initial-page fetch failed. The page renders its own
+   *  translated error UI on top of this signal — the hook deliberately
+   *  doesn't carry a translatable message. */
+  hasError: boolean;
   loadMore: () => void;
   refetch: () => void;
 };
@@ -63,10 +66,13 @@ export function useUserPlaylists({
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(hasInitialData ? (initialHasMore ?? false) : false);
   const [totalCount, setTotalCount] = useState(hasInitialData ? (initialTotalCount ?? initialData.length) : 0);
-  const [error, setError] = useState<string | null>(null);
+  const [hasError, setHasError] = useState(false);
 
   const hasMoreRef = useRef(hasMore);
-  const pageRef = useRef(0);
+  // SSR delivers page 0; the next loadMore() must request page 1, not page 0
+  // again (which would duplicate the SSR rows). When there's no SSR data we
+  // start at 0 and the initial-fetch effect requests it.
+  const pageRef = useRef(hasInitialData ? 1 : 0);
   const isFetchingRef = useRef(false);
   const loadMoreFailCountRef = useRef(0);
 
@@ -96,11 +102,11 @@ export function useUserPlaylists({
         hasMoreRef.current = more;
         pageRef.current = page + 1;
         loadMoreFailCountRef.current = 0;
-        setError(null);
+        setHasError(false);
       } catch (err) {
         console.error('Failed to fetch user playlists:', err);
         if (isInitial) {
-          setError('Failed to load playlists');
+          setHasError(true);
         } else {
           loadMoreFailCountRef.current += 1;
           if (loadMoreFailCountRef.current >= 3) {
@@ -153,5 +159,5 @@ export function useUserPlaylists({
     void fetchPage(0, true);
   }, [fetchPage]);
 
-  return { playlists, isLoading, isLoadingMore, hasMore, totalCount, error, loadMore, refetch };
+  return { playlists, isLoading, isLoadingMore, hasMore, totalCount, hasError, loadMore, refetch };
 }

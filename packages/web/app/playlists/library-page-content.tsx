@@ -146,7 +146,7 @@ export default function LibraryPageContent({
     isLoading: playlistsLoading,
     isLoadingMore: playlistsLoadingMore,
     hasMore: playlistsHasMore,
-    error: playlistsError,
+    hasError: playlistsHasError,
     loadMore: loadMorePlaylists,
     refetch: refetchPlaylists,
   } = useUserPlaylists({
@@ -189,7 +189,7 @@ export default function LibraryPageContent({
     initialDiscoverPlaylists?.recent ?? [],
   );
   const [discoverLoading, setDiscoverLoading] = useState(!hasInitialDiscoverData);
-  const error = playlistsError;
+  const error = playlistsHasError;
 
   const hasDiscoverDataRef = useRef(hasInitialDiscoverData);
 

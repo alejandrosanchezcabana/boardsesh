@@ -1,4 +1,4 @@
-import { eq, and, or, isNull, desc, inArray } from 'drizzle-orm';
+import { eq, and, or, isNull, desc, sql } from 'drizzle-orm';
 import type { ConnectionContext } from '@boardsesh/shared-schema';
 import { db } from '../../../../db/client';
 import * as dbSchema from '@boardsesh/db/schema';
@@ -14,26 +14,16 @@ import { getClimbCounts, formatOwnedPlaylist, type OwnedPlaylistRow } from '../h
  */
 const PINNED_LIMIT = 12;
 
-const PINNED_SELECT = {
-  id: dbSchema.playlists.id,
-  uuid: dbSchema.playlists.uuid,
-  boardType: dbSchema.playlists.boardType,
-  layoutId: dbSchema.playlists.layoutId,
-  name: dbSchema.playlists.name,
-  description: dbSchema.playlists.description,
-  isPublic: dbSchema.playlists.isPublic,
-  color: dbSchema.playlists.color,
-  icon: dbSchema.playlists.icon,
-  createdAt: dbSchema.playlists.createdAt,
-  updatedAt: dbSchema.playlists.updatedAt,
-  lastAccessedAt: dbSchema.playlists.lastAccessedAt,
-  pinnedAt: dbSchema.userPlaylistPins.createdAt,
-} as const;
-
 /**
  * Get the authenticated user's pinned playlists. Pins are user-scoped:
  * a user can pin their own private/public playlists or anyone's public
  * playlist. Ordering is most-recently-pinned first.
+ *
+ * Single-query design: drives off userPlaylistPins (the user-scope of pins),
+ * inner-joins playlists, and left-joins playlistOwnership scoped to the
+ * current user so we get the user's role on each pinned playlist (or null,
+ * mapped to 'viewer'). isPinnedByMe is hardcoded true — every row here is
+ * a pin by construction.
  */
 export const myPinnedPlaylists = async (
   _: unknown,
@@ -59,30 +49,38 @@ export const myPinnedPlaylists = async (
   }
 
   const rows = await db
-    .select(PINNED_SELECT)
+    .select({
+      id: dbSchema.playlists.id,
+      uuid: dbSchema.playlists.uuid,
+      boardType: dbSchema.playlists.boardType,
+      layoutId: dbSchema.playlists.layoutId,
+      name: dbSchema.playlists.name,
+      description: dbSchema.playlists.description,
+      isPublic: dbSchema.playlists.isPublic,
+      color: dbSchema.playlists.color,
+      icon: dbSchema.playlists.icon,
+      createdAt: dbSchema.playlists.createdAt,
+      updatedAt: dbSchema.playlists.updatedAt,
+      lastAccessedAt: dbSchema.playlists.lastAccessedAt,
+      // playlistOwnership is left-joined and scoped to the current user, so
+      // the role column is populated for owned pins and null for pins on
+      // other users' public playlists. Default to 'viewer' downstream.
+      role: dbSchema.playlistOwnership.role,
+      // Driven off userPlaylistPins via INNER JOIN — every row is pinned.
+      isPinnedByMe: sql<boolean>`true`,
+    })
     .from(dbSchema.userPlaylistPins)
     .innerJoin(dbSchema.playlists, eq(dbSchema.userPlaylistPins.playlistId, dbSchema.playlists.id))
+    .leftJoin(
+      dbSchema.playlistOwnership,
+      and(
+        eq(dbSchema.playlistOwnership.playlistId, dbSchema.playlists.id),
+        eq(dbSchema.playlistOwnership.userId, userId),
+      ),
+    )
     .where(and(...conditions))
     .orderBy(desc(dbSchema.userPlaylistPins.createdAt))
     .limit(PINNED_LIMIT);
-
-  // Pinned playlists may be owned by other users — look up the current
-  // user's role (if any) for each pinned playlist. Scope by playlist id
-  // (mirrors getPlaylistFollowStats) so users with large libraries don't
-  // pull their entire ownership table into memory just to discard it.
-  const pinnedIds = rows.map((r) => r.id);
-  const ownership = pinnedIds.length
-    ? await db
-        .select({
-          playlistId: dbSchema.playlistOwnership.playlistId,
-          role: dbSchema.playlistOwnership.role,
-        })
-        .from(dbSchema.playlistOwnership)
-        .where(
-          and(eq(dbSchema.playlistOwnership.userId, userId), inArray(dbSchema.playlistOwnership.playlistId, pinnedIds)),
-        )
-    : [];
-  const roleByPlaylistId = new Map(ownership.map((o) => [o.playlistId.toString(), o.role]));
 
   const owned: OwnedPlaylistRow[] = rows.map((row) => ({
     id: row.id,
@@ -97,15 +95,16 @@ export const myPinnedPlaylists = async (
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
     lastAccessedAt: row.lastAccessedAt,
-    role: roleByPlaylistId.get(row.id.toString()) ?? 'viewer',
+    role: row.role ?? 'viewer',
+    isPinnedByMe: true,
   }));
 
-  const climbCounts = await getClimbCounts(owned.map((p) => p.id));
-  const followStats = await getPlaylistFollowStats(
-    owned.map((p) => p.uuid),
-    userId,
-  );
-  // Every row here is pinned by definition — short-circuit the lookup.
-  const pinSet = new Set(owned.map((p) => p.uuid));
-  return owned.map((p) => formatOwnedPlaylist(p, climbCounts, followStats, pinSet));
+  const [climbCounts, followStats] = await Promise.all([
+    getClimbCounts(owned.map((p) => p.id)),
+    getPlaylistFollowStats(
+      owned.map((p) => p.uuid),
+      userId,
+    ),
+  ]);
+  return owned.map((p) => formatOwnedPlaylist(p, climbCounts, followStats));
 };

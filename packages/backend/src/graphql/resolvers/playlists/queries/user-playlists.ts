@@ -5,38 +5,47 @@ import * as dbSchema from '@boardsesh/db/schema';
 import { requireAuthenticated, validateInput } from '../../shared/helpers';
 import { GetUserPlaylistsInputSchema, GetAllUserPlaylistsInputSchema } from '../../../../validation/schemas';
 import { getPlaylistFollowStats } from '../helpers/follow-stats';
-import { getPlaylistPinSet } from '../helpers/pin-stats';
 import { getClimbCounts, formatOwnedPlaylist, type OwnedPlaylistRow } from '../helpers/enrichment';
 
-const PLAYLIST_SELECT = {
-  id: dbSchema.playlists.id,
-  uuid: dbSchema.playlists.uuid,
-  boardType: dbSchema.playlists.boardType,
-  layoutId: dbSchema.playlists.layoutId,
-  name: dbSchema.playlists.name,
-  description: dbSchema.playlists.description,
-  isPublic: dbSchema.playlists.isPublic,
-  color: dbSchema.playlists.color,
-  icon: dbSchema.playlists.icon,
-  createdAt: dbSchema.playlists.createdAt,
-  updatedAt: dbSchema.playlists.updatedAt,
-  lastAccessedAt: dbSchema.playlists.lastAccessedAt,
-  role: dbSchema.playlistOwnership.role,
-} as const;
+/**
+ * Build the select shape for owned-playlist queries. Takes the current user
+ * id so we can compute isPinnedByMe via a LEFT JOIN against userPlaylistPins
+ * — same query, no extra round-trip.
+ */
+function ownedPlaylistSelect(userId: string) {
+  return {
+    id: dbSchema.playlists.id,
+    uuid: dbSchema.playlists.uuid,
+    boardType: dbSchema.playlists.boardType,
+    layoutId: dbSchema.playlists.layoutId,
+    name: dbSchema.playlists.name,
+    description: dbSchema.playlists.description,
+    isPublic: dbSchema.playlists.isPublic,
+    color: dbSchema.playlists.color,
+    icon: dbSchema.playlists.icon,
+    createdAt: dbSchema.playlists.createdAt,
+    updatedAt: dbSchema.playlists.updatedAt,
+    lastAccessedAt: dbSchema.playlists.lastAccessedAt,
+    role: dbSchema.playlistOwnership.role,
+    isPinnedByMe: sql<boolean>`${dbSchema.userPlaylistPins.id} IS NOT NULL`,
+  } as const;
+}
 
 const PLAYLIST_ORDER = desc(sql`COALESCE(${dbSchema.playlists.lastAccessedAt}, ${dbSchema.playlists.updatedAt})`);
 
 /**
  * Enrich owned playlist rows with climb counts and follow stats.
+ * isPinnedByMe is already on the row from the LEFT JOIN.
  */
 async function enrichOwnedPlaylists(playlists: OwnedPlaylistRow[], userId: string) {
-  const uuids = playlists.map((p) => p.uuid);
-  const [countMap, followStats, pinSet] = await Promise.all([
+  const [countMap, followStats] = await Promise.all([
     getClimbCounts(playlists.map((p) => p.id)),
-    getPlaylistFollowStats(uuids, userId),
-    getPlaylistPinSet(uuids, userId),
+    getPlaylistFollowStats(
+      playlists.map((p) => p.uuid),
+      userId,
+    ),
   ]);
-  return playlists.map((p) => formatOwnedPlaylist(p, countMap, followStats, pinSet));
+  return playlists.map((p) => formatOwnedPlaylist(p, countMap, followStats));
 }
 
 /**
@@ -53,9 +62,16 @@ export const userPlaylists = async (
   const userId = ctx.userId!;
 
   const userPlaylists = await db
-    .select(PLAYLIST_SELECT)
+    .select(ownedPlaylistSelect(userId))
     .from(dbSchema.playlists)
     .innerJoin(dbSchema.playlistOwnership, eq(dbSchema.playlistOwnership.playlistId, dbSchema.playlists.id))
+    .leftJoin(
+      dbSchema.userPlaylistPins,
+      and(
+        eq(dbSchema.userPlaylistPins.playlistId, dbSchema.playlists.id),
+        eq(dbSchema.userPlaylistPins.userId, userId),
+      ),
+    )
     .where(
       and(
         eq(dbSchema.playlistOwnership.userId, userId),
@@ -111,9 +127,16 @@ export const allUserPlaylists = async (
   const totalCount = countResult[0]?.count ?? 0;
 
   const rows = await db
-    .select(PLAYLIST_SELECT)
+    .select(ownedPlaylistSelect(userId))
     .from(dbSchema.playlists)
     .innerJoin(dbSchema.playlistOwnership, eq(dbSchema.playlistOwnership.playlistId, dbSchema.playlists.id))
+    .leftJoin(
+      dbSchema.userPlaylistPins,
+      and(
+        eq(dbSchema.userPlaylistPins.playlistId, dbSchema.playlists.id),
+        eq(dbSchema.userPlaylistPins.userId, userId),
+      ),
+    )
     .where(whereClause)
     .orderBy(PLAYLIST_ORDER)
     .limit(pageSize + 1)

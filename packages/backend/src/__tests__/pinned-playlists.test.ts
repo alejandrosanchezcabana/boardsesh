@@ -248,18 +248,13 @@ describe('myPinnedPlaylists query', () => {
 
   it('returns pinned playlists ordered by pin recency, capped at PINNED_LIMIT', async () => {
     const ctx = makeCtx();
+    // Single-query design: role rides on the row from the LEFT JOIN to
+    // playlistOwnership scoped to the current user.
     const { chain: mainChain, calls: mainCalls } = createMockChain([
-      makePinnedRow({ uuid: 'pl-recent', id: BigInt(1) }),
-      makePinnedRow({ uuid: 'pl-older', id: BigInt(2) }),
+      makePinnedRow({ uuid: 'pl-recent', id: BigInt(1), role: 'owner' }),
+      makePinnedRow({ uuid: 'pl-older', id: BigInt(2), role: 'owner' }),
     ]);
     mockDb.select.mockReturnValueOnce(mainChain);
-
-    // Ownership lookup (scoped to pinned ids) — both owned by current user.
-    const { chain: ownership, calls: ownershipCalls } = createMockChain([
-      { playlistId: BigInt(1), role: 'owner' },
-      { playlistId: BigInt(2), role: 'owner' },
-    ]);
-    mockDb.select.mockReturnValueOnce(ownership);
 
     // Climb counts
     const { chain: climbCounts } = createMockChain([]);
@@ -276,23 +271,19 @@ describe('myPinnedPlaylists query', () => {
     expect(result[0]).toMatchObject({ uuid: 'pl-recent', userRole: 'owner', isPinnedByMe: true });
     expect(result[1]).toMatchObject({ uuid: 'pl-older', userRole: 'owner', isPinnedByMe: true });
 
-    // Confirms the perf-fix: ownership query was scoped (.where called once)
-    // and the main query applied LIMIT.
-    expect(ownershipCalls.where.length).toBe(1);
+    // Single query with LEFT JOIN gives us role + ordering + limit in one go.
+    expect(mainCalls.leftJoin.length).toBe(1);
     expect(mainCalls.limit.length).toBe(1);
     expect(mainCalls.orderBy.length).toBe(1);
   });
 
   it('falls back to viewer role when the user does not own a pinned public playlist', async () => {
     const ctx = makeCtx();
+    // LEFT JOIN to playlistOwnership returns null role for non-owners.
     const { chain: mainChain } = createMockChain([
-      makePinnedRow({ uuid: 'pl-public', id: BigInt(50), isPublic: true }),
+      makePinnedRow({ uuid: 'pl-public', id: BigInt(50), isPublic: true, role: null }),
     ]);
     mockDb.select.mockReturnValueOnce(mainChain);
-
-    // Ownership query returns nothing — user only pinned someone else's public playlist.
-    const { chain: ownership } = createMockChain([]);
-    mockDb.select.mockReturnValueOnce(ownership);
 
     const { chain: climbCounts } = createMockChain([]);
     mockDb.select.mockReturnValueOnce(climbCounts);
@@ -309,11 +300,9 @@ describe('myPinnedPlaylists query', () => {
   it('applies the boardType + layoutId filter', async () => {
     const ctx = makeCtx();
     const { chain: mainChain, calls: mainCalls } = createMockChain([
-      makePinnedRow({ uuid: 'pl-1', boardType: 'kilter', layoutId: 8 }),
+      makePinnedRow({ uuid: 'pl-1', boardType: 'kilter', layoutId: 8, role: 'owner' }),
     ]);
     mockDb.select.mockReturnValueOnce(mainChain);
-    const { chain: ownership } = createMockChain([{ playlistId: BigInt(1), role: 'owner' }]);
-    mockDb.select.mockReturnValueOnce(ownership);
     const { chain: climbCounts } = createMockChain([]);
     mockDb.select.mockReturnValueOnce(climbCounts);
     const { chain: followerChain } = createMockChain([]);

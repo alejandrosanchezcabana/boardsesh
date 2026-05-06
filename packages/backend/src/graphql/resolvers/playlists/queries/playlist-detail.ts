@@ -5,7 +5,6 @@ import * as dbSchema from '@boardsesh/db/schema';
 import { requireAuthenticated, validateInput } from '../../shared/helpers';
 import { GetPlaylistsForClimbInputSchema, GetPlaylistsForClimbsInputSchema } from '../../../../validation/schemas';
 import { getPlaylistFollowStats } from '../helpers/follow-stats';
-import { getPlaylistPinSet } from '../helpers/pin-stats';
 
 /**
  * Get a specific playlist by ID.
@@ -18,6 +17,10 @@ export const playlist = async (
 ): Promise<unknown> => {
   const userId = ctx.userId;
 
+  // LEFT JOIN userPlaylistPins scoped to the current user so isPinnedByMe
+  // rides on the same query — saves a round-trip vs. a separate lookup.
+  // Unauthenticated viewers always get isPinnedByMe = false (the join
+  // matches nothing because userId is null).
   const playlistResult = await db
     .select({
       id: dbSchema.playlists.id,
@@ -32,8 +35,19 @@ export const playlist = async (
       createdAt: dbSchema.playlists.createdAt,
       updatedAt: dbSchema.playlists.updatedAt,
       lastAccessedAt: dbSchema.playlists.lastAccessedAt,
+      isPinnedByMe: sql<boolean>`${dbSchema.userPlaylistPins.id} IS NOT NULL`,
     })
     .from(dbSchema.playlists)
+    .leftJoin(
+      dbSchema.userPlaylistPins,
+      and(
+        eq(dbSchema.userPlaylistPins.playlistId, dbSchema.playlists.id),
+        userId
+          ? eq(dbSchema.userPlaylistPins.userId, userId)
+          : // Force the LEFT JOIN to never match for unauthenticated viewers.
+            sql`false`,
+      ),
+    )
     .where(eq(dbSchema.playlists.uuid, playlistId))
     .limit(1);
 
@@ -67,11 +81,9 @@ export const playlist = async (
     .where(eq(dbSchema.playlistClimbs.playlistId, p.id))
     .limit(1);
 
-  // Get follow + pin stats in parallel
-  const [followStats, pinSet] = await Promise.all([
-    getPlaylistFollowStats([p.uuid], userId ?? null),
-    getPlaylistPinSet([p.uuid], userId ?? null),
-  ]);
+  // Follow stats are still a separate batched lookup (followerCount needs
+  // an aggregate). isPinnedByMe is already on the row from the LEFT JOIN.
+  const followStats = await getPlaylistFollowStats([p.uuid], userId ?? null);
   const stats = followStats.get(p.uuid) ?? { followerCount: 0, isFollowedByMe: false };
 
   return {
@@ -91,7 +103,7 @@ export const playlist = async (
     userRole,
     followerCount: stats.followerCount,
     isFollowedByMe: stats.isFollowedByMe,
-    isPinnedByMe: pinSet.has(p.uuid),
+    isPinnedByMe: p.isPinnedByMe,
   };
 };
 

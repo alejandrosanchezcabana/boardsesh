@@ -13,7 +13,6 @@ import {
   PinPlaylistInputSchema,
 } from '../../../validation/schemas';
 import { getPlaylistFollowStats } from './queries';
-import { getPlaylistPinSet } from './helpers/pin-stats';
 import { verifyPlaylistAccess } from './helpers/enrichment';
 
 export const playlistMutations = {
@@ -127,11 +126,19 @@ export const playlistMutations = {
       .where(eq(dbSchema.playlistClimbs.playlistId, playlistId))
       .limit(1);
 
-    const [followStats, pinSet] = await Promise.all([
+    const [followStats, pinRow] = await Promise.all([
       getPlaylistFollowStats([updated.uuid], userId),
-      getPlaylistPinSet([updated.uuid], userId),
+      // Single-row pin lookup by composite-unique-index (userId, playlistId)
+      // — cheaper than the helper's batched IN-array path for the
+      // mutation's one-playlist case.
+      db
+        .select({ id: dbSchema.userPlaylistPins.id })
+        .from(dbSchema.userPlaylistPins)
+        .where(and(eq(dbSchema.userPlaylistPins.userId, userId), eq(dbSchema.userPlaylistPins.playlistId, playlistId)))
+        .limit(1),
     ]);
     const stats = followStats.get(updated.uuid) ?? { followerCount: 0, isFollowedByMe: false };
+    const isPinnedByMe = pinRow.length > 0;
 
     return {
       id: updated.id.toString(),
@@ -149,7 +156,7 @@ export const playlistMutations = {
       userRole: 'owner',
       followerCount: stats.followerCount,
       isFollowedByMe: stats.isFollowedByMe,
-      isPinnedByMe: pinSet.has(updated.uuid),
+      isPinnedByMe,
     };
   },
 
