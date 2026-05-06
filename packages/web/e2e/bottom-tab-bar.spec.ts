@@ -118,7 +118,7 @@ test.describe('Bottom Tab Bar - Navigation', () => {
       await page.waitForURL(/\/notifications/, { timeout: 5_000 });
     } catch {
       console.warn('[bottom-tab-bar.spec] Bell click did not navigate within 5s; falling back to page.goto');
-      await page.goto('/notifications');
+      await page.goto('/notifications', { waitUntil: 'domcontentloaded' });
     }
     await expect(page).toHaveURL(/\/notifications/, { timeout: 15_000 });
     await expect(page.locator(bottomTabBar)).toBeVisible();
@@ -251,7 +251,11 @@ test.describe('Bottom Tab Bar - Queue Integration', () => {
         console.warn(
           `[bottom-tab-bar.spec] "${label}" tab click did not navigate within 5s; falling back to page.goto("${fallbackUrl}")`,
         );
-        await page.goto(fallbackUrl);
+        // `waitUntil: 'domcontentloaded'` rather than the default 'load' —
+        // /feed in particular keeps long-running activity-feed subscriptions
+        // alive that delay the 'load' event past playwright's 30 s ceiling
+        // even after the route's HTML and chunks are committed.
+        await page.goto(fallbackUrl, { waitUntil: 'domcontentloaded' });
       }
     };
 
@@ -278,7 +282,7 @@ test.describe('Bottom Tab Bar - Queue Integration', () => {
       await page.waitForURL(/\/kilter\//, { timeout: 5_000 });
     } catch {
       console.warn('[bottom-tab-bar.spec] "Climb" tab click did not navigate within 5s; falling back to page.goto');
-      await page.goto(boardUrl);
+      await page.goto(boardUrl, { waitUntil: 'domcontentloaded' });
     }
     await expect(page).toHaveURL(/\/kilter\//, { timeout: 20000 });
     await verifyBarsShowClimb(15000);
