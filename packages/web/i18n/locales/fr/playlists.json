@@ -20,6 +20,7 @@
     "sections": {
       "pinned": "Épinglées",
       "jumpBackIn": "Reprendre",
+      "smart": "Vos sélections",
       "discover": "Découvrir"
     },
     "pin": {
@@ -27,6 +28,26 @@
       "unpinAriaLabel": "Désépingler la playlist",
       "pinFailed": "Échec de l'épinglage de la playlist",
       "unpinFailed": "Échec du désépinglage de la playlist"
+    },
+    "smart": {
+      "fiveStars": {
+        "title": "Cinq étoiles",
+        "description": "Les voies auxquelles vous avez attribué cinq étoiles."
+      },
+      "mostRepeated": {
+        "title": "Les plus répétées",
+        "description": "Les voies sur lesquelles vous revenez sans cesse."
+      },
+      "projects": {
+        "title": "Projets",
+        "description": "Les voies que vous avez le plus travaillées sans les enchaîner."
+      },
+      "notFound": {
+        "title": "Playlist intelligente introuvable",
+        "description": "Cette playlist intelligente n'existe pas."
+      },
+      "empty": "Aucune voie dans cette playlist intelligente pour l'instant.",
+      "shareText": "Découvrez les voies de {{name}} sur Boardsesh"
     },
     "empty": {
       "title": "Aucune playlist pour l'instant",
