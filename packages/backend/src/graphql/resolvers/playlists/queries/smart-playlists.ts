@@ -38,14 +38,20 @@ function smartBaseConditions(userId: string, boardName: string | undefined): SQL
  * `boardName` is provided we additionally constrain the side that's being filtered
  * (the outer query) to that board, but the existence test itself is always
  * board-aware.
+ *
+ * Correlation is via explicit table-qualified identifiers (`sent.board_type` for
+ * the inner aliased copy, `boardsesh_ticks.board_type` for the outer scope),
+ * not via Drizzle column interpolation, so the predicate doesn't accidentally
+ * resolve both sides to the inner alias if Drizzle ever rewrites the outer
+ * `from(boardseshTicks)` to use an alias.
  */
 function notSentExists(userId: string): SQL {
   return sql`NOT EXISTS (
     SELECT 1
-    FROM ${dbSchema.boardseshTicks} sent
+    FROM boardsesh_ticks AS sent
     WHERE sent.user_id = ${userId}
-      AND sent.board_type = ${dbSchema.boardseshTicks.boardType}
-      AND sent.climb_uuid = ${dbSchema.boardseshTicks.climbUuid}
+      AND sent.board_type = boardsesh_ticks.board_type
+      AND sent.climb_uuid = boardsesh_ticks.climb_uuid
       AND sent.status IN ('flash', 'send')
   )`;
 }

@@ -18,8 +18,30 @@
       "modalDescription": "Inicia sesión para registrar tus bloques y gestionar tus playlists."
     },
     "sections": {
+      "pinned": "Fijadas",
       "jumpBackIn": "Continúa donde lo dejaste",
+      "smart": "Tus selecciones",
       "discover": "Descubre"
+    },
+    "smart": {
+      "fiveStars": {
+        "title": "Cinco estrellas",
+        "description": "Bloques que has valorado con cinco estrellas."
+      },
+      "mostRepeated": {
+        "title": "Más repetidos",
+        "description": "Bloques a los que vuelves una y otra vez."
+      },
+      "projects": {
+        "title": "Proyectos",
+        "description": "Bloques en los que más has trabajado sin encadenar."
+      },
+      "notFound": {
+        "title": "Playlist inteligente no encontrada",
+        "description": "Esta playlist inteligente no existe."
+      },
+      "empty": "Todavía no hay bloques en esta playlist inteligente.",
+      "shareText": "Mira los bloques de {{name}} en Boardsesh"
     },
     "empty": {
       "title": "Aún no tienes playlists",

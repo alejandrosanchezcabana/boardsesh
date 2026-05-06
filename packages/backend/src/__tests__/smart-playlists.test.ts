@@ -248,9 +248,16 @@ describe('smartPlaylist resolver', () => {
     };
     for (const calls of [pageCalls, countCalls]) {
       const rendered = renderSql(calls.where[0][0]);
-      expect(rendered).toMatch(/board_type/i);
-      expect(rendered).toMatch(/climb_uuid/i);
+      // Inner subquery aliases boardsesh_ticks as `sent` and references the
+      // outer scope by bare `boardsesh_ticks.<col>`. Pin both halves of the
+      // correlation so a future Drizzle interpolation regression can't
+      // silently turn the subquery into `sent.x = sent.x` (always-true) or
+      // `boardsesh_ticks.x = boardsesh_ticks.x` (no correlation at all).
       expect(rendered.toUpperCase()).toMatch(/NOT EXISTS/);
+      expect(rendered).toMatch(/FROM\s+boardsesh_ticks\s+AS\s+sent/i);
+      expect(rendered).toMatch(/sent\.board_type\s*=\s*boardsesh_ticks\.board_type/i);
+      expect(rendered).toMatch(/sent\.climb_uuid\s*=\s*boardsesh_ticks\.climb_uuid/i);
+      expect(rendered).toMatch(/sent\.status\s+IN\s*\(\s*'flash'\s*,\s*'send'\s*\)/i);
     }
 
     // Sanity: notInArray is no longer used anywhere (we replaced it with NOT EXISTS).
