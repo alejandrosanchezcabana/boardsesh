@@ -441,14 +441,6 @@ export const playlistsTypeDefs = /* GraphQL */ `
     userId: ID!
     "Filter to a board type (optional)"
     boardName: String
-    "Filter to a layout ID (optional)"
-    layoutId: Int
-    "Size ID (optional)"
-    sizeId: Int
-    "Set IDs (optional)"
-    setIds: String
-    "Board angle (optional)"
-    angle: Int
     "Page number"
     page: Int
     "Page size"

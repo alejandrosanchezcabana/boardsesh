@@ -641,10 +641,6 @@ export type GetSmartPlaylistInput = {
   type: SmartPlaylistType;
   userId: string;
   boardName?: string;
-  layoutId?: number;
-  sizeId?: number;
-  setIds?: string;
-  angle?: number;
   page?: number;
   pageSize?: number;
 };

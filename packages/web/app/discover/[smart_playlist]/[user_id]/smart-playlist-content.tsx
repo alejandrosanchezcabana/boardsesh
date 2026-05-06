@@ -66,10 +66,7 @@ export default function SmartPlaylistContent({ smartPlaylistType, smartPlaylistS
         userId,
         page: pageParam,
         pageSize: 20,
-        ...(selectedBoard && {
-          boardName: selectedBoard.boardType,
-          layoutId: selectedBoard.layoutId,
-        }),
+        ...(selectedBoard && { boardName: selectedBoard.boardType }),
       };
       const response = await client.request<GetSmartPlaylistQueryResponse>(GET_SMART_PLAYLIST, {
         input,

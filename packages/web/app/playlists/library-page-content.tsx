@@ -14,7 +14,6 @@ import {
   type DiscoverPlaylistsQueryResponse,
   type DiscoverPlaylistsInput,
   type GetMySmartPlaylistCountsQueryResponse,
-  type SmartPlaylistCount,
   type Playlist,
   type DiscoverablePlaylist,
   type PinPlaylistMutationResponse,
@@ -473,7 +472,11 @@ export default function LibraryPageContent({
 
   // Smart playlists prepended to the playlist card grid for the signed-in user.
   // Skip entries with count === 0 so the grid only shows non-empty smart playlists.
+  // boardType/layoutId drive the board-preview backdrop on the card; pick the
+  // user's selected board if any, falling back to their primary board so a
+  // Tension-only user doesn't see a Kilter visual.
   const currentUserId = session?.user?.id ?? null;
+  const smartCardBoard = selectedBoard ?? myBoards[0] ?? null;
   const smartLeadingItems =
     isAuthenticated && currentUserId
       ? SMART_PLAYLISTS.flatMap((preset) => {
@@ -485,8 +488,8 @@ export default function LibraryPageContent({
               key: preset.slug,
               name: t(preset.titleI18nKey),
               climbCount: count,
-              boardType: selectedBoard?.boardType ?? 'kilter',
-              layoutId: selectedBoard?.layoutId ?? null,
+              boardType: smartCardBoard?.boardType ?? 'kilter',
+              layoutId: smartCardBoard?.layoutId ?? null,
               color: preset.color,
               icon: preset.icon,
               href: smartPlaylistHref(preset.slug, currentUserId),
