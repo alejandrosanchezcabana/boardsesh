@@ -1,4 +1,4 @@
-import { eq, and, or, isNull, desc } from 'drizzle-orm';
+import { eq, and, or, isNull, desc, inArray } from 'drizzle-orm';
 import type { ConnectionContext } from '@boardsesh/shared-schema';
 import { db } from '../../../../db/client';
 import * as dbSchema from '@boardsesh/db/schema';
@@ -8,8 +8,9 @@ import { getPlaylistFollowStats } from '../helpers/follow-stats';
 import { getClimbCounts, formatOwnedPlaylist, type OwnedPlaylistRow } from '../helpers/enrichment';
 
 /**
- * Server-side cap. The pinned grid is a small surface; users with more pins
- * than this never see them in the grid (overflow goes into "Jump Back In").
+ * Server-side cap. The pinned grid is a small surface; pins beyond this cap
+ * are not surfaced (overflow is not shown — owned playlists also live in
+ * "Jump Back In", but pins on other users' public playlists do not).
  */
 const PINNED_LIMIT = 12;
 
@@ -65,17 +66,21 @@ export const myPinnedPlaylists = async (
     .orderBy(desc(dbSchema.userPlaylistPins.createdAt))
     .limit(PINNED_LIMIT);
 
-  // Pinned playlists may be owned by other users — find the current user's
-  // role (if any) via a per-id ownership lookup. This is the same enrichment
-  // shape as user-playlists.ts but the join cardinality differs.
-  const ownership = rows.length
+  // Pinned playlists may be owned by other users — look up the current
+  // user's role (if any) for each pinned playlist. Scope by playlist id
+  // (mirrors getPlaylistFollowStats) so users with large libraries don't
+  // pull their entire ownership table into memory just to discard it.
+  const pinnedIds = rows.map((r) => r.id);
+  const ownership = pinnedIds.length
     ? await db
         .select({
           playlistId: dbSchema.playlistOwnership.playlistId,
           role: dbSchema.playlistOwnership.role,
         })
         .from(dbSchema.playlistOwnership)
-        .where(eq(dbSchema.playlistOwnership.userId, userId))
+        .where(
+          and(eq(dbSchema.playlistOwnership.userId, userId), inArray(dbSchema.playlistOwnership.playlistId, pinnedIds)),
+        )
     : [];
   const roleByPlaylistId = new Map(ownership.map((o) => [o.playlistId.toString(), o.role]));
 

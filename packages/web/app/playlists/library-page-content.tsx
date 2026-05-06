@@ -57,8 +57,10 @@ type LibraryPageContentProps = {
   playlistsBasePath?: string;
   /** SSR-fetched user boards for instant rendering. */
   initialMyBoards?: UserBoard[] | null;
-  /** SSR-fetched user playlists for instant rendering. */
-  initialPlaylists?: Playlist[] | null;
+  /** SSR-fetched user playlists for instant rendering. The connection shape
+   *  carries hasMore + totalCount so the client hook can seed both correctly
+   *  and avoid a redundant first fetch. */
+  initialPlaylists?: { playlists: Playlist[]; totalCount: number; hasMore: boolean } | null;
   /** SSR-fetched discover playlists for instant rendering. */
   initialDiscoverPlaylists?: {
     popular: DiscoverablePlaylist[];
@@ -152,11 +154,13 @@ export default function LibraryPageContent({
     boardType: selectedBoard?.boardType,
     layoutId: selectedBoard?.layoutId,
     pageSize: 20,
-    initialData: hasInitialPlaylistData ? (initialPlaylists ?? []) : undefined,
-    // Without a server-side hasMore on initial load we can't know for sure;
-    // assume "could be more" so the sentinel still attaches and confirms with
-    // the first scroll-triggered fetch.
-    initialHasMore: hasInitialPlaylistData ? true : undefined,
+    initialData: hasInitialPlaylistData ? initialPlaylists.playlists : undefined,
+    // Pass through the server's real hasMore + totalCount so the
+    // IntersectionObserver doesn't fire a redundant first request just to
+    // discover hasMore=false, and so any "X of Y" copy is correct on first
+    // paint.
+    initialHasMore: hasInitialPlaylistData ? initialPlaylists.hasMore : undefined,
+    initialTotalCount: hasInitialPlaylistData ? initialPlaylists.totalCount : undefined,
   });
 
   // Pinned playlists — server first, IndexedDB recents fallback. Re-derives on

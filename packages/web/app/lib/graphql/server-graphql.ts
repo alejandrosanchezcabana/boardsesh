@@ -46,19 +46,28 @@ export async function serverMyBoards(authToken: string): Promise<UserBoard[] | n
   }
 }
 
+export type ServerUserPlaylistsResult = {
+  playlists: Playlist[];
+  totalCount: number;
+  hasMore: boolean;
+};
+
 /**
  * Server-side fetch of the user's playlists (authenticated, not cached).
+ * Returns the raw paginated result so the client hook can seed both totalCount
+ * and hasMore from SSR — passing only the playlists array would force a
+ * redundant first fetch just to discover hasMore.
  */
 export async function serverUserPlaylists(
   authToken: string,
   input: { boardType?: string; layoutId?: number; page?: number; pageSize?: number } = {},
-): Promise<Playlist[] | null> {
+): Promise<ServerUserPlaylistsResult | null> {
   const { GET_ALL_USER_PLAYLISTS } = await import('@/app/lib/graphql/operations/playlists');
   type Response = GetAllUserPlaylistsQueryResponse;
 
   try {
     const response = await executeAuthenticatedGraphQL<Response>(GET_ALL_USER_PLAYLISTS, { input }, authToken);
-    return response.allUserPlaylists.playlists;
+    return response.allUserPlaylists;
   } catch {
     return null;
   }

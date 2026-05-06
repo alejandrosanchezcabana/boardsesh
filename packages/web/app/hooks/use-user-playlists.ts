@@ -18,8 +18,14 @@ type UseUserPlaylistsOptions = {
   pageSize?: number;
   /** SSR-provided initial data. When supplied, the first page fetch is skipped. */
   initialData?: Playlist[];
-  /** Whether SSR initial data exhausts the user's library (so hasMore=false). */
+  /** Whether SSR initial data exhausts the user's library. Pass the server's
+   *  hasMore so the IntersectionObserver doesn't fire a redundant first
+   *  network request just to learn there's nothing more. */
   initialHasMore?: boolean;
+  /** Server-reported total count for the current filter. Defaults to
+   *  initialData.length, but that under-reports when SSR returns one page
+   *  out of many — pass the real total from the server response. */
+  initialTotalCount?: number;
 };
 
 type UseUserPlaylistsResult = {
@@ -49,13 +55,14 @@ export function useUserPlaylists({
   pageSize = 20,
   initialData,
   initialHasMore,
+  initialTotalCount,
 }: UseUserPlaylistsOptions): UseUserPlaylistsResult {
   const hasInitialData = initialData != null;
   const [playlists, setPlaylists] = useState<Playlist[]>(hasInitialData ? initialData : []);
   const [isLoading, setIsLoading] = useState(!hasInitialData);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(hasInitialData ? (initialHasMore ?? false) : false);
-  const [totalCount, setTotalCount] = useState(hasInitialData ? initialData.length : 0);
+  const [totalCount, setTotalCount] = useState(hasInitialData ? (initialTotalCount ?? initialData.length) : 0);
   const [error, setError] = useState<string | null>(null);
 
   const hasMoreRef = useRef(hasMore);

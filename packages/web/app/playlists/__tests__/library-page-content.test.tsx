@@ -274,7 +274,7 @@ describe('LibraryPageContent FAB orchestration', () => {
     render(
       <LibraryPageContent
         initialMyBoards={[board]}
-        initialPlaylists={[]}
+        initialPlaylists={{ playlists: [], totalCount: 0, hasMore: false }}
         initialDiscoverPlaylists={{ popular: [], recent: [] }}
         boardConfigs={fakeBoardConfigs}
         boardSlug={board.slug}
@@ -295,7 +295,7 @@ describe('LibraryPageContent FAB orchestration', () => {
     render(
       <LibraryPageContent
         initialMyBoards={[]}
-        initialPlaylists={[]}
+        initialPlaylists={{ playlists: [], totalCount: 0, hasMore: false }}
         initialDiscoverPlaylists={{ popular: [], recent: [] }}
         boardConfigs={fakeBoardConfigs}
       />,
@@ -315,7 +315,7 @@ describe('LibraryPageContent FAB orchestration', () => {
     render(
       <LibraryPageContent
         initialMyBoards={[]}
-        initialPlaylists={[]}
+        initialPlaylists={{ playlists: [], totalCount: 0, hasMore: false }}
         initialDiscoverPlaylists={{ popular: [], recent: [] }}
         boardConfigs={fakeBoardConfigs}
       />,
@@ -337,7 +337,7 @@ describe('LibraryPageContent FAB orchestration', () => {
     render(
       <LibraryPageContent
         initialMyBoards={[]}
-        initialPlaylists={[]}
+        initialPlaylists={{ playlists: [], totalCount: 0, hasMore: false }}
         initialDiscoverPlaylists={{ popular: [], recent: [] }}
         boardConfigs={fakeBoardConfigs}
       />,
@@ -363,7 +363,7 @@ describe('LibraryPageContent FAB orchestration', () => {
     render(
       <LibraryPageContent
         initialMyBoards={[]}
-        initialPlaylists={[]}
+        initialPlaylists={{ playlists: [], totalCount: 0, hasMore: false }}
         initialDiscoverPlaylists={{ popular: [], recent: [] }}
       />,
     );
@@ -384,7 +384,7 @@ describe('LibraryPageContent FAB orchestration', () => {
     render(
       <LibraryPageContent
         initialMyBoards={[board]}
-        initialPlaylists={[]}
+        initialPlaylists={{ playlists: [], totalCount: 0, hasMore: false }}
         initialDiscoverPlaylists={{ popular: [], recent: [] }}
         boardConfigs={fakeBoardConfigs}
         boardSlug={board.slug}
@@ -402,7 +402,7 @@ describe('LibraryPageContent FAB orchestration', () => {
     render(
       <LibraryPageContent
         initialMyBoards={[board]}
-        initialPlaylists={[]}
+        initialPlaylists={{ playlists: [], totalCount: 0, hasMore: false }}
         initialDiscoverPlaylists={{ popular: [], recent: [] }}
         boardConfigs={fakeBoardConfigs}
         boardSlug={board.slug}
@@ -424,7 +424,7 @@ describe('LibraryPageContent FAB orchestration', () => {
     render(
       <LibraryPageContent
         initialMyBoards={[board]}
-        initialPlaylists={[]}
+        initialPlaylists={{ playlists: [], totalCount: 0, hasMore: false }}
         initialDiscoverPlaylists={{ popular: [], recent: [] }}
         boardConfigs={fakeBoardConfigs}
         boardSlug="kilter-route"
@@ -442,7 +442,7 @@ describe('LibraryPageContent FAB orchestration', () => {
     render(
       <LibraryPageContent
         initialMyBoards={[]}
-        initialPlaylists={[]}
+        initialPlaylists={{ playlists: [], totalCount: 0, hasMore: false }}
         initialDiscoverPlaylists={{ popular: [], recent: [] }}
         boardConfigs={fakeBoardConfigs}
       />,

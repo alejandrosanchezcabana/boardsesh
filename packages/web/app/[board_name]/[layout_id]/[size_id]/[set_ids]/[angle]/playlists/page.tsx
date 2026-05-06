@@ -43,7 +43,9 @@ export default async function PlaylistsPage(props: { params: Promise<BoardRouteP
       getAllBoardConfigs(),
     ]);
 
-    const lcpPreloadUrl = getPlaylistLcpPreloadUrl(initialPlaylists?.[0] ?? initialDiscoverPlaylists?.popular?.[0]);
+    const lcpPreloadUrl = getPlaylistLcpPreloadUrl(
+      initialPlaylists?.playlists?.[0] ?? initialDiscoverPlaylists?.popular?.[0],
+    );
 
     return (
       <I18nProvider locale={locale} namespaces={['playlists']}>

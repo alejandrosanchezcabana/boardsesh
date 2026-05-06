@@ -67,9 +67,7 @@ export default function PlaylistCard({
         </div>
         <div className={styles.cardCompactInfo}>
           <div className={styles.cardCompactName}>{name}</div>
-          <div className={styles.cardMeta}>
-            {climbCount} {climbCount === 1 ? 'climb' : 'climbs'}
-          </div>
+          <div className={styles.cardMeta}>{t('detail.climbCount', { count: climbCount })}</div>
         </div>
       </LocaleLink>
     );
