@@ -38,9 +38,11 @@ type RawRetentionRow = {
 };
 
 async function fetchRetention(): Promise<RetentionRow[]> {
-  // Cohort = week-of-signup (UTC). Activity = at least one boardsesh tick.
-  // Window capped at 180 days. D7/D30 columns are NULL'd for cohorts younger
-  // than the window so the UI can render a placeholder instead of 0%.
+  // Cohort = week-of-signup (UTC). Activity = at least one boardsesh tick
+  // that originated in Boardsesh (aurora_id IS NULL — i.e. not synced in
+  // from Aurora). Window capped at 180 days. D7/D30 columns are NULL'd for
+  // cohorts younger than the window so the UI can render a placeholder
+  // instead of 0%.
   const rows = await executeRows<RawRetentionRow>(
     dbz,
     sql`
@@ -64,6 +66,7 @@ async function fetchRetention(): Promise<RetentionRow[]> {
         JOIN boardsesh_ticks t
           ON t.user_id = sc.user_id
          AND t.climbed_at >= sc.created_at
+         AND t.aurora_id IS NULL
         GROUP BY sc.user_id
       ),
       cohort_rollup AS (
