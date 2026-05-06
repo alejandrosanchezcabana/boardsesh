@@ -1363,20 +1363,12 @@ export type GetPlaylistsForClimbsInput = {
 
 /** Input for fetching a smart playlist. */
 export type GetSmartPlaylistInput = {
-  /** Board angle (optional) */
-  angle?: InputMaybe<Scalars['Int']['input']>;
   /** Filter to a board type (optional) */
   boardName?: InputMaybe<Scalars['String']['input']>;
-  /** Filter to a layout ID (optional) */
-  layoutId?: InputMaybe<Scalars['Int']['input']>;
   /** Page number */
   page?: InputMaybe<Scalars['Int']['input']>;
   /** Page size */
   pageSize?: InputMaybe<Scalars['Int']['input']>;
-  /** Set IDs (optional) */
-  setIds?: InputMaybe<Scalars['String']['input']>;
-  /** Size ID (optional) */
-  sizeId?: InputMaybe<Scalars['Int']['input']>;
   /** Smart playlist type */
   type: SmartPlaylistType;
   /** User whose logbook to compute from */
