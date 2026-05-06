@@ -472,31 +472,11 @@ export default function LibraryPageContent({
 
   // Smart playlists prepended to the playlist card grid for the signed-in user.
   // Skip entries with count === 0 so the grid only shows non-empty smart playlists.
-  // boardType/layoutId drive the board-preview backdrop on the card; pick the
-  // user's selected board if any, falling back to their primary board so a
-  // Tension-only user doesn't see a Kilter visual.
+  // boardType/layoutId drive the board-preview backdrop on the smart cards;
+  // pick the user's selected board if any, falling back to their primary
+  // board so a Tension-only user doesn't see a Kilter visual.
   const currentUserId = session?.user?.id ?? null;
   const smartCardBoard = selectedBoard ?? myBoards[0] ?? null;
-  const smartLeadingItems =
-    isAuthenticated && currentUserId
-      ? SMART_PLAYLISTS.flatMap((preset) => {
-          const found = smartCounts.find((c) => c.type === preset.type);
-          const count = found?.count ?? 0;
-          if (count === 0) return [];
-          return [
-            {
-              key: preset.slug,
-              name: t(preset.titleI18nKey),
-              climbCount: count,
-              boardType: smartCardBoard?.boardType ?? 'kilter',
-              layoutId: smartCardBoard?.layoutId ?? null,
-              color: preset.color,
-              icon: preset.icon,
-              href: smartPlaylistHref(preset.slug, currentUserId),
-            },
-          ];
-        })
-      : [];
 
   return (
     <>
@@ -545,7 +525,7 @@ export default function LibraryPageContent({
           a clean entry point at the top of the page. Only renders presets
           whose count is non-zero so users without enough history don't see
           empty cards. */}
-      {isAuthenticated && session?.user?.id && smartCounts.some((c) => c.count > 0) && (
+      {isAuthenticated && currentUserId && smartCounts.some((c) => c.count > 0) && (
         <>
           <div className={styles.sectionTitle}>{t('library.sections.smart')}</div>
           <div className={styles.cardGrid}>
@@ -558,11 +538,11 @@ export default function LibraryPageContent({
                   key={preset.slug}
                   name={t(preset.titleI18nKey)}
                   climbCount={count}
-                  boardType={selectedBoard?.boardType ?? 'kilter'}
-                  layoutId={selectedBoard?.layoutId ?? null}
+                  boardType={smartCardBoard?.boardType ?? 'kilter'}
+                  layoutId={smartCardBoard?.layoutId ?? null}
                   color={preset.color}
                   icon={preset.icon}
-                  href={smartPlaylistHref(preset.slug, session.user.id!)}
+                  href={smartPlaylistHref(preset.slug, currentUserId)}
                   variant="grid"
                   index={i}
                   fetchPriority={i === 0 ? 'high' : undefined}

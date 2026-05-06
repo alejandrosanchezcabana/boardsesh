@@ -54,10 +54,16 @@ export async function hydrateClimbsByRefs(refs: ClimbRef[], options?: HydrateCli
       and(
         eq(tables.climbStats.boardType, tables.climbs.boardType),
         eq(tables.climbStats.climbUuid, tables.climbs.uuid),
+        // Inner self-correlated subquery: the outer leftJoin target is
+        // `board_climb_stats` (unaliased), and we alias the inner copy as
+        // `s`. Using a bare `FROM board_climb_stats s` rather than
+        // `${tables.climbStats}` interpolation makes the correlation
+        // alias-stable — a future Drizzle release that aliases the outer
+        // target wouldn't silently break the resolution to it.
         eq(
           tables.climbStats.angle,
           sql`(
-            SELECT s.angle FROM ${tables.climbStats} s
+            SELECT s.angle FROM board_climb_stats s
             WHERE s.board_type = ${tables.climbs.boardType}
               AND s.climb_uuid = ${tables.climbs.uuid}
             ORDER BY s.ascensionist_count DESC NULLS LAST

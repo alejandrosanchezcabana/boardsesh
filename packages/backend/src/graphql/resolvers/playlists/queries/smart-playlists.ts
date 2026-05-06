@@ -2,7 +2,7 @@ import { eq, and, desc, sql, inArray, max, type SQL } from 'drizzle-orm';
 import { type ConnectionContext, type Climb } from '@boardsesh/shared-schema';
 import { db } from '../../../../db/client';
 import * as dbSchema from '@boardsesh/db/schema';
-import { requireAuthenticated, validateInput } from '../../shared/helpers';
+import { applyRateLimit, requireAuthenticated, validateInput } from '../../shared/helpers';
 import { GetSmartPlaylistInputSchema } from '../../../../validation/schemas';
 import { hydrateClimbsByRefs, type ClimbRef } from '../helpers/hydrate-climbs';
 
@@ -172,11 +172,16 @@ async function countSmartClimbRefs(
 /**
  * Public smart playlist query — anyone with the URL can view a user's
  * computed playlist. Uses the user's logbook (boardseshTicks).
+ *
+ * Rate limited per-IP (anonymous) or per-user (authenticated). Each call
+ * fans out to 3+ DB queries (user lookup + page refs + count + hydrate),
+ * so this is high-cost relative to typical reads. The default 60/min
+ * cap prevents trivial scraping while still allowing real share-link traffic.
  */
 export const smartPlaylist = async (
   _: unknown,
   { input }: { input: SmartPlaylistInput },
-  _ctx: ConnectionContext,
+  ctx: ConnectionContext,
 ): Promise<{
   meta: {
     type: SmartPlaylistType;
@@ -189,6 +194,7 @@ export const smartPlaylist = async (
   totalCount: number;
   hasMore: boolean;
 }> => {
+  await applyRateLimit(ctx, 60, 'smartPlaylist');
   validateInput(GetSmartPlaylistInputSchema, input, 'input');
 
   const page = input.page ?? 0;
