@@ -53,6 +53,7 @@ function getClientInstance(locale: Locale, resources: Record<string, Record<stri
       interpolation: { escapeValue: false },
       returnNull: false,
       saveMissing: true,
+      saveMissingPlurals: false,
       missingKeyHandler: (lngs, ns, key, fallbackValue) => {
         reportMissingI18nKey({ lngs, ns, key, fallbackValue });
       },
