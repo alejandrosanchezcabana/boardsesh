@@ -7,6 +7,7 @@ import { validateInput } from '../../shared/helpers';
 import { GetPlaylistClimbsInputSchema } from '../../../../validation/schemas';
 import { UNIFIED_TABLES, isValidBoardName } from '../../../../db/queries/util/table-select';
 import { verifyPlaylistAccess } from '../helpers/enrichment';
+import { hydrateClimbsByRefs } from '../helpers/hydrate-climbs';
 
 export type PlaylistClimbsInput = {
   playlistId: string;
@@ -113,80 +114,43 @@ async function fetchSpecificBoardClimbs(
 
 /**
  * All-boards mode: fetch climbs across all board types.
+ *
+ * Two-step: first read the page of refs (uuid + boardType + per-row angle
+ * override) from playlistClimbs in position order, then hand them to the
+ * shared hydrator which owns the climbs/climbStats join. Lets schema changes
+ * to climbStats live in exactly one file (`helpers/hydrate-climbs.ts`).
  */
 async function fetchAllBoardsClimbs(
   playlistId: bigint,
   page: number,
   pageSize: number,
 ): Promise<{ climbs: Climb[]; hasMore: boolean }> {
-  const DEFAULT_ANGLE = 40;
   const tables = UNIFIED_TABLES;
 
-  const results = await db
+  const refRows = await db
     .select({
       climbUuid: dbSchema.playlistClimbs.climbUuid,
-      position: dbSchema.playlistClimbs.position,
-      playlistAngle: dbSchema.playlistClimbs.angle,
-      uuid: tables.climbs.uuid,
-      layoutId: tables.climbs.layoutId,
       boardType: tables.climbs.boardType,
-      setter_username: tables.climbs.setterUsername,
-      name: tables.climbs.name,
-      description: tables.climbs.description,
-      frames: tables.climbs.frames,
-      statsAngle: tables.climbStats.angle,
-      ascensionist_count: tables.climbStats.ascensionistCount,
-      difficulty_id: sql<number | null>`ROUND(${tables.climbStats.displayDifficulty}::numeric, 0)`,
-      quality_average: sql<number>`ROUND(${tables.climbStats.qualityAverage}::numeric, 2)`,
-      difficulty_error: sql<number>`ROUND(${tables.climbStats.difficultyAverage}::numeric - ${tables.climbStats.displayDifficulty}::numeric, 2)`,
-      benchmark_difficulty: tables.climbStats.benchmarkDifficulty,
+      playlistAngle: dbSchema.playlistClimbs.angle,
     })
     .from(dbSchema.playlistClimbs)
     .innerJoin(tables.climbs, eq(tables.climbs.uuid, dbSchema.playlistClimbs.climbUuid))
-    .leftJoin(
-      tables.climbStats,
-      and(
-        eq(tables.climbStats.boardType, tables.climbs.boardType),
-        eq(tables.climbStats.climbUuid, tables.climbs.uuid),
-        eq(
-          tables.climbStats.angle,
-          sql`(
-          SELECT s.angle FROM board_climb_stats s
-          WHERE s.board_type = ${tables.climbs.boardType}
-            AND s.climb_uuid = ${tables.climbs.uuid}
-          ORDER BY s.ascensionist_count DESC NULLS LAST
-          LIMIT 1
-        )`,
-        ),
-      ),
-    )
     .where(eq(dbSchema.playlistClimbs.playlistId, playlistId))
     .orderBy(asc(dbSchema.playlistClimbs.position), asc(dbSchema.playlistClimbs.addedAt))
     .limit(pageSize + 1)
     .offset(page * pageSize);
 
-  const { items, hasMore } = paginateResults(results, pageSize);
+  const { items, hasMore } = paginateResults(refRows, pageSize);
 
-  const climbs: Climb[] = items.map((result) => {
-    const bt = (result.boardType || 'kilter') as BoardName;
-    return {
-      uuid: result.uuid || result.climbUuid,
-      layoutId: result.layoutId,
-      setter_username: result.setter_username || '',
-      name: result.name || '',
-      description: result.description || '',
-      frames: result.frames || '',
-      angle: result.playlistAngle ?? result.statsAngle ?? DEFAULT_ANGLE,
-      ascensionist_count: Number(result.ascensionist_count || 0),
-      difficulty: getGradeLabel(result.difficulty_id),
-      quality_average: result.quality_average?.toString() || '0',
-      stars: Math.round((Number(result.quality_average) || 0) * 5),
-      difficulty_error: result.difficulty_error?.toString() || '0',
-      benchmark_difficulty:
-        result.benchmark_difficulty && result.benchmark_difficulty > 0 ? result.benchmark_difficulty.toString() : null,
-      boardType: bt,
-    };
-  });
+  const angleOverrides = new Map<string, number | null>();
+  for (const row of items) {
+    angleOverrides.set(`${row.boardType}:${row.climbUuid}`, row.playlistAngle ?? null);
+  }
+
+  const climbs = await hydrateClimbsByRefs(
+    items.map((row) => ({ climbUuid: row.climbUuid, boardType: row.boardType })),
+    { angleOverrides },
+  );
 
   return { climbs, hasMore };
 }

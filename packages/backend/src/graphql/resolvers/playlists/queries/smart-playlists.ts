@@ -1,11 +1,10 @@
 import { eq, and, desc, sql, inArray, notInArray, max, type SQL } from 'drizzle-orm';
-import { type ConnectionContext, type Climb, type BoardName } from '@boardsesh/shared-schema';
+import { type ConnectionContext, type Climb } from '@boardsesh/shared-schema';
 import { db } from '../../../../db/client';
 import * as dbSchema from '@boardsesh/db/schema';
-import { getGradeLabel } from '@boardsesh/db/queries';
 import { requireAuthenticated, validateInput } from '../../shared/helpers';
 import { GetSmartPlaylistInputSchema } from '../../../../validation/schemas';
-import { UNIFIED_TABLES } from '../../../../db/queries/util/table-select';
+import { hydrateClimbsByRefs, type ClimbRef } from '../helpers/hydrate-climbs';
 
 type SmartPlaylistType = 'FIVE_STARS' | 'MOST_REPEATED' | 'PROJECTS';
 
@@ -17,10 +16,7 @@ type SmartPlaylistInput = {
   pageSize?: number;
 };
 
-type SmartClimbRef = {
-  climbUuid: string;
-  boardType: string;
-};
+type SmartClimbRef = ClimbRef;
 
 /**
  * Build the WHERE conditions shared by every smart-playlist query path:
@@ -167,92 +163,6 @@ async function countSmartClimbRefs(
 }
 
 /**
- * Hydrate a page of (climbUuid, boardType) pairs into full Climb objects, joining
- * climbs and climbStats. Mirrors the all-boards mode of the playlistClimbs resolver.
- *
- * TODO: deduplicate with `fetchAllBoardsClimbs` in `playlist-climbs.ts` — both
- * paths build the same SELECT + LEFT JOIN angle subselect against UNIFIED_TABLES
- * and emit the same Climb shape. A schema change to climbStats currently has to
- * be made in both files in lockstep.
- */
-async function hydrateClimbs(refs: SmartClimbRef[]): Promise<Climb[]> {
-  if (refs.length === 0) return [];
-
-  const tables = UNIFIED_TABLES;
-  const uuids = refs.map((r) => r.climbUuid);
-
-  const rows = await db
-    .select({
-      climbUuid: tables.climbs.uuid,
-      layoutId: tables.climbs.layoutId,
-      boardType: tables.climbs.boardType,
-      setter_username: tables.climbs.setterUsername,
-      name: tables.climbs.name,
-      description: tables.climbs.description,
-      frames: tables.climbs.frames,
-      statsAngle: tables.climbStats.angle,
-      ascensionist_count: tables.climbStats.ascensionistCount,
-      difficulty_id: sql<number | null>`ROUND(${tables.climbStats.displayDifficulty}::numeric, 0)`,
-      quality_average: sql<number>`ROUND(${tables.climbStats.qualityAverage}::numeric, 2)`,
-      difficulty_error: sql<number>`ROUND(${tables.climbStats.difficultyAverage}::numeric - ${tables.climbStats.displayDifficulty}::numeric, 2)`,
-      benchmark_difficulty: tables.climbStats.benchmarkDifficulty,
-    })
-    .from(tables.climbs)
-    .leftJoin(
-      tables.climbStats,
-      and(
-        eq(tables.climbStats.boardType, tables.climbs.boardType),
-        eq(tables.climbStats.climbUuid, tables.climbs.uuid),
-        eq(
-          tables.climbStats.angle,
-          sql`(
-            SELECT s.angle FROM ${tables.climbStats} s
-            WHERE s.board_type = ${tables.climbs.boardType}
-              AND s.climb_uuid = ${tables.climbs.uuid}
-            ORDER BY s.ascensionist_count DESC NULLS LAST
-            LIMIT 1
-          )`,
-        ),
-      ),
-    )
-    .where(inArray(tables.climbs.uuid, uuids));
-
-  // Build a map for quick lookup, keyed by (boardType, uuid) since uuids can collide across boards.
-  const climbMap = new Map<string, (typeof rows)[number]>();
-  for (const row of rows) {
-    climbMap.set(`${row.boardType}:${row.climbUuid}`, row);
-  }
-
-  const DEFAULT_ANGLE = 40;
-  const climbs: Climb[] = [];
-
-  for (const ref of refs) {
-    const row = climbMap.get(`${ref.boardType}:${ref.climbUuid}`);
-    if (!row) continue;
-    const bt = (row.boardType || ref.boardType) as BoardName;
-    climbs.push({
-      uuid: row.climbUuid,
-      layoutId: row.layoutId,
-      setter_username: row.setter_username || '',
-      name: row.name || '',
-      description: row.description || '',
-      frames: row.frames || '',
-      angle: row.statsAngle ?? DEFAULT_ANGLE,
-      ascensionist_count: Number(row.ascensionist_count || 0),
-      difficulty: getGradeLabel(row.difficulty_id),
-      quality_average: row.quality_average?.toString() || '0',
-      stars: Math.round((Number(row.quality_average) || 0) * 5),
-      difficulty_error: row.difficulty_error?.toString() || '0',
-      benchmark_difficulty:
-        row.benchmark_difficulty && row.benchmark_difficulty > 0 ? row.benchmark_difficulty.toString() : null,
-      boardType: bt,
-    });
-  }
-
-  return climbs;
-}
-
-/**
  * Public smart playlist query — anyone with the URL can view a user's
  * computed playlist. Uses the user's logbook (boardseshTicks).
  */
@@ -299,7 +209,7 @@ export const smartPlaylist = async (
     countSmartClimbRefs(input.type, input.userId, input.boardName),
   ]);
   const hasMore = (page + 1) * pageSize < totalCount;
-  const climbs = await hydrateClimbs(pageRefs);
+  const climbs = await hydrateClimbsByRefs(pageRefs);
 
   return {
     meta: {
@@ -319,11 +229,10 @@ export const smartPlaylist = async (
  * Climb counts for the current user's smart playlists, used to render
  * the cards on the library page.
  *
- * TODO: collapse into a single SQL roundtrip. Today this fires three queries
- * in parallel (FIVE_STARS, MOST_REPEATED, PROJECTS), and the MOST_REPEATED
- * helper uses a wrapped subquery so its branch costs two roundtrips on its
- * own. Cheap at current scale; consider a single CTE-backed query if it
- * shows up in profiling.
+ * Single roundtrip via CTEs — Postgres scans `boardsesh_ticks` once for the
+ * shared `base` and `sent` CTEs, then derives all three counts. Drizzle's
+ * query builder can't express co-defined CTEs reused across siblings, hence
+ * `db.execute(sql\`...\`)` (the sanctioned escape hatch in CLAUDE.md).
  */
 export const mySmartPlaylistCounts = async (
   _: unknown,
@@ -333,15 +242,58 @@ export const mySmartPlaylistCounts = async (
   requireAuthenticated(ctx);
   const userId = ctx.userId!;
 
-  const [fiveStars, mostRepeated, projects] = await Promise.all([
-    countSmartClimbRefs('FIVE_STARS', userId, undefined),
-    countSmartClimbRefs('MOST_REPEATED', userId, undefined),
-    countSmartClimbRefs('PROJECTS', userId, undefined),
-  ]);
+  const result = await db.execute<{ type: SmartPlaylistType; count: number }>(sql`
+    WITH base AS (
+      SELECT climb_uuid, board_type, quality, attempt_count, status
+      FROM ${dbSchema.boardseshTicks}
+      WHERE user_id = ${userId}
+    ),
+    sent AS (
+      SELECT DISTINCT climb_uuid
+      FROM base
+      WHERE status IN ('flash', 'send')
+    ),
+    five_stars AS (
+      SELECT COUNT(DISTINCT (board_type, climb_uuid))::int AS count
+      FROM base
+      WHERE quality = 5
+    ),
+    most_repeated AS (
+      SELECT COUNT(*)::int AS count
+      FROM (
+        SELECT climb_uuid, board_type
+        FROM base
+        GROUP BY climb_uuid, board_type
+        HAVING SUM(attempt_count) > 1
+      ) r
+    ),
+    projects AS (
+      SELECT COUNT(DISTINCT (board_type, climb_uuid))::int AS count
+      FROM base
+      WHERE climb_uuid NOT IN (SELECT climb_uuid FROM sent)
+    )
+    SELECT 'FIVE_STARS'::text AS type, count FROM five_stars
+    UNION ALL
+    SELECT 'MOST_REPEATED'::text, count FROM most_repeated
+    UNION ALL
+    SELECT 'PROJECTS'::text, count FROM projects
+  `);
+
+  // db.execute returns either an iterable of rows directly or `{ rows }`
+  // depending on the underlying postgres client; normalise here.
+  const rows = (Array.isArray(result) ? result : (result as { rows?: unknown[] }).rows) as
+    | Array<{ type: SmartPlaylistType; count: number }>
+    | undefined;
+  if (!rows) return [];
+
+  const byType = new Map<SmartPlaylistType, number>();
+  for (const row of rows) {
+    byType.set(row.type, Number(row.count ?? 0));
+  }
 
   return [
-    { type: 'FIVE_STARS', count: fiveStars },
-    { type: 'MOST_REPEATED', count: mostRepeated },
-    { type: 'PROJECTS', count: projects },
+    { type: 'FIVE_STARS', count: byType.get('FIVE_STARS') ?? 0 },
+    { type: 'MOST_REPEATED', count: byType.get('MOST_REPEATED') ?? 0 },
+    { type: 'PROJECTS', count: byType.get('PROJECTS') ?? 0 },
   ];
 };

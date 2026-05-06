@@ -193,13 +193,17 @@ describe('playlistClimbs resolver', () => {
     const countChain = createMockChain([{ count: 2 }]);
     mockDb.select.mockReturnValueOnce(countChain);
 
-    // 3. Climbs query (all-boards mode — no boardName filter)
-    const climbsChain = createMockChain([
+    // 3. Refs query (page of climbUuid + boardType + per-row angle from playlistClimbs)
+    const refsChain = createMockChain([
+      { climbUuid: 'climb-1', boardType: 'kilter', playlistAngle: 40 },
+      { climbUuid: 'climb-2', boardType: 'tension', playlistAngle: null },
+    ]);
+    mockDb.select.mockReturnValueOnce(refsChain);
+
+    // 4. Hydrate query (rows from helpers/hydrate-climbs.ts — climbs LEFT JOIN climbStats)
+    const hydrateChain = createMockChain([
       {
         climbUuid: 'climb-1',
-        position: 0,
-        playlistAngle: 40,
-        uuid: 'climb-1',
         layoutId: 1,
         boardType: 'kilter',
         setter_username: 'setter1',
@@ -208,16 +212,13 @@ describe('playlistClimbs resolver', () => {
         frames: '',
         statsAngle: 40,
         ascensionist_count: 10,
-        difficulty: 'V5',
+        difficulty_id: 25,
         quality_average: 3.5,
         difficulty_error: 0.2,
         benchmark_difficulty: null,
       },
       {
         climbUuid: 'climb-2',
-        position: 1,
-        playlistAngle: null,
-        uuid: 'climb-2',
         layoutId: 2,
         boardType: 'tension',
         setter_username: 'setter2',
@@ -226,13 +227,13 @@ describe('playlistClimbs resolver', () => {
         frames: '',
         statsAngle: 30,
         ascensionist_count: 5,
-        difficulty: 'V3',
+        difficulty_id: 15,
         quality_average: 2.0,
         difficulty_error: 0.1,
         benchmark_difficulty: null,
       },
     ]);
-    mockDb.select.mockReturnValueOnce(climbsChain);
+    mockDb.select.mockReturnValueOnce(hydrateChain);
 
     const result = await playlistQueries.playlistClimbs(null, { input: { playlistId: 'test-pl' } }, ctx);
 
@@ -313,12 +314,20 @@ describe('playlistClimbs resolver', () => {
     const countChain = createMockChain([{ count: 25 }]);
     mockDb.select.mockReturnValueOnce(countChain);
 
-    // 3. Return pageSize + 1 results to indicate hasMore
-    const climbResults = Array.from({ length: 21 }, (_, i) => ({
+    // 3. Refs query — returns pageSize + 1 to indicate hasMore. Trimming to
+    // pageSize happens before the hydrate call, so the hydrate mock only
+    // needs the trimmed set.
+    const refRows = Array.from({ length: 21 }, (_, i) => ({
       climbUuid: `climb-${i}`,
-      position: i,
+      boardType: 'kilter',
       playlistAngle: 40,
-      uuid: `climb-${i}`,
+    }));
+    const refsChain = createMockChain(refRows);
+    mockDb.select.mockReturnValueOnce(refsChain);
+
+    // 4. Hydrate query — only the 20 trimmed refs are hydrated.
+    const hydrateRows = Array.from({ length: 20 }, (_, i) => ({
+      climbUuid: `climb-${i}`,
       layoutId: 1,
       boardType: 'kilter',
       setter_username: 'setter1',
@@ -327,13 +336,13 @@ describe('playlistClimbs resolver', () => {
       frames: '',
       statsAngle: 40,
       ascensionist_count: 1,
-      difficulty: 'V1',
+      difficulty_id: 5,
       quality_average: 1.0,
       difficulty_error: 0,
       benchmark_difficulty: null,
     }));
-    const climbsChain = createMockChain(climbResults);
-    mockDb.select.mockReturnValueOnce(climbsChain);
+    const hydrateChain = createMockChain(hydrateRows);
+    mockDb.select.mockReturnValueOnce(hydrateChain);
 
     const result = await playlistQueries.playlistClimbs(
       null,

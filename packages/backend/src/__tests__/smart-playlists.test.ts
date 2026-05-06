@@ -273,27 +273,56 @@ describe('mySmartPlaylistCounts resolver', () => {
     );
   });
 
-  it('returns one entry per smart-playlist type', async () => {
+  it('returns one entry per smart-playlist type from a single CTE roundtrip', async () => {
     const ctx = makeCtx();
 
-    // FIVE_STARS count
-    mockDb.select.mockReturnValueOnce(makeChain([{ count: 7 }]).chain);
-    // MOST_REPEATED — the resolver wraps the GROUP BY/HAVING in a subquery,
-    // so two select calls happen for this type. The subquery's `.as()` returns
-    // a value used as the from() target of the outer select — the outer is
-    // what eventually awaits to a count.
-    mockDb.select.mockReturnValueOnce(makeChain([]).chain); // inner
-    mockDb.select.mockReturnValueOnce(makeChain([{ count: 3 }]).chain); // outer
-    // PROJECTS outer
-    mockDb.select.mockReturnValueOnce(makeChain([{ count: 5 }]).chain);
-    // PROJECTS sentSubquery
-    mockDb.select.mockReturnValueOnce(makeChain([]).chain);
+    // Single db.execute call returns three rows. Order returned from the
+    // resolver is fixed (FIVE_STARS, MOST_REPEATED, PROJECTS) regardless of
+    // SQL row order.
+    mockDb.execute.mockResolvedValueOnce([
+      { type: 'PROJECTS', count: 5 },
+      { type: 'FIVE_STARS', count: 7 },
+      { type: 'MOST_REPEATED', count: 3 },
+    ]);
 
     const result = await playlistQueries.mySmartPlaylistCounts(null, undefined, ctx);
     expect(result).toEqual([
       { type: 'FIVE_STARS', count: 7 },
       { type: 'MOST_REPEATED', count: 3 },
       { type: 'PROJECTS', count: 5 },
+    ]);
+    expect(mockDb.execute).toHaveBeenCalledTimes(1);
+  });
+
+  it('handles the {rows: ...} shape some postgres clients return', async () => {
+    const ctx = makeCtx();
+
+    mockDb.execute.mockResolvedValueOnce({
+      rows: [
+        { type: 'FIVE_STARS', count: 1 },
+        { type: 'MOST_REPEATED', count: 2 },
+        { type: 'PROJECTS', count: 3 },
+      ],
+    });
+
+    const result = await playlistQueries.mySmartPlaylistCounts(null, undefined, ctx);
+    expect(result).toEqual([
+      { type: 'FIVE_STARS', count: 1 },
+      { type: 'MOST_REPEATED', count: 2 },
+      { type: 'PROJECTS', count: 3 },
+    ]);
+  });
+
+  it('returns 0 for any type missing from the CTE result', async () => {
+    const ctx = makeCtx();
+
+    mockDb.execute.mockResolvedValueOnce([{ type: 'FIVE_STARS', count: 9 }]);
+
+    const result = await playlistQueries.mySmartPlaylistCounts(null, undefined, ctx);
+    expect(result).toEqual([
+      { type: 'FIVE_STARS', count: 9 },
+      { type: 'MOST_REPEATED', count: 0 },
+      { type: 'PROJECTS', count: 0 },
     ]);
   });
 });
