@@ -11,8 +11,6 @@ import { useTranslation } from 'react-i18next';
 import { useLocaleRouter } from '@/app/lib/i18n/use-locale-router';
 import { executeGraphQL } from '@/app/lib/graphql/client';
 import {
-  type DiscoverPlaylistsQueryResponse,
-  type DiscoverPlaylistsInput,
   type GetMySmartPlaylistCountsQueryResponse,
   type Playlist,
   type DiscoverablePlaylist,
@@ -20,12 +18,12 @@ import {
   type PinPlaylistMutationVariables,
   type UnpinPlaylistMutationResponse,
   type UnpinPlaylistMutationVariables,
-  DISCOVER_PLAYLISTS,
   PIN_PLAYLIST,
   UNPIN_PLAYLIST,
   GET_MY_SMART_PLAYLIST_COUNTS,
 } from '@/app/lib/graphql/operations/playlists';
 import { useUserPlaylists } from '@/app/hooks/use-user-playlists';
+import { useDiscoverPlaylists } from '@/app/hooks/use-discover-playlists';
 import { usePinnedPlaylists } from '@/app/hooks/use-pinned-playlists';
 import { SMART_PLAYLISTS, smartPlaylistHref } from '@/app/lib/smart-playlists';
 import { useWsAuthToken } from '@/app/hooks/use-ws-auth-token';
@@ -65,10 +63,16 @@ type LibraryPageContentProps = {
    *  carries hasMore + totalCount so the client hook can seed both correctly
    *  and avoid a redundant first fetch. */
   initialPlaylists?: { playlists: Playlist[]; totalCount: number; hasMore: boolean } | null;
-  /** SSR-fetched discover playlists for instant rendering. */
+  /** SSR-fetched discover playlists for instant rendering. The connection
+   *  shape carries per-stream hasMore + totalCount so the client hook can
+   *  seed both correctly and avoid a redundant first fetch. */
   initialDiscoverPlaylists?: {
     popular: DiscoverablePlaylist[];
     recent: DiscoverablePlaylist[];
+    popularHasMore: boolean;
+    recentHasMore: boolean;
+    popularTotalCount?: number;
+    recentTotalCount?: number;
   } | null;
   /** Board configuration data for the custom-board picker path. */
   boardConfigs?: BoardConfigData;
@@ -186,55 +190,27 @@ export default function LibraryPageContent({
     [pinnedPlaylists, pinnedSource],
   );
 
-  const [popularPlaylists, setPopularPlaylists] = useState<DiscoverablePlaylist[]>(
-    initialDiscoverPlaylists?.popular ?? [],
-  );
-  const [recentPlaylists, setRecentPlaylists] = useState<DiscoverablePlaylist[]>(
-    initialDiscoverPlaylists?.recent ?? [],
-  );
-  const [discoverLoading, setDiscoverLoading] = useState(!hasInitialDiscoverData);
+  // Discover playlists — paginated horizontal scroll. Reset on board filter
+  // change. Two parallel cursors (popular + recent) live inside the hook;
+  // exhausted streams stop pulling additional pages.
+  const {
+    popular: popularPlaylists,
+    recent: recentPlaylists,
+    isLoading: discoverLoading,
+    isLoadingMore: discoverLoadingMore,
+    hasMore: discoverHasMore,
+    loadMore: loadMoreDiscover,
+  } = useDiscoverPlaylists({
+    boardType: selectedBoard?.boardType,
+    layoutId: selectedBoard?.layoutId,
+    pageSize: 10,
+    initialData: hasInitialDiscoverData
+      ? { popular: initialDiscoverPlaylists.popular, recent: initialDiscoverPlaylists.recent }
+      : undefined,
+    initialPopularHasMore: hasInitialDiscoverData ? initialDiscoverPlaylists.popularHasMore : undefined,
+    initialRecentHasMore: hasInitialDiscoverData ? initialDiscoverPlaylists.recentHasMore : undefined,
+  });
   const error = playlistsHasError;
-
-  const hasDiscoverDataRef = useRef(hasInitialDiscoverData);
-
-  // Fetch discover playlists (works for both "All" and specific board)
-  const fetchDiscoverData = useCallback(async () => {
-    try {
-      // Only show loading if we don't already have data
-      if (!hasDiscoverDataRef.current) {
-        setDiscoverLoading(true);
-      }
-
-      const baseInput: DiscoverPlaylistsInput = {
-        pageSize: 10,
-        ...(selectedBoard && {
-          boardType: selectedBoard.boardType,
-          layoutId: selectedBoard.layoutId,
-        }),
-      };
-
-      const [popularRes, recentRes] = await Promise.all([
-        executeGraphQL<DiscoverPlaylistsQueryResponse, { input: DiscoverPlaylistsInput }>(DISCOVER_PLAYLISTS, {
-          input: { ...baseInput, sortBy: 'popular' },
-        }),
-        executeGraphQL<DiscoverPlaylistsQueryResponse, { input: DiscoverPlaylistsInput }>(DISCOVER_PLAYLISTS, {
-          input: { ...baseInput, sortBy: 'recent' },
-        }),
-      ]);
-
-      setPopularPlaylists(popularRes.discoverPlaylists.playlists);
-      setRecentPlaylists(recentRes.discoverPlaylists.playlists);
-      hasDiscoverDataRef.current = true;
-    } catch (err) {
-      console.error('Error fetching discover playlists:', err);
-    } finally {
-      setDiscoverLoading(false);
-    }
-  }, [selectedBoard]);
-
-  useEffect(() => {
-    void fetchDiscoverData();
-  }, [fetchDiscoverData]);
 
   // Pin / unpin a playlist. Optimistic refetch — wait for the mutation, then
   // re-pull both the pinned list (server source of truth) and the page-1 of
@@ -311,9 +287,8 @@ export default function LibraryPageContent({
   const handleBoardSelect = useCallback(
     (board: UserBoard | null) => {
       setSelectedBoard(board);
-      // useUserPlaylists / usePinnedPlaylists reset themselves on filter change.
-      // Discover keeps its skeletons on board flip via this ref.
-      hasDiscoverDataRef.current = false;
+      // useUserPlaylists / useDiscoverPlaylists / usePinnedPlaylists all reset
+      // themselves on filter change.
 
       // When rendered from a board route, switching boards navigates to the correct URL
       if (boardSlug || playlistsBasePath !== '/playlists') {
@@ -613,9 +588,17 @@ export default function LibraryPageContent({
         </PlaylistScrollSection>
       )}
 
-      {/* Discover */}
+      {/* Discover — paginated horizontal scroll, popular + recent streams
+          merged client-side. Same IntersectionObserver-driven loadMore as
+          "Jump Back In". */}
       {(discoverLoading || discoverItems.length > 0) && (
-        <PlaylistScrollSection title={t('library.sections.discover')} loading={discoverLoading}>
+        <PlaylistScrollSection
+          title={t('library.sections.discover')}
+          loading={discoverLoading}
+          onLoadMore={loadMoreDiscover}
+          hasMore={discoverHasMore}
+          isLoadingMore={discoverLoadingMore}
+        >
           {discoverItems.map((p, i) => (
             <PlaylistCard
               key={p.uuid}

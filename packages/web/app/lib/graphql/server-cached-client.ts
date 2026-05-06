@@ -127,10 +127,17 @@ export async function cachedUserSessionGroupedFeed(authToken: string, userId: st
 
 /**
  * Server-side cached fetch of discover playlists (public, no auth needed).
+ *
+ * Surfaces per-stream `hasMore` + `totalCount` so the client hook can seed
+ * pagination state without firing a redundant first request.
  */
 export async function cachedDiscoverPlaylists(input: { boardType?: string; layoutId?: number } = {}): Promise<{
   popular: DiscoverablePlaylist[];
   recent: DiscoverablePlaylist[];
+  popularHasMore: boolean;
+  recentHasMore: boolean;
+  popularTotalCount: number;
+  recentTotalCount: number;
 } | null> {
   const { DISCOVER_PLAYLISTS } = await import('@/app/lib/graphql/operations/playlists');
   type Response = DiscoverPlaylistsQueryResponse;
@@ -151,6 +158,10 @@ export async function cachedDiscoverPlaylists(input: { boardType?: string; layou
     return {
       popular: popularRes.discoverPlaylists.playlists,
       recent: recentRes.discoverPlaylists.playlists,
+      popularHasMore: popularRes.discoverPlaylists.hasMore,
+      recentHasMore: recentRes.discoverPlaylists.hasMore,
+      popularTotalCount: popularRes.discoverPlaylists.totalCount,
+      recentTotalCount: recentRes.discoverPlaylists.totalCount,
     };
   } catch {
     return null;
