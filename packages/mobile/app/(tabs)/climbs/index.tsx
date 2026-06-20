@@ -368,33 +368,34 @@ function ClimbListInner() {
     let cancelled = false;
     restoredKeyRef.current = null;
     setRestoredKey(null);
-    getLastSearch(boardConfig, { isAuthenticated })
-      .then((saved) => {
-        if (cancelled) return;
-        if (saved) {
-          replaceSearch(saved.filters, saved.searchText, saved.boardFilters);
-          visibleSearchTextRef.current = '';
-          applyVisibleSearchText(saved.searchText);
-        } else {
-          // Never-searched board → clean default band, no grade/filters/name
-          // inherited from the board the climber came from.
+    const task = InteractionManager.runAfterInteractions(() => {
+      getLastSearch(boardConfig, { isAuthenticated })
+        .then((saved) => {
+          if (cancelled) return;
+          if (saved) {
+            replaceSearch(saved.filters, saved.searchText, saved.boardFilters);
+            visibleSearchTextRef.current = '';
+            applyVisibleSearchText(saved.searchText);
+          } else {
+            replaceSearch(DEFAULT_CLIMB_FILTER_STATE, '', DEFAULT_CLIMB_BOARD_FILTER_STATE);
+            visibleSearchTextRef.current = '';
+            applyVisibleSearchText('');
+          }
+          restoredKeyRef.current = boardKey;
+          setRestoredKey(boardKey);
+        })
+        .catch(() => {
+          if (cancelled) return;
           replaceSearch(DEFAULT_CLIMB_FILTER_STATE, '', DEFAULT_CLIMB_BOARD_FILTER_STATE);
           visibleSearchTextRef.current = '';
           applyVisibleSearchText('');
-        }
-        restoredKeyRef.current = boardKey;
-        setRestoredKey(boardKey);
-      })
-      .catch(() => {
-        if (cancelled) return;
-        replaceSearch(DEFAULT_CLIMB_FILTER_STATE, '', DEFAULT_CLIMB_BOARD_FILTER_STATE);
-        visibleSearchTextRef.current = '';
-        applyVisibleSearchText('');
-        restoredKeyRef.current = boardKey;
-        setRestoredKey(boardKey);
-      });
+          restoredKeyRef.current = boardKey;
+          setRestoredKey(boardKey);
+        });
+    });
     return () => {
       cancelled = true;
+      task.cancel();
     };
     // Restore is keyed on the board only — re-running on filter changes would
     // clobber the user's edits. replaceSearch is stable; searchHeaderRef is a ref.
