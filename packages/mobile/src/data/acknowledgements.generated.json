@@ -1,14 +1,14 @@
 {
-  "generatedAt": "2026-06-15T03:43:45.371Z",
+  "generatedAt": "2026-06-22T12:46:49.372Z",
   "contributors": [
     {
       "login": "marcodejongh",
       "name": "Marco de Jongh",
       "avatarUrl": "https://avatars.githubusercontent.com/u/1107647?u=63993f18e3d652404c7a04ae91a5f7a505fdef5c&v=4",
       "htmlUrl": "https://github.com/marcodejongh",
-      "pullRequests": 2187,
-      "issues": 393,
-      "contributions": 2580
+      "pullRequests": 2423,
+      "issues": 420,
+      "contributions": 2843
     },
     {
       "login": "ES-Alexander",
@@ -33,9 +33,18 @@
       "name": "Alex Sánchez",
       "avatarUrl": "https://avatars.githubusercontent.com/u/10997544?u=41ac204494f58d9a5f32b3652af16a75c20869df&v=4",
       "htmlUrl": "https://github.com/alejandrosanchezcabana",
-      "pullRequests": 9,
+      "pullRequests": 13,
       "issues": 2,
-      "contributions": 11
+      "contributions": 15
+    },
+    {
+      "login": "azuttre",
+      "name": "WinnebagoMaaan",
+      "avatarUrl": "https://avatars.githubusercontent.com/u/3766782?u=9f484b4611ad060ec18326e2a53fd044b1ee9b1a&v=4",
+      "htmlUrl": "https://github.com/azuttre",
+      "pullRequests": 7,
+      "issues": 1,
+      "contributions": 8
     },
     {
       "login": "shelldandy",
@@ -63,15 +72,6 @@
       "pullRequests": 3,
       "issues": 2,
       "contributions": 5
-    },
-    {
-      "login": "azuttre",
-      "name": "WinnebagoMaaan",
-      "avatarUrl": "https://avatars.githubusercontent.com/u/3766782?u=9f484b4611ad060ec18326e2a53fd044b1ee9b1a&v=4",
-      "htmlUrl": "https://github.com/azuttre",
-      "pullRequests": 3,
-      "issues": 1,
-      "contributions": 4
     },
     {
       "login": "diziet",
@@ -108,6 +108,15 @@
       "pullRequests": 1,
       "issues": 1,
       "contributions": 2
+    },
+    {
+      "login": "aliebling",
+      "name": null,
+      "avatarUrl": "https://avatars.githubusercontent.com/u/1900068?u=cf20aea456c6d86c5ee1b046494023b26ec1b216&v=4",
+      "htmlUrl": "https://github.com/aliebling",
+      "pullRequests": 0,
+      "issues": 1,
+      "contributions": 1
     },
     {
       "login": "crcklt",
@@ -173,6 +182,15 @@
       "contributions": 1
     },
     {
+      "login": "kay-jay95",
+      "name": null,
+      "avatarUrl": "https://avatars.githubusercontent.com/u/261702971?v=4",
+      "htmlUrl": "https://github.com/kay-jay95",
+      "pullRequests": 0,
+      "issues": 1,
+      "contributions": 1
+    },
+    {
       "login": "lukalelovic",
       "name": "Luka Lelovic",
       "avatarUrl": "https://avatars.githubusercontent.com/u/58709344?u=db4195ace34107bb99d0b3b6d2beee6bea2396b9&v=4",
@@ -182,10 +200,28 @@
       "contributions": 1
     },
     {
+      "login": "mayank-dev-15",
+      "name": "Mayank Basena",
+      "avatarUrl": "https://avatars.githubusercontent.com/u/289773841?v=4",
+      "htmlUrl": "https://github.com/mayank-dev-15",
+      "pullRequests": 1,
+      "issues": 0,
+      "contributions": 1
+    },
+    {
       "login": "Milvintsiss",
       "name": null,
       "avatarUrl": "https://avatars.githubusercontent.com/u/38794405?u=9d60aafcebea37e090c70447a8861884880f4abd&v=4",
       "htmlUrl": "https://github.com/Milvintsiss",
+      "pullRequests": 0,
+      "issues": 1,
+      "contributions": 1
+    },
+    {
+      "login": "p4t7m4n",
+      "name": "Schlomo",
+      "avatarUrl": "https://avatars.githubusercontent.com/u/45936392?u=3a91d94a41afec4631cd1cf7c60eaab22fdd2cc6&v=4",
+      "htmlUrl": "https://github.com/p4t7m4n",
       "pullRequests": 0,
       "issues": 1,
       "contributions": 1
