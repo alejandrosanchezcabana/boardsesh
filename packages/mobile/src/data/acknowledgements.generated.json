@@ -1,14 +1,14 @@
 {
-  "generatedAt": "2026-07-20T09:55:37.170Z",
+  "generatedAt": "2026-07-27T10:37:46.507Z",
   "contributors": [
     {
       "login": "marcodejongh",
       "name": "Marco de Jongh",
       "avatarUrl": "https://avatars.githubusercontent.com/u/1107647?u=63993f18e3d652404c7a04ae91a5f7a505fdef5c&v=4",
       "htmlUrl": "https://github.com/marcodejongh",
-      "pullRequests": 2849,
-      "issues": 581,
-      "contributions": 3430
+      "pullRequests": 2935,
+      "issues": 641,
+      "contributions": 3576
     },
     {
       "login": "ES-Alexander",
@@ -80,6 +80,15 @@
       "htmlUrl": "https://github.com/0at",
       "pullRequests": 3,
       "issues": 2,
+      "contributions": 5
+    },
+    {
+      "login": "fallaciousreasoning",
+      "name": "Jay Harris",
+      "avatarUrl": "https://avatars.githubusercontent.com/u/7678024?v=4",
+      "htmlUrl": "https://github.com/fallaciousreasoning",
+      "pullRequests": 5,
+      "issues": 0,
       "contributions": 5
     },
     {
