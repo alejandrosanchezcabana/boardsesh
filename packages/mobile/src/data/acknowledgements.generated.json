@@ -1,14 +1,14 @@
 {
-  "generatedAt": "2026-08-03T10:37:33.861Z",
+  "generatedAt": "2026-08-10T08:23:54.236Z",
   "contributors": [
     {
       "login": "marcodejongh",
       "name": "Marco de Jongh",
       "avatarUrl": "https://avatars.githubusercontent.com/u/1107647?u=63993f18e3d652404c7a04ae91a5f7a505fdef5c&v=4",
       "htmlUrl": "https://github.com/marcodejongh",
-      "pullRequests": 3072,
-      "issues": 715,
-      "contributions": 3787
+      "pullRequests": 3085,
+      "issues": 726,
+      "contributions": 3811
     },
     {
       "login": "ES-Alexander",
@@ -42,9 +42,18 @@
       "name": "Alex Sánchez",
       "avatarUrl": "https://avatars.githubusercontent.com/u/10997544?u=41ac204494f58d9a5f32b3652af16a75c20869df&v=4",
       "htmlUrl": "https://github.com/alejandrosanchezcabana",
-      "pullRequests": 13,
+      "pullRequests": 14,
       "issues": 2,
-      "contributions": 15
+      "contributions": 16
+    },
+    {
+      "login": "fallaciousreasoning",
+      "name": "Jay Harris",
+      "avatarUrl": "https://avatars.githubusercontent.com/u/7678024?v=4",
+      "htmlUrl": "https://github.com/fallaciousreasoning",
+      "pullRequests": 8,
+      "issues": 0,
+      "contributions": 8
     },
     {
       "login": "shelldandy",
@@ -80,15 +89,6 @@
       "htmlUrl": "https://github.com/0at",
       "pullRequests": 3,
       "issues": 2,
-      "contributions": 5
-    },
-    {
-      "login": "fallaciousreasoning",
-      "name": "Jay Harris",
-      "avatarUrl": "https://avatars.githubusercontent.com/u/7678024?v=4",
-      "htmlUrl": "https://github.com/fallaciousreasoning",
-      "pullRequests": 5,
-      "issues": 0,
       "contributions": 5
     },
     {
@@ -285,6 +285,24 @@
       "name": "Said Pazirandeh",
       "avatarUrl": "https://avatars.githubusercontent.com/u/16970708?u=78e05fd203ba985c06b4e0938a20657e4b7f5e4e&v=4",
       "htmlUrl": "https://github.com/SaidPar",
+      "pullRequests": 0,
+      "issues": 1,
+      "contributions": 1
+    },
+    {
+      "login": "SamRoehrich",
+      "name": "Sam Roehrich",
+      "avatarUrl": "https://avatars.githubusercontent.com/u/26787961?u=3a62179e459a45ca215efc7eb2cfac496e205420&v=4",
+      "htmlUrl": "https://github.com/SamRoehrich",
+      "pullRequests": 1,
+      "issues": 0,
+      "contributions": 1
+    },
+    {
+      "login": "T1llK",
+      "name": null,
+      "avatarUrl": "https://avatars.githubusercontent.com/u/75973120?v=4",
+      "htmlUrl": "https://github.com/T1llK",
       "pullRequests": 0,
       "issues": 1,
       "contributions": 1
